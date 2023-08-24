@@ -30,7 +30,6 @@ contract LilypadStorage is Ownable {
    * Users
    */
   function updateUser(
-    address userAddress,
     uint256 metadataCID,
     string memory url,
     SharedStructs.ServiceType[] memory roles,
@@ -38,14 +37,14 @@ contract LilypadStorage is Ownable {
     address[] memory trustedDirectories
   ) public onlyOwner returns (SharedStructs.User memory) {
     SharedStructs.User memory newUser = SharedStructs.User(
-      userAddress,
+      tx.origin,
       metadataCID,
       url,
       roles,
       trustedMediators,
       trustedDirectories
     );
-    users[userAddress] = newUser;
+    users[tx.origin] = newUser;
     return newUser;
   }
 
@@ -56,21 +55,19 @@ contract LilypadStorage is Ownable {
   }
 
   function addUserToList(
-    SharedStructs.ServiceType serviceType,
-    address userAddress
-  ) public onlyOwner {
-    require(users[userAddress].userAddress != address(0), "User must exist");
-    (, bool found) = _getUserListIndex(serviceType, userAddress);
+    SharedStructs.ServiceType serviceType
+  ) public {
+    require(users[tx.origin].userAddress != address(0), "User must exist");
+    (, bool found) = _getUserListIndex(serviceType, tx.origin);
     require(!found, "User is already part of that list");
-    usersByType[serviceType].push(userAddress);
+    usersByType[serviceType].push(tx.origin);
   }
 
   function removeUserFromList(
-    SharedStructs.ServiceType serviceType,
-    address userAddress
-  ) public onlyOwner {
-    require(users[userAddress].userAddress != address(0), "User must exist");
-    (uint256 index, bool found) = _getUserListIndex(serviceType, userAddress);
+    SharedStructs.ServiceType serviceType
+  ) public {
+    require(users[tx.origin].userAddress != address(0), "User must exist");
+    (uint256 index, bool found) = _getUserListIndex(serviceType, tx.origin);
     require(found, "User is not part of that list");
     for (uint256 i = index; i < usersByType[serviceType].length - 1; i++) {
       usersByType[serviceType][i] = usersByType[serviceType][i + 1];
@@ -99,7 +96,8 @@ contract LilypadStorage is Ownable {
   /**
    * Deals
    */
-  
+
+  // only the controller contract can call this
   function addDeal(
     uint256 dealId,
     address resourceProvider,
@@ -151,6 +149,7 @@ contract LilypadStorage is Ownable {
    * Agreements
    */
   
+  // only the controller contract can call this
   function agreeResourceProvider(
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
@@ -160,6 +159,7 @@ contract LilypadStorage is Ownable {
     return agreements[dealId];
   }
 
+  // only the controller contract can call this
   function agreeJobCreator(
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
@@ -186,6 +186,7 @@ contract LilypadStorage is Ownable {
    * Results
    */
 
+  // only the controller contract can call this
   function addResult(
     uint256 dealId,
     uint256 resultsId,

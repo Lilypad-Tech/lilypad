@@ -10,8 +10,8 @@ import "./ILilypadStorage.sol";
 
 contract LilypadController is Ownable, Initializable {
   bool private initialized;
-  address private storageAddress;
-  address private tokenAddress;
+  address public storageAddress;
+  address public tokenAddress;
   ILilypadStorage private storageContract;
   IERC20 private tokenContract;
 
@@ -50,6 +50,9 @@ contract LilypadController is Ownable, Initializable {
     uint256 resultsCollateral
   ) public returns (SharedStructs.Agreement memory) {
     require(!storageContract.hasAgreement(dealId), "Deal has already been agreed");
+    require(resourceProvider != address(0), "Resource provider must be defined");
+    require(jobCreator != address(0), "Job creator must be defined");
+    require(resourceProvider != jobCreator, "Resource provider and job creator cannot be the same");
 
     // we already have this deal and so the values must line up
     if(storageContract.hasDeal(dealId)) {
