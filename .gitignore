@@ -1,0 +1,8 @@
+hardhat/node_modules
+hardhat/artifacts
+hardhat/cache
+hardhat/deployments/hardhat
+hardhat/deployments/localhost
+hardhat/deployments/localgeth
+.env
+ops/testnet/.terraform/providers

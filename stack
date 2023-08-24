@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export DEFAULT_DATA_DIR="/tmp/geth"
+export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
+
+# if "$DIR/.env" exists then source it
+if [[ -f "$DIR/.env" ]]; then
+  source "$DIR/.env"
+fi
+
+############################################################################
+############################################################################
+# geth
+############################################################################
+############################################################################
+
+# run a local geth node in dev mode mounted against a local data directory
+function geth() {
+  docker network ls | grep lilypad || docker network create lilypad
+  docker run -d --restart always \
+    --name geth \
+    --network lilypad \
+    -p 8545:8545 \
+    -v ${DATA_DIRECTORY}:/data/geth \
+    ethereum/client-go \
+      --datadir /data/geth \
+      --dev \
+      --http \
+      --http.api web3,eth,net \
+      --http.addr 0.0.0.0 \
+      --http.corsdomain '*' \
+      --http.port 8545 \
+      --http.vhosts '*'
+}
+
+function geth-command() {
+  docker exec -i geth geth --exec "$@" attach /data/geth/geth.ipc
+}
+
+# move ALL the money apart from 1 eth to the given admin account
+# this expects the .env file to already have been created
+function fund-admin() {
+  if [[ -z "$ADMIN_ADDRESS" ]]; then
+    echo >&2 "ADMIN_ADDRESS must be set (source ${DIR}/.env)"
+    exit 1
+  fi
+  geth-command "eth.sendTransaction({from: eth.coinbase, to: \"${ADMIN_ADDRESS}\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })"
+}
+
+function geth-stop() {
+  docker rm -f geth 2> /dev/null || true
+}
+
+function geth-clean() {
+  sudo rm -rf ${DATA_DIRECTORY}
+}
+
+############################################################################
+############################################################################
+# faucet
+############################################################################
+############################################################################
+
+# fun the faucet container
+function faucet() {
+  local privateKey=$(echo -n "$FAUCET_PRIVATE_KEY" | sed 's/^0x//')
+  docker run -d \
+    --name faucet \
+    -p 81:8080 \
+    --network modicum \
+    -e WEB3_PROVIDER=http://geth:8545 \
+    -e PRIVATE_KEY=$privateKey \
+    chainflag/eth-faucet:1.1.0 \
+      --faucet.amount=100 \
+      --faucet.minutes=1
+}
+
+############################################################################
+############################################################################
+# hardhat scripts
+############################################################################
+############################################################################
+
+# run a script in the hardhat/scripts folder
+function hardhat-script() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat run "$@"
+  )
+}
+
+# print the env settings for the various accounts and private keys
+function print-env() {
+  hardhat-script scripts/print-env.js
+}
+
+function fund-services() {
+  hardhat-script scripts/fund-services.js
+}
+
+function balances() {
+  hardhat-script scripts/balances.js
+}
+
+eval "$@"

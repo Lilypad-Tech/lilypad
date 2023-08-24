@@ -1,0 +1,23 @@
+{
+  "name": "modicum-demo",
+  "version": "0.1.0",
+  "scripts": {},
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@openzeppelin/contracts": "^4.0.0",
+    "hardhat": "^2.12.6",
+    "web3": "^1.10.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "bluebird": "^3.7.2",
+    "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
+    "dotenv": "^16.3.1",
+    "ethereum-waffle": "^4.0.10",
+    "ethereumjs-wallet": "^1.0.2",
+    "hardhat-deploy": "^0.11.34",
+    "keythereum": "^2.0.0",
+    "minimist": "^1.2.8"
+  }
+}
