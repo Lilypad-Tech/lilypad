@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./SharedStructs.sol";
 
-contract LilypadStorage is Ownable {
+contract LilypadStorage is Ownable, Initializable {
 
   // a map of user address -> user
   mapping(address => SharedStructs.User) public users;
@@ -27,15 +27,31 @@ contract LilypadStorage is Ownable {
   mapping(uint256 => SharedStructs.Result) public results;
 
   /**
+   * Init
+   */
+
+  // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
+  function initialize() public initializer {
+    
+  }
+
+  /**
    * Users
    */
+
+  function getUser(
+    address userAddress
+  ) public view returns (SharedStructs.User memory) {
+    return users[userAddress];
+  }
+
   function updateUser(
     uint256 metadataCID,
     string memory url,
     SharedStructs.ServiceType[] memory roles,
     address[] memory trustedMediators,
     address[] memory trustedDirectories
-  ) public onlyOwner returns (SharedStructs.User memory) {
+  ) public returns (SharedStructs.User memory) {
     SharedStructs.User memory newUser = SharedStructs.User(
       tx.origin,
       metadataCID,
@@ -46,12 +62,6 @@ contract LilypadStorage is Ownable {
     );
     users[tx.origin] = newUser;
     return newUser;
-  }
-
-  function getUser(
-    address userAddress
-  ) public view returns (SharedStructs.User memory) {
-    return users[userAddress];
   }
 
   function addUserToList(
@@ -73,6 +83,12 @@ contract LilypadStorage is Ownable {
       usersByType[serviceType][i] = usersByType[serviceType][i + 1];
     }
     usersByType[serviceType].pop();
+  }
+
+  function showUsersInList(
+    SharedStructs.ServiceType serviceType
+  ) public view returns (address[] memory) {
+    return usersByType[serviceType];
   }
 
   // returns the index of the user found in the service list
@@ -97,7 +113,18 @@ contract LilypadStorage is Ownable {
    * Deals
    */
 
-  // only the controller contract can call this
+  function getDeal(
+    uint256 dealId
+  ) public view returns (SharedStructs.Deal memory) {
+    return deals[dealId];
+  }
+
+  function getDealsForParty(
+    address party
+  ) public view returns (uint256[] memory) {
+    return dealsForParty[party];
+  }
+
   function addDeal(
     uint256 dealId,
     address resourceProvider,
@@ -111,7 +138,7 @@ contract LilypadStorage is Ownable {
     require(!hasDeal(dealId), "Deal already exists");
     require(resourceProvider != address(0), "Resource provider must be defined");
     require(jobCreator != address(0), "Job creator must be defined");
-    SharedStructs.Deal memory newDeal = SharedStructs.Deal(
+    deals[dealId] = SharedStructs.Deal(
       dealId,
       resourceProvider,
       jobCreator,
@@ -121,41 +148,29 @@ contract LilypadStorage is Ownable {
       jobCollateral,
       resultsCollateral
     );
-    deals[dealId] = newDeal;
+    agreements[dealId].state = SharedStructs.AgreementState.Negotiating;
     dealsForParty[resourceProvider].push(dealId);
     dealsForParty[jobCreator].push(dealId);
-    return newDeal;
-  }
-
-  function getDeal(
-    uint256 dealId
-  ) public view returns (SharedStructs.Deal memory) {
     return deals[dealId];
-  }
-
-  function getDealsForParty(
-    address party
-  ) public view returns (uint256[] memory) {
-    return dealsForParty[party];
-  }
-
-  function hasDeal(
-    uint256 dealId
-  ) public view returns (bool) {
-    return getDeal(dealId).dealId != 0;
   }
 
   /**
    * Agreements
    */
   
-  // only the controller contract can call this
+  function getAgreement(
+    uint256 dealId
+  ) public view returns (SharedStructs.Agreement memory) {
+    return agreements[dealId];
+  }
+
   function agreeResourceProvider(
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].resourceProviderAgreedAt == 0, "resource provider has already agreed");
     agreements[dealId].resourceProviderAgreedAt = block.timestamp;
+    _maybeAgreeDeal(dealId);
     return agreements[dealId];
   }
 
@@ -166,52 +181,88 @@ contract LilypadStorage is Ownable {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].jobCreatorAgreedAt == 0, "job creator has already agreed");
     agreements[dealId].jobCreatorAgreedAt = block.timestamp;
+    _maybeAgreeDeal(dealId);
     return agreements[dealId];
   }
 
-  function hasAgreement(
+  function _maybeAgreeDeal(
     uint256 dealId
-  ) public view returns (bool) {
-    require(hasDeal(dealId), "Deal does not exist");
-    return agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0;
-  }
-
-  function getAgreement(
-    uint256 dealId
-  ) public view returns (SharedStructs.Agreement memory) {
-    return agreements[dealId];
+  ) private {
+    if(isAgreement(dealId)) {
+      agreements[dealId].dealAgreedAt = block.timestamp;
+      agreements[dealId].state = SharedStructs.AgreementState.Agreed;
+    }
   }
 
   /**
    * Results
    */
 
-  // only the controller contract can call this
+  function getResult(
+    uint256 dealId
+  ) public view returns (SharedStructs.Result memory) {
+    return results[dealId];
+  }
+
   function addResult(
     uint256 dealId,
     uint256 resultsId,
     uint256 instructionCount
   ) public onlyOwner returns (SharedStructs.Result memory) {
-    require(hasDeal(dealId), "Deal does not exist");
-    require(hasAgreement(dealId), "Agreement does not exist");
-    SharedStructs.Result memory newResult = SharedStructs.Result(
+    require(isAgreement(dealId), "Deal not in Agree state");
+    agreements[dealId].dealAgreedAt = block.timestamp;
+    agreements[dealId].state = SharedStructs.AgreementState.Submitted;
+    results[dealId] = SharedStructs.Result(
       dealId,
       resultsId,
       instructionCount
     );
-    results[dealId] = newResult;
-    return newResult;
+    return results[dealId];
   }
 
-  function hasResult(
+  function timeoutResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isAgreement(dealId), "Deal not in Agree state");
+    agreements[dealId].timedOutAt = block.timestamp;
+    agreements[dealId].state = SharedStructs.AgreementState.Timeout;
+  }
+
+  /**
+   * Checkers
+   */
+
+  function hasDeal(
     uint256 dealId
   ) public view returns (bool) {
-    return getResult(dealId).dealId != 0;
+    return getDeal(dealId).dealId != 0;
   }
 
-  function getResult(
+  function isNegotiating(
     uint256 dealId
-  ) public view returns (SharedStructs.Result memory) {
-    return results[dealId];
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Negotiating;
+  }
+
+  function isAgreement(
+    uint256 dealId
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Agreed;
+  }
+
+  function isTimeout(
+    uint256 dealId
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Timeout;
+  }
+
+  function isSubmitted(
+    uint256 dealId
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Submitted;
   }
 }

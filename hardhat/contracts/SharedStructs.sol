@@ -11,6 +11,15 @@ library SharedStructs {
     JobCreator
   }
 
+  enum AgreementState {
+    Negotiating,
+    Agreed,
+    Timeout,
+    Submitted,
+    Accepted,
+    Rejected
+  }
+
   // we map addresses onto infomation about the user
   struct User {
     address userAddress;
@@ -22,9 +31,10 @@ library SharedStructs {
     address[] trustedDirectories;
   }
 
-  // a Deal forms the agreement between both parties
+  // a Deal forms the information that is agreed between both parties
   // both parties must have called "agree_deal" with the exact
   // same parameters before the deal is considered valid
+  // a Deal is immutable - nothing about it can be updated
   struct Deal {
     // the CID of the Deal document on IPFS (and directory service)
     // this contains the job spec, the job offer and the resource offer
@@ -50,15 +60,8 @@ library SharedStructs {
     uint256 resultsCollateral;
   }
 
-  // so we keep the deal details seperated from the fact that both parties have agreed
-  // to the deal - this represents a 2 sided agreement and records the timestamp
-  // of when both parties agreed to the deal
-  struct Agreement {
-    uint256 resourceProviderAgreedAt;
-    uint256 jobCreatorAgreedAt;
-  }
-
   // what the RP submits back once having run the job
+  // this is also immutable
   struct Result {
     // the id of the deal that this result is for
     uint256 dealId;
@@ -68,5 +71,18 @@ library SharedStructs {
 
     // how many instructions were executed by the RP
     uint256 instructionCount;
+  }
+
+  // an agreement keeps track of the state of a deal and it's fields can be mutated
+  struct Agreement {
+    // the current state of the agreement
+    AgreementState state;
+    uint256 resourceProviderAgreedAt;
+    uint256 jobCreatorAgreedAt;
+    uint256 dealAgreedAt;
+    uint256 timedOutAt;
+    uint256 resultsSubmittedAt;
+    uint256 resultsAcceptedAt;
+    uint256 resultsRejectedAt;
   }
 }
