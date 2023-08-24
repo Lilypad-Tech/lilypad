@@ -5,6 +5,65 @@ import "./SharedStructs.sol";
 
 interface ILilypadStorage {
 
+  // a new user has registered
+  event UserUpdated(
+    SharedStructs.ServiceType indexed userType,
+    address indexed userAddress,
+    uint256 indexed metadataCID
+  );
+
+  // trusted providers have been changed for a user
+  event TrustedProvidersAdded(
+    address indexed userAddress,
+    SharedStructs.ServiceType indexed providerType,
+    address[] indexed trustedProviders
+  );
+
+  // when one party agrees to a deal this is emitted
+  // along with the address of the agreeing party
+  // this can be used to lookup whether it's the RP or JC
+  event ResourceProviderAgreed(uint256 indexed dealId, address indexed resourceProvider);
+  event JobCreatorAgreed(uint256 indexed dealId, address indexed jobCreator);
+
+  // once both parties have agreed this is emitted
+  event DealAgreed(uint256 indexed dealId);
+
+  // a result has been subnmitted by a resource provider
+  event ResultAdded(uint256 indexed dealId);
+
+  /**
+   * Users
+   */
+  function updateUser(
+    address userAddress,
+    uint256 metadataCID,
+    string memory url,
+    SharedStructs.ServiceType[] memory roles,
+    address[] memory trustedMediators,
+    address[] memory trustedDirectories
+  ) external returns (SharedStructs.User memory);
+
+  function getUser(
+    address userAddress
+  ) external returns (SharedStructs.User memory);
+
+  // add the given user to a list of service types
+  // that can be easily discovered (e.g. how to list the solvers)
+  function addUserToList(
+    SharedStructs.ServiceType serviceType,
+    address userAddress
+  ) external;
+
+  function removeUserFromList(
+    SharedStructs.ServiceType serviceType,
+    address userAddress
+  ) external;
+
+  function showUsersInList(
+    SharedStructs.ServiceType serviceType
+  ) external returns (address[] memory);
+
+  
   /**
    * Deals
    */
@@ -14,10 +73,15 @@ interface ILilypadStorage {
     address resourceProvider,
     address jobCreator,
     uint256 instructionPrice,
+    uint256 timeout,
     uint256 timeoutCollateral,
     uint256 jobCollateral,
     uint256 resultsCollateral
   ) external returns (SharedStructs.Deal memory);
+
+  function hasDeal(
+    uint256 dealId
+  ) external returns (bool);
 
   function getDeal(
     uint256 dealId
@@ -28,13 +92,7 @@ interface ILilypadStorage {
   function getDealsForParty(
     address party
   ) external returns (uint256[] memory);
-
-  function hasDeal(
-    uint256 dealId
-  ) external returns (bool);
-
-  event DealAdded(uint256 indexed dealId);
-
+  
   /**
    * Agreements
    */
@@ -43,7 +101,11 @@ interface ILilypadStorage {
   //  * that the deal exists
   //  * that the sender of the tx is either rp or jc
   //  * that the rp or jc has not already agreed
-  function agree(
+  function agreeResourceProvider(
+    uint256 dealId
+  ) external returns (SharedStructs.Agreement memory);
+
+  function agreeJobCreator(
     uint256 dealId
   ) external returns (SharedStructs.Agreement memory);
 
@@ -52,13 +114,9 @@ interface ILilypadStorage {
     uint256 dealId
   ) external returns (bool);
 
-  // when one party agrees to a deal this is emitted
-  // along with the address of the agreeing party
-  // this can be used to lookup whether it's the RP or JC
-  event PartyAgreed(uint256 indexed dealId, address indexed agreedParty); 
-
-  // once both parties have agreed this is emitted
-  event DealAgreed(uint256 indexed dealId);
+  function getAgreement(
+    uint256 dealId
+  ) external returns (SharedStructs.Agreement memory);
 
   /**
    * Results
@@ -71,13 +129,11 @@ interface ILilypadStorage {
     uint256 instructionCount
   ) external returns (SharedStructs.Result memory);
 
-  function getResult(
-    uint256 dealId
-  ) external returns (SharedStructs.Result memory);
-
   function hasResult(
     uint256 dealId
   ) external returns (bool);
 
-  event ResultAdded(uint256 indexed dealId);  
+  function getResult(
+    uint256 dealId
+  ) external returns (SharedStructs.Result memory);
 }

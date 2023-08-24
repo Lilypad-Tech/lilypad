@@ -3,6 +3,25 @@ pragma solidity ^0.8.6;
 
 library SharedStructs {
 
+  enum ServiceType {
+    Solver,
+    Mediator,
+    Directory,
+    ResourceProvider,
+    JobCreator
+  }
+
+  // we map addresses onto infomation about the user
+  struct User {
+    address userAddress;
+    // the CID of information for this user
+    uint256 metadataCID;
+    string url;
+    ServiceType[] roles;
+    address[] trustedMediators;
+    address[] trustedDirectories;
+  }
+
   // a Deal forms the agreement between both parties
   // both parties must have called "agree_deal" with the exact
   // same parameters before the deal is considered valid
@@ -17,6 +36,9 @@ library SharedStructs {
 
     // agreed price per instruction
     uint256 instructionPrice;
+
+    // the max time we will wait for the results
+    uint256 timeout;
 
     // the collateral that the RP has put up to prevent timeouts
     uint256 timeoutCollateral;

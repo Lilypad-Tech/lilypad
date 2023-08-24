@@ -60,31 +60,18 @@ function geth-clean() {
 
 ############################################################################
 ############################################################################
-# faucet
+# hardhat
 ############################################################################
 ############################################################################
 
-# fun the faucet container
-function faucet() {
-  local privateKey=$(echo -n "$FAUCET_PRIVATE_KEY" | sed 's/^0x//')
-  docker run -d \
-    --name faucet \
-    -p 81:8080 \
-    --network modicum \
-    -e WEB3_PROVIDER=http://geth:8545 \
-    -e PRIVATE_KEY=$privateKey \
-    chainflag/eth-faucet:1.1.0 \
-      --faucet.amount=100 \
-      --faucet.minutes=1
+function unit-tests() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat test --network hardhat
+  )
 }
 
-############################################################################
-############################################################################
-# hardhat scripts
-############################################################################
-############################################################################
-
-# run a script in the hardhat/scripts folder
 function hardhat-script() {
   (
     set -euo pipefail
@@ -105,5 +92,26 @@ function fund-services() {
 function balances() {
   hardhat-script scripts/balances.js
 }
+
+############################################################################
+############################################################################
+# faucet
+############################################################################
+############################################################################
+
+# fun the faucet container
+function faucet() {
+  local privateKey=$(echo -n "$FAUCET_PRIVATE_KEY" | sed 's/^0x//')
+  docker run -d \
+    --name faucet \
+    -p 81:8080 \
+    --network modicum \
+    -e WEB3_PROVIDER=http://geth:8545 \
+    -e PRIVATE_KEY=$privateKey \
+    chainflag/eth-faucet:1.1.0 \
+      --faucet.amount=100 \
+      --faucet.minutes=1
+}
+
 
 eval "$@"
