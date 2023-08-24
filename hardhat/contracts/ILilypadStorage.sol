@@ -93,6 +93,14 @@ interface ILilypadStorage {
     uint256 dealId
   ) external;
 
+  function acceptResult(
+    uint256 dealId
+  ) external;
+
+  function rejectResult(
+    uint256 dealId
+  ) external;
+
   /**
    * Checkers
    */
@@ -117,7 +125,12 @@ interface ILilypadStorage {
     uint256 dealId
   ) external returns (bool);
 
-  
+  function isAccepted(
+    uint256 dealId
+  ) external returns (bool);
 
+  function isRejected(
+    uint256 dealId
+  ) external returns (bool);
   
 }

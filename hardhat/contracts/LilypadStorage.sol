@@ -133,7 +133,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 timeout,
     uint256 timeoutCollateral,
     uint256 jobCollateral,
-    uint256 resultsCollateral
+    uint256 resultsCollateralMultiple
   ) public onlyOwner returns (SharedStructs.Deal memory) {
     require(!hasDeal(dealId), "Deal already exists");
     require(resourceProvider != address(0), "Resource provider must be defined");
@@ -146,7 +146,7 @@ contract LilypadStorage is Ownable, Initializable {
       timeout,
       timeoutCollateral,
       jobCollateral,
-      resultsCollateral
+      resultsCollateralMultiple
     );
     agreements[dealId].state = SharedStructs.AgreementState.Negotiating;
     dealsForParty[resourceProvider].push(dealId);
@@ -210,7 +210,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 instructionCount
   ) public onlyOwner returns (SharedStructs.Result memory) {
     require(isAgreement(dealId), "Deal not in Agree state");
-    agreements[dealId].dealAgreedAt = block.timestamp;
+    agreements[dealId].resultsSubmittedAt = block.timestamp;
     agreements[dealId].state = SharedStructs.AgreementState.Submitted;
     results[dealId] = SharedStructs.Result(
       dealId,
@@ -226,6 +226,22 @@ contract LilypadStorage is Ownable, Initializable {
     require(isAgreement(dealId), "Deal not in Agree state");
     agreements[dealId].timedOutAt = block.timestamp;
     agreements[dealId].state = SharedStructs.AgreementState.Timeout;
+  }
+
+  function acceptResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isSubmitted(dealId), "Deal not in Submitted state");
+    agreements[dealId].resultsAcceptedAt = block.timestamp;
+    agreements[dealId].state = SharedStructs.AgreementState.Accepted;
+  }
+
+  function rejectResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isSubmitted(dealId), "Deal not in Submitted state");
+    agreements[dealId].resultsRejectedAt = block.timestamp;
+    agreements[dealId].state = SharedStructs.AgreementState.Rejected;
   }
 
   /**
@@ -264,5 +280,19 @@ contract LilypadStorage is Ownable, Initializable {
   ) public view returns (bool) {
     if(!hasDeal(dealId)) return false;
     return agreements[dealId].state == SharedStructs.AgreementState.Submitted;
+  }
+
+  function isAccepted(
+    uint256 dealId
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Accepted;
+  }
+
+  function isRejected(
+    uint256 dealId
+  ) public view returns (bool) {
+    if(!hasDeal(dealId)) return false;
+    return agreements[dealId].state == SharedStructs.AgreementState.Rejected;
   }
 }
