@@ -21,6 +21,11 @@ export const getWallet = (name: string) => {
   return new ethers.Wallet(account.privateKey, ethers.provider)
 }
 
+export const getAddress = (name: string) => {
+  const account = getAccount(name)
+  return account.address
+}
+
 // amount is in wei
 export const transfer = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
   const signer = new hre.ethers.Wallet(fromAccount.privateKey)
