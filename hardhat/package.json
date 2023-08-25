@@ -1,23 +1,31 @@
 {
-  "name": "modicum-demo",
-  "version": "0.1.0",
+  "name": "lilypad",
+  "version": "0.0.1",
   "scripts": {},
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "@openzeppelin/contracts": "^4.0.0",
-    "hardhat": "^2.12.6",
-    "web3": "^1.10.0"
-  },
   "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.4",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@types/bluebird": "^3.5.38",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.5.6",
     "bluebird": "^3.7.2",
-    "chai": "^4.3.7",
+    "chai": "^4.3.8",
     "chai-as-promised": "^7.1.1",
     "dotenv": "^16.3.1",
     "ethereum-waffle": "^4.0.10",
     "ethereumjs-wallet": "^1.0.2",
+    "ethers": "^6.7.1",
+    "hardhat": "^2.12.6",
     "hardhat-deploy": "^0.11.34",
     "keythereum": "^2.0.0",
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "ts-node": "^10.9.1",
+    "typechain": "^4.0.3",
+    "typescript": "^5.2.2",
+    "web3": "^1.10.0"
   }
 }

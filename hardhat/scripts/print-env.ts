@@ -1,6 +1,6 @@
-const {
+import {
   ACCOUNTS,
-} = require('../utils/accounts')
+} from '../utils/accounts'
 
 async function main() {
   // loop over accounts and print env for address and private key

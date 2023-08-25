@@ -2,11 +2,10 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "hardhat/console.sol";
 import "./SharedStructs.sol";
 import "./ILilypadStorage.sol";
+import "./ILilypadToken.sol";
 
 contract LilypadController is Ownable, Initializable {
 
@@ -18,7 +17,7 @@ contract LilypadController is Ownable, Initializable {
   address public tokenAddress;
 
   ILilypadStorage private storageContract;
-  IERC20 private tokenContract;
+  ILilypadToken private tokenContract;
 
   /**
    * Events
@@ -58,7 +57,7 @@ contract LilypadController is Ownable, Initializable {
   function setTokenAddress(address _tokenAddress) public onlyOwner {
     require(_tokenAddress != address(0), "Token address must be defined");
     tokenAddress = _tokenAddress;
-    tokenContract = IERC20(storageAddress);
+    tokenContract = ILilypadToken(storageAddress);
   }
 
   /**

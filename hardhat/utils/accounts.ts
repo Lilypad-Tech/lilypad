@@ -1,20 +1,23 @@
-const ethers = require('ethers')
+import { ethers } from 'hardhat'
+import { Account } from './types'
 
-const loadEnv = (name, defaultValue) => {
+export const loadEnv = (name: string, defaultValue: string) => {
   return process.env[name] || defaultValue
 }
 
-const loadPrivateKey = (name, defaultValue) => {
+export const loadPrivateKey = (name: string, defaultValue: string) => {
   return loadEnv(`PRIVATE_KEY_${name.toUpperCase()}`, defaultValue)
 }
 
-const loadAddress = (name, defaultValue) => {
+export const loadAddress = (name: string, defaultValue: string) => {
   return loadEnv(`ADDRESS_${name.toUpperCase()}`, defaultValue)
 }
 
-const AMOUNT_TO_FUND = ethers.utils.parseEther('10000')
+export const AMOUNT_TO_FUND = ethers.parseEther('10000')
 
-const ACCOUNTS = [{
+// the default values here are the hardhat defualt insecure accounts
+// this means that we get a reproducable dev environment between hardhat and geth
+export const ACCOUNTS: Account[] = [{
   name: 'admin',
   address: loadAddress('admin', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'),
   privateKey: loadPrivateKey('admin', '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80')
@@ -45,21 +48,21 @@ const ACCOUNTS = [{
 }]
 
 // map of account name -> account
-const NAMED_ACCOUNTS = ACCOUNTS.reduce((all, acc) => {
+export const NAMED_ACCOUNTS = ACCOUNTS.reduce<Record<string, Account>>((all, acc) => {
   all[acc.name] = acc
   return all
 }, {})
 
 // map of account name -> account address
-const ACCOUNT_ADDRESSES = ACCOUNTS.reduce((all, acc) => {
+export const ACCOUNT_ADDRESSES = ACCOUNTS.reduce<Record<string, string>>((all, acc) => {
   all[acc.name] = acc.address
   return all
 }, {})
 
 // flat list of private keys in order
-const PRIVATE_KEYS = ACCOUNTS.map(acc => acc.privateKey)
+export const PRIVATE_KEYS = ACCOUNTS.map(acc => acc.privateKey)
 
-const getAccount = (name) => {
+export const getAccount = (name: string) => {
   const account = NAMED_ACCOUNTS[name]
   if (!account) {
     throw new Error(`Unknown account ${name}`)
@@ -67,20 +70,7 @@ const getAccount = (name) => {
   return account
 }
 
-const getWallet = (accountName) => {
+export const getWallet = (accountName: string) => {
   const account = getAccount(accountName)
   return new ethers.Wallet(account.privateKey)
-}
-
-module.exports = {
-  AMOUNT_TO_FUND,
-  ACCOUNTS,
-  NAMED_ACCOUNTS,
-  ACCOUNT_ADDRESSES,
-  PRIVATE_KEYS,
-  loadEnv,
-  loadPrivateKey,
-  loadAddress,
-  getAccount,
-  getWallet,
 }

@@ -1,14 +1,18 @@
-require('hardhat-deploy')
-require('@nomicfoundation/hardhat-toolbox')
-const dotenv = require('dotenv')
+import { HardhatUserConfig } from 'hardhat/config'
+import '@nomicfoundation/hardhat-toolbox'
+import "@nomicfoundation/hardhat-ethers"
+import 'hardhat-deploy'
+import * as dotenv from 'dotenv'
+
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
+
 const {
   ACCOUNT_ADDRESSES,
   PRIVATE_KEYS,
 } = require('./utils/accounts')
 
-const config = {
+const config: HardhatUserConfig = {
   solidity: '0.8.6',
   defaultNetwork: 'geth',
   namedAccounts: ACCOUNT_ADDRESSES,
