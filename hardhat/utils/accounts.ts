@@ -1,4 +1,5 @@
-import { ethers } from 'hardhat'
+// IMPORTANT: we cannot import hardhat directly here
+// because it will cause a circular dependency
 import { Account } from './types'
 
 export const loadEnv = (name: string, defaultValue: string) => {
@@ -12,8 +13,6 @@ export const loadPrivateKey = (name: string, defaultValue: string) => {
 export const loadAddress = (name: string, defaultValue: string) => {
   return loadEnv(`ADDRESS_${name.toUpperCase()}`, defaultValue)
 }
-
-export const AMOUNT_TO_FUND = ethers.parseEther('10000')
 
 // the default values here are the hardhat defualt insecure accounts
 // this means that we get a reproducable dev environment between hardhat and geth
@@ -68,9 +67,4 @@ export const getAccount = (name: string) => {
     throw new Error(`Unknown account ${name}`)
   }
   return account
-}
-
-export const getWallet = (accountName: string) => {
-  const account = getAccount(accountName)
-  return new ethers.Wallet(account.privateKey)
 }

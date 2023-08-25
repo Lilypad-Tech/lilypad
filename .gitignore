@@ -4,5 +4,6 @@ hardhat/cache
 hardhat/deployments/hardhat
 hardhat/deployments/localhost
 hardhat/deployments/localgeth
+hardhat/typechain-types
 .env
 ops/testnet/.terraform/providers

@@ -1,16 +1,18 @@
 import { HardhatUserConfig } from 'hardhat/config'
+import '@typechain/hardhat'
 import '@nomicfoundation/hardhat-toolbox'
-import "@nomicfoundation/hardhat-ethers"
+import '@nomicfoundation/hardhat-ethers'
+import '@nomicfoundation/hardhat-chai-matchers'
 import 'hardhat-deploy'
 import * as dotenv from 'dotenv'
 
-const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
-dotenv.config({ path: ENV_FILE })
-
-const {
+import {
   ACCOUNT_ADDRESSES,
   PRIVATE_KEYS,
-} = require('./utils/accounts')
+} from './utils/accounts'
+
+const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
+dotenv.config({ path: ENV_FILE })
 
 const config: HardhatUserConfig = {
   solidity: '0.8.6',

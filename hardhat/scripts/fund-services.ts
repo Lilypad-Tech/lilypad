@@ -1,13 +1,12 @@
-const bluebird = require('bluebird')
-const {
+import bluebird from 'bluebird'
+import {
   ACCOUNTS,
-  AMOUNT_TO_FUND,
   getAccount,
-} = require('../utils/accounts')
-
-const {
+} from '../utils/accounts'
+import {
   transfer,
-} = require('../utils/utils')
+  AMOUNT_TO_FUND,
+} from '../utils/utils'
 
 async function main() {
   const adminAccount = getAccount('admin')
