@@ -1,4 +1,5 @@
 import hre, { ethers } from 'hardhat'
+import bluebird from 'bluebird'
 import {
   BigNumberish,
   Signer,
@@ -6,6 +7,7 @@ import {
 } from 'ethers'
 import { Account } from './types'
 import {
+  ACCOUNTS,
   getAccount,
 } from './accounts'
 import {
@@ -15,6 +17,12 @@ import {
 } from '../typechain-types'
 
 export const AMOUNT_TO_FUND = ethers.parseEther('10000')
+
+// a million tokens in total
+export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000')
+
+// each service gets 1000 tokens
+export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.parseEther('1000')
 
 export const getWallet = (name: string) => {
   const account = getAccount(name)
@@ -42,12 +50,13 @@ export const transfer = async (fromAccount: Account, toAccount: Account, amount:
 export async function deployContract<T extends any>(
   name: string,
   signer: Signer,
+  args: any[] = [],
 ): Promise<T>{
   const factory = await ethers.getContractFactory(
     name,
     signer,
   )
-  const contract = await factory.deploy() as unknown as T
+  const contract = await factory.deploy(...args) as unknown as T
   return contract
 }
 
@@ -79,8 +88,15 @@ export async function getStorageAddress() {
   return getContractAddress('LilypadStorage')
 }
 
-export async function deployToken(signer: Signer) {
-  return deployContract<LilypadToken>('LilypadToken', signer)
+export async function deployToken(
+  signer: Signer,
+  tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
+) {
+  return deployContract<LilypadToken>('LilypadToken', signer, [
+    'LilyPad',
+    'LLY',
+    tokenSupply,
+  ])
 }
 
 export async function connectToken() {
@@ -111,14 +127,35 @@ export async function getControllerAddress() {
   return getContractAddress('LilypadController')
 }
 
+export async function fundAccountTokens(
+  address: AddressLike,
+  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
+) {
+  const token = await connectToken()
+  await token
+    .connect(getWallet('admin'))
+    .transfer(address, amount)
+}
+
+export async function fundAllTokens(
+  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
+) {
+  await bluebird.mapSeries(ACCOUNTS, async (account) => {
+    fundAccountTokens(account.address, amount)
+  })
+}
+
 export async function deployContracts(
   signer: Signer,
+  tokenSupply = DEFAULT_TOKEN_SUPPLY,
+  tokensPerAccount = DEFAULT_TOKENS_PER_ACCOUNT,
 ) {
   const storage = await deployStorage(signer)
-  const token = await deployToken(signer)
+  const token = await deployToken(signer, tokenSupply)
   const storageAddress = await getStorageAddress()
   const tokenAddress = await getTokenAddress()
   const controller = await deployController(signer, storageAddress, tokenAddress)
+  await fundAllTokens(tokensPerAccount)
   return {
     storage,
     token,

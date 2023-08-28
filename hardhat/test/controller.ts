@@ -8,7 +8,8 @@ import { ethers } from 'hardhat'
 import {
   getWallet,
   getAddress,
-  deployStorage,
+  deployContracts,
+  DEFAULT_TOKENS_PER_ACCOUNT,
 } from '../utils/web3'
 import {
   getServiceType,
@@ -22,5 +23,33 @@ const { expect } = chai
 
 describe("Controller", () => {
 
+  async function setupContracts() {
+    return deployContracts(getWallet('admin'))
+  }
+
+  describe("Token supply", () => {
+
+    it("Should initially fund accounts", async function () {
+      const {
+        token,
+      } = await loadFixture(setupContracts)
+      expect(await token.balanceOf(getAddress('job_creator'))).to.equal(DEFAULT_TOKENS_PER_ACCOUNT)
+    })
+
+  })
+
+  // describe("End to end", () => {
+
+  //   it("Should run a job and payout", async function () {
+  //     const {
+  //       storage,
+  //       token,
+  //       controller,
+  //     } = await loadFixture(setupContracts)
+
+
+  //   })
+
+  // })
 
 })
