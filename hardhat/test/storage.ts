@@ -205,6 +205,18 @@ describe("Storage", () => {
         .to.deep.equal([])
     })
 
+    it("Should deny removing a user from a list if they have not added themselves", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      await expect(storage
+        .connect(getWallet('job_creator'))
+        .removeUserFromList(
+          getServiceType('JobCreator')
+        )
+      ).to.be.revertedWith('User is not part of that list')
+    })
+
   })
 
 })
