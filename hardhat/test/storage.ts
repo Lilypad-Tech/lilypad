@@ -111,6 +111,21 @@ describe("Storage", () => {
     return storage
   }
 
+  async function setupStorageWithUsersAndDealAndAgreementAndResult() {
+    const storage = await setupStorageWithUsersAndDealAndAgreement()
+
+    expect(await storage
+      .connect(getWallet('admin'))
+      .addResult(
+        dealID,
+        resultsID,
+        instructionCount,
+      )
+    ).to.not.be.reverted
+    
+    return storage
+  }
+
   describe("Deployment", () => {
 
     it("Should have deployed with empty state", async function () {
@@ -363,21 +378,31 @@ describe("Storage", () => {
 
   describe("Results", () => {
     it("Should be able to add and get a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
-
-      expect(await storage
-        .connect(getWallet('admin'))
-        .addResult(
-          dealID,
-          resultsID,
-          instructionCount,
-        )
-      ).to.not.be.reverted
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
 
       const result = await storage.getResult(dealID)
       expect(result.dealId).to.equal(dealID)
       expect(result.resultsId).to.equal(resultsID)
       expect(result.instructionCount).to.equal(instructionCount)
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.resultsSubmittedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('Submitted'))
+    })
+
+    it("Should be able to timeout a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+
+      expect(await storage
+        .connect(getWallet('admin'))
+        .timeoutResult(
+          dealID,
+        )
+      ).to.not.be.reverted
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.timedOutAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('Timeout'))
     })
 
   })

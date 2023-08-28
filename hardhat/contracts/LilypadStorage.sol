@@ -237,7 +237,7 @@ contract LilypadStorage is Ownable, Initializable {
   function timeoutResult(
     uint256 dealId
   ) public onlyOwner {
-    require(isAgreement(dealId), "Deal not in Agree state");
+    require(isSubmitted(dealId), "Deal not in Submitted state");
     agreements[dealId].timedOutAt = block.timestamp;
     agreements[dealId].state = SharedStructs.AgreementState.Timeout;
   }
