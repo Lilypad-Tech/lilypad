@@ -260,6 +260,24 @@ describe("Storage", () => {
         .to.deep.equal([])
     })
 
+    it("Should deny adding a deal the second time", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      
+      await expect(storage
+        .connect(getWallet('admin'))
+        .addDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('Deal already exists')
+    })
+
   })
 
 })
