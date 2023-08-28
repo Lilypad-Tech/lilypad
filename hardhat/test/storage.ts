@@ -278,6 +278,24 @@ describe("Storage", () => {
       ).to.be.revertedWith('Deal already exists')
     })
 
+    it("Should deny adding a deal as not the owner", async function () {
+      const storage = await loadFixture(setupStorageWithUsers)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .addDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
+    })
+
   })
 
 })
