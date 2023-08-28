@@ -73,6 +73,24 @@ describe("Storage", () => {
     return storage
   }
 
+  async function setupStorageWithUsersAndDeal() {
+    const storage = await setupStorageWithUsers()
+    expect(await storage
+      .connect(getWallet('admin'))
+      .addDeal(
+        dealID,
+        getAddress('resource_provider'),
+        getAddress('job_creator'),
+        ethers.getBigInt(1),
+        ethers.getBigInt(1),
+        ethers.getBigInt(1),
+        ethers.getBigInt(1),
+        ethers.getBigInt(1),
+      )
+    ).to.not.be.reverted
+    return storage
+  }
+
   describe("Deployment", () => {
 
     it("Should have deployed with empty state", async function () {
@@ -217,20 +235,7 @@ describe("Storage", () => {
   describe("Deals", () => {
 
     it("Should be able to add a deal and then read it", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-      expect(await storage
-        .connect(getWallet('admin'))
-        .addDeal(
-          dealID,
-          getAddress('resource_provider'),
-          getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-        )
-      ).to.not.be.reverted
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
 
       const deal = await storage.getDeal(dealID)
 
