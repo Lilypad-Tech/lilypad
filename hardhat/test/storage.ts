@@ -102,6 +102,36 @@ describe("Storage", () => {
       expect(jc.trustedDirectories).to.deep.equal([getAddress('directory')])
     })
 
+    it("Should be able to update an existing user", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      const newCID = ethers.getBigInt(456)
+      const newURL = "def"
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .updateUser(
+          newCID,
+          newURL,
+          [
+            getServiceType('JobCreator'),
+          ],
+          [
+            getAddress('mediator')
+          ],
+          [
+            getAddress('directory')
+          ]
+        )
+      ).to.not.be.reverted
+      
+      const jc = await storage.getUser(getAddress('job_creator'))
+
+      expect(jc.metadataCID).to.equal(newCID)
+      expect(jc.url).to.equal(newURL)
+    })
+
   })
 
 })
