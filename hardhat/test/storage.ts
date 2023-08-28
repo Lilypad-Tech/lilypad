@@ -509,18 +509,7 @@ describe("Storage", () => {
       expect(agreement.state).to.equal(getAgreementState('ResultsSubmitted'))
     })
 
-    it("Should be able to accept a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('JobCreator')
-        )
-      ).to.not.be.reverted
-    })
-
-    it("Should throw if not in agreed state", async function () {
+    it("Should throw if we try to add results and not in agreed state", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDeal)
 
       await expect(storage
@@ -530,8 +519,38 @@ describe("Storage", () => {
           resultsID,
           instructionCount,
         )
-        ).to.be.revertedWith('Deal not in DealAgreed state')
+      ).to.be.revertedWith('Deal not in DealAgreed state')
     })
+
+    it("Should be able to accept a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .acceptResult(
+          dealID
+        )
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('ResultsAccepted'))
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.resultsAcceptedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('ResultsAccepted'))
+    })
+
+    it("Should throw if we try to accept results and not in submitted state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .acceptResult(
+          dealID
+        )
+      ).to.be.revertedWith('Deal not in ResultsSubmitted state')
+    })
+
+    
 
   })
 
