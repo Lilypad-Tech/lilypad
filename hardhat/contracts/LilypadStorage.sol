@@ -213,7 +213,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
-    require(agreements[dealId].resourceProviderAgreedAt == 0, "resource provider has already agreed");
+    require(agreements[dealId].resourceProviderAgreedAt == 0, "Resource provider has already agreed");
     agreements[dealId].resourceProviderAgreedAt = block.timestamp;
     _maybeAgreeDeal(dealId);
     return agreements[dealId];
@@ -223,14 +223,14 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
-    require(agreements[dealId].jobCreatorAgreedAt == 0, "job creator has already agreed");
+    require(agreements[dealId].jobCreatorAgreedAt == 0, "Job creator has already agreed");
     agreements[dealId].jobCreatorAgreedAt = block.timestamp;
     _maybeAgreeDeal(dealId);
     return agreements[dealId];
   }
 
   /**
-   * Results
+   * Post Results
    */
 
   function getResult(
@@ -255,6 +255,10 @@ contract LilypadStorage is Ownable, Initializable {
     return results[dealId];
   }
 
+  /**
+   * Judge Results
+   */
+
   function acceptResult(
     uint256 dealId
   ) public onlyOwner {
@@ -274,26 +278,6 @@ contract LilypadStorage is Ownable, Initializable {
     agreements[dealId].mediator = mediator;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChallenged);
 
-  }
-
-  // called because the JC waited too long for a result to be submitted
-  // and wants it's money back
-  function timeoutSubmitResult(
-    uint256 dealId
-  ) public onlyOwner {
-    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
-    agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
-    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutSubmitResults);
-  }
-
-  // called because the RP waited too long for a judgement of it's results
-  // and wants it's money back
-  function timeoutJudgeResult(
-    uint256 dealId
-  ) public onlyOwner {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
-    agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
-    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutJudgeResults);
   }
 
   /**
@@ -316,6 +300,29 @@ contract LilypadStorage is Ownable, Initializable {
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationRejected);
   }
 
+  /**
+   * Timeouts
+   */
+
+  // called because the JC waited too long for a result to be submitted
+  // and wants it's money back
+  function timeoutSubmitResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
+    agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutSubmitResults);
+  }
+
+  // called because the RP waited too long for a judgement of it's results
+  // and wants it's money back
+  function timeoutJudgeResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
+    agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutJudgeResults);
+  }
   // called because the RP or JC waited too long for a mediation of it's results
   // and both want their money back
   function timeoutMediateResult(

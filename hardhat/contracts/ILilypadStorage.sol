@@ -77,7 +77,7 @@ interface ILilypadStorage {
   ) external returns (SharedStructs.Agreement memory);
   
   /**
-   * Results
+   * Post Results
    */
 
   function getResult(
@@ -90,6 +90,10 @@ interface ILilypadStorage {
     uint256 instructionCount
   ) external returns (SharedStructs.Result memory);
 
+  /**
+   * Judge Results
+   */
+
   function acceptResult(
     uint256 dealId
   ) external;
@@ -99,22 +103,27 @@ interface ILilypadStorage {
     address mediator
   ) external;
 
-  function timeoutSubmitResult(
-    uint256 dealId
-  ) external;
-
-  function timeoutJudgeResult(
-    uint256 dealId
-  ) external;
-
   /**
    * Mediation
    */
+  
   function mediationAcceptResult(
     uint256 dealId
   ) external;
 
   function mediationRejectResult(
+    uint256 dealId
+  ) external;
+
+  /**
+   * Timeouts
+   */
+
+  function timeoutSubmitResult(
+    uint256 dealId
+  ) external;
+
+  function timeoutJudgeResult(
     uint256 dealId
   ) external;
 
