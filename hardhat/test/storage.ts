@@ -12,10 +12,8 @@ import {
 } from '../utils/web3'
 import {
   getServiceType,
+  getAgreementState,
 } from '../utils/enums'
-import {
-  LilypadStorage,
-} from '../typechain-types'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -88,6 +86,26 @@ describe("Storage", () => {
         ethers.getBigInt(1),
       )
     ).to.not.be.reverted
+    return storage
+  }
+
+  async function setupStorageWithUsersAndDealAndAgreement() {
+    const storage = await setupStorageWithUsersAndDeal()
+
+    expect(await storage
+      .connect(getWallet('admin'))
+      .agreeResourceProvider(
+        dealID
+      )
+    ).to.not.be.reverted
+
+    expect(await storage
+      .connect(getWallet('admin'))
+      .agreeJobCreator(
+        dealID
+      )
+    ).to.not.be.reverted
+    
     return storage
   }
 
@@ -296,6 +314,20 @@ describe("Storage", () => {
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
 
+  })
+
+  describe("Agreements", () => {
+
+    it("Should be able to agree both parties", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.state).to.equal(getAgreementState('Agreed'))
+      expect(agreement.resourceProviderAgreedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.jobCreatorAgreedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.dealAgreedAt).to.not.equal(ethers.getBigInt(0))
+
+    })
   })
 
 })

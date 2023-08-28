@@ -202,7 +202,7 @@ contract LilypadStorage is Ownable, Initializable {
   function _maybeAgreeDeal(
     uint256 dealId
   ) private {
-    if(isAgreement(dealId)) {
+    if(agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0) {
       agreements[dealId].dealAgreedAt = block.timestamp;
       agreements[dealId].state = SharedStructs.AgreementState.Agreed;
     }
