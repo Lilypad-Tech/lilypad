@@ -132,6 +132,26 @@ describe("Storage", () => {
       expect(jc.url).to.equal(newURL)
     })
 
+    it("Should be able to list users of a certain role", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      expect(await storage.showUsersInList(getServiceType('JobCreator')))
+        .to.deep.equal([])
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('JobCreator')
+        )
+      ).to.not.be.reverted
+
+      expect(await storage.showUsersInList(getServiceType('JobCreator')))
+        .to.deep.equal([
+          getAddress('job_creator'),
+        ])
+    })
+
   })
 
 })

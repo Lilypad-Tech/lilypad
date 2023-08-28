@@ -69,6 +69,7 @@ contract LilypadStorage is Ownable, Initializable {
     require(users[tx.origin].userAddress != address(0), "User must exist");
     (, bool found) = _getUserListIndex(serviceType, tx.origin);
     require(!found, "User is already part of that list");
+    require(_doesUserHaveRole(serviceType, tx.origin), "User must have that role");
     usersByType[serviceType].push(tx.origin);
   }
 
@@ -106,6 +107,20 @@ contract LilypadStorage is Ownable, Initializable {
       }
     }
     return (ret, found);
+  }
+
+  function _doesUserHaveRole(
+    SharedStructs.ServiceType serviceType,
+    address userAddress
+  ) private view returns (bool) {
+    bool found = false;
+    for (uint256 i = 0; i < users[userAddress].roles.length; i++) {
+      if (users[userAddress].roles[i] == serviceType) {
+        found = true;
+        break;
+      }
+    }
+    return found;
   }
 
   /**
