@@ -152,6 +152,18 @@ describe("Storage", () => {
         ])
     })
 
+    it("Should be deny adding a user to a list without the role", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      await expect(storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('ResourceProvider')
+        )
+      ).to.be.revertedWith('User must have that role')
+    })
+
   })
 
 })
