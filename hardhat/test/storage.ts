@@ -250,6 +250,16 @@ describe("Storage", () => {
 
     })
 
+    it("Should be able to see deals for specific parties", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      expect(await storage.getDealsForParty(getAddress('resource_provider')))
+        .to.deep.equal([dealID])
+      expect(await storage.getDealsForParty(getAddress('job_creator')))
+        .to.deep.equal([dealID])
+      expect(await storage.getDealsForParty(getAddress('mediator')))
+        .to.deep.equal([])
+    })
+
   })
 
 })
