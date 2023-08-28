@@ -357,7 +357,6 @@ describe("Storage", () => {
       ).to.be.revertedWith('Resource provider must be defined')
     })
 
-
     it("Should error when the JC is empty", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       
@@ -375,6 +374,47 @@ describe("Storage", () => {
           ethers.getBigInt(1)
         )
       ).to.be.revertedWith('Job creator must be defined')
+    })
+
+    const compareErrors = [
+      '',
+      'RP does not match',
+      'JC does not match',
+      'Instruction price does not match',
+      'Timeout does not match',
+      'Timeout collateral does not match',
+      'Payment collateral does not match',
+      'Results collateral does not match',
+      'Mediation fee does not match',
+    ]
+    const badArgs: any = {
+      0: ethers.getBigInt(100),
+      1: getAddress('mediator'),
+      2: getAddress('mediator'),
+    }
+    const goodArgs: any[] = [
+      dealID,
+      getAddress('resource_provider'),
+      getAddress('job_creator'),
+      ethers.getBigInt(1),
+      ethers.getBigInt(1),
+      ethers.getBigInt(1),
+      ethers.getBigInt(1),
+      ethers.getBigInt(1),
+      ethers.getBigInt(1)
+    ]
+    compareErrors.forEach((expectedError, i) => {
+      if(i == 0) return
+      const passArgs: any[] = [].concat(...goodArgs)
+      passArgs[i] = badArgs[i] || ethers.getBigInt(0)
+      it(`Should compare error: ${expectedError}`, async function () {
+        const storage = await loadFixture(setupStorageWithUsersAndDeal)
+        const connectedStorage = storage.connect(getWallet('admin')) as any
+        await expect(
+          connectedStorage.ensureDeal(...passArgs)
+        ).to.be.revertedWith(expectedError)
+      })
+      
     })
 
   })
