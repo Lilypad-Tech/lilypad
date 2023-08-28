@@ -27,6 +27,8 @@ describe("Storage", () => {
   const jcURL = "def"
 
   const dealID = ethers.getBigInt(10)
+  const resultsID = ethers.getBigInt(11)
+  const instructionCount = ethers.getBigInt(25)
 
   async function setupStorage() {
     const admin = getWallet('admin')
@@ -357,6 +359,27 @@ describe("Storage", () => {
         )
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
+  })
+
+  describe("Results", () => {
+    it("Should be able to add and get a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      expect(await storage
+        .connect(getWallet('admin'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount,
+        )
+      ).to.not.be.reverted
+
+      const result = await storage.getResult(dealID)
+      expect(result.dealId).to.equal(dealID)
+      expect(result.resultsId).to.equal(resultsID)
+      expect(result.instructionCount).to.equal(instructionCount)
+    })
+
   })
 
 })
