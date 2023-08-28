@@ -102,12 +102,14 @@ describe("Storage", () => {
       )
     ).to.not.be.reverted
 
-    expect(await storage
+    await expect(storage
       .connect(getWallet('admin'))
       .agreeJobCreator(
         dealID
       )
-    ).to.not.be.reverted
+    )
+      .to.emit(storage, "DealStateChange")
+      .withArgs(dealID, getAgreementState('DealAgreed'))
     
     return storage
   }
@@ -115,14 +117,16 @@ describe("Storage", () => {
   async function setupStorageWithUsersAndDealAndAgreementAndResult() {
     const storage = await setupStorageWithUsersAndDealAndAgreement()
 
-    expect(await storage
+    await expect(storage
       .connect(getWallet('admin'))
       .addResult(
         dealID,
         resultsID,
         instructionCount,
       )
-    ).to.not.be.reverted
+    )
+      .to.emit(storage, "DealStateChange")
+      .withArgs(dealID, getAgreementState('ResultsSubmitted'))
     
     return storage
   }
@@ -130,13 +134,15 @@ describe("Storage", () => {
   async function setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge() {
     const storage = await setupStorageWithUsersAndDealAndAgreementAndResult()
 
-    expect(await storage
+    await expect(storage
       .connect(getWallet('admin'))
       .challengeResult(
         dealID,
         getAddress('mediator')
       )
-    ).to.not.be.reverted
+    )
+      .to.emit(storage, "DealStateChange")
+      .withArgs(dealID, getAgreementState('ResultsChallenged'))
     
     return storage
   }
@@ -503,18 +509,44 @@ describe("Storage", () => {
       expect(agreement.state).to.equal(getAgreementState('ResultsSubmitted'))
     })
 
+    it("Should be able to accept a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('JobCreator')
+        )
+      ).to.not.be.reverted
+    })
+
+    it("Should throw if not in agreed state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount,
+        )
+        ).to.be.revertedWith('Deal not in DealAgreed state')
+    })
+
   })
 
   describe("Timeouts", () => {
     it("Should be able to timeout a submit result", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
 
-      expect(await storage
+      await expect(storage
         .connect(getWallet('admin'))
         .timeoutSubmitResult(
           dealID,
         )
-      ).to.not.be.reverted
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('TimeoutSubmitResults'))
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.timeoutSubmitResultsAt).to.not.equal(ethers.getBigInt(0))
@@ -524,12 +556,14 @@ describe("Storage", () => {
     it("Should be able to timeout a judge result", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
 
-      expect(await storage
+      await expect(storage
         .connect(getWallet('admin'))
         .timeoutJudgeResult(
           dealID,
         )
-      ).to.not.be.reverted
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('TimeoutJudgeResults'))
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.timeoutJudgeResultsAt).to.not.equal(ethers.getBigInt(0))
@@ -539,12 +573,15 @@ describe("Storage", () => {
     it("Should be able to timeout a mediation result", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
 
-      expect(await storage
+      await expect(storage
         .connect(getWallet('admin'))
         .timeoutMediateResult(
           dealID,
         )
-      ).to.not.be.reverted
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('TimeoutMediateResults'))
+      
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.timeoutMediateResultsAt).to.not.equal(ethers.getBigInt(0))
