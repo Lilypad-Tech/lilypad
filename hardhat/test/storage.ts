@@ -152,7 +152,7 @@ describe("Storage", () => {
         ])
     })
 
-    it("Should be deny adding a user to a list without the role", async function () {
+    it("Should deny adding a user to a list without the role", async function () {
       const storage = await loadFixture(setupStorage)
       await addUsers(storage)
 
@@ -162,6 +162,25 @@ describe("Storage", () => {
           getServiceType('ResourceProvider')
         )
       ).to.be.revertedWith('User must have that role')
+    })
+
+    it("Should deny adding a user to a list twice", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('JobCreator')
+        )
+      ).to.not.be.reverted
+
+      await expect(storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('JobCreator')
+        )
+      ).to.be.revertedWith('User is already part of that list')
     })
 
   })
