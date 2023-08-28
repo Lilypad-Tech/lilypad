@@ -183,6 +183,28 @@ describe("Storage", () => {
       ).to.be.revertedWith('User is already part of that list')
     })
 
+    it("Should allow a user to remove themselves from a list", async function () {
+      const storage = await loadFixture(setupStorage)
+      await addUsers(storage)
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .addUserToList(
+          getServiceType('JobCreator')
+        )
+      ).to.not.be.reverted
+
+      expect(await storage
+        .connect(getWallet('job_creator'))
+        .removeUserFromList(
+          getServiceType('JobCreator')
+        )
+      ).to.not.be.reverted
+
+      expect(await storage.showUsersInList(getServiceType('JobCreator')))
+        .to.deep.equal([])
+    })
+
   })
 
 })
