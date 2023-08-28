@@ -28,6 +28,8 @@ describe("Storage", () => {
   const jcCID = ethers.getBigInt(456)
   const jcURL = "def"
 
+  const dealID = ethers.getBigInt(10)
+
   async function setupStorage() {
     const admin = getWallet('admin')
     const storage = await deployStorage(admin)
@@ -215,7 +217,31 @@ describe("Storage", () => {
   describe("Deals", () => {
 
     it("Should be able to add a deal and then read it", async function () {
+      const storage = await loadFixture(setupStorageWithUsers)
+      expect(await storage
+        .connect(getWallet('admin'))
+        .addDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.not.be.reverted
 
+      const deal = await storage.getDeal(dealID)
+
+      expect(deal.dealId).to.equal(dealID)
+      expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
+      expect(deal.jobCreator).to.equal(getAddress('job_creator'))
+      expect(deal.instructionPrice).to.equal(ethers.getBigInt(1))
+      expect(deal.timeout).to.equal(ethers.getBigInt(1))
+      expect(deal.timeoutCollateral).to.equal(ethers.getBigInt(1))
+      expect(deal.jobCollateral).to.equal(ethers.getBigInt(1))
+      expect(deal.resultsCollateralMultiple).to.equal(ethers.getBigInt(1))
 
     })
 
