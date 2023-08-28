@@ -13,8 +13,8 @@ contract LilypadController is Ownable, Initializable {
    * Types
    */
   
-  address public storageAddress;
-  address public tokenAddress;
+  address private storageAddress;
+  address private tokenAddress;
 
   ILilypadStorage private storageContract;
   ILilypadToken private tokenContract;
@@ -26,16 +26,18 @@ contract LilypadController is Ownable, Initializable {
   event ResourceProviderAgreed(uint256 indexed dealId);
   event JobCreatorAgreed(uint256 indexed dealId);
   event DealAgreed(uint256 indexed dealId);
-  event Timeout(uint256 indexed dealId);
+  event TimeoutSubmitResults(uint256 indexed dealId);
+  event TimeoutJudgeResults(uint256 indexed dealId);
+  event TimeoutMediateResults(uint256 indexed dealId);
   event ResultAdded(uint256 indexed dealId);
   event ResultAccepted(uint256 indexed dealId);
-  event ResultRejected(uint256 indexed dealId);
+  event ResultChallenged(uint256 indexed dealId, address indexed mediator);
   event Payment(
     uint256 indexed dealId,
     address payee,
     uint256 amount,
-    SharedStructs.PaymentDirection direction,
-    SharedStructs.PaymentReason reason
+    SharedStructs.PaymentReason reason,
+    SharedStructs.PaymentDirection direction
   );
   
   /**
@@ -64,6 +66,17 @@ contract LilypadController is Ownable, Initializable {
    * Agreements
    */
 
+  // * create the deal if not exists
+  // * otherwise compare the values to ensure 2 sided agreement
+  // * check the RP or JC is calling this
+  // * if RP:
+  //    * mark the deal as RP agreed
+  //    * pay in the timeout collateral
+  // * if JC:
+  //    * mark the deal as JC agreed
+  //    * pay in the payment collateral and timeout collateral
+  // * if both sides have agreed then mark the deal as agreed
+  // * emit the event
   function agree(
     uint256 dealId,
     address resourceProvider,
@@ -71,40 +84,21 @@ contract LilypadController is Ownable, Initializable {
     uint256 instructionPrice,
     uint256 timeout,
     uint256 timeoutCollateral,
-    uint256 jobCollateral,
-    uint256 resultsCollateralMultiple
+    uint256 paymentCollateral,
+    uint256 resultsCollateralMultiple,
+    uint256 mediationFee
   ) public returns (SharedStructs.Agreement memory) {
-    require(storageContract.isNegotiating(dealId), "Deal is not in negotiation state");
-    require(resourceProvider != address(0), "RP must be defined");
-    require(jobCreator != address(0), "JC must be defined");
-    require(resourceProvider != jobCreator, "RP and JC cannot be the same");
-
-    // we already have this deal and so the values must line up
-    if(storageContract.hasDeal(dealId)) {
-      SharedStructs.Deal memory existingDeal = storageContract.getDeal(dealId);
-      require(existingDeal.resourceProvider == resourceProvider, "RP does not match");
-      require(existingDeal.jobCreator == jobCreator, "JC does not match");
-      require(existingDeal.instructionPrice == instructionPrice, "Instruction price does not match");
-      require(existingDeal.timeout == timeout, "Timeout does not match");
-      require(existingDeal.timeoutCollateral == timeoutCollateral, "Timeout collateral does not match");
-      require(existingDeal.jobCollateral == jobCollateral, "Job collateral does not match");
-      require(existingDeal.resultsCollateralMultiple == resultsCollateralMultiple, "Results collateral does not match");
-    }
-    else {
-      // we don't have this deal yet so add it
-      storageContract.addDeal(
-        dealId,
-        resourceProvider,
-        jobCreator,
-        instructionPrice,
-        timeout,
-        timeoutCollateral,
-        jobCollateral,
-        resultsCollateralMultiple
-      );
-    }
-
-    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    SharedStructs.Deal memory deal = storageContract.ensureDeal(
+      dealId,
+      resourceProvider,
+      jobCreator,
+      instructionPrice,
+      timeout,
+      timeoutCollateral,
+      paymentCollateral,
+      resultsCollateralMultiple,
+      mediationFee
+    );
     bool isResourceProvider = tx.origin == deal.resourceProvider;
     bool isJobCreator = tx.origin == deal.jobCreator;
     require(isResourceProvider || isJobCreator, "Only RP or JC can agree to deal");
@@ -116,26 +110,33 @@ contract LilypadController is Ownable, Initializable {
         dealId,
         deal.resourceProvider,
         deal.timeoutCollateral,
-        SharedStructs.PaymentDirection.In,
-        SharedStructs.PaymentReason.TimeoutCollateral
+        SharedStructs.PaymentReason.TimeoutCollateral,
+        SharedStructs.PaymentDirection.PaidIn
       );
       emit ResourceProviderAgreed(dealId);
     }
     else if(isJobCreator) {
       storageContract.agreeJobCreator(dealId);
-      _payIn(deal.jobCollateral);
+      _payIn(deal.paymentCollateral + deal.timeoutCollateral);
       emit Payment(
         dealId,
         deal.jobCreator,
-        deal.jobCollateral,
-        SharedStructs.PaymentDirection.In,
-        SharedStructs.PaymentReason.JobCollateral
+        deal.paymentCollateral,
+        SharedStructs.PaymentReason.PaymentCollateral,
+        SharedStructs.PaymentDirection.PaidIn
+      );
+      emit Payment(
+        dealId,
+        deal.resourceProvider,
+        deal.timeoutCollateral,
+        SharedStructs.PaymentReason.TimeoutCollateral,
+        SharedStructs.PaymentDirection.PaidIn
       );
       emit JobCreatorAgreed(dealId);
     }
 
     // both sides have agreed!
-    if(storageContract.isAgreement(dealId)) {
+    if(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed)) {
       emit DealAgreed(dealId);
     }
 
@@ -151,15 +152,15 @@ contract LilypadController is Ownable, Initializable {
   // * calculate the cost of the job
   // * calculate the job collateral based on the multiple
   // * work out the difference between the timeout and results collateral
-  // * pay the difference into / out of the contract
+  // * pay the difference into / out of the contract to the RP
   // * emit the event
   function addResult(
     uint256 dealId,
     uint256 resultsId,
     uint256 instructionCount
   ) public returns (SharedStructs.Result memory) {
-    require(storageContract.isAgreement(dealId), "Deal is not in agreement state");
-    require(!_hasTimedOut(dealId), "Deal has timed out");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal is not in DealAgreed state");
+    require(!_hasSubmitResultsTimedOut(dealId), "Deal has timed out");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.resourceProvider == tx.origin, "Only RP can add results");
 
@@ -169,24 +170,23 @@ contract LilypadController is Ownable, Initializable {
       instructionCount
     );
 
-    // the cost of the job based on reported instructions * cost per instruction
-    uint256 jobCost = deal.instructionPrice * result.instructionCount;
-
     // how many multiple of the job cost must the RP put up as collateral
-    uint256 resultsCollateral = deal.resultsCollateralMultiple * jobCost;
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
     // what is the difference between what the RP has already paid and needs to now pay?
+    // the RP has paid in the timeout collateral
+    // it will now be charged the results collateral
     // a positive number means we are owed money
     // a negative number means we pay the RP a refund
-    int256 rpCollateralDiff = int256(resultsCollateral) - int256(deal.timeoutCollateral);
+    int256 resultsTimeoutDiff = int256(resultsCollateral) - int256(deal.timeoutCollateral);
     
-    if(rpCollateralDiff > 0) {
+    if(resultsTimeoutDiff > 0) {
       // the RP pays us because the job collateral is higher than the timeout collateral
-      _payIn(uint256(rpCollateralDiff));
+      _payIn(uint256(resultsTimeoutDiff));
     }
-    else if(rpCollateralDiff < 0) {
+    else if(resultsTimeoutDiff < 0) {
       // we pay the RP because the job collateral is lower
-      _payOut(deal.resourceProvider, uint256(rpCollateralDiff));
+      _payOut(deal.resourceProvider, uint256(resultsTimeoutDiff));
     }
 
     // the refund of the timeout collateral
@@ -194,8 +194,8 @@ contract LilypadController is Ownable, Initializable {
       dealId,
       deal.resourceProvider,
       deal.timeoutCollateral,
-      SharedStructs.PaymentDirection.Out,
-      SharedStructs.PaymentReason.TimeoutCollateralRefund
+      SharedStructs.PaymentReason.TimeoutCollateral,
+      SharedStructs.PaymentDirection.Refunded
     );
 
     // the payment of the job collateral
@@ -203,8 +203,8 @@ contract LilypadController is Ownable, Initializable {
       dealId,
       deal.resourceProvider,
       resultsCollateral,
-      SharedStructs.PaymentDirection.In,
-      SharedStructs.PaymentReason.ResultsCollateral
+      SharedStructs.PaymentReason.ResultsCollateral,
+      SharedStructs.PaymentDirection.PaidIn
     );
 
     emit ResultAdded(dealId);
@@ -216,126 +216,292 @@ contract LilypadController is Ownable, Initializable {
   // * check we are in Submitted state
   // * mark the deal as results accepted
   // * calculate the cost of the job
-  // * deduct the cost of the job from the JC collateral
-  // * pay the RP the cost of the job and the results collateral
-  // * pay the JC
+  // * deduct the cost of the job from the JC payment collateral
+  // * pay the RP the cost of the job
+  // * refund the RP the results collateral
+  // * refund the JC the job collateral minus the cost
+  // * refund the JC the timeout collateral
   function acceptResult(
     uint256 dealId
   ) public {
-    require(storageContract.isSubmitted(dealId), "Deal is not in submitted state");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
+    require(!_hasJudgeResultsTimedOut(dealId), "Deal has timed out");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.jobCreator == tx.origin, "Only JC can accept result");
-    SharedStructs.Result memory result = storageContract.getResult(dealId);
+    
     storageContract.acceptResult(dealId);
 
-    uint256 jobCost = deal.instructionPrice * result.instructionCount;
-    uint256 resultsCollateral = deal.resultsCollateralMultiple * jobCost;
+    uint256 jobCost = storageContract.getJobCost(dealId);
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
+    
+    // the difference between the job collateral and the job cost
+    // is how much the job creator get's back
+    int256 paymentCollateralRefund = int256(deal.paymentCollateral) - int256(jobCost);
 
-    // we pay the RP the resultsCollateral + jobCost
-    // we pay the JC the jobCollateral - jobCost
-    int256 jcRefund = int256(deal.jobCollateral) - int256(jobCost);
+    // the job cost more than the job collateral
+    // this means the RP get's less than instruction count * instruction price
+    // however they took on the deal knowing how much collateral was put up
+    // equally however - it's very important to zero this number to prevent
+    // the JC getting money back that they didn't pay in
+    if(paymentCollateralRefund < 0) {
+      paymentCollateralRefund = 0;
+    }
 
-    if(jcRefund > 0) {
-      // the JC gets a refund
-      _payOut(deal.jobCreator, uint256(jcRefund));
+    // we pay back the remaining job collateral and timeout collateral to the job creator
+    _payOut(deal.jobCreator, uint256(paymentCollateralRefund) + deal.timeoutCollateral);
 
-      // the refund to the JC because they overpaid
+    if(paymentCollateralRefund > 0) {
       emit Payment(
         dealId,
-        deal.resourceProvider,
-        resultsCollateral,
-        SharedStructs.PaymentDirection.Out,
-        SharedStructs.PaymentReason.JobCollateralRefund
+        deal.jobCreator,
+        uint256(paymentCollateralRefund),
+        SharedStructs.PaymentReason.PaymentCollateral,
+        SharedStructs.PaymentDirection.Refunded
       );
     }
 
-    _payOut(deal.resourceProvider, jobCost + resultsCollateral);
+    emit Payment(
+      dealId,
+      deal.jobCreator,
+      deal.timeoutCollateral,
+      SharedStructs.PaymentReason.TimeoutCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
 
-    // the refund to the RP for their results collateral
+    // now we pay back the results collateral and the job payment to the RP
+    _payOut(deal.resourceProvider, resultsCollateral + jobCost);
+
     emit Payment(
       dealId,
       deal.resourceProvider,
       resultsCollateral,
-      SharedStructs.PaymentDirection.Out,
-      SharedStructs.PaymentReason.ResultsCollateralRefund
+      SharedStructs.PaymentReason.ResultsCollateral,
+      SharedStructs.PaymentDirection.Refunded
     );
 
-    // the payment to the RP for running the job
     emit Payment(
       dealId,
       deal.resourceProvider,
       jobCost,
-      SharedStructs.PaymentDirection.Out,
-      SharedStructs.PaymentReason.JobPayment
+      SharedStructs.PaymentReason.JobPayment,
+      SharedStructs.PaymentDirection.PaidOut
     );
   }
 
   // * check the JC is calling this
   // * check we are in Submitted state
-  // * mark the deal as results rejected
-  // * refund the JC
-  // * slash the RP
-
-  // TODO: trigger the mediation process
-  function rejectResult(
-    uint256 dealId
+  // * check the mediator is in the list of RP trusted mediators
+  // * mark the deal as results challenged
+  // * charge the JC the mediation fee
+  // * refund the JC the timeout collateral
+  // * emit the Mediation event so the mediator kicks in
+  function challengeResult(
+    uint256 dealId,
+    address mediator
   ) public {
-    require(storageContract.isSubmitted(dealId), "Deal is not in submitted state");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
+    require(!_hasJudgeResultsTimedOut(dealId), "Deal has timed out");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.jobCreator == tx.origin, "Only JC can reject result");
-    SharedStructs.Result memory result = storageContract.getResult(dealId);
-    storageContract.rejectResult(dealId);
+    require(deal.jobCreator == tx.origin, "Only JC can challenge result");
 
-    uint256 jobCost = deal.instructionPrice * result.instructionCount;
-    uint256 resultsCollateral = deal.resultsCollateralMultiple * jobCost;
+    // this function will require that the mediator is in the RP's list of trusted mediators
+    storageContract.challengeResult(dealId, mediator);
 
-    // the JC gets a refund
-    _payOut(deal.jobCreator, deal.jobCollateral);
+    // what is the difference between what the JC has already paid and needs to now pay?
+    // the JC has paid in the timeout collateral
+    // it will now be charged the mediation fee
+    // a positive number means we are owed money
+    // a negative number means we pay the RP a refund
+    int256 timeoutMediationDiff = int256(deal.timeoutCollateral) - int256(deal.mediationFee);
 
-    // the refund to the JC because they overpaid
+    if(timeoutMediationDiff > 0) {
+      // the RP pays us because the job collateral is higher than the timeout collateral
+      _payIn(uint256(timeoutMediationDiff));
+    }
+    else if(timeoutMediationDiff < 0) {
+      // we pay the RP because the job collateral is lower
+      _payOut(deal.resourceProvider, uint256(timeoutMediationDiff));
+    }
+    
+    // the refund of the timeout collateral
     emit Payment(
       dealId,
       deal.jobCreator,
-      deal.jobCollateral,
-      SharedStructs.PaymentDirection.Out,
-      SharedStructs.PaymentReason.JobCollateralRefund
+      deal.timeoutCollateral,
+      SharedStructs.PaymentReason.TimeoutCollateral,
+      SharedStructs.PaymentDirection.Refunded
     );
 
-    // we slash the RP
+    // the payment of the mediation fee
+    emit Payment(
+      dealId,
+      deal.jobCreator,
+      deal.mediationFee,
+      SharedStructs.PaymentReason.MediationFee,
+      SharedStructs.PaymentDirection.PaidIn
+    );
+
+    emit ResultChallenged(dealId, mediator);
+  }
+
+  /**
+   * Mediation
+   */
+
+  // the mediator calls this to say that the resource provider did the correct job
+  // * check the state is ResultsChallenged
+  // * check the mediator is calling this
+  // * mark the deal as mediation accepted
+  // * refund the JC what is left from the payment collateral (if any)
+  // * pay the RP the cost of the job
+  // * refund the RP the results collateral
+  // * pay the mediator for mediating
+  function mediateAcceptResult(
+    uint256 dealId
+  ) public {
+    require(_canMediateResult(dealId), "Cannot mediate result");
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+
+    uint256 jobCost = storageContract.getJobCost(dealId);
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
+
+    int256 paymentCollateralRefund = int256(deal.paymentCollateral) - int256(jobCost);
+
+    // if there is a refund for the JC then let's pay it
+    if(paymentCollateralRefund > 0) {
+      _payOut(deal.jobCreator, uint256(paymentCollateralRefund));
+      emit Payment(
+        dealId,
+        deal.jobCreator,
+        uint256(paymentCollateralRefund),
+        SharedStructs.PaymentReason.PaymentCollateral,
+        SharedStructs.PaymentDirection.Refunded
+      );
+    }
+
+    // now we pay back the results collateral and the job payment to the RP
+    _payOut(deal.resourceProvider, resultsCollateral + jobCost);
+
     emit Payment(
       dealId,
       deal.resourceProvider,
       resultsCollateral,
-      SharedStructs.PaymentDirection.Slashed,
-      SharedStructs.PaymentReason.ResultsCollateralSlashed
+      SharedStructs.PaymentReason.ResultsCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
+
+    emit Payment(
+      dealId,
+      deal.resourceProvider,
+      jobCost,
+      SharedStructs.PaymentReason.JobPayment,
+      SharedStructs.PaymentDirection.PaidOut
+    );
+
+    // pay the mediator
+    _payOut(agreement.mediator, deal.mediationFee);
+
+    emit Payment(
+      dealId,
+      agreement.mediator,
+      deal.mediationFee,
+      SharedStructs.PaymentReason.MediationFee,
+      SharedStructs.PaymentDirection.PaidOut
     );
   }
 
+  // the mediator calls this to say that the resource provider did the bad job
+  // * check the state is ResultsChallenged
+  // * check the mediator is calling this
+  // * mark the deal as mediation rejected
+  // * refund the JC their payment collateral
+  // * slash the RP's results collateral
+  // * pay the mediator for mediating
+  function mediateRejectResult(
+    uint256 dealId
+  ) public {
+    require(_canMediateResult(dealId), "Cannot mediate result");
+
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
+
+    // refund the JC their payment collateral
+    _payOut(deal.jobCreator, deal.paymentCollateral);
+
+    emit Payment(
+      dealId,
+      deal.jobCreator,
+      deal.paymentCollateral,
+      SharedStructs.PaymentReason.PaymentCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
+
+    // pay the mediator
+    _payOut(agreement.mediator, deal.mediationFee);
+
+    emit Payment(
+      dealId,
+      agreement.mediator,
+      deal.mediationFee,
+      SharedStructs.PaymentReason.MediationFee,
+      SharedStructs.PaymentDirection.PaidOut
+    );
+
+    // slash the RP
+    emit Payment(
+      dealId,
+      deal.resourceProvider,
+      resultsCollateral,
+      SharedStructs.PaymentReason.ResultsCollateral,
+      SharedStructs.PaymentDirection.Slashed
+    );
+
+  }
+
+  function _canMediateResult(
+    uint256 dealId 
+  ) private returns (bool) {
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal is not in ResultsChallenged state");
+    require(!_hasMediateResultsTimedOut(dealId), "Deal has timed out");
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    require(agreement.mediator != address(0), "No mediator has been selected");
+    require(agreement.mediator == tx.origin, "Only mediator can accept or reject result");
+    return true;
+  }
+
+
+  /**
+   * Timeouts
+   */
+
   // the job creator calls this after the timeout has passed and there are no results submitted
-  // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
   // * check the JC is calling this
   // * mark the deal as timedout
   // * pay back the JC's job collateral
+  // * slash the RP's results collateral
   // * emit the event
-  function refundTimeout(
+  function timeoutSubmitResults(
     uint256 dealId
   ) public {
-    require(storageContract.isAgreement(dealId), "Deal is not in agreement state");
-    require(_hasTimedOut(dealId), "Deal has not timed out yet");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal is not in DealAgreed state");
+    require(_hasSubmitResultsTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.jobCreator == tx.origin, "Only JC can refund timeout");
-    storageContract.timeoutResult(dealId);
+    require(deal.jobCreator == tx.origin, "Only JC can refund submit results timeout");
+    storageContract.timeoutSubmitResult(dealId);
 
-    // actually refund the job creator
-    _payOut(deal.jobCreator, deal.jobCollateral);
+    // refund the job creator
+    _payOut(deal.jobCreator, deal.paymentCollateral);
 
     // the refund of the job collateral to the JC
     emit Payment(
       dealId,
       deal.jobCreator,
-      deal.jobCollateral,
-      SharedStructs.PaymentDirection.Out,
-      SharedStructs.PaymentReason.JobCollateralTimeoutRefund
+      deal.paymentCollateral,
+      SharedStructs.PaymentReason.PaymentCollateral,
+      SharedStructs.PaymentDirection.Refunded
     );
 
     // the slashing of the timeout collateral for the RP
@@ -343,14 +509,107 @@ contract LilypadController is Ownable, Initializable {
       dealId,
       deal.resourceProvider,
       deal.timeoutCollateral,
-      SharedStructs.PaymentDirection.Slashed,
-      SharedStructs.PaymentReason.TimeoutCollateralSlashed
+      SharedStructs.PaymentReason.TimeoutCollateral,
+      SharedStructs.PaymentDirection.Slashed
     );
 
-    emit Timeout(dealId);
+    emit TimeoutSubmitResults(dealId);
   }
 
-  function _hasTimedOut(
+  // the resource provider calls this after the timeout has passed after submitting results
+  // and the job creator has not yet submitted their judgement on those results
+  // * check the RP is calling this
+  // * mark the deal as timedout
+  // * pay back the RP's results collateral
+  // * pay the RP the cost of the job
+  // * slash the JC's timeout collateral
+  // * slash the JC's job collateral
+  // * emit the event
+  function timeoutJudgeResults(
+    uint256 dealId
+  ) public {
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
+    require(_hasJudgeResultsTimedOut(dealId), "Deal has not timed out yet");
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    require(deal.resourceProvider == tx.origin, "Only RP can refund judge results timeout");
+    storageContract.timeoutJudgeResult(dealId);
+
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
+
+    // refund the resource provider
+    _payOut(deal.resourceProvider, resultsCollateral);
+
+    // the refund of the results collateral to the RP
+    emit Payment(
+      dealId,
+      deal.resourceProvider,
+      resultsCollateral,
+      SharedStructs.PaymentReason.PaymentCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
+
+    // the slashing of the timeout collateral for the RP
+    emit Payment(
+      dealId,
+      deal.jobCreator,
+      deal.timeoutCollateral,
+      SharedStructs.PaymentReason.TimeoutCollateral,
+      SharedStructs.PaymentDirection.Slashed
+    );
+
+    emit TimeoutJudgeResults(dealId);
+  }
+
+  // either the JC or RP call this after the timeout has passed after results being challenged
+  // this refunds both the payment and results collateral to both the JC and RP
+  // * check the RP or JC is calling this
+  // * mark the deal as timedout
+  // * pay back the RP's results collateral
+  // * pay back the JC's paymnet collateral
+  // * emit the event
+  function timeoutMediateResults(
+    uint256 dealId
+  ) public {
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal is not in ResultsChallenged state");
+    require(_hasMediateResultsTimedOut(dealId), "Deal has not timed out yet");
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    require(deal.resourceProvider == tx.origin || deal.jobCreator == tx.origin, "Only RP or JC can refund mediate results timeout");
+    storageContract.timeoutMediateResult(dealId);
+
+    uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
+
+    // refund the resource provider
+    _payOut(deal.resourceProvider, resultsCollateral);
+
+    // refund the job creator
+    _payOut(deal.jobCreator, deal.paymentCollateral);
+
+    // the refund of the results collateral to the RP
+    emit Payment(
+      dealId,
+      deal.resourceProvider,
+      resultsCollateral,
+      SharedStructs.PaymentReason.ResultsCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
+
+    // the refund of the payment collateral to the JC
+    emit Payment(
+      dealId,
+      deal.jobCreator,
+      deal.paymentCollateral,
+      SharedStructs.PaymentReason.PaymentCollateral,
+      SharedStructs.PaymentDirection.Refunded
+    );
+
+    emit TimeoutMediateResults(dealId);
+  }
+
+  /**
+   * Timeout checkers
+   */
+
+  function _hasSubmitResultsTimedOut(
     uint256 dealId
   ) private returns (bool) {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
@@ -358,11 +617,25 @@ contract LilypadController is Ownable, Initializable {
     return block.timestamp > agreement.dealAgreedAt + deal.timeout;
   }
 
+  function _hasJudgeResultsTimedOut(
+    uint256 dealId
+  ) private returns (bool) {
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    return block.timestamp > agreement.resultsSubmittedAt + deal.timeout;
+  }
+
+  function _hasMediateResultsTimedOut(
+    uint256 dealId
+  ) private returns (bool) {
+    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    return block.timestamp > agreement.resultsChallengedAt + deal.timeout;
+  }
+
   /**
    * Payments
    */
-
-  
 
   // move tokens around inside the erc-20 contract
   function _pay(

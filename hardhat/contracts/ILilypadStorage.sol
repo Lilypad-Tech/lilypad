@@ -48,7 +48,7 @@ interface ILilypadStorage {
     address party
   ) external returns (uint256[] memory);
 
-  function addDeal(
+  function ensureDeal(
     uint256 dealId,
     address resourceProvider,
     address jobCreator,
@@ -56,9 +56,10 @@ interface ILilypadStorage {
     uint256 timeout,
     uint256 timeoutCollateral,
     uint256 jobCollateral,
-    uint256 resultsCollateral
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) external returns (SharedStructs.Deal memory);
-  
+
   /**
    * Agreements
    */
@@ -89,18 +90,50 @@ interface ILilypadStorage {
     uint256 instructionCount
   ) external returns (SharedStructs.Result memory);
 
-  function timeoutResult(
-    uint256 dealId
-  ) external;
-
   function acceptResult(
     uint256 dealId
   ) external;
 
-  function rejectResult(
+  function challengeResult(
+    uint256 dealId,
+    address mediator
+  ) external;
+
+  function timeoutSubmitResult(
     uint256 dealId
   ) external;
 
+  function timeoutJudgeResult(
+    uint256 dealId
+  ) external;
+
+  /**
+   * Mediation
+   */
+  function mediationAcceptResult(
+    uint256 dealId
+  ) external;
+
+  function mediationRejectResult(
+    uint256 dealId
+  ) external;
+
+  function timeoutMediateResult(
+    uint256 dealId
+  ) external;
+
+  /**
+   * Costings
+   */
+
+  function getJobCost(
+    uint256 dealId
+  ) external returns (uint256);
+
+  function getResultsCollateral(
+    uint256 dealId
+  ) external returns (uint256);
+  
   /**
    * Checkers
    */
@@ -109,28 +142,9 @@ interface ILilypadStorage {
     uint256 dealId
   ) external returns (bool);
 
-  function isNegotiating(
-    uint256 dealId
-  ) external returns (bool);
-
-  function isAgreement(
-    uint256 dealId
-  ) external returns (bool);
-
-  function isTimeout(
-    uint256 dealId
-  ) external returns (bool);
-
-  function isSubmitted(
-    uint256 dealId
-  ) external returns (bool);
-
-  function isAccepted(
-    uint256 dealId
-  ) external returns (bool);
-
-  function isRejected(
-    uint256 dealId
+  function isState(
+    uint256 dealId,
+    SharedStructs.AgreementState state
   ) external returns (bool);
   
 }

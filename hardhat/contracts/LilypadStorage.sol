@@ -5,25 +5,39 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./SharedStructs.sol";
 
+// import "@openzeppelin/contracts/utils/Strings.sol";
+// import "hardhat/console.sol";
+// console.log("ensureDeal");
+// console.log(Strings.toString(uint256(SharedStructs.AgreementState.DealNegotiating)));
+// console.log(Strings.toString(uint256(agreements[dealId].state)));
+
 contract LilypadStorage is Ownable, Initializable {
 
   // a map of user address -> user
-  mapping(address => SharedStructs.User) public users;
+  mapping(address => SharedStructs.User) private users;
 
   // a map of user type => user address[]
-  mapping(SharedStructs.ServiceType => address[]) public usersByType;
+  mapping(SharedStructs.ServiceType => address[]) private usersByType;
 
   // a map of deal id -> deal
-  mapping(uint256 => SharedStructs.Deal) public deals;
+  mapping(uint256 => SharedStructs.Deal) private deals;
 
   // a map of party -> dealid[]
-  mapping(address => uint256[]) public dealsForParty;
+  mapping(address => uint256[]) private dealsForParty;
 
   // a map of deal id -> agreement
-  mapping(uint256 => SharedStructs.Agreement) public agreements;
+  mapping(uint256 => SharedStructs.Agreement) private agreements;
 
   // a map of deal id -> result
-  mapping(uint256 => SharedStructs.Result) public results;
+  mapping(uint256 => SharedStructs.Result) private results;
+
+  // a map of deal id -> result
+  mapping(uint256 => SharedStructs.Result) private mediations;
+
+  event DealStateChange(
+    uint256 indexed dealId,
+    SharedStructs.AgreementState indexed state
+  );
 
   /**
    * Init
@@ -139,32 +153,49 @@ contract LilypadStorage is Ownable, Initializable {
     return dealsForParty[party];
   }
 
-  function addDeal(
+  function ensureDeal(
     uint256 dealId,
     address resourceProvider,
     address jobCreator,
     uint256 instructionPrice,
     uint256 timeout,
     uint256 timeoutCollateral,
-    uint256 jobPaymentCollateral,
-    uint256 resultsCollateralMultiple
+    uint256 paymentCollateral,
+    uint256 resultsCollateralMultiple,
+    uint256 mediationFee
   ) public onlyOwner returns (SharedStructs.Deal memory) {
-    require(!hasDeal(dealId), "Deal already exists");
+    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal is not in DealNegotiating state");
     require(resourceProvider != address(0), "Resource provider must be defined");
     require(jobCreator != address(0), "Job creator must be defined");
-    deals[dealId] = SharedStructs.Deal(
-      dealId,
-      resourceProvider,
-      jobCreator,
-      instructionPrice,
-      timeout,
-      timeoutCollateral,
-      jobPaymentCollateral,
-      resultsCollateralMultiple
-    );
-    agreements[dealId].state = SharedStructs.AgreementState.Negotiating;
-    dealsForParty[resourceProvider].push(dealId);
-    dealsForParty[jobCreator].push(dealId);
+    require(resourceProvider != jobCreator, "RP and JC cannot be the same");
+
+    if(hasDeal(dealId)) {
+      SharedStructs.Deal memory existingDeal = getDeal(dealId);
+      require(existingDeal.resourceProvider == resourceProvider, "RP does not match");
+      require(existingDeal.jobCreator == jobCreator, "JC does not match");
+      require(existingDeal.instructionPrice == instructionPrice, "Instruction price does not match");
+      require(existingDeal.timeout == timeout, "Timeout does not match");
+      require(existingDeal.timeoutCollateral == timeoutCollateral, "Timeout collateral does not match");
+      require(existingDeal.paymentCollateral == paymentCollateral, "Payment collateral does not match");
+      require(existingDeal.resultsCollateralMultiple == resultsCollateralMultiple, "Results collateral does not match");
+      require(existingDeal.mediationFee == mediationFee, "Mediation fee does not match");
+    }
+    else {
+      deals[dealId] = SharedStructs.Deal(
+        dealId,
+        resourceProvider,
+        jobCreator,
+        instructionPrice,
+        timeout,
+        timeoutCollateral,
+        paymentCollateral,
+        resultsCollateralMultiple,
+        mediationFee
+      );
+      dealsForParty[resourceProvider].push(dealId);
+      dealsForParty[jobCreator].push(dealId);
+    }
+
     return deals[dealId];
   }
 
@@ -188,7 +219,6 @@ contract LilypadStorage is Ownable, Initializable {
     return agreements[dealId];
   }
 
-  // only the controller contract can call this
   function agreeJobCreator(
     uint256 dealId
   ) public onlyOwner returns (SharedStructs.Agreement memory) {
@@ -197,15 +227,6 @@ contract LilypadStorage is Ownable, Initializable {
     agreements[dealId].jobCreatorAgreedAt = block.timestamp;
     _maybeAgreeDeal(dealId);
     return agreements[dealId];
-  }
-
-  function _maybeAgreeDeal(
-    uint256 dealId
-  ) private {
-    if(agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0) {
-      agreements[dealId].dealAgreedAt = block.timestamp;
-      agreements[dealId].state = SharedStructs.AgreementState.Agreed;
-    }
   }
 
   /**
@@ -223,9 +244,9 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 resultsId,
     uint256 instructionCount
   ) public onlyOwner returns (SharedStructs.Result memory) {
-    require(isAgreement(dealId), "Deal not in Agree state");
+    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
     agreements[dealId].resultsSubmittedAt = block.timestamp;
-    agreements[dealId].state = SharedStructs.AgreementState.Submitted;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsSubmitted);
     results[dealId] = SharedStructs.Result(
       dealId,
       resultsId,
@@ -234,28 +255,91 @@ contract LilypadStorage is Ownable, Initializable {
     return results[dealId];
   }
 
-  function timeoutResult(
-    uint256 dealId
-  ) public onlyOwner {
-    require(isSubmitted(dealId), "Deal not in Submitted state");
-    agreements[dealId].timedOutAt = block.timestamp;
-    agreements[dealId].state = SharedStructs.AgreementState.Timeout;
-  }
-
   function acceptResult(
     uint256 dealId
   ) public onlyOwner {
-    require(isSubmitted(dealId), "Deal not in Submitted state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     agreements[dealId].resultsAcceptedAt = block.timestamp;
-    agreements[dealId].state = SharedStructs.AgreementState.Accepted;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsAccepted);
   }
 
-  function rejectResult(
+  function challengeResult(
+    uint256 dealId,
+    address mediator
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
+    SharedStructs.Deal memory deal = getDeal(dealId);
+    require(_hasTrustedMediator(deal.resourceProvider, mediator), "Resource provider does not trust that mediator");
+    agreements[dealId].resultsChallengedAt = block.timestamp;
+    agreements[dealId].mediator = mediator;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChallenged);
+
+  }
+
+  // called because the JC waited too long for a result to be submitted
+  // and wants it's money back
+  function timeoutSubmitResult(
     uint256 dealId
   ) public onlyOwner {
-    require(isSubmitted(dealId), "Deal not in Submitted state");
-    agreements[dealId].resultsRejectedAt = block.timestamp;
-    agreements[dealId].state = SharedStructs.AgreementState.Rejected;
+    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
+    agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutSubmitResults);
+  }
+
+  // called because the RP waited too long for a judgement of it's results
+  // and wants it's money back
+  function timeoutJudgeResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
+    agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutJudgeResults);
+  }
+
+  /**
+   * Mediation
+   */
+
+  function mediationAcceptResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    agreements[dealId].mediationAcceptedAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.MediationAccepted);
+  }
+
+  function mediationRejectResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    agreements[dealId].mediationRejectedAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.MediationRejected);
+  }
+
+  // called because the RP or JC waited too long for a mediation of it's results
+  // and both want their money back
+  function timeoutMediateResult(
+    uint256 dealId
+  ) public onlyOwner {
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    agreements[dealId].timeoutMediateResultsAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutMediateResults);
+  }
+
+  /**
+   * Costings
+   */
+
+  function getJobCost(
+    uint256 dealId
+  ) public view returns (uint256) {
+    return deals[dealId].instructionPrice * results[dealId].instructionCount;
+  }
+
+  function getResultsCollateral(
+    uint256 dealId
+  ) public view returns (uint256) {
+    return deals[dealId].resultsCollateralMultiple * getJobCost(dealId);
   }
 
   /**
@@ -268,45 +352,51 @@ contract LilypadStorage is Ownable, Initializable {
     return getDeal(dealId).dealId != 0;
   }
 
-  function isNegotiating(
-    uint256 dealId
+  function isState(
+    uint256 dealId,
+    SharedStructs.AgreementState state
   ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Negotiating;
+    // if we don't have a deal, we should check against DealNegotiating
+    // as this is the default state - otherwise it's impossible to check
+    // for isState('DealNegotiating')
+    if(!hasDeal(dealId)) {
+      return state == SharedStructs.AgreementState.DealNegotiating;
+    }
+    return agreements[dealId].state == state;
   }
 
-  function isAgreement(
+  /**
+   * Utils
+   */
+
+  function _maybeAgreeDeal(
     uint256 dealId
-  ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Agreed;
+  ) private {
+    if(agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0) {
+      agreements[dealId].dealAgreedAt = block.timestamp;
+      _changeAgreementState(dealId, SharedStructs.AgreementState.DealAgreed);
+    }
   }
 
-  function isTimeout(
-    uint256 dealId
-  ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Timeout;
+  function _changeAgreementState(
+    uint256 dealId,
+    SharedStructs.AgreementState state
+  ) private {
+    agreements[dealId].state = state;
+    emit DealStateChange(dealId, state);
   }
 
-  function isSubmitted(
-    uint256 dealId
-  ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Submitted;
-  }
-
-  function isAccepted(
-    uint256 dealId
-  ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Accepted;
-  }
-
-  function isRejected(
-    uint256 dealId
-  ) public view returns (bool) {
-    if(!hasDeal(dealId)) return false;
-    return agreements[dealId].state == SharedStructs.AgreementState.Rejected;
+  function _hasTrustedMediator(
+    address userId,
+    address mediator
+  ) private view returns (bool) {
+    bool found = false;
+    for (uint256 i = 0; i < users[userId].trustedMediators.length; i++) {
+      if (users[userId].trustedMediators[i] == mediator) {
+        found = true;
+        break;
+      }
+    }
+    return found;
   }
 }

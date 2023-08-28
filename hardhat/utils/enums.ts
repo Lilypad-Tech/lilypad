@@ -5,38 +5,44 @@ export const ServiceType = [
   'Mediator',
   'Directory',
   'ResourceProvider',
-  'JobCreator'
+  'JobCreator',
 ]
 
 export const AgreementState = [
-  'Negotiating',
-  'Agreed',
-  'Timeout',
-  'Submitted',
-  'Accepted',
-  'Rejected'
+  'DealNegotiating',
+  'DealAgreed',
+  'ResultsSubmitted',
+  'ResultsAccepted',
+  'ResultsChallenged',
+  'MediationAccepted',
+  'MediationRejected',
+  'TimeoutSubmitResults',
+  'TimeoutJudgeResults',
+  'TimeoutMediateResults',
+]
+
+
+export const PaymentReason = [
+  'PaymentCollateral',
+  'ResultsCollateral',
+  'TimeoutCollateral',
+  'JobPayment',
+  'MediationFee',
 ]
 
 export const PaymentDirection = [
-  'In',
-  'Out',
-  'Slashed'
+  'PaidIn',
+  'PaidOut',
+  'Refunded',
+  'Slashed',
 ]
 
-export const PaymentReason = [
-  'JobCollateral',
-  'JobCollateralRefund',
-  'JobCollateralTimeoutRefund',
-  'ResultsCollateral',
-  'ResultsCollateralRefund',
-  'ResultsCollateralSlashed',
-  'JobPayment',
-  'TimeoutCollateral',
-  'TimeoutCollateralRefund',
-  'TimeoutCollateralSlashed'
-]
-
-export const getServiceType = (type: string) => ServiceType.indexOf(type)
-export const getAgreementState = (type: string) => AgreementState.indexOf(type)
-export const getPaymentDirection = (type: string) => PaymentDirection.indexOf(type)
-export const getPaymentReason = (type: string) => PaymentReason.indexOf(type)
+export const getTypeIndex = (name: string, arr: string[], type: string) => {
+  const ret = arr.indexOf(type)
+  if(ret < 0) throw new Error(`no ${name} of type ${type}`)
+  return ret
+}
+export const getServiceType = (type: string) => getTypeIndex('ServiceType', ServiceType, type)
+export const getAgreementState = (type: string) => getTypeIndex('AgreementState', AgreementState, type)
+export const getPaymentReason = (type: string) => getTypeIndex('PaymentReason', PaymentReason, type)
+export const getPaymentDirection = (type: string) => getTypeIndex('PaymentDirection', PaymentDirection, type)

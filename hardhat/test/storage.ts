@@ -77,7 +77,7 @@ describe("Storage", () => {
     const storage = await setupStorageWithUsers()
     expect(await storage
       .connect(getWallet('admin'))
-      .addDeal(
+      .ensureDeal(
         dealID,
         getAddress('resource_provider'),
         getAddress('job_creator'),
@@ -86,6 +86,7 @@ describe("Storage", () => {
         ethers.getBigInt(1),
         ethers.getBigInt(1),
         ethers.getBigInt(1),
+        ethers.getBigInt(1)
       )
     ).to.not.be.reverted
     return storage
@@ -280,8 +281,9 @@ describe("Storage", () => {
       expect(deal.instructionPrice).to.equal(ethers.getBigInt(1))
       expect(deal.timeout).to.equal(ethers.getBigInt(1))
       expect(deal.timeoutCollateral).to.equal(ethers.getBigInt(1))
-      expect(deal.jobCollateral).to.equal(ethers.getBigInt(1))
+      expect(deal.paymentCollateral).to.equal(ethers.getBigInt(1))
       expect(deal.resultsCollateralMultiple).to.equal(ethers.getBigInt(1))
+      expect(deal.mediationFee).to.equal(ethers.getBigInt(1))
 
       expect(await storage.hasDeal(dealID))
         .to.equal(true)
@@ -298,30 +300,12 @@ describe("Storage", () => {
         .to.deep.equal([])
     })
 
-    it("Should deny adding a deal the second time", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
-      
-      await expect(storage
-        .connect(getWallet('admin'))
-        .addDeal(
-          dealID,
-          getAddress('resource_provider'),
-          getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-        )
-      ).to.be.revertedWith('Deal already exists')
-    })
-
     it("Should deny adding a deal as not the owner", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       
       await expect(storage
         .connect(getWallet('resource_provider'))
-        .addDeal(
+        .ensureDeal(
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
@@ -330,8 +314,67 @@ describe("Storage", () => {
           ethers.getBigInt(1),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
+          ethers.getBigInt(1)
         )
       ).to.be.revertedWith('Ownable: caller is not the owner')
+    })
+
+    it("Should error when the RP and JC are the same", async function () {
+      const storage = await loadFixture(setupStorageWithUsers)
+      
+      await expect(storage
+        .connect(getWallet('admin'))
+        .ensureDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1)
+        )
+      ).to.be.revertedWith('RP and JC cannot be the same')
+    })
+
+    it("Should error when the RP is empty", async function () {
+      const storage = await loadFixture(setupStorageWithUsers)
+      
+      await expect(storage
+        .connect(getWallet('admin'))
+        .ensureDeal(
+          dealID,
+          ethers.ZeroAddress,
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1)
+        )
+      ).to.be.revertedWith('Resource provider must be defined')
+    })
+
+
+    it("Should error when the JC is empty", async function () {
+      const storage = await loadFixture(setupStorageWithUsers)
+      
+      await expect(storage
+        .connect(getWallet('admin'))
+        .ensureDeal(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.ZeroAddress,
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1)
+        )
+      ).to.be.revertedWith('Job creator must be defined')
     })
 
   })
@@ -340,7 +383,7 @@ describe("Storage", () => {
 
     it("Should be negotiating before agreements are made", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDeal)
-      expect(await storage.isNegotiating(dealID))
+      expect(await storage.isState(dealID, getAgreementState('DealNegotiating')))
         .to.equal(true)
     })
 
@@ -348,12 +391,12 @@ describe("Storage", () => {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.state).to.equal(getAgreementState('Agreed'))
+      expect(agreement.state).to.equal(getAgreementState('DealAgreed'))
       expect(agreement.resourceProviderAgreedAt).to.not.equal(ethers.getBigInt(0))
       expect(agreement.jobCreatorAgreedAt).to.not.equal(ethers.getBigInt(0))
       expect(agreement.dealAgreedAt).to.not.equal(ethers.getBigInt(0))
 
-      expect(await storage.isAgreement(dealID))
+      expect(await storage.isState(dealID, getAgreementState('DealAgreed')))
         .to.equal(true)
     })
 
@@ -387,23 +430,23 @@ describe("Storage", () => {
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.resultsSubmittedAt).to.not.equal(ethers.getBigInt(0))
-      expect(agreement.state).to.equal(getAgreementState('Submitted'))
+      expect(agreement.state).to.equal(getAgreementState('ResultsSubmitted'))
     })
 
-    it("Should be able to timeout a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+    // it("Should be able to timeout a result", async function () {
+    //   const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
 
-      expect(await storage
-        .connect(getWallet('admin'))
-        .timeoutResult(
-          dealID,
-        )
-      ).to.not.be.reverted
+    //   expect(await storage
+    //     .connect(getWallet('admin'))
+    //     .timeoutResult(
+    //       dealID,
+    //     )
+    //   ).to.not.be.reverted
 
-      const agreement = await storage.getAgreement(dealID)
-      expect(agreement.timedOutAt).to.not.equal(ethers.getBigInt(0))
-      expect(agreement.state).to.equal(getAgreementState('Timeout'))
-    })
+    //   const agreement = await storage.getAgreement(dealID)
+    //   expect(agreement.timedOutAt).to.not.equal(ethers.getBigInt(0))
+    //   expect(agreement.state).to.equal(getAgreementState('Timeout'))
+    // })
 
   })
 
