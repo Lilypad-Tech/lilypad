@@ -539,17 +539,6 @@ describe("Storage", () => {
       expect(agreement.state).to.equal(getAgreementState('ResultsAccepted'))
     })
 
-    it("Should throw if we try to accept results and not in submitted state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
-
-      await expect(storage
-        .connect(getWallet('admin'))
-        .acceptResult(
-          dealID
-        )
-      ).to.be.revertedWith('Deal not in ResultsSubmitted state')
-    })
-
     it("Should be able to challenge a result", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
 
@@ -568,6 +557,17 @@ describe("Storage", () => {
       expect(agreement.state).to.equal(getAgreementState('ResultsChallenged'))
     })
 
+    it("Should throw if we try to accept results and not in submitted state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .acceptResult(
+          dealID
+        )
+      ).to.be.revertedWith('Deal not in ResultsSubmitted state')
+    })
+
     it("Should throw if we try to challenge results and not in submitted state", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
 
@@ -580,7 +580,67 @@ describe("Storage", () => {
       ).to.be.revertedWith('Deal not in ResultsSubmitted state')
     })
 
+    // TODO: mediate results without a trusted mediator address
+
+  })
+
+  describe("Mediation", () => {
     
+    it("Should be able to mediator -> accept a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .mediationAcceptResult(
+          dealID
+        )
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('MediationAccepted'))
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.mediationAcceptedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('MediationAccepted'))
+    })
+
+    it("Should be able to mediator -> reject a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .mediationRejectResult(
+          dealID
+        )
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('MediationRejected'))
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.mediationRejectedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('MediationRejected'))
+    })
+
+    it("Should throw if we try to accept mediation results and not in submitted state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .mediationAcceptResult(
+          dealID
+        )
+      ).to.be.revertedWith('Deal not in ResultsChallenged state')
+    })
+
+    it("Should throw if we try to challenge results and not in submitted state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .mediationRejectResult(
+          dealID
+        )
+      ).to.be.revertedWith('Deal not in ResultsChallenged state')
+    })
 
   })
 
