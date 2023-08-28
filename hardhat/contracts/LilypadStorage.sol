@@ -131,7 +131,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 instructionPrice,
     uint256 timeout,
     uint256 timeoutCollateral,
-    uint256 jobCollateral,
+    uint256 jobPaymentCollateral,
     uint256 resultsCollateralMultiple
   ) public onlyOwner returns (SharedStructs.Deal memory) {
     require(!hasDeal(dealId), "Deal already exists");
@@ -144,7 +144,7 @@ contract LilypadStorage is Ownable, Initializable {
       instructionPrice,
       timeout,
       timeoutCollateral,
-      jobCollateral,
+      jobPaymentCollateral,
       resultsCollateralMultiple
     );
     agreements[dealId].state = SharedStructs.AgreementState.Negotiating;

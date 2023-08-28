@@ -2,7 +2,6 @@ import {
   time,
   loadFixture,
 } from '@nomicfoundation/hardhat-toolbox/network-helpers'
-import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { ethers } from 'hardhat'
@@ -15,8 +14,8 @@ import {
   getServiceType,
 } from '../utils/enums'
 import {
-  SharedStructs,  
-} from '../typechain-types/contracts/LilypadStorage'
+  LilypadStorage,
+} from '../typechain-types'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -40,16 +39,13 @@ describe("Storage", () => {
 
   describe("Users", () => {
 
-    it("Should be able to add and list users", async function () {
-      const storage = await loadFixture(setupStorage)
-      
-      const rpCID = ethers.getBigInt(123)
-      const rpURL = "abc"
+    const rpCID = ethers.getBigInt(123)
+    const rpURL = "abc"
 
-      const jcCID = ethers.getBigInt(456)
-      const jcURL = "def"
+    const jcCID = ethers.getBigInt(456)
+    const jcURL = "def"
 
-      // register the resource provider
+    const addUsers = async (storage: LilypadStorage) => {
       expect(await storage
         .connect(getWallet('resource_provider'))
         .updateUser(
@@ -83,15 +79,27 @@ describe("Storage", () => {
           ]
         )
       ).to.not.be.reverted
+    }
 
+    it("Should be able to add and get users", async function () {
+      const storage = await loadFixture(setupStorage)
+      
+      await addUsers(storage)
+      
       const rp = await storage.getUser(getAddress('resource_provider'))
       const jc = await storage.getUser(getAddress('job_creator'))
 
       expect(rp.metadataCID).to.equal(rpCID)
       expect(rp.url).to.equal(rpURL)
+      expect(rp.roles).to.deep.equal([getServiceType('ResourceProvider')])
+      expect(rp.trustedMediators).to.deep.equal([getAddress('mediator')])
+      expect(rp.trustedDirectories).to.deep.equal([getAddress('directory')])
 
       expect(jc.metadataCID).to.equal(jcCID)
       expect(jc.url).to.equal(jcURL)
+      expect(jc.roles).to.deep.equal([getServiceType('JobCreator')])
+      expect(jc.trustedMediators).to.deep.equal([getAddress('mediator')])
+      expect(jc.trustedDirectories).to.deep.equal([getAddress('directory')])
     })
 
   })
