@@ -266,6 +266,9 @@ describe("Storage", () => {
       expect(deal.jobCollateral).to.equal(ethers.getBigInt(1))
       expect(deal.resultsCollateralMultiple).to.equal(ethers.getBigInt(1))
 
+      expect(await storage.hasDeal(dealID))
+        .to.equal(true)
+
     })
 
     it("Should be able to see deals for specific parties", async function () {
@@ -318,6 +321,12 @@ describe("Storage", () => {
 
   describe("Agreements", () => {
 
+    it("Should be negotiating before agreements are made", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      expect(await storage.isNegotiating(dealID))
+        .to.equal(true)
+    })
+
     it("Should be able to agree both parties", async function () {
       const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
 
@@ -327,6 +336,26 @@ describe("Storage", () => {
       expect(agreement.jobCreatorAgreedAt).to.not.equal(ethers.getBigInt(0))
       expect(agreement.dealAgreedAt).to.not.equal(ethers.getBigInt(0))
 
+      expect(await storage.isAgreement(dealID))
+        .to.equal(true)
+    })
+
+    it("Should deny the agree functions if not owner", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
+
+      await expect(storage
+        .connect(getWallet('job_creator'))
+        .agreeJobCreator(
+          dealID
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
     })
   })
 
