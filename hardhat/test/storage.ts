@@ -550,6 +550,36 @@ describe("Storage", () => {
       ).to.be.revertedWith('Deal not in ResultsSubmitted state')
     })
 
+    it("Should be able to challenge a result", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .challengeResult(
+          dealID,
+          getAddress('mediator')
+        )
+      )
+        .to.emit(storage, "DealStateChange")
+        .withArgs(dealID, getAgreementState('ResultsChallenged'))
+
+      const agreement = await storage.getAgreement(dealID)
+      expect(agreement.resultsChallengedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('ResultsChallenged'))
+    })
+
+    it("Should throw if we try to challenge results and not in submitted state", async function () {
+      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+
+      await expect(storage
+        .connect(getWallet('admin'))
+        .challengeResult(
+          dealID,
+          getAddress('mediator')
+        )
+      ).to.be.revertedWith('Deal not in ResultsSubmitted state')
+    })
+
     
 
   })
