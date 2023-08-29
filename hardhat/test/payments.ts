@@ -28,7 +28,7 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe.only("Payments", () => {
+describe("Payments", () => {
 
   const dealID = ethers.getBigInt(10)
 
@@ -85,16 +85,22 @@ describe.only("Payments", () => {
         payments,
       } = await loadFixture(setupPayments)
 
-      // await expect(payments
-      //   .connect(getWallet('admin'))
-      //   .agreeResourceProvider(
-      //     dealID,
-      //     getAddress('resource_provider'),
-      //     timeoutCollateral,
-      //   )
-      // )
-      //   .to.emit(storage, "DealStateChange")
-      //   .withArgs(dealID, getAgreementState('MediationRejected'))
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+        )
+      ).to.not.be.reverted
+
+      // use bluebird to map over all accounts and check that the balances are correct
+      await bluebird.mapSeries(ACCOUNTS, async (account) => {
+        const balance = await token.balanceOf(getAddress(account.name))
+        console.log(`account: ${account.name} (${account.address}) - balance: ${balance}`)
+      })  
+
+      //expect(await token.balanceOf(getAddress('resource_provider'))).to.equal(DEFAULT_TOKEN_SUPPLY - timeoutCollateral)
       
     })
 

@@ -35,6 +35,10 @@ export const getAddress = (name: string) => {
   return account.address
 }
 
+export const getRandomWallet = () => {
+  return ethers.Wallet.createRandom()
+}
+
 // amount is in wei
 export const transfer = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
   const signer = new hre.ethers.Wallet(fromAccount.privateKey)
@@ -92,11 +96,15 @@ export async function getStorageAddress() {
 export async function deployToken(
   signer: Signer,
   tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
+  escrowAddress: AddressLike,
+  controllerAddress: AddressLike,
 ) {
   return deployContract<LilypadToken>('LilypadToken', signer, [
     'LilyPad',
     'LLY',
     tokenSupply,
+    escrowAddress,
+    controllerAddress,
   ])
 }
 
@@ -110,12 +118,13 @@ export async function getTokenAddress() {
 
 export async function deployPayments(
   signer: Signer,
-  tokenAddress: AddressLike
+  tokenAddress: AddressLike,
+  escrowAddress: AddressLike,
 ) {
   const payments = await deployContract<LilypadPayments>('LilypadPayments', signer)
   await payments
     .connect(signer)
-    .initialize(tokenAddress)
+    .initialize(tokenAddress, escrowAddress)
   return payments
 }
 

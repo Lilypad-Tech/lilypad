@@ -5,13 +5,24 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ILilypadToken.sol";
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "hardhat/console.sol";
+// console.log("ensureDeal");
+// console.log(Strings.toString(uint256(SharedStructs.AgreementState.DealNegotiating)));
+// console.log(Strings.toString(uint256(agreements[dealId].state)));
+
 contract LilypadPayments is Ownable, Initializable {
 
   /**
    * Types
    */
+
+  // the address of the LilypadToken contract
   address private tokenAddress;
   ILilypadToken private tokenContract;
+
+  // the address we use as the escrow for the system
+  address private escrowAddress;
 
   /**
    * Enums
@@ -66,15 +77,36 @@ contract LilypadPayments is Ownable, Initializable {
    * Init
    */
 
+  // used for debugging
+  mapping(address => string) private accountNames;
+
   // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
-  function initialize(address _tokenAddress) public initializer {
+  function initialize(
+    address _tokenAddress,
+    address _escrowAddress
+  ) public initializer {
     setTokenAddress(_tokenAddress);
+    setEscrowAddress(_escrowAddress);
+
+    // this is only for debugging
+    accountNames[address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)] = "admin";
+    accountNames[address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)] = "faucet";
+    accountNames[address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC)] = "solver";
+    accountNames[address(0x90F79bf6EB2c4f870365E785982E1f101E93b906)] = "mediator";
+    accountNames[address(0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65)] = "resource_provider";
+    accountNames[address(0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc)] = "job_creator";
+    accountNames[address(0x976EA74026E726554dB657fA54763abd0C3a0aa9)] = "directory";
   }
 
   function setTokenAddress(address _tokenAddress) public onlyOwner {
     require(_tokenAddress != address(0), "Token address must be defined");
     tokenAddress = _tokenAddress;
     tokenContract = ILilypadToken(_tokenAddress);
+  }
+
+  function setEscrowAddress(address _escrowAddress) public onlyOwner {
+    require(_escrowAddress != address(0), "Escrow address must be defined");
+    escrowAddress = _escrowAddress;
   }
 
   /**
@@ -93,7 +125,8 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 dealId,
     address resourceProvider,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == resourceProvider, "Can only be called by the RP");
     _payIn(timeoutCollateral);
     emit Payment(
       dealId,
@@ -503,31 +536,21 @@ contract LilypadPayments is Ownable, Initializable {
    * Payment utils
    */
 
-  // move tokens around inside the erc-20 contract
-  function _pay(
-    address from,
-    address to,
-    uint256 amount
-  ) private {
-    require(tokenContract.balanceOf(from) >= amount, "Insufficient balance");
-    require(tokenContract.allowance(from, to) >= amount, "Allowance too low");
-    bool success = tokenContract.transferFrom(from, to, amount);
-    require(success, "Transfer failed");
-  }
-
-  // take X tokens from the tx sender and add them to the owners token balance
+  // this is always called by the spender of the token
+  // and so even though the controller calls the payment contract
+  // the token is configured to use tx.origin as the spender
+  // i.e. the owner of the tokens is who is calling this
   function _payIn(
     uint256 amount
   ) private {
-    // approve the tokens we are about to move
-    // this works because _payIn is always called as part of the user who is paying
-    // into the contract
-    tokenContract.approve(owner(), amount);
-    _pay(
-      tx.origin,
-      owner(),
-      amount
-    );
+    require(tokenContract.balanceOf(tx.origin) >= amount, "Insufficient balance");
+
+    console.log("PAY IN");
+    console.log(accountNames[tx.origin]);
+    console.log(amount);
+
+    bool success = tokenContract.transfer(escrowAddress, amount);
+    require(success, "Transfer failed");
   }
 
   // take X tokens from the contract's token balance and send them to the given address
@@ -535,10 +558,13 @@ contract LilypadPayments is Ownable, Initializable {
     address payWho,
     uint256 amount
   ) private {
-    _pay(
-      owner(),
-      payWho,
-      amount
-    );
+    require(tokenContract.balanceOf(owner()) >= amount, "Insufficient balance");
+
+    console.log("PAY OUT");
+    console.log(accountNames[payWho]);
+    console.log(amount);
+
+    bool success = tokenContract.payoutEscrow(payWho, amount);
+    require(success, "Transfer failed");
   }
 }
