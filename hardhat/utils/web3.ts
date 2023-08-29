@@ -11,8 +11,9 @@ import {
   getAccount,
 } from './accounts'
 import {
-  LilypadStorage,
   LilypadToken,
+  LilypadPayments,
+  LilypadStorage,
   LilypadController,
 } from '../typechain-types'
 
@@ -107,15 +108,26 @@ export async function getTokenAddress() {
   return getContractAddress('LilypadToken')
 }
 
+export async function deployPayments(
+  signer: Signer,
+  tokenAddress: AddressLike
+) {
+  const payments = await deployContract<LilypadPayments>('LilypadPayments', signer)
+  await payments
+    .connect(signer)
+    .initialize(tokenAddress)
+  return payments
+}
+
 export async function deployController(
   signer: Signer,
   storageAddress: AddressLike,
-  tokenAddress: AddressLike,
+  paymentsAddress: AddressLike,
 ) {
   const controller = await deployContract<LilypadController>('LilypadController', signer)
   await controller
     .connect(signer)
-    .initialize(storageAddress, tokenAddress)
+    .initialize(storageAddress, paymentsAddress)
   return controller
 }
 

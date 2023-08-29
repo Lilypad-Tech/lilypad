@@ -8,8 +8,9 @@ import { ethers } from 'hardhat'
 import {
   getWallet,
   getAddress,
-  deployContracts,
-  DEFAULT_TOKENS_PER_ACCOUNT,
+  deployToken,
+  deployPayments,
+  DEFAULT_TOKEN_SUPPLY,
 } from '../utils/web3'
 import {
   getServiceType,
@@ -21,21 +22,34 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe("Controller", () => {
+describe.only("Payments", () => {
+
+  async function setupToken() {
+    const admin = getWallet('admin')
+    const token = await deployToken(admin, DEFAULT_TOKEN_SUPPLY)
+    return token
+  }
+
+  async function setupPayments() {
+    const admin = getWallet('admin')
+    const token = await setupToken()
+    const payments = await deployPayments(admin, token.getAddress())
+    return {
+      token,
+      payments
+    }
+  }
 
   async function setupContracts() {
-    return deployContracts(getWallet('admin'))
+    
   }
 
   describe("Token supply", () => {
 
     it("Should initially fund accounts", async function () {
-      const {
-        token,
-      } = await loadFixture(setupContracts)
-      expect(await token.balanceOf(getAddress('job_creator'))).to.equal(DEFAULT_TOKENS_PER_ACCOUNT)
+      const token = await loadFixture(setupToken)
+      expect(await token.balanceOf(getAddress('admin'))).to.equal(DEFAULT_TOKEN_SUPPLY)
     })
-
   })
 
   // describe("End to end", () => {
