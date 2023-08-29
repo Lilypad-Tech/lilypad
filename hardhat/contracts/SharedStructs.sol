@@ -45,41 +45,6 @@ library SharedStructs {
 
   }
 
-  enum PaymentReason {
-
-    // the money the JC puts up to pay for the job
-    PaymentCollateral,
-
-    // the money the RP puts up to attest it's results are correct
-    ResultsCollateral,
-
-    // the money the RP, JC and Mediator all put up to prevent timeouts
-    TimeoutCollateral,
-
-    // the money the RP gets paid for the job for running it successfully
-    JobPayment,
-
-    // the money the JC pays the mediator for resolving a dispute
-    MediationFee
-  }
-
-  enum PaymentDirection {
-
-    // money flowing into the contract
-    // i.e. we GET paid
-    PaidIn,
-
-    // money paid out to services
-    // i.e. we are PAYING
-    PaidOut,
-
-    // collateral that is locked up being refunded
-    Refunded,
-    
-    // collateral that is locked up being slashed
-    Slashed
-  }
-
   // we map addresses onto infomation about the user
   struct User {
     address userAddress;
