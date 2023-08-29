@@ -30,6 +30,8 @@ const { expect } = chai
 
 describe.only("Payments", () => {
 
+  const dealID = ethers.getBigInt(10)
+
   async function setupToken() {
     const admin = getWallet('admin')
     const token = await deployToken(admin, DEFAULT_TOKEN_SUPPLY)
@@ -44,7 +46,7 @@ describe.only("Payments", () => {
 
   async function setupPayments() {
     const admin = getWallet('admin')
-    const token = await setupToken()
+    const token = await setupTokenWithFunds()
     const payments = await deployPayments(admin, token.getAddress())
     return {
       token,
@@ -65,8 +67,37 @@ describe.only("Payments", () => {
         if(account.name === 'admin') return
         expect(await token.balanceOf(getAddress(account.name))).to.equal(DEFAULT_TOKENS_PER_ACCOUNT)
       })
+    })
+  })
+
+  describe("Token approval", () => {
+
+    // test that when as a job creator - we agree to a deal
+    // the tokens are moved from our account to the payments contract
+    // and that happens automatically because the arrangement of
+    // contracts is such that the auto approval works
+    it("Should auto approve the movement of tokens", async function () {
+
+      const timeoutCollateral = ethers.getBigInt(10)
+
+      const {
+        token,
+        payments,
+      } = await loadFixture(setupPayments)
+
+      // await expect(payments
+      //   .connect(getWallet('admin'))
+      //   .agreeResourceProvider(
+      //     dealID,
+      //     getAddress('resource_provider'),
+      //     timeoutCollateral,
+      //   )
+      // )
+      //   .to.emit(storage, "DealStateChange")
+      //   .withArgs(dealID, getAgreementState('MediationRejected'))
       
     })
+
   })
 
   // describe("End to end", () => {

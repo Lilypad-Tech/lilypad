@@ -3,7 +3,6 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./SharedStructs.sol";
 import "./ILilypadToken.sol";
 
 contract LilypadPayments is Ownable, Initializable {
@@ -91,13 +90,15 @@ contract LilypadPayments is Ownable, Initializable {
 
   // * pay in the timeout collateral
   function agreeResourceProvider(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    uint256 timeoutCollateral
   ) public onlyOwner {
-    _payIn(deal.timeoutCollateral);
+    _payIn(timeoutCollateral);
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
-      deal.timeoutCollateral,
+      dealId,
+      resourceProvider,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.PaidIn
     );
@@ -105,20 +106,23 @@ contract LilypadPayments is Ownable, Initializable {
 
   // * pay in the payment collateral and timeout collateral
   function agreeJobCreator(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
   ) public onlyOwner {
-    _payIn(deal.paymentCollateral + deal.timeoutCollateral);
+    _payIn(paymentCollateral + timeoutCollateral);
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.paymentCollateral,
+      dealId,
+      jobCreator,
+      paymentCollateral,
       PaymentReason.PaymentCollateral,
       PaymentDirection.PaidIn
     );
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
-      deal.timeoutCollateral,
+      dealId,
+      jobCreator,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.PaidIn
     );
@@ -133,15 +137,17 @@ contract LilypadPayments is Ownable, Initializable {
   // * work out the difference between the timeout and results collateral
   // * pay the difference into / out of the contract to the RP
   function addResult(
-    SharedStructs.Deal memory deal,
-    uint256 resultsCollateral
+    uint256 dealId,
+    address resourceProvider,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) public onlyOwner {
     // what is the difference between what the RP has already paid and needs to now pay?
     // the RP has paid in the timeout collateral
     // it will now be charged the results collateral
     // a positive number means we are owed money
     // a negative number means we pay the RP a refund
-    int256 resultsTimeoutDiff = int256(resultsCollateral) - int256(deal.timeoutCollateral);
+    int256 resultsTimeoutDiff = int256(resultsCollateral) - int256(timeoutCollateral);
     
     if(resultsTimeoutDiff > 0) {
       // the RP pays us because the job collateral is higher than the timeout collateral
@@ -149,22 +155,22 @@ contract LilypadPayments is Ownable, Initializable {
     }
     else if(resultsTimeoutDiff < 0) {
       // we pay the RP because the job collateral is lower
-      _payOut(deal.resourceProvider, uint256(resultsTimeoutDiff));
+      _payOut(resourceProvider, uint256(resultsTimeoutDiff));
     }
 
     // the refund of the timeout collateral
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
-      deal.timeoutCollateral,
+      dealId,
+      resourceProvider,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.Refunded
     );
 
     // the payment of the job collateral
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.ResultsCollateral,
       PaymentDirection.PaidIn
@@ -178,13 +184,17 @@ contract LilypadPayments is Ownable, Initializable {
   // * refund the JC the job collateral minus the cost
   // * refund the JC the timeout collateral
   function acceptResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     uint256 jobCost,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) public onlyOwner {
     // the difference between the job collateral and the job cost
     // is how much the job creator get's back
-    int256 paymentCollateralRefund = int256(deal.paymentCollateral) - int256(jobCost);
+    int256 paymentCollateralRefund = int256(paymentCollateral) - int256(jobCost);
 
     // the job cost more than the job collateral
     // this means the RP get's less than instruction count * instruction price
@@ -196,12 +206,12 @@ contract LilypadPayments is Ownable, Initializable {
     }
 
     // we pay back the remaining job collateral and timeout collateral to the job creator
-    _payOut(deal.jobCreator, uint256(paymentCollateralRefund) + deal.timeoutCollateral);
+    _payOut(jobCreator, uint256(paymentCollateralRefund) + timeoutCollateral);
 
     if(paymentCollateralRefund > 0) {
       emit Payment(
-        deal.dealId,
-        deal.jobCreator,
+        dealId,
+        jobCreator,
         uint256(paymentCollateralRefund),
         PaymentReason.PaymentCollateral,
         PaymentDirection.Refunded
@@ -209,27 +219,27 @@ contract LilypadPayments is Ownable, Initializable {
     }
 
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.timeoutCollateral,
+      dealId,
+      jobCreator,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.Refunded
     );
 
     // now we pay back the results collateral and the job payment to the RP
-    _payOut(deal.resourceProvider, resultsCollateral + jobCost);
+    _payOut(resourceProvider, resultsCollateral + jobCost);
 
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.ResultsCollateral,
       PaymentDirection.Refunded
     );
 
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       jobCost,
       PaymentReason.JobPayment,
       PaymentDirection.PaidOut
@@ -239,14 +249,18 @@ contract LilypadPayments is Ownable, Initializable {
   // * charge the JC the mediation fee
   // * refund the JC the timeout collateral
   function challengeResult(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 timeoutCollateral,
+    uint256 mediationFee
   ) public onlyOwner {
     // what is the difference between what the JC has already paid and needs to now pay?
     // the JC has paid in the timeout collateral
     // it will now be charged the mediation fee
     // a positive number means we are owed money
     // a negative number means we pay the RP a refund
-    int256 timeoutMediationDiff = int256(deal.timeoutCollateral) - int256(deal.mediationFee);
+    int256 timeoutMediationDiff = int256(timeoutCollateral) - int256(mediationFee);
 
     if(timeoutMediationDiff > 0) {
       // the RP pays us because the job collateral is higher than the timeout collateral
@@ -254,23 +268,23 @@ contract LilypadPayments is Ownable, Initializable {
     }
     else if(timeoutMediationDiff < 0) {
       // we pay the RP because the job collateral is lower
-      _payOut(deal.resourceProvider, uint256(timeoutMediationDiff));
+      _payOut(resourceProvider, uint256(timeoutMediationDiff));
     }
     
     // the refund of the timeout collateral
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.timeoutCollateral,
+      dealId,
+      jobCreator,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.Refunded
     );
 
     // the payment of the mediation fee
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.mediationFee,
+      dealId,
+      jobCreator,
+      mediationFee,
       PaymentReason.MediationFee,
       PaymentDirection.PaidIn
     );
@@ -285,19 +299,23 @@ contract LilypadPayments is Ownable, Initializable {
   // * refund the RP the results collateral
   // * pay the mediator for mediating
   function mediationAcceptResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     address mediator,
     uint256 jobCost,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) public onlyOwner {
-    int256 paymentCollateralRefund = int256(deal.paymentCollateral) - int256(jobCost);
+    int256 paymentCollateralRefund = int256(paymentCollateral) - int256(jobCost);
 
     // if there is a refund for the JC then let's pay it
     if(paymentCollateralRefund > 0) {
-      _payOut(deal.jobCreator, uint256(paymentCollateralRefund));
+      _payOut(jobCreator, uint256(paymentCollateralRefund));
       emit Payment(
-        deal.dealId,
-        deal.jobCreator,
+        dealId,
+        jobCreator,
         uint256(paymentCollateralRefund),
         PaymentReason.PaymentCollateral,
         PaymentDirection.Refunded
@@ -305,31 +323,31 @@ contract LilypadPayments is Ownable, Initializable {
     }
 
     // now we pay back the results collateral and the job payment to the RP
-    _payOut(deal.resourceProvider, resultsCollateral + jobCost);
+    _payOut(resourceProvider, resultsCollateral + jobCost);
 
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.ResultsCollateral,
       PaymentDirection.Refunded
     );
 
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       jobCost,
       PaymentReason.JobPayment,
       PaymentDirection.PaidOut
     );
 
     // pay the mediator
-    _payOut(mediator, deal.mediationFee);
+    _payOut(mediator, mediationFee);
 
     emit Payment(
-      deal.dealId,
+      dealId,
       mediator,
-      deal.mediationFee,
+      mediationFee,
       PaymentReason.MediationFee,
       PaymentDirection.PaidOut
     );
@@ -339,36 +357,40 @@ contract LilypadPayments is Ownable, Initializable {
   // * slash the RP's results collateral
   // * pay the mediator for mediating
   function mediationRejectResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     address mediator,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) public onlyOwner {
     // refund the JC their payment collateral
-    _payOut(deal.jobCreator, deal.paymentCollateral);
+    _payOut(jobCreator, paymentCollateral);
 
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.paymentCollateral,
+      dealId,
+      jobCreator,
+      paymentCollateral,
       PaymentReason.PaymentCollateral,
       PaymentDirection.Refunded
     );
 
     // pay the mediator
-    _payOut(mediator, deal.mediationFee);
+    _payOut(mediator, mediationFee);
 
     emit Payment(
-      deal.dealId,
+      dealId,
       mediator,
-      deal.mediationFee,
+      mediationFee,
       PaymentReason.MediationFee,
       PaymentDirection.PaidOut
     );
 
     // slash the RP
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.ResultsCollateral,
       PaymentDirection.Slashed
@@ -382,25 +404,29 @@ contract LilypadPayments is Ownable, Initializable {
   // * pay back the JC's job collateral
   // * slash the RP's results collateral
   function timeoutSubmitResults(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
   ) public onlyOwner {
     // refund the job creator
-    _payOut(deal.jobCreator, deal.paymentCollateral);
+    _payOut(jobCreator, paymentCollateral);
 
     // the refund of the job collateral to the JC
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.paymentCollateral,
+      dealId,
+      jobCreator,
+      paymentCollateral,
       PaymentReason.PaymentCollateral,
       PaymentDirection.Refunded
     );
 
     // the slashing of the timeout collateral for the RP
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
-      deal.timeoutCollateral,
+      dealId,
+      resourceProvider,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.Slashed
     );
@@ -411,16 +437,19 @@ contract LilypadPayments is Ownable, Initializable {
   // * slash the JC's timeout collateral
   // * slash the JC's job collateral
   function timeoutJudgeResults(
-    SharedStructs.Deal memory deal,
-    uint256 resultsCollateral
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) public onlyOwner {
     // refund the resource provider
-    _payOut(deal.resourceProvider, resultsCollateral);
+    _payOut(resourceProvider, resultsCollateral);
 
     // the refund of the results collateral to the RP
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.PaymentCollateral,
       PaymentDirection.Refunded
@@ -428,9 +457,9 @@ contract LilypadPayments is Ownable, Initializable {
 
     // the slashing of the timeout collateral for the RP
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.timeoutCollateral,
+      dealId,
+      jobCreator,
+      timeoutCollateral,
       PaymentReason.TimeoutCollateral,
       PaymentDirection.Slashed
     );
@@ -438,20 +467,23 @@ contract LilypadPayments is Ownable, Initializable {
 
   // * pay back the RP's results collateral
   // * pay back the JC's paymnet collateral
-  function timeoutMediateResults(
-    SharedStructs.Deal memory deal,
+  function timeoutMediateResult(
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 paymentCollateral,
     uint256 resultsCollateral
   ) public onlyOwner {
     // refund the resource provider
-    _payOut(deal.resourceProvider, resultsCollateral);
+    _payOut(resourceProvider, resultsCollateral);
 
     // refund the job creator
-    _payOut(deal.jobCreator, deal.paymentCollateral);
+    _payOut(jobCreator, paymentCollateral);
 
     // the refund of the results collateral to the RP
     emit Payment(
-      deal.dealId,
-      deal.resourceProvider,
+      dealId,
+      resourceProvider,
       resultsCollateral,
       PaymentReason.ResultsCollateral,
       PaymentDirection.Refunded
@@ -459,9 +491,9 @@ contract LilypadPayments is Ownable, Initializable {
 
     // the refund of the payment collateral to the JC
     emit Payment(
-      deal.dealId,
-      deal.jobCreator,
-      deal.paymentCollateral,
+      dealId,
+      jobCreator,
+      paymentCollateral,
       PaymentReason.PaymentCollateral,
       PaymentDirection.Refunded
     );

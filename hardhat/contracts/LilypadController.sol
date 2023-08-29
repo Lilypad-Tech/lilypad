@@ -100,12 +100,21 @@ contract LilypadController is Ownable, Initializable {
 
     if(isResourceProvider) {
       storageContract.agreeResourceProvider(dealId);
-      paymentsContract.agreeResourceProvider(deal);
+      paymentsContract.agreeResourceProvider(
+        dealId,
+        deal.resourceProvider,
+        deal.timeoutCollateral
+      );
       emit ResourceProviderAgreed(dealId);
     }
     else if(isJobCreator) {
       storageContract.agreeJobCreator(dealId);
-      paymentsContract.agreeJobCreator(deal);
+      paymentsContract.agreeJobCreator(
+        dealId,
+        deal.jobCreator,
+        deal.paymentCollateral,
+        deal.timeoutCollateral
+      );
       emit JobCreatorAgreed(dealId);
     }
 
@@ -149,7 +158,12 @@ contract LilypadController is Ownable, Initializable {
     // we don't know the instruction count
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
-    paymentsContract.addResult(deal, resultsCollateral);
+    paymentsContract.addResult(
+      dealId,
+      deal.resourceProvider,
+      resultsCollateral,
+      deal.timeoutCollateral
+    );
 
     emit ResultAdded(dealId);
   }
@@ -175,7 +189,15 @@ contract LilypadController is Ownable, Initializable {
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
     storageContract.acceptResult(dealId);
-    paymentsContract.acceptResult(deal, jobCost, resultsCollateral);
+    paymentsContract.acceptResult(
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
+      jobCost,
+      deal.paymentCollateral,
+      resultsCollateral,
+      deal.timeoutCollateral
+    );
 
     emit ResultAccepted(dealId);
   }
@@ -198,7 +220,13 @@ contract LilypadController is Ownable, Initializable {
 
     // this function will require that the mediator is in the RP's list of trusted mediators
     storageContract.challengeResult(dealId, mediator);
-    paymentsContract.challengeResult(deal);
+    paymentsContract.challengeResult(
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
+      deal.timeoutCollateral,
+      deal.mediationFee
+    );
     
     emit ResultChallenged(dealId, mediator);
   }
@@ -227,10 +255,14 @@ contract LilypadController is Ownable, Initializable {
 
     storageContract.mediationAcceptResult(dealId);
     paymentsContract.mediationAcceptResult(
-      deal,
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
       agreement.mediator,
       jobCost,
-      resultsCollateral
+      deal.paymentCollateral,
+      resultsCollateral,
+      deal.mediationFee
     );
 
     emit MediationAcceptResult(dealId);
@@ -255,9 +287,13 @@ contract LilypadController is Ownable, Initializable {
 
     storageContract.mediationRejectResult(dealId);
     paymentsContract.mediationRejectResult(
-      deal,
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
       agreement.mediator,
-      resultsCollateral
+      deal.paymentCollateral,
+      resultsCollateral,
+      deal.mediationFee
     );
 
     emit MediationRejectResult(dealId);
@@ -293,7 +329,13 @@ contract LilypadController is Ownable, Initializable {
     require(deal.jobCreator == tx.origin, "Only JC can refund submit results timeout");
 
     storageContract.timeoutSubmitResult(dealId);
-    paymentsContract.timeoutSubmitResult(deal);
+    paymentsContract.timeoutSubmitResult(
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
+      deal.paymentCollateral,
+      deal.timeoutCollateral
+    );
 
     emit TimeoutSubmitResult(dealId);
   }
@@ -318,7 +360,13 @@ contract LilypadController is Ownable, Initializable {
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
     storageContract.timeoutJudgeResult(dealId);    
-    paymentsContract.timeoutJudgeResult(deal, resultsCollateral);
+    paymentsContract.timeoutJudgeResult(
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
+      resultsCollateral,
+      deal.timeoutCollateral
+    );
     
     emit TimeoutJudgeResult(dealId);
   }
@@ -341,7 +389,13 @@ contract LilypadController is Ownable, Initializable {
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
     storageContract.timeoutMediateResult(dealId);
-    paymentsContract.timeoutMediateResult(deal, resultsCollateral);
+    paymentsContract.timeoutMediateResult(
+      dealId,
+      deal.resourceProvider,
+      deal.jobCreator,
+      deal.paymentCollateral,
+      resultsCollateral
+    );
     
     emit TimeoutMediateResult(dealId);
   }
@@ -375,8 +429,3 @@ contract LilypadController is Ownable, Initializable {
   }
 
 }
-
-
-
-
-

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.6;
 
-import "./SharedStructs.sol";
-
 interface ILilypadPayments {
 
   /**
@@ -17,11 +15,16 @@ interface ILilypadPayments {
    * Agreements
    */
   function agreeResourceProvider(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    uint256 timeoutCollateral
   ) external;
 
   function agreeJobCreator(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
   ) external;
 
   /**
@@ -29,18 +32,28 @@ interface ILilypadPayments {
    */
 
   function addResult(
-    SharedStructs.Deal memory deal,
-    uint256 resultsCollateral
+    uint256 dealId,
+    address resourceProvider,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) external;
 
   function acceptResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     uint256 jobCost,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) external;
 
   function challengeResult(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 timeoutCollateral,
+    uint256 mediationFee
   ) external;
 
   /**
@@ -48,16 +61,24 @@ interface ILilypadPayments {
    */
 
   function mediationAcceptResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     address mediator,
     uint256 jobCost,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) external;
 
   function mediationRejectResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
     address mediator,
-    uint256 resultsCollateral
+    uint256 paymentCollateral,
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) external;
 
   /**
@@ -65,16 +86,26 @@ interface ILilypadPayments {
    */
 
   function timeoutSubmitResult(
-    SharedStructs.Deal memory deal
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
   ) external;
 
   function timeoutJudgeResult(
-    SharedStructs.Deal memory deal,
-    uint256 resultsCollateral
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 resultsCollateral,
+    uint256 timeoutCollateral
   ) external;
 
   function timeoutMediateResult(
-    SharedStructs.Deal memory deal,
+    uint256 dealId,
+    address resourceProvider,
+    address jobCreator,
+    uint256 paymentCollateral,
     uint256 resultsCollateral
   ) external;
   
