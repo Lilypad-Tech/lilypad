@@ -39,23 +39,27 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract LilypadToken is Ownable, ERC20 {
 
   // the address the escrow is paid into and out of
-  address private _escrowAddress;
+  address private escrowAddress;
 
   // the address that is allowed to manage the escrow balance
-  address private _controllerAddress;
+  address private controllerAddress;
 
   constructor(
     string memory name,
     string memory symbol,
-    uint256 initialSupply,
-    address escrowAddress,
-    address controllerAddress
+    uint256 initialSupply
   ) ERC20(name, symbol) {
-    require(escrowAddress != address(0), "LilypadToken: escrowAddress cannot be zero address");
-    require(controllerAddress != address(0), "LilypadToken: controllerAddress cannot be zero address");
     _mint(msg.sender, initialSupply);
-    _escrowAddress = escrowAddress;
-    _controllerAddress = controllerAddress;
+  }
+
+  function setEscrowAddress(address _escrowAddress) public onlyOwner {
+    require(_escrowAddress != address(0), "LilypadToken: escrow address must be defined");
+    escrowAddress = _escrowAddress;
+  }
+
+  function setControllerAddress(address _controllerAddress) public onlyOwner {
+    require(_controllerAddress != address(0), "LilypadToken: controller address must be defined");
+    controllerAddress = _controllerAddress;
   }
 
   // so we can pay in money to our payments
@@ -63,13 +67,23 @@ contract LilypadToken is Ownable, ERC20 {
     return tx.origin;
   }
 
+  function payinEscrow(
+    address fromAddress,
+    uint256 amount
+  ) public returns (bool) {
+    require(fromAddress != address(0), "LilypadToken: fromAddress cannot be zero address");
+    require(_msgSender() == fromAddress, "LilypadToken: only message sender can call payinEscrow");
+    _transfer(fromAddress, escrowAddress, amount);
+    return true;
+  }
+
   function payoutEscrow(
     address toAddress,
     uint256 amount
   ) public returns (bool) {
-    require(msg.sender == _controllerAddress, "LilypadToken: only controller can pay from escrow");
     require(toAddress != address(0), "LilypadToken: toAddress cannot be zero address");
-    _transfer(_escrowAddress, toAddress, amount);
+    require(msg.sender == controllerAddress, "LilypadToken: only controller can call payoutEscrow");
+    _transfer(escrowAddress, toAddress, amount);
     return true;
   }
 }

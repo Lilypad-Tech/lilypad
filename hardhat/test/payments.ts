@@ -19,9 +19,10 @@ import {
   ACCOUNTS,
 } from '../utils/accounts'
 import {
-  getServiceType,
-  getAgreementState,
-} from '../utils/enums'
+  getTokenSigners,
+  setupToken,
+  setupTokenWithFunds,
+} from './utils'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -32,19 +33,8 @@ describe("Payments", () => {
 
   const dealID = ethers.getBigInt(10)
 
-  async function setupToken() {
-    const admin = getWallet('admin')
-    const token = await deployToken(admin, DEFAULT_TOKEN_SUPPLY)
-    return token
-  }
-
-  async function setupTokenWithFunds() {
-    const token = await setupToken()
-    await fundAllAccountsWithTokens(token, DEFAULT_TOKENS_PER_ACCOUNT)
-    return token
-  }
-
   async function setupPayments() {
+    const tokenSigners = await getTokenSigners()
     const admin = getWallet('admin')
     const token = await setupTokenWithFunds()
     const payments = await deployPayments(admin, token.getAddress())

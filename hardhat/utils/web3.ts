@@ -96,15 +96,11 @@ export async function getStorageAddress() {
 export async function deployToken(
   signer: Signer,
   tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
-  escrowAddress: AddressLike,
-  controllerAddress: AddressLike,
 ) {
   return deployContract<LilypadToken>('LilypadToken', signer, [
     'LilyPad',
     'LLY',
     tokenSupply,
-    escrowAddress,
-    controllerAddress,
   ])
 }
 

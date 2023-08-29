@@ -1,5 +1,4 @@
 import {
-  time,
   loadFixture,
 } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import chai from 'chai'
@@ -9,52 +8,27 @@ import { ethers } from 'hardhat'
 import {
   getWallet,
   getAddress,
-  deployToken,
-  getRandomWallet,
-  fundAllAccountsWithTokens,
   DEFAULT_TOKEN_SUPPLY,
   DEFAULT_TOKENS_PER_ACCOUNT,
 } from '../utils/web3'
 import {
   ACCOUNTS,
 } from '../utils/accounts'
+import {
+  getTokenSigners,
+  setupToken,
+  setupTokenWithAutoController,
+  setupTokenWithFunds,
+} from './utils'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
+
+
 describe.only("Token", () => {
-
-  async function getSigners() {
-    const signers = await ethers.getSigners()
-    const escrow = signers[signers.length-1]
-    const controller = signers[signers.length-2]
-    const payee = signers[signers.length-3]
-    return {
-      escrow,
-      controller,
-      payee,
-    }
-  }
-
-  async function setupToken() {
-    const signers = await getSigners()
-    const admin = getWallet('admin')
-    const token = await deployToken(
-      admin,
-      DEFAULT_TOKEN_SUPPLY,
-      signers.escrow.address,
-      signers.controller.address,
-    )
-    return token
-  }
-
-  async function setupTokenWithFunds() {
-    const token = await setupToken()
-    await fundAllAccountsWithTokens(token, DEFAULT_TOKENS_PER_ACCOUNT)
-    return token
-  }
 
   describe("Initial Supply", () => {
 
@@ -72,12 +46,12 @@ describe.only("Token", () => {
     })
   })
 
-  describe("Pay out escrow", () => {
+  describe("escrow", () => {
 
-    it("Should pay out when called from the controller", async function () {
+    it("Should pay in and pay out", async function () {
       const amount = ethers.getBigInt(100)
-      const token = await loadFixture(setupToken)
-      const signers = await getSigners()
+      const token = await loadFixture(setupTokenWithAutoController)
+      const signers = await getTokenSigners()
 
       expect(await token
         .connect(getWallet('admin'))
@@ -104,7 +78,7 @@ describe.only("Token", () => {
     it("Can only be run by the controller", async function () {
       const amount = ethers.getBigInt(100)
       const token = await loadFixture(setupToken)
-      const signers = await getSigners()
+      const signers = await getTokenSigners()
 
       await expect(token
         .connect(getWallet('admin'))
@@ -112,7 +86,7 @@ describe.only("Token", () => {
           signers.payee.address,
           amount
         )
-      ).to.be.revertedWith('LilypadToken: only controller can pay from escrow')
+      ).to.be.revertedWith('LilypadToken: only controller can call payoutEscrow')
     })
 
   })
