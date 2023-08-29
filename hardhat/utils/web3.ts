@@ -140,37 +140,20 @@ export async function getControllerAddress() {
 }
 
 export async function fundAccountTokens(
+  tokenContract: LilypadToken,
   address: AddressLike,
   amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
 ) {
-  const token = await connectToken()
-  await token
+  await tokenContract
     .connect(getWallet('admin'))
     .transfer(address, amount)
 }
 
-export async function fundAllTokens(
+export async function fundAllAccountsWithTokens(
+  tokenContract: LilypadToken,
   amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
 ) {
   await bluebird.mapSeries(ACCOUNTS, async (account) => {
-    fundAccountTokens(account.address, amount)
+    await fundAccountTokens(tokenContract, account.address, amount)
   })
-}
-
-export async function deployContracts(
-  signer: Signer,
-  tokenSupply = DEFAULT_TOKEN_SUPPLY,
-  tokensPerAccount = DEFAULT_TOKENS_PER_ACCOUNT,
-) {
-  const storage = await deployStorage(signer)
-  const token = await deployToken(signer, tokenSupply)
-  const storageAddress = await getStorageAddress()
-  const tokenAddress = await getTokenAddress()
-  const controller = await deployController(signer, storageAddress, tokenAddress)
-  await fundAllTokens(tokensPerAccount)
-  return {
-    storage,
-    token,
-    controller,
-  }
 }
