@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.6;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./SharedStructs.sol";
+import "./ControllerOwnable.sol";
 
 // import "@openzeppelin/contracts/utils/Strings.sol";
 // import "hardhat/console.sol";
@@ -11,7 +11,7 @@ import "./SharedStructs.sol";
 // console.log(Strings.toString(uint256(SharedStructs.AgreementState.DealNegotiating)));
 // console.log(Strings.toString(uint256(agreements[dealId].state)));
 
-contract LilypadStorage is Ownable, Initializable {
+contract LilypadStorage is ControllerOwnable, Initializable {
 
   // the address that is allowed to be the msg.sender for the payment functions
   address private controllerAddress;
@@ -169,7 +169,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateralMultiple,
     uint256 mediationFee
-  ) public onlyOwner returns (SharedStructs.Deal memory) {
+  ) public onlyController returns (SharedStructs.Deal memory) {
     require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal is not in DealNegotiating state");
     require(resourceProvider != address(0), "Resource provider must be defined");
     require(jobCreator != address(0), "Job creator must be defined");
@@ -217,7 +217,7 @@ contract LilypadStorage is Ownable, Initializable {
 
   function agreeResourceProvider(
     uint256 dealId
-  ) public onlyOwner returns (SharedStructs.Agreement memory) {
+  ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].resourceProviderAgreedAt == 0, "Resource provider has already agreed");
     agreements[dealId].resourceProviderAgreedAt = block.timestamp;
@@ -227,7 +227,7 @@ contract LilypadStorage is Ownable, Initializable {
 
   function agreeJobCreator(
     uint256 dealId
-  ) public onlyOwner returns (SharedStructs.Agreement memory) {
+  ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].jobCreatorAgreedAt == 0, "Job creator has already agreed");
     agreements[dealId].jobCreatorAgreedAt = block.timestamp;
@@ -249,7 +249,7 @@ contract LilypadStorage is Ownable, Initializable {
     uint256 dealId,
     uint256 resultsId,
     uint256 instructionCount
-  ) public onlyOwner returns (SharedStructs.Result memory) {
+  ) public onlyController returns (SharedStructs.Result memory) {
     require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
     agreements[dealId].resultsSubmittedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsSubmitted);
@@ -267,7 +267,7 @@ contract LilypadStorage is Ownable, Initializable {
 
   function acceptResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     agreements[dealId].resultsAcceptedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsAccepted);
@@ -276,7 +276,7 @@ contract LilypadStorage is Ownable, Initializable {
   function checkResult(
     uint256 dealId,
     address mediator
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     SharedStructs.Deal memory deal = getDeal(dealId);
     require(_hasTrustedMediator(deal.resourceProvider, mediator), "Resource provider does not trust that mediator");
@@ -292,7 +292,7 @@ contract LilypadStorage is Ownable, Initializable {
 
   function mediationAcceptResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
     agreements[dealId].mediationAcceptedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationAccepted);
@@ -300,7 +300,7 @@ contract LilypadStorage is Ownable, Initializable {
 
   function mediationRejectResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
     agreements[dealId].mediationRejectedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationRejected);
@@ -314,7 +314,7 @@ contract LilypadStorage is Ownable, Initializable {
   // and wants it's money back
   function timeoutSubmitResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
     agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutSubmitResults);
@@ -324,7 +324,7 @@ contract LilypadStorage is Ownable, Initializable {
   // and wants it's money back
   function timeoutJudgeResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutJudgeResults);
@@ -333,7 +333,7 @@ contract LilypadStorage is Ownable, Initializable {
   // and both want their money back
   function timeoutMediateResult(
     uint256 dealId
-  ) public onlyOwner {
+  ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
     agreements[dealId].timeoutMediateResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutMediateResults);
