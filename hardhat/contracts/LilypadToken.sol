@@ -46,7 +46,7 @@ contract LilypadToken is ControllerOwnable, ERC20 {
     _mint(msg.sender, initialSupply);
   }
 
-  function getEscrowBalance(
+  function escrowBalanceOf(
     address _address
   ) public view returns (uint256) {
     return escrowBalances[_address];

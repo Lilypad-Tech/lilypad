@@ -18,14 +18,14 @@ import {
 } from '../utils/accounts'
 import {
   setupPaymentsFixture,
-} from './utils'
+} from './fixtures'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe.only("Payments", () => {
+describe("Payments", () => {
 
   const dealID = ethers.getBigInt(10)
 

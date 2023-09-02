@@ -16,16 +16,26 @@ import {
 } from '../utils/accounts'
 import {
   setupTokenFixture,
-} from './utils'
+} from './fixtures'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe("Token", () => {
+describe.only("Token", () => {
 
-  const setupTokenWithFunds = () => setupTokenFixture(true)
-  const setupTokenWithoutFunds = () => setupTokenFixture(false)
-
+  function setupTokenWithFunds() {
+    return setupTokenFixture({
+      testMode: true,
+      withFunds: true,
+    })
+  }
+  function setupTokenWithoutFunds() {
+    return setupTokenFixture({
+      testMode: true,
+      withFunds: false,
+    })
+  }
+  
   describe("Initial Supply", () => {
 
     it("Should fund admin with initial supply", async function () {
@@ -42,18 +52,63 @@ describe("Token", () => {
     })
   })
 
-  describe("escrow", () => {
+  describe("Access control", () => {
+    it("Can only run if there is a controller address set", async function () {
+      const amount = ethers.getBigInt(100)
+      const token = await setupTokenFixture({
+        testMode: false,
+        withFunds: false,
+      })
 
-    it("Should pay in and pay out", async function () {
+      await expect(token
+        .connect(getWallet('resource_provider'))
+        .refundEscrow(
+          getAddress('resource_provider'),
+          amount
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only be run by the controller", async function () {
+      const amount = ethers.getBigInt(100)
+      const token = await setupTokenFixture({
+        testMode: false,
+        withFunds: false,
+        // just something so it's set
+        controllerAddress: getAddress('mediator'),
+      })
+
+      await expect(token
+        .connect(getWallet('resource_provider'))
+        .refundEscrow(
+          getAddress('resource_provider'),
+          amount
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+  })
+
+  describe("Escrow", () => {
+
+    it("Should handle the end of end of running a job", async function () {
       const amount = ethers.getBigInt(100)
       const token = await loadFixture(setupTokenWithFunds)
       const tokenAddress = await token.getAddress()
 
       const getBalances = async () => {
         return bluebird.props({
-          job_creator: token.balanceOf(getAddress('job_creator')),
-          resource_provider: token.balanceOf(getAddress('resource_provider')),
-          escrow: token.balanceOf(tokenAddress),
+          escrow: bluebird.props({
+            job_creator: token.escrowBalanceOf(getAddress('job_creator')),
+            resource_provider: token.escrowBalanceOf(getAddress('resource_provider')),
+            slashed: token.escrowBalanceOf(getAddress('admin')),
+          }),
+          tokens: bluebird.props({
+            job_creator: token.balanceOf(getAddress('job_creator')),
+            resource_provider: token.balanceOf(getAddress('resource_provider')),
+            escrow: token.balanceOf(tokenAddress),
+            slashed: token.balanceOf(getAddress('admin')),
+          })
+          
         })
       }
 
@@ -61,35 +116,30 @@ describe("Token", () => {
 
       expect(await token
         .connect(getWallet('job_creator'))
-        .payinEscrow(amount)
+        .payEscrow(amount)
       ).to.not.be.reverted
 
       const balances2 = await getBalances()
-      expect(balances2.job_creator).to.equal(balances1.job_creator - amount)
-      expect(balances2.escrow).to.equal(balances1.escrow + amount)
+      expect(balances2.tokens.job_creator).to.equal(balances1.tokens.job_creator - amount)
+      expect(balances2.escrow.job_creator).to.equal(balances1.escrow.job_creator + amount)
+      expect(balances2.tokens.escrow).to.equal(amount)
 
       expect(await token
         .connect(getWallet('admin'))
-        .payoutEscrow(getAddress('resource_provider'), amount)
-      ).to.not.be.reverted
-
-      const balances3 = await getBalances()
-      expect(balances3.resource_provider).to.equal(balances2.resource_provider + amount)
-      expect(balances3.escrow).to.equal(balances2.escrow - amount)
-    })
-
-    it("Can only be run by the controller", async function () {
-      const amount = ethers.getBigInt(100)
-      const token = await loadFixture(setupTokenWithFunds)
-
-      await expect(token
-        .connect(getWallet('resource_provider'))
-        .payoutEscrow(
+        .payJob(
+          getAddress('job_creator'),
           getAddress('resource_provider'),
           amount
         )
-      ).to.be.revertedWith('Ownable: caller is not the owner')
+      ).to.not.be.reverted
+
+      const balances3 = await getBalances()
+      expect(balances3.tokens.resource_provider).to.equal(balances2.tokens.resource_provider + amount)
+      expect(balances3.escrow.job_creator).to.equal(balances2.escrow.job_creator - amount)
+      expect(balances3.tokens.escrow).to.equal(0)
     })
+
+    
 
   })
 })
