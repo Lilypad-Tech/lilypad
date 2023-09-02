@@ -22,9 +22,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-// https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
-
-describe.only("Token", () => {
+describe("Token", () => {
 
   describe("Initial Supply", () => {
 
