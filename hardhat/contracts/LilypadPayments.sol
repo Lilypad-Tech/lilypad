@@ -125,7 +125,7 @@ contract LilypadPayments is Ownable, Initializable {
     address resourceProvider,
     uint256 timeoutCollateral
   ) public {
-    require(tx.origin == resourceProvider, "Can only be called by the RP");
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
     _pay(
       dealId,
       resourceProvider,
@@ -143,7 +143,7 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 timeoutCollateral
   ) public {
-    require(tx.origin == jobCreator, "Can only be called by the JC");
+    require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
     _pay(
       dealId,
       jobCreator,
@@ -174,7 +174,8 @@ contract LilypadPayments is Ownable, Initializable {
     address resourceProvider,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
     // the refund of the timeout collateral
     _pay(
       dealId,
@@ -208,7 +209,8 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
 
     // pay the RP the job cost
     _pay(
@@ -268,7 +270,9 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 timeoutCollateral,
     uint256 mediationFee
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
+    
     // the refund of the timeout collateral
     _pay(
       dealId,
@@ -308,7 +312,6 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 resultsCollateral,
     uint256 mediationFee
   ) public onlyOwner {
-
     // pay the RP the job cost
     _pay(
       dealId,
@@ -412,7 +415,8 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
     // the refund of the job collateral to the JC
     _pay(
       dealId,
@@ -444,7 +448,8 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
     // the refund of the results collateral to the RP
     _pay(
       dealId,
@@ -476,7 +481,8 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == resourceProvider || tx.origin == jobCreator, "LilypadPayments: Can only be called by the RP or JC");
     // the refund of the results collateral to the RP
     _pay(
       dealId,
@@ -519,7 +525,7 @@ contract LilypadPayments is Ownable, Initializable {
   function _payIn(
     uint256 amount
   ) private {
-    require(tokenContract.balanceOf(tx.origin) >= amount, "Insufficient balance");
+    require(tokenContract.balanceOf(tx.origin) >= amount, "LilypadPayments: Insufficient balance");
 
     console.log("PAY IN");
     console.log(accountNames[tx.origin]);
@@ -534,7 +540,7 @@ contract LilypadPayments is Ownable, Initializable {
     address payWho,
     uint256 amount
   ) private {
-    require(tokenContract.balanceOf(tokenAddress) >= amount, "Insufficient balance");
+    require(tokenContract.balanceOf(tokenAddress) >= amount, "LilypadPayments: Insufficient balance");
 
     console.log("PAY OUT");
     console.log(accountNames[payWho]);
@@ -552,7 +558,7 @@ contract LilypadPayments is Ownable, Initializable {
     PaymentDirection direction
   ) private {
     if(direction == PaymentDirection.Refunded) {
-      require(escrowBalances[payee] >= amount, "Insufficient balance");
+      require(escrowBalances[payee] >= amount, "LilypadPayments: Insufficient balance");
     }
     if(direction == PaymentDirection.PaidIn) {
       _payIn(amount);
