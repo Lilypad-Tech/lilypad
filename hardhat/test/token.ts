@@ -15,9 +15,7 @@ import {
   ACCOUNTS,
 } from '../utils/accounts'
 import {
-  getTokenSigners,
   setupToken,
-  setupTokenWithAutoController,
   setupTokenWithFunds,
 } from './utils'
 
@@ -25,8 +23,6 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
-
-
 
 describe.only("Token", () => {
 
@@ -50,43 +46,49 @@ describe.only("Token", () => {
 
     it("Should pay in and pay out", async function () {
       const amount = ethers.getBigInt(100)
-      const token = await loadFixture(setupTokenWithAutoController)
-      const signers = await getTokenSigners()
+      const token = await loadFixture(setupTokenWithFunds)
+      const tokenAddress = await token.getAddress()
+
+      const getBalances = async () => {
+        return bluebird.props({
+          job_creator: token.balanceOf(getAddress('job_creator')),
+          resource_provider: token.balanceOf(getAddress('resource_provider')),
+          escrow: token.balanceOf(tokenAddress),
+        })
+      }
+
+      const balances1 = await getBalances()
+
+      expect(await token
+        .connect(getWallet('job_creator'))
+        .payinEscrow(amount)
+      ).to.not.be.reverted
+
+      const balances2 = await getBalances()
+      expect(balances2.job_creator).to.equal(balances1.job_creator - amount)
+      expect(balances2.escrow).to.equal(balances1.escrow + amount)
 
       expect(await token
         .connect(getWallet('admin'))
-        .transfer(
-          signers.escrow.address,
-          amount
-        )
+        .payoutEscrow(getAddress('resource_provider'), amount)
       ).to.not.be.reverted
 
-      expect(await token.balanceOf(signers.escrow.address)).to.equal(amount)
-
-      expect(await token
-        .connect(signers.controller)
-        .payoutEscrow(
-          signers.payee.address,
-          amount
-        )
-      ).to.not.be.reverted
-
-      expect(await token.balanceOf(signers.escrow.address)).to.equal(0)
-      expect(await token.balanceOf(signers.payee.address)).to.equal(amount)
+      const balances3 = await getBalances()
+      expect(balances3.resource_provider).to.equal(balances2.resource_provider + amount)
+      expect(balances3.escrow).to.equal(balances2.escrow - amount)
     })
 
     it("Can only be run by the controller", async function () {
       const amount = ethers.getBigInt(100)
       const token = await loadFixture(setupToken)
-      const signers = await getTokenSigners()
 
       await expect(token
-        .connect(getWallet('admin'))
+        .connect(getWallet('resource_provider'))
         .payoutEscrow(
-          signers.payee.address,
+          getAddress('resource_provider'),
           amount
         )
-      ).to.be.revertedWith('LilypadToken: only controller can call payoutEscrow')
+      ).to.be.revertedWith('Ownable: caller is not the owner')
     })
 
   })

@@ -219,10 +219,9 @@ contract LilypadController is Ownable, Initializable {
     require(deal.jobCreator == tx.origin, "Only JC can challenge result");
 
     // this function will require that the mediator is in the RP's list of trusted mediators
-    storageContract.challengeResult(dealId, mediator);
-    paymentsContract.challengeResult(
+    storageContract.checkResult(dealId, mediator);
+    paymentsContract.checkResult(
       dealId,
-      deal.resourceProvider,
       deal.jobCreator,
       deal.timeoutCollateral,
       deal.mediationFee
@@ -394,7 +393,8 @@ contract LilypadController is Ownable, Initializable {
       deal.resourceProvider,
       deal.jobCreator,
       deal.paymentCollateral,
-      resultsCollateral
+      resultsCollateral,
+      deal.mediationFee
     );
     
     emit TimeoutMediateResult(dealId);

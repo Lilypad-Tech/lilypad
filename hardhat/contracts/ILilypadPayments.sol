@@ -12,6 +12,14 @@ interface ILilypadPayments {
   ) external;
 
   /**
+   * Escrow
+   */
+
+  function getEscrowBalance(
+    address _tokenAddress
+  ) external returns (uint256);
+
+  /**
    * Agreements
    */
   function agreeResourceProvider(
@@ -48,9 +56,8 @@ interface ILilypadPayments {
     uint256 timeoutCollateral
   ) external;
 
-  function challengeResult(
+  function checkResult(
     uint256 dealId,
-    address resourceProvider,
     address jobCreator,
     uint256 timeoutCollateral,
     uint256 mediationFee
@@ -106,7 +113,8 @@ interface ILilypadPayments {
     address resourceProvider,
     address jobCreator,
     uint256 paymentCollateral,
-    uint256 resultsCollateral
+    uint256 resultsCollateral,
+    uint256 mediationFee
   ) external;
   
 }

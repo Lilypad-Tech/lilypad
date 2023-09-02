@@ -115,12 +115,11 @@ export async function getTokenAddress() {
 export async function deployPayments(
   signer: Signer,
   tokenAddress: AddressLike,
-  escrowAddress: AddressLike,
 ) {
   const payments = await deployContract<LilypadPayments>('LilypadPayments', signer)
   await payments
     .connect(signer)
-    .initialize(tokenAddress, escrowAddress)
+    .initialize(tokenAddress)
   return payments
 }
 

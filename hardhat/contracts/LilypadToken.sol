@@ -5,44 +5,29 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /*
-  standard ERC20 token but with 2 key changes
+  standard ERC20 token but with some additional features:
 
-   * use tx.origin instead of msg.sender
-   * `payFromEscrow` function
+   * Ownable
+   * payinEscrow
+   * payoutEscrow
+
+  the escrow functions are designed to be called by the payments contract
+
+   * deploy this contract as admin
+   * deploy the payments contract as admin and pass this address to it
+   * update the owner of this contract to be the payments contract
   
-  ## tx.origin
-
-  we use tx.origin so that actual wallet owners can call controller functions
-  that pass through to the payments contract which then passes the tx through to here
-
-  equally, this is just an ERC-20 contract where any user can move their funds
-  around freely
-
-  so - the one change we make is to use tx.origin instead of msg.sender
-  this means the ORIGINAL sender of the tx is who pays into the contract
-  and not the address of the calling contract (most likely the payments contract)
-
-  in the case that a wallet owner calls a function directly on this contract
-  it's the same behaviour as msg.sender
-
-  ## payFromEscrow()
-
-  we need a way for our controller (i.e. payments) contract to be able to pay out to users
-  so we manage:
+  now, only the payments contract can call the escrow functions on behalf of address(this)
   
-   * "_escrowAddress" - the address that "has" the escrow balance
-   * "_controllerAddress" - the address that can manage the escrow balance
+  no other address other than address(this) (i.e. this contract) are affected by these functions
 
-  this address will accumulate and pay out tokens to/from users
+  in other words - these two functions give our payments contract the ability to
+  pay into and pay out of the escrow balance regardless of who has signed the tx
 
  */
 contract LilypadToken is Ownable, ERC20 {
 
-  // the address the escrow is paid into and out of
-  address private escrowAddress;
-
-  // the address that is allowed to manage the escrow balance
-  address private controllerAddress;
+  mapping(address => uint256) private escrowBalances;
 
   constructor(
     string memory name,
@@ -52,38 +37,23 @@ contract LilypadToken is Ownable, ERC20 {
     _mint(msg.sender, initialSupply);
   }
 
-  function setEscrowAddress(address _escrowAddress) public onlyOwner {
-    require(_escrowAddress != address(0), "LilypadToken: escrow address must be defined");
-    escrowAddress = _escrowAddress;
-  }
-
-  function setControllerAddress(address _controllerAddress) public onlyOwner {
-    require(_controllerAddress != address(0), "LilypadToken: controller address must be defined");
-    controllerAddress = _controllerAddress;
-  }
-
-  // so we can pay in money to our payments
-  function _msgSender() internal view override returns (address) {
-    return tx.origin;
-  }
-
   function payinEscrow(
-    address fromAddress,
     uint256 amount
   ) public returns (bool) {
-    require(fromAddress != address(0), "LilypadToken: fromAddress cannot be zero address");
-    require(_msgSender() == fromAddress, "LilypadToken: only message sender can call payinEscrow");
-    _transfer(fromAddress, escrowAddress, amount);
+    // it's important we use tx.origin and not msg.sender here
+    // msg.sender will be the payments contract
+    // tx.origin will be the user who called the controller -> payments -> token
+    // i.e. the account that is actually paying into the escrow address
+    _transfer(tx.origin, address(this), amount);
     return true;
   }
 
   function payoutEscrow(
     address toAddress,
     uint256 amount
-  ) public returns (bool) {
+  ) public onlyOwner returns (bool) {
     require(toAddress != address(0), "LilypadToken: toAddress cannot be zero address");
-    require(msg.sender == controllerAddress, "LilypadToken: only controller can call payoutEscrow");
-    _transfer(escrowAddress, toAddress, amount);
+    _transfer(address(this), toAddress, amount);
     return true;
   }
 }

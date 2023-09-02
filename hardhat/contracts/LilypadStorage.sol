@@ -267,7 +267,7 @@ contract LilypadStorage is Ownable, Initializable {
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsAccepted);
   }
 
-  function challengeResult(
+  function checkResult(
     uint256 dealId,
     address mediator
   ) public onlyOwner {

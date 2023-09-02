@@ -98,7 +98,7 @@ interface ILilypadStorage {
     uint256 dealId
   ) external;
 
-  function challengeResult(
+  function checkResult(
     uint256 dealId,
     address mediator
   ) external;
