@@ -142,7 +142,8 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
-  ) public onlyOwner {
+  ) public {
+    require(tx.origin == jobCreator, "Can only be called by the JC");
     _pay(
       dealId,
       jobCreator,
