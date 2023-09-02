@@ -1,5 +1,4 @@
 import {
-  time,
   loadFixture,
 } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import chai from 'chai'
@@ -7,21 +6,18 @@ import bluebird from 'bluebird'
 import chaiAsPromised from 'chai-as-promised'
 import { ethers } from 'hardhat'
 import {
+  getPaymentReason,
+  getPaymentDirection,
+} from '../utils/enums'
+import {
   getWallet,
   getAddress,
-  deployToken,
-  deployPayments,
-  fundAllAccountsWithTokens,
-  DEFAULT_TOKEN_SUPPLY,
-  DEFAULT_TOKENS_PER_ACCOUNT,
 } from '../utils/web3'
 import {
   ACCOUNTS,
 } from '../utils/accounts'
 import {
-  getTokenSigners,
-  setupToken,
-  setupTokenWithFunds,
+  setupPaymentsFixture,
 } from './utils'
 
 chai.use(chaiAsPromised)
@@ -29,51 +25,23 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe("Payments", () => {
+describe.only("Payments", () => {
 
   const dealID = ethers.getBigInt(10)
 
-  async function setupPayments() {
-    const tokenSigners = await getTokenSigners()
-    const admin = getWallet('admin')
-    const token = await setupTokenWithFunds()
-    const payments = await deployPayments(admin, token.getAddress())
-    return {
-      token,
-      payments
-    }
-  }
+  describe("Deals", () => {
 
-  describe("Token supply", () => {
-
-    it("Should fund admin with initial supply", async function () {
-      const token = await loadFixture(setupToken)
-      expect(await token.balanceOf(getAddress('admin'))).to.equal(DEFAULT_TOKEN_SUPPLY)
-    })
-
-    it("Should fund all accounts with DEFAULT_TOKENS_PER_ACCOUNT", async function () {
-      const token = await loadFixture(setupTokenWithFunds)
-      await bluebird.mapSeries(ACCOUNTS, async (account) => {
-        if(account.name === 'admin') return
-        expect(await token.balanceOf(getAddress(account.name))).to.equal(DEFAULT_TOKENS_PER_ACCOUNT)
-      })
-    })
-  })
-
-  describe("Token approval", () => {
-
-    // test that when as a job creator - we agree to a deal
-    // the tokens are moved from our account to the payments contract
-    // and that happens automatically because the arrangement of
-    // contracts is such that the auto approval works
-    it("Should auto approve the movement of tokens", async function () {
+    it("Should agree resource provider", async function () {
 
       const timeoutCollateral = ethers.getBigInt(10)
 
       const {
         token,
         payments,
-      } = await loadFixture(setupPayments)
+      } = await loadFixture(setupPaymentsFixture)
+
+      const balanceBefore = await token.balanceOf(getAddress('resource_provider'))
+      const escrowBefore = await payments.getEscrowBalance(getAddress('resource_provider'))
 
       await expect(payments
         .connect(getWallet('resource_provider'))
@@ -82,32 +50,22 @@ describe("Payments", () => {
           getAddress('resource_provider'),
           timeoutCollateral,
         )
-      ).to.not.be.reverted
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('PaidIn'),
+        )
 
-      // use bluebird to map over all accounts and check that the balances are correct
-      await bluebird.mapSeries(ACCOUNTS, async (account) => {
-        const balance = await token.balanceOf(getAddress(account.name))
-        console.log(`account: ${account.name} (${account.address}) - balance: ${balance}`)
-      })  
+      const balanceAfter = await token.balanceOf(getAddress('resource_provider'))
+      const escrowAfter = await payments.getEscrowBalance(getAddress('resource_provider'))
 
-      //expect(await token.balanceOf(getAddress('resource_provider'))).to.equal(DEFAULT_TOKEN_SUPPLY - timeoutCollateral)
-      
+      expect(balanceAfter).to.equal(balanceBefore - timeoutCollateral)
+      expect(escrowAfter).to.equal(escrowBefore + timeoutCollateral)
     })
 
   })
-
-  // describe("End to end", () => {
-
-  //   it("Should run a job and payout", async function () {
-  //     const {
-  //       storage,
-  //       token,
-  //       controller,
-  //     } = await loadFixture(setupContracts)
-
-
-  //   })
-
-  // })
-
 })

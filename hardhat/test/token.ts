@@ -15,8 +15,7 @@ import {
   ACCOUNTS,
 } from '../utils/accounts'
 import {
-  setupToken,
-  setupTokenWithFunds,
+  setupTokenFixture,
 } from './utils'
 
 chai.use(chaiAsPromised)
@@ -24,10 +23,13 @@ const { expect } = chai
 
 describe("Token", () => {
 
+  const setupTokenWithFunds = () => setupTokenFixture(true)
+  const setupTokenWithoutFunds = () => setupTokenFixture(false)
+
   describe("Initial Supply", () => {
 
     it("Should fund admin with initial supply", async function () {
-      const token = await loadFixture(setupToken)
+      const token = await loadFixture(setupTokenWithoutFunds)
       expect(await token.balanceOf(getAddress('admin'))).to.equal(DEFAULT_TOKEN_SUPPLY)
     })
 
@@ -78,7 +80,7 @@ describe("Token", () => {
 
     it("Can only be run by the controller", async function () {
       const amount = ethers.getBigInt(100)
-      const token = await loadFixture(setupToken)
+      const token = await loadFixture(setupTokenWithFunds)
 
       await expect(token
         .connect(getWallet('resource_provider'))

@@ -17,6 +17,11 @@ import {
   LilypadController,
 } from '../typechain-types'
 
+/*
+
+  CONSTANTS
+
+*/
 export const AMOUNT_TO_FUND = ethers.parseEther('10000')
 
 // a million tokens in total
@@ -25,6 +30,11 @@ export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000')
 // each service gets 1000 tokens
 export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.parseEther('1000')
 
+/*
+
+  WALLET UTILS
+
+*/
 export const getWallet = (name: string) => {
   const account = getAccount(name)
   return new ethers.Wallet(account.privateKey, ethers.provider)
@@ -39,7 +49,6 @@ export const getRandomWallet = () => {
   return ethers.Wallet.createRandom()
 }
 
-// amount is in wei
 export const transfer = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
   const signer = new hre.ethers.Wallet(fromAccount.privateKey)
 
@@ -52,6 +61,11 @@ export const transfer = async (fromAccount: Account, toAccount: Account, amount:
   console.log(`Moved ${amount} from ${fromAccount.name} (${fromAccount.address}) to ${toAccount.name} (${toAccount.address}) - ${tx.hash}.`)
 }
 
+/*
+
+  DEPLOYMENT
+
+*/
 export async function deployContract<T extends any>(
   name: string,
   signer: Signer,
@@ -81,18 +95,12 @@ export async function getContractAddress(
   return deployment.address
 }
 
-export async function deployStorage(signer: Signer) {
-  return deployContract<LilypadStorage>('LilypadStorage', signer)
-}
 
-export async function connectStorage() {
-  return connectContract<LilypadStorage>('LilypadStorage')
-}
+/*
 
-export async function getStorageAddress() {
-  return getContractAddress('LilypadStorage')
-}
+  TOKEN
 
+*/
 export async function deployToken(
   signer: Signer,
   tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
@@ -112,6 +120,30 @@ export async function getTokenAddress() {
   return getContractAddress('LilypadToken')
 }
 
+export async function fundTokens(
+  tokenContract: LilypadToken,
+  address: AddressLike,
+  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
+) {
+  await tokenContract
+    .connect(getWallet('admin'))
+    .transfer(address, amount)
+}
+
+export async function fundAccountsWithTokens(
+  tokenContract: LilypadToken,
+  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
+) {
+  await bluebird.mapSeries(ACCOUNTS, async (account) => {
+    await fundTokens(tokenContract, account.address, amount)
+  })
+}
+
+/*
+
+  PAYMENTS
+
+*/
 export async function deployPayments(
   signer: Signer,
   tokenAddress: AddressLike,
@@ -123,6 +155,31 @@ export async function deployPayments(
   return payments
 }
 
+
+/*
+
+  STORAGE
+
+*/
+export async function deployStorage(signer: Signer) {
+  return deployContract<LilypadStorage>('LilypadStorage', signer)
+}
+
+export async function connectStorage() {
+  return connectContract<LilypadStorage>('LilypadStorage')
+}
+
+export async function getStorageAddress() {
+  return getContractAddress('LilypadStorage')
+}
+
+
+
+/*
+
+  CONTROLLER
+
+*/
 export async function deployController(
   signer: Signer,
   storageAddress: AddressLike,
@@ -141,23 +198,4 @@ export async function connectController() {
 
 export async function getControllerAddress() {
   return getContractAddress('LilypadController')
-}
-
-export async function fundAccountTokens(
-  tokenContract: LilypadToken,
-  address: AddressLike,
-  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
-) {
-  await tokenContract
-    .connect(getWallet('admin'))
-    .transfer(address, amount)
-}
-
-export async function fundAllAccountsWithTokens(
-  tokenContract: LilypadToken,
-  amount: BigNumberish = DEFAULT_TOKENS_PER_ACCOUNT,
-) {
-  await bluebird.mapSeries(ACCOUNTS, async (account) => {
-    await fundAccountTokens(tokenContract, account.address, amount)
-  })
 }

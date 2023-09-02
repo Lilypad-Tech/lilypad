@@ -2,22 +2,51 @@ import { ethers } from 'hardhat'
 import {
   getWallet,
   deployToken,
-  fundAllAccountsWithTokens,
+  deployPayments,
+  fundAccountsWithTokens,
   DEFAULT_TOKEN_SUPPLY,
   DEFAULT_TOKENS_PER_ACCOUNT,
 } from '../utils/web3'
 
-export async function setupToken() {
+/*
+
+  FIXTURES
+
+  these are thin wrappers around our web3 utils lib
+
+  used by tests to prepare env for unit tests
+
+*/
+
+/*
+
+  TOKEN
+
+*/
+export async function setupTokenFixture(withFunds = true) {
   const admin = getWallet('admin')
   const token = await deployToken(
     admin,
     DEFAULT_TOKEN_SUPPLY,
   )
+  if(withFunds) {
+    await fundAccountsWithTokens(token, DEFAULT_TOKENS_PER_ACCOUNT)
+  }
   return token
 }
 
-export async function setupTokenWithFunds() {
-  const token = await setupToken()
-  await fundAllAccountsWithTokens(token, DEFAULT_TOKENS_PER_ACCOUNT)
-  return token
+/*
+
+  PAYMENTS
+
+*/
+export async function setupPaymentsFixture() {
+  const admin = getWallet('admin')
+  const token = await setupTokenFixture(true)
+  const payments = await deployPayments(admin, token.getAddress())
+  token.transferOwnership(payments.getAddress())
+  return {
+    token,
+    payments,
+  }
 }
