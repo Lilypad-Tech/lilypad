@@ -4,6 +4,7 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ILilypadToken.sol";
+import "./ControllerOwnable.sol";
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "hardhat/console.sol";
@@ -11,7 +12,7 @@ import "hardhat/console.sol";
 // console.log(Strings.toString(uint256(SharedStructs.AgreementState.DealNegotiating)));
 // console.log(Strings.toString(uint256(agreements[dealId].state)));
 
-contract LilypadPayments is Ownable, Initializable {
+contract LilypadPayments is ControllerOwnable, Initializable {
 
   /**
    * Types
@@ -21,8 +22,8 @@ contract LilypadPayments is Ownable, Initializable {
   address private tokenAddress;
   ILilypadToken private tokenContract;
 
-  // keep track of the current escrow balance for each address
-  mapping(address => uint256) private escrowBalances;
+  // used to cut off upgrades for the remote contract
+  bool private canChangeTokenAddress = true;
 
   /**
    * Enums
@@ -96,10 +97,17 @@ contract LilypadPayments is Ownable, Initializable {
     accountNames[address(0x976EA74026E726554dB657fA54763abd0C3a0aa9)] = "directory";
   }
 
+  // the LilypadToken we are calling payinEscrow and payoutEscrow on
   function setTokenAddress(address _tokenAddress) public onlyOwner {
-    require(_tokenAddress != address(0), "Token address must be defined");
+    require(_tokenAddress != address(0), "LilepadPayments: Token address must be defined");
+    require(canChangeTokenAddress, "LilypadToken: canChangeTokenAddress is disabled");
     tokenAddress = _tokenAddress;
     tokenContract = ILilypadToken(_tokenAddress);
+  }
+
+  // set for canChangePaymentsAddress
+  function disableChangeTokenAddress() public onlyOwner {
+    canChangeTokenAddress = false;
   }
 
   /**
@@ -108,12 +116,6 @@ contract LilypadPayments is Ownable, Initializable {
    * these methods are called by the controller to wrap various payment
    * scenarios - hence they are all onlyOwner
    */
-
-  function getEscrowBalance(
-    address _address
-  ) public view returns (uint256) {
-    return escrowBalances[_address];
-  }
 
   /**
    * Agreements
@@ -124,16 +126,15 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 dealId,
     address resourceProvider,
     uint256 timeoutCollateral
-  ) public {
-    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
-    _pay(
+  ) public onlyController {
+    // we check this here to double check who we are about to charge (the RP)
+    // is who signed the TX and so we can take the money
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the JC");
+    _payEscrow(
       dealId,
-      resourceProvider,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.PaidIn
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[resourceProvider] += timeoutCollateral;
   }
 
   // * pay in the payment collateral and timeout collateral
@@ -142,25 +143,18 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
-  ) public {
+  ) public onlyController {
     require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
-    _pay(
+    _payEscrow(
       dealId,
-      jobCreator,
-      paymentCollateral,
-      PaymentReason.PaymentCollateral,
-      PaymentDirection.PaidIn
-    );
-    escrowBalances[jobCreator] += paymentCollateral;
-
-    _pay(
-      dealId,
-      jobCreator,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.PaidIn
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[jobCreator] += timeoutCollateral;
+    _payEscrow(
+      dealId,
+      paymentCollateral,
+      PaymentReason.PaymentCollateral
+    );
   }
 
   /**
@@ -174,27 +168,19 @@ contract LilypadPayments is Ownable, Initializable {
     address resourceProvider,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public {
+  ) public onlyController {
     require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
-    // the refund of the timeout collateral
-    _pay(
+    _refundEscrow(
       dealId,
       resourceProvider,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[resourceProvider] -= timeoutCollateral;
-
-    // the payment of the job collateral
-    _pay(
+    _payEscrow(
       dealId,
-      resourceProvider,
       resultsCollateral,
-      PaymentReason.ResultsCollateral,
-      PaymentDirection.PaidIn
+      PaymentReason.ResultsCollateral
     );
-    escrowBalances[resourceProvider] += resultsCollateral;
   }
 
   // * pay the RP the job cost
@@ -209,58 +195,57 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public {
+  ) public onlyController {
     require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
 
-    // pay the RP the job cost
-    _pay(
-      dealId,
-      resourceProvider,
-      jobCost,
-      PaymentReason.JobPayment,
-      PaymentDirection.PaidOut
-    );
+    // what if the final job cost is more than the payment collateral?
+    // well - we have to cap the job cost at that collateral
+    // true - the RP has lost money but they agreed to the deal
+    uint256 actualPayment = jobCost;
+    uint256 jcRefund = 0;
+    if(jobCost > paymentCollateral) {
+      actualPayment = paymentCollateral;
+    } else {
+      jcRefund = paymentCollateral - jobCost;
+    }
 
-    // the difference between the job collateral and the job cost
-    // is how much the job creator get's back
-    int256 jcRefund = int256(paymentCollateral) - int256(jobCost);
+    // pay the RP the actualPayment
+    _payOut(
+      dealId,
+      jobCreator,
+      resourceProvider,
+      actualPayment,
+      PaymentReason.JobPayment
+    );
 
     // if the job cost more than the payment collateral then we shold not go negative
     // otherwise we are paying out more than the JC has put in
     //
     // the RP is loosing out a bit here but they agreed to doing the job
     if(jcRefund > 0) {
-      _pay(
+      _refundEscrow(
         dealId,
         jobCreator,
-        uint256(jcRefund),
-        PaymentReason.PaymentCollateral,
-        PaymentDirection.Refunded
+        jcRefund,
+        PaymentReason.PaymentCollateral
       );
     }
 
-    // this accounts for the job cost and the potential refund of the payment collateral
-    escrowBalances[jobCreator] -= paymentCollateral;
-
-    // pay the JC the timeout collateral
-    _pay(
+    // refund the JC timeout collateral
+    _refundEscrow(
       dealId,
       jobCreator,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[jobCreator] -= timeoutCollateral;
 
-    // pay the RP results collateral
-    _pay(
+    // refund the RP results collateral
+    _refundEscrow(
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.ResultsCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.ResultsCollateral
     );
-    escrowBalances[resourceProvider] -= resultsCollateral;
   }
 
   // * charge the JC the mediation fee
@@ -270,28 +255,23 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 timeoutCollateral,
     uint256 mediationFee
-  ) public {
+  ) public onlyController {
     require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
     
     // the refund of the timeout collateral
-    _pay(
+    _refundEscrow(
       dealId,
       jobCreator,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[jobCreator] -= timeoutCollateral;
 
     // the payment of the mediation fee
-    _pay(
+    _payEscrow(
       dealId,
-      jobCreator,
       mediationFee,
-      PaymentReason.MediationFee,
-      PaymentDirection.PaidIn
+      PaymentReason.MediationFee
     );
-    escrowBalances[jobCreator] += mediationFee;
   }
 
   /**
@@ -311,55 +291,56 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
-  ) public onlyOwner {
-    // pay the RP the job cost
-    _pay(
+  ) public onlyController {
+    require(tx.origin == mediator, "LilypadPayments: Can only be called by the mediator");
+    uint256 actualPayment = jobCost;
+    uint256 jcRefund = 0;
+    if(jobCost > paymentCollateral) {
+      actualPayment = paymentCollateral;
+    } else {
+      jcRefund = paymentCollateral - jobCost;
+    }
+    
+    // pay the RP the job cost from the JC
+    _payOut(
       dealId,
+      jobCreator,
       resourceProvider,
-      jobCost,
-      PaymentReason.JobPayment,
-      PaymentDirection.PaidOut
+      actualPayment,
+      PaymentReason.JobPayment
     );
 
-    // pay the mediator the fee
-    _pay(
+    // pay the mediator the fee from the JC
+    _payOut(
       dealId,
+      jobCreator,
       mediator,
       mediationFee,
-      PaymentReason.MediationFee,
-      PaymentDirection.PaidOut
+      PaymentReason.MediationFee
     );
-    escrowBalances[jobCreator] -= mediationFee;
-
-    // the difference between the job collateral and the job cost
-    // is how much the job creator get's back
-    int256 jcRefund = int256(paymentCollateral) - int256(jobCost);
 
     // if the job cost more than the payment collateral then we shold not go negative
     // otherwise we are paying out more than the JC has put in
     //
     // the RP is loosing out a bit here but they agreed to doing the job
     if(jcRefund > 0) {
-      _pay(
+
+      // refund the JC the diff between payment collateral and job cost
+      _refundEscrow(
         dealId,
         jobCreator,
-        uint256(jcRefund),
-        PaymentReason.PaymentCollateral,
-        PaymentDirection.Refunded
+        jcRefund,
+        PaymentReason.PaymentCollateral
       );
     }
 
-    // this accounts for the job cost and the potential refund of the payment collateral
-    escrowBalances[jobCreator] -= paymentCollateral;
-
-    _pay(
+    // refund the RP the results collateral
+    _refundEscrow(
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.ResultsCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.ResultsCollateral
     );
-    escrowBalances[resourceProvider] -= resultsCollateral;
   }
 
   // * refund the JC their payment collateral
@@ -373,34 +354,32 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
-  ) public onlyOwner {
-    _pay(
+  ) public onlyController {
+    require(tx.origin == mediator, "LilypadPayments: Can only be called by the mediator");
+    // refund the JC their payment collateral
+    _refundEscrow(
       dealId,
       jobCreator,
       paymentCollateral,
-      PaymentReason.PaymentCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.PaymentCollateral
     );
-    escrowBalances[jobCreator] -= paymentCollateral;
 
-    _pay(
+    // pay the mediator the fee from the JC
+    _payOut(
       dealId,
+      jobCreator,
       mediator,
       mediationFee,
-      PaymentReason.MediationFee,
-      PaymentDirection.PaidOut
+      PaymentReason.MediationFee
     );
-    escrowBalances[jobCreator] -= mediationFee;
 
     // slash the RP
-    _pay(
+    _slashEscrow(
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.ResultsCollateral,
-      PaymentDirection.Slashed
+      PaymentReason.ResultsCollateral
     );
-    escrowBalances[resourceProvider] -= resultsCollateral;
   }
 
   /**
@@ -415,27 +394,23 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
-  ) public {
+  ) public onlyController {
     require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
     // the refund of the job collateral to the JC
-    _pay(
+    _refundEscrow(
       dealId,
       jobCreator,
       paymentCollateral,
-      PaymentReason.PaymentCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.PaymentCollateral
     );
-    escrowBalances[jobCreator] -= paymentCollateral;
-
+    
     // the slashing of the timeout collateral for the RP
-    _pay(
+    _slashEscrow(
       dealId,
       resourceProvider,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.Slashed
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[resourceProvider] -= timeoutCollateral;
   }
 
   // * pay back the RP's results collateral
@@ -448,27 +423,23 @@ contract LilypadPayments is Ownable, Initializable {
     address jobCreator,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
-  ) public {
+  ) public onlyController {
     require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
     // the refund of the results collateral to the RP
-    _pay(
+    _refundEscrow(
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.PaymentCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.PaymentCollateral
     );
-    escrowBalances[resourceProvider] -= resultsCollateral;
 
     // the slashing of the timeout collateral for the RP
-    _pay(
+    _slashEscrow(
       dealId,
       jobCreator,
       timeoutCollateral,
-      PaymentReason.TimeoutCollateral,
-      PaymentDirection.Slashed
+      PaymentReason.TimeoutCollateral
     );
-    escrowBalances[jobCreator] -= timeoutCollateral;
   }
 
   // * pay back the RP's results collateral
@@ -481,97 +452,127 @@ contract LilypadPayments is Ownable, Initializable {
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
-  ) public {
+  ) public onlyController {
     require(tx.origin == resourceProvider || tx.origin == jobCreator, "LilypadPayments: Can only be called by the RP or JC");
     // the refund of the results collateral to the RP
-    _pay(
+    _refundEscrow(
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.ResultsCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.ResultsCollateral
     );
-    escrowBalances[resourceProvider] -= resultsCollateral;
 
     // the refund of the payment collateral to the JC
-    _pay(
+    _refundEscrow(
       dealId,
       jobCreator,
       paymentCollateral,
-      PaymentReason.PaymentCollateral,
-      PaymentDirection.Refunded
+      PaymentReason.PaymentCollateral
     );
-    escrowBalances[jobCreator] -= paymentCollateral;
 
     // the refund of the mediation fee to the JC
-    _pay(
+    _refundEscrow(
       dealId,
       jobCreator,
       mediationFee,
-      PaymentReason.MediationFee,
-      PaymentDirection.Refunded
+      PaymentReason.MediationFee
     );
-    escrowBalances[jobCreator] -= mediationFee;
   }
 
   /**
    * Payment utils
    */
 
-  // this is always called by the spender of the token
-  // and so even though the controller calls the payment contract
-  // the token is configured to use tx.origin as the spender
-  // i.e. the owner of the tokens is who is calling this
-  function _payIn(
-    uint256 amount
+
+  function _payEscrow(
+    uint256 dealId,
+    uint256 amount,
+    PaymentReason reason
   ) private {
+    // we check they have that much in their token balance before moving to tokens to us
     require(tokenContract.balanceOf(tx.origin) >= amount, "LilypadPayments: Insufficient balance");
 
-    console.log("PAY IN");
+    console.log("_payEscrow");
     console.log(accountNames[tx.origin]);
     console.log(amount);
 
-    bool success = tokenContract.payinEscrow(amount);
-    require(success, "Transfer failed");
-  }
+    bool success = tokenContract.payEscrow(amount);
+    require(success, "LilypadPayments: Pay escrow failed");
 
-  // take X tokens from the contract's token balance and send them to the given address
-  function _payOut(
-    address payWho,
-    uint256 amount
-  ) private {
-    require(tokenContract.balanceOf(tokenAddress) >= amount, "LilypadPayments: Insufficient balance");
-
-    console.log("PAY OUT");
-    console.log(accountNames[payWho]);
-    console.log(amount);
-
-    bool success = tokenContract.payoutEscrow(payWho, amount);
-    require(success, "Transfer failed");
-  }
-
-  function _pay(
-    uint256 dealId,
-    address payee,
-    uint256 amount,
-    PaymentReason reason,
-    PaymentDirection direction
-  ) private {
-    if(direction == PaymentDirection.Refunded) {
-      require(escrowBalances[payee] >= amount, "LilypadPayments: Insufficient balance");
-    }
-    if(direction == PaymentDirection.PaidIn) {
-      _payIn(amount);
-    }
-    else if(direction == PaymentDirection.PaidOut || direction == PaymentDirection.Refunded) {
-      _payOut(payee, amount);
-    }
     emit Payment(
       dealId,
-      payee,
+      tx.origin,
       amount,
       reason,
-      direction
+      PaymentDirection.PaidIn
+    );
+  }
+
+  function _refundEscrow(
+    uint256 dealId,
+    address toAddress,
+    uint256 amount,
+    PaymentReason reason
+  ) private {
+    console.log("_refundEscrow");
+    console.log(accountNames[toAddress]);
+    console.log(amount);
+
+    bool success = tokenContract.refundEscrow(toAddress, amount);
+    require(success, "LilypadPayments: Refund escrow failed");
+
+    emit Payment(
+      dealId,
+      toAddress,
+      amount,
+      reason,
+      PaymentDirection.Refunded
+    );
+  }
+
+  function _payOut(
+    uint256 dealId,
+    address fromAddress,
+    address toAddress,
+    uint256 amount,
+    PaymentReason reason
+  ) private {
+    console.log("_payJob");
+    console.log(accountNames[fromAddress]);
+    console.log(accountNames[toAddress]);
+    console.log(amount);
+
+    bool success = tokenContract.payJob(fromAddress, toAddress, amount);
+    require(success, "LilypadPayments: Pay job failed");
+
+    emit Payment(
+      dealId,
+      toAddress,
+      amount,
+      reason,
+      PaymentDirection.PaidOut
+    );
+  }
+
+  function _slashEscrow(
+    uint256 dealId,
+    address slashedAddress,
+    uint256 amount,
+    PaymentReason reason
+  ) private {
+    console.log("_slashEscrow");
+    console.log(accountNames[slashedAddress]);
+    console.log(amount);
+
+    bool success = tokenContract.slashEscrow(slashedAddress, amount);
+    require(success, "LilypadPayments: Slash escrow failed");
+
+    emit Payment(
+      dealId,
+      slashedAddress,
+      amount,
+      reason,
+      PaymentDirection.Slashed
     );
   }
 }

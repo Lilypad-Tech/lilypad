@@ -13,6 +13,12 @@ import "./SharedStructs.sol";
 
 contract LilypadStorage is Ownable, Initializable {
 
+  // the address that is allowed to be the msg.sender for the payment functions
+  address private controllerAddress;
+
+  // used to cut off upgrades for the remote contract
+  bool private canChangeControllerAddress = true;
+
   // a map of user address -> user
   mapping(address => SharedStructs.User) private users;
 

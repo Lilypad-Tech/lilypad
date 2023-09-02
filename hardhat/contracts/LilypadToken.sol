@@ -3,30 +3,39 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ControllerOwnable.sol";
 
 /*
   standard ERC20 token but with some additional features:
 
-   * Ownable
-   * payinEscrow
-   * payoutEscrow
+   * ControllerOwnable
+     * for paying in, we use tx.origin so the actual payee must call the contract
+     * for paying out - we use the Controller Ownable feature so only the payments contract
+       can pay out from the escrow account
+   * getEscrowBalance
+     * get the current escrow balance for an address
+   * payEscrow
+     * pay into the escrow account
+   * refundEscrow
+     * get refunded from the escrow account
+   * payJob
+     * reduce the "from" account by X amount
+     * actually pay that amount to the "to" address
+   * slashEscrow
+     * reduce the "slashed" account by X amount
 
   the escrow functions are designed to be called by the payments contract
 
    * deploy this contract as admin
    * deploy the payments contract as admin and pass this address to it
-   * update the owner of this contract to be the payments contract
+   * update the ControllerOwnable address of this contract to be the payments contract
   
-  now, only the payments contract can call the escrow functions on behalf of address(this)
-  
-  no other address other than address(this) (i.e. this contract) are affected by these functions
-
-  in other words - these two functions give our payments contract the ability to
-  pay into and pay out of the escrow balance regardless of who has signed the tx
+  now, only the payments contract can call the escrow functions that pay out
 
  */
-contract LilypadToken is Ownable, ERC20 {
+contract LilypadToken is ControllerOwnable, ERC20 {
 
+  // keep track of the current escrow balance for each address
   mapping(address => uint256) private escrowBalances;
 
   constructor(
@@ -37,7 +46,14 @@ contract LilypadToken is Ownable, ERC20 {
     _mint(msg.sender, initialSupply);
   }
 
-  function payinEscrow(
+  function getEscrowBalance(
+    address _address
+  ) public view returns (uint256) {
+    return escrowBalances[_address];
+  }
+
+  // money being paid into the escrow account
+  function payEscrow(
     uint256 amount
   ) public returns (bool) {
     // it's important we use tx.origin and not msg.sender here
@@ -45,15 +61,44 @@ contract LilypadToken is Ownable, ERC20 {
     // tx.origin will be the user who called the controller -> payments -> token
     // i.e. the account that is actually paying into the escrow address
     _transfer(tx.origin, address(this), amount);
+    escrowBalances[tx.origin] += amount;
     return true;
   }
 
-  function payoutEscrow(
+  // money being paid back from the escrow account
+  function refundEscrow(
     address toAddress,
     uint256 amount
-  ) public onlyOwner returns (bool) {
+  ) public onlyController returns (bool) {
     require(toAddress != address(0), "LilypadToken: toAddress cannot be zero address");
+    require(escrowBalances[toAddress] >= amount, "LilypadToken: not enough funds in escrow");
     _transfer(address(this), toAddress, amount);
+    escrowBalances[toAddress] -= amount;
+    return true;
+  }
+
+  // pay the RP account from the JC escrow account
+  function payJob(
+    address fromAddress,
+    address toAddress,
+    uint256 amount
+  ) public onlyController returns (bool) {
+    require(escrowBalances[fromAddress] >= amount, "LilypadToken: not enough funds in escrow");
+    _transfer(address(this), toAddress, amount);
+    escrowBalances[fromAddress] -= amount;
+    return true;
+  }
+
+  // the given party has been slashed so the money stays in the contract
+  // TODO: what should happen to slashed funds?
+  // at the moment we move them to the owner address so they are not locked
+  function slashEscrow(
+    address slashedAddress,
+    uint256 amount
+  ) public onlyController returns (bool) {
+    require(escrowBalances[slashedAddress] >= amount, "LilypadToken: not enough funds in escrow");
+    escrowBalances[slashedAddress] -= amount;
+    _transfer(address(this), owner(), amount);
     return true;
   }
 }

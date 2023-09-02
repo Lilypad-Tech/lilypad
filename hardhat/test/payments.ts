@@ -113,5 +113,57 @@ describe.only("Payments", () => {
       expect(escrowAfter).to.equal(escrowBefore + payentCollateral + timeoutCollateral)
     })
 
+
+  })
+
+  describe("Results", () => {
+
+    it("Should add a result", async function () {
+
+      const resultsCollateral = ethers.getBigInt(20)
+      const timeoutCollateral = ethers.getBigInt(10)
+
+      const {
+        token,
+        payments,
+      } = await loadFixture(setupPaymentsFixture)
+
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+        )
+      ).to.not.be.reverted
+
+      const balanceBefore = await token.balanceOf(getAddress('resource_provider'))
+      const escrowBefore = await payments.getEscrowBalance(getAddress('resource_provider'))
+
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          timeoutCollateral,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('PaidIn'),
+        )
+
+      const balanceAfter = await token.balanceOf(getAddress('resource_provider'))
+      const escrowAfter = await payments.getEscrowBalance(getAddress('resource_provider'))
+
+      expect(balanceAfter).to.equal(balanceBefore - timeoutCollateral)
+      expect(escrowAfter).to.equal(escrowBefore + timeoutCollateral)
+    })
+
   })
 })

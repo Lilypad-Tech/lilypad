@@ -79,23 +79,6 @@ export async function deployContract<T extends any>(
   return contract
 }
 
-export async function connectContract<T extends any>(
-  name: string,
-): Promise<T>{
-  const deployment = await hre.deployments.get(name)
-  const factory = await hre.ethers.getContractFactory(name)
-  const contract = factory.attach(deployment.address) as unknown as T
-  return contract
-}
-
-export async function getContractAddress(
-  name: string,
-): Promise<AddressLike>{
-  const deployment = await hre.deployments.get(name)
-  return deployment.address
-}
-
-
 /*
 
   TOKEN
@@ -104,20 +87,13 @@ export async function getContractAddress(
 export async function deployToken(
   signer: Signer,
   tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
+  testMode = false,
 ) {
-  return deployContract<LilypadToken>('LilypadToken', signer, [
+  return deployContract<LilypadToken>(testMode ? 'LilypadTokenTestable' : 'LilypadToken', signer, [
     'LilyPad',
     'LLY',
     tokenSupply,
   ])
-}
-
-export async function connectToken() {
-  return connectContract<LilypadToken>('LilypadToken')
-}
-
-export async function getTokenAddress() {
-  return getContractAddress('LilypadToken')
 }
 
 export async function fundTokens(
@@ -147,8 +123,9 @@ export async function fundAccountsWithTokens(
 export async function deployPayments(
   signer: Signer,
   tokenAddress: AddressLike,
+  testMode = false,
 ) {
-  const payments = await deployContract<LilypadPayments>('LilypadPayments', signer)
+  const payments = await deployContract<LilypadPayments>(testMode ? 'LilypadPaymentsTestable' : 'LilypadPayments', signer)
   await payments
     .connect(signer)
     .initialize(tokenAddress)
@@ -161,19 +138,12 @@ export async function deployPayments(
   STORAGE
 
 */
-export async function deployStorage(signer: Signer) {
-  return deployContract<LilypadStorage>('LilypadStorage', signer)
+export async function deployStorage(
+  signer: Signer,
+  testMode = false,
+) {
+  return deployContract<LilypadStorage>(testMode ? 'LilypadStorageTestable' : 'LilypadStorage', signer)
 }
-
-export async function connectStorage() {
-  return connectContract<LilypadStorage>('LilypadStorage')
-}
-
-export async function getStorageAddress() {
-  return getContractAddress('LilypadStorage')
-}
-
-
 
 /*
 
@@ -190,6 +160,48 @@ export async function deployController(
     .connect(signer)
     .initialize(storageAddress, paymentsAddress)
   return controller
+}
+
+
+/*
+
+  HARDHAT DEPLOYMENTS
+
+  these all require the deployments to have been done via hardhat
+  and for there to be deployment.json files for us to look inside of
+
+*/
+
+export async function connectContract<T extends any>(
+  name: string,
+): Promise<T>{
+  const deployment = await hre.deployments.get(name)
+  const factory = await hre.ethers.getContractFactory(name)
+  const contract = factory.attach(deployment.address) as unknown as T
+  return contract
+}
+
+export async function getContractAddress(
+  name: string,
+): Promise<AddressLike>{
+  const deployment = await hre.deployments.get(name)
+  return deployment.address
+}
+
+export async function connectStorage() {
+  return connectContract<LilypadStorage>('LilypadStorage')
+}
+
+export async function getStorageAddress() {
+  return getContractAddress('LilypadStorage')
+}
+
+export async function connectToken() {
+  return connectContract<LilypadToken>('LilypadToken')
+}
+
+export async function getTokenAddress() {
+  return getContractAddress('LilypadToken')
 }
 
 export async function connectController() {
