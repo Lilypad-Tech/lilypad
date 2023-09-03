@@ -21,7 +21,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe.only("Token", () => {
+describe("Token", () => {
 
   function setupTokenWithFunds() {
     return setupTokenFixture({
@@ -90,7 +90,7 @@ describe.only("Token", () => {
 
   describe("Escrow", () => {
 
-    it("Should handle the end of end of running a job", async function () {
+    it("Should handle payEscrow and refundEscrow", async function () {
       const amount = ethers.getBigInt(100)
       const token = await loadFixture(setupTokenWithFunds)
       const tokenAddress = await token.getAddress()
@@ -99,14 +99,10 @@ describe.only("Token", () => {
         return bluebird.props({
           escrow: bluebird.props({
             job_creator: token.escrowBalanceOf(getAddress('job_creator')),
-            resource_provider: token.escrowBalanceOf(getAddress('resource_provider')),
-            slashed: token.escrowBalanceOf(getAddress('admin')),
           }),
           tokens: bluebird.props({
             job_creator: token.balanceOf(getAddress('job_creator')),
-            resource_provider: token.balanceOf(getAddress('resource_provider')),
             escrow: token.balanceOf(tokenAddress),
-            slashed: token.balanceOf(getAddress('admin')),
           })
           
         })
@@ -117,7 +113,69 @@ describe.only("Token", () => {
       expect(await token
         .connect(getWallet('job_creator'))
         .payEscrow(amount)
-      ).to.not.be.reverted
+      ).
+        to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('job_creator'),
+          tokenAddress,
+          amount,
+        )
+
+      const balances2 = await getBalances()
+
+      expect(balances2.tokens.job_creator).to.equal(balances1.tokens.job_creator - amount)
+      expect(balances2.tokens.escrow).to.equal(amount)
+      expect(balances2.escrow.job_creator).to.equal(amount)
+
+      expect(await token
+        .connect(getWallet('job_creator'))
+        .refundEscrow(getAddress('job_creator'), amount)
+      ).
+        to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          amount,
+        )
+
+      const balances3 = await getBalances()
+      expect(balances3.tokens.job_creator).to.equal(balances1.tokens.job_creator)
+      expect(balances3.tokens.escrow).to.equal(0)
+      expect(balances3.escrow.job_creator).to.equal(0)
+    })
+
+    it("Should handle payEscrow and payJob", async function () {
+      const amount = ethers.getBigInt(100)
+      const token = await loadFixture(setupTokenWithFunds)
+      const tokenAddress = await token.getAddress()
+
+      const getBalances = async () => {
+        return bluebird.props({
+          escrow: bluebird.props({
+            job_creator: token.escrowBalanceOf(getAddress('job_creator')),
+            resource_provider: token.escrowBalanceOf(getAddress('resource_provider')),
+          }),
+          tokens: bluebird.props({
+            job_creator: token.balanceOf(getAddress('job_creator')),
+            resource_provider: token.balanceOf(getAddress('resource_provider')),
+            escrow: token.balanceOf(tokenAddress),
+          })
+          
+        })
+      }
+
+      const balances1 = await getBalances()
+
+      expect(await token
+        .connect(getWallet('job_creator'))
+        .payEscrow(amount)
+      )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('job_creator'),
+          tokenAddress,
+          amount,
+        )
 
       const balances2 = await getBalances()
       expect(balances2.tokens.job_creator).to.equal(balances1.tokens.job_creator - amount)
@@ -131,15 +189,76 @@ describe.only("Token", () => {
           getAddress('resource_provider'),
           amount
         )
-      ).to.not.be.reverted
+      )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          amount,
+        )
 
       const balances3 = await getBalances()
       expect(balances3.tokens.resource_provider).to.equal(balances2.tokens.resource_provider + amount)
-      expect(balances3.escrow.job_creator).to.equal(balances2.escrow.job_creator - amount)
+      expect(balances3.escrow.job_creator).to.equal(0)
       expect(balances3.tokens.escrow).to.equal(0)
     })
 
-    
+    it("Should handle payEscrow and slashEscrow", async function () {
+      const amount = ethers.getBigInt(100)
+      const token = await loadFixture(setupTokenWithFunds)
+      const tokenAddress = await token.getAddress()
 
+      const getBalances = async () => {
+        return bluebird.props({
+          escrow: bluebird.props({
+            resource_provider: token.escrowBalanceOf(getAddress('resource_provider')),
+          }),
+          tokens: bluebird.props({
+            resource_provider: token.balanceOf(getAddress('resource_provider')),
+            escrow: token.balanceOf(tokenAddress),
+            slashed: token.balanceOf(getAddress('admin')),
+          })
+          
+        })
+      }
+
+      const balances1 = await getBalances()
+
+      expect(await token
+        .connect(getWallet('resource_provider'))
+        .payEscrow(amount)
+      )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('resource_provider'),
+          tokenAddress,
+          amount,
+        )
+
+      const balances2 = await getBalances()
+      expect(balances2.tokens.resource_provider).to.equal(balances1.tokens.resource_provider - amount)
+      expect(balances2.escrow.resource_provider).to.equal(balances1.escrow.resource_provider + amount)
+      expect(balances2.tokens.escrow).to.equal(amount)
+
+      expect(await token
+        .connect(getWallet('admin'))
+        .slashEscrow(
+          getAddress('resource_provider'),
+          amount
+        )
+      )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('admin'),
+          amount,
+        )
+
+      const balances3 = await getBalances()
+      expect(balances3.tokens.resource_provider).to.equal(balances1.tokens.resource_provider - amount)
+      expect(balances3.escrow.resource_provider).to.equal(0)
+      expect(balances3.tokens.escrow).to.equal(0)
+      expect(balances3.tokens.slashed).to.equal(balances1.tokens.slashed + amount)
+    })
   })
 })
