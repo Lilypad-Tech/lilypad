@@ -604,13 +604,13 @@ describe("Payments", () => {
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
       expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens)
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
-      expect(balanceAfterAdmin.tokens).to.equal(balanceAfterAdmin.tokens + resultsCollateral)
+      expect(balanceAfterAdmin.tokens).to.equal(balanceBeforeAdmin.tokens + resultsCollateral)
       expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
     })
 
   })
 
-  describe.only("Timeouts", () => {
+  describe("Timeouts", () => {
 
     it("Should timeout submit results", async function () {
       const {
@@ -749,7 +749,7 @@ describe("Payments", () => {
       expect(balanceAfterAdmin.tokens).to.equal(balanceBeforeAdmin.tokens + timeoutCollateral)
     })
 
-    it.only("Should timeout mediate results", async function () {
+    it("Should timeout mediate results", async function () {
       const {
         token,
         payments,

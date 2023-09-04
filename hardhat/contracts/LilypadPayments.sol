@@ -5,8 +5,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ILilypadToken.sol";
 import "./ControllerOwnable.sol";
 
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "hardhat/console.sol";
+// import "@openzeppelin/contracts/utils/Strings.sol";
+// import "hardhat/console.sol";
 // console.log("ensureDeal");
 // console.log(Strings.toString(uint256(SharedStructs.AgreementState.DealNegotiating)));
 // console.log(Strings.toString(uint256(agreements[dealId].state)));
@@ -87,13 +87,13 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     setTokenAddress(_tokenAddress);
 
     // this is only for debugging
-    accountNames[address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)] = "admin";
-    accountNames[address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)] = "faucet";
-    accountNames[address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC)] = "solver";
-    accountNames[address(0x90F79bf6EB2c4f870365E785982E1f101E93b906)] = "mediator";
-    accountNames[address(0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65)] = "resource_provider";
-    accountNames[address(0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc)] = "job_creator";
-    accountNames[address(0x976EA74026E726554dB657fA54763abd0C3a0aa9)] = "directory";
+    // accountNames[address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)] = "admin";
+    // accountNames[address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)] = "faucet";
+    // accountNames[address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC)] = "solver";
+    // accountNames[address(0x90F79bf6EB2c4f870365E785982E1f101E93b906)] = "mediator";
+    // accountNames[address(0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65)] = "resource_provider";
+    // accountNames[address(0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc)] = "job_creator";
+    // accountNames[address(0x976EA74026E726554dB657fA54763abd0C3a0aa9)] = "directory";
   }
 
   // the LilypadToken we are calling payinEscrow and payoutEscrow on
@@ -500,9 +500,9 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     // we check they have that much in their token balance before moving to tokens to us
     require(tokenContract.balanceOf(tx.origin) >= amount, "LilypadPayments: Insufficient balance");
 
-    console.log("_payEscrow");
-    console.log(accountNames[tx.origin]);
-    console.log(amount);
+    // console.log("_payEscrow");
+    // console.log(accountNames[tx.origin]);
+    // console.log(amount);
 
     bool success = tokenContract.payEscrow(amount);
     require(success, "LilypadPayments: Pay escrow failed");
@@ -522,9 +522,9 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     uint256 amount,
     PaymentReason reason
   ) private {
-    console.log("_refundEscrow");
-    console.log(accountNames[toAddress]);
-    console.log(amount);
+    // console.log("_refundEscrow");
+    // console.log(accountNames[toAddress]);
+    // console.log(amount);
 
     bool success = tokenContract.refundEscrow(toAddress, amount);
     require(success, "LilypadPayments: Refund escrow failed");
@@ -545,10 +545,10 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     uint256 amount,
     PaymentReason reason
   ) private {
-    console.log("_payJob");
-    console.log(accountNames[fromAddress]);
-    console.log(accountNames[toAddress]);
-    console.log(amount);
+    // console.log("_payJob");
+    // console.log(accountNames[fromAddress]);
+    // console.log(accountNames[toAddress]);
+    // console.log(amount);
 
     bool success = tokenContract.payJob(fromAddress, toAddress, amount);
     require(success, "LilypadPayments: Pay job failed");
@@ -568,9 +568,9 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     uint256 amount,
     PaymentReason reason
   ) private {
-    console.log("_slashEscrow");
-    console.log(accountNames[slashedAddress]);
-    console.log(amount);
+    // console.log("_slashEscrow");
+    // console.log(accountNames[slashedAddress]);
+    // console.log(amount);
 
     bool success = tokenContract.slashEscrow(slashedAddress, amount);
     require(success, "LilypadPayments: Slash escrow failed");
