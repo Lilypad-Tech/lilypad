@@ -263,7 +263,7 @@ describe.only("Controller", () => {
     })
   })
 
-  describe.only("Results", () => {
+  describe("Results", () => {
     it("Post results as RP", async function () {
       const {
         token,
@@ -323,7 +323,7 @@ describe.only("Controller", () => {
       await checkAgreement(storage, 'ResultsSubmitted')
     })
 
-    it.only("Accepts results as JC", async function () {
+    it("Accepts results as JC", async function () {
       const {
         token,
         tokenAddress,
@@ -411,5 +411,46 @@ describe.only("Controller", () => {
 
       await checkAgreement(storage, 'ResultsAccepted')
     })
+  })
+
+  describe.only("End to end", () => {
+
+    // TODO: we need a lot more tests for the unhappy path
+    it("Runs a job in the happy path", async function () {
+      const {
+        token,
+        tokenAddress,
+        payments,
+        storage,
+        controller,
+      } = await loadFixture(setupController)
+
+      const balancesBeforeJC = await getBalances(token, 'job_creator')
+      const balancesBeforeRP = await getBalances(token, 'resource_provider')
+
+      await agree(controller, 'job_creator')
+      await agree(controller, 'resource_provider')
+      await controller
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount
+        )
+      await controller
+        .connect(getWallet('job_creator'))
+        .acceptResult(
+          dealID,
+        )
+
+      const balancesAfterJC = await getBalances(token, 'job_creator')
+      const balancesAfterRP = await getBalances(token, 'resource_provider')
+
+      expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens + jobCost)
+      expect(balancesAfterJC.tokens).to.equal(balancesBeforeJC.tokens - jobCost)
+      
+      await checkAgreement(storage, 'ResultsAccepted')
+    })
+
   })
 })
