@@ -1,44 +1,34 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-const deployPayments: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployController: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre
   const { deploy, execute } = deployments
   const {
     admin,
   } = await getNamedAccounts()
-  await deploy("LilypadPayments", {
+  await deploy("LilypadController", {
     from: admin,
     args: [],
     log: true,
   })
 
-  const tokenContract = await deployments.get('LilypadToken')
+  const storageContract = await deployments.get('LilypadStorage')
   const paymentsContract = await deployments.get('LilypadPayments')
-
+  
   await execute(
-    'LilypadPayments',
+    'LilypadController',
     {
       from: admin,
       log: true,
     },
     'initialize',
-    tokenContract.address
+    storageContract.address,
+    paymentsContract.address,
   )
-
-  await execute(
-    'LilypadToken',
-    {
-      from: admin,
-      log: true,
-    },
-    'setControllerAddress',
-    paymentsContract.address
-  )
-
   return true
 }
 
-deployPayments.id = 'deployPayments'
+deployController.id = 'deployController'
 
-export default deployPayments
+export default deployController
