@@ -64,6 +64,15 @@ function geth-clean() {
 ############################################################################
 ############################################################################
 
+function compile-contracts() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat compile
+  )
+  chmod 0644 pkg/contract/bindings/contracts/*.go
+}
+
 function unit-tests() {
   (
     set -euo pipefail
