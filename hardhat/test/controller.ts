@@ -34,7 +34,9 @@ const { expect } = chai
 describe.only("Controller", () => {
 
   const dealID = ethers.getBigInt(10)
-  const instructionPrice = ethers.getBigInt(1)
+  const resultsID = ethers.getBigInt(11)
+  const instructionPrice = ethers.getBigInt(10)
+  const instructionCount = ethers.getBigInt(1)
   const timeout = ethers.getBigInt(100)
   const timeoutCollateral = ethers.getBigInt(10)
   const resultsCollateralMultiple = ethers.getBigInt(4)
@@ -42,6 +44,56 @@ describe.only("Controller", () => {
   const paymentCollateral = ethers.getBigInt(30)
   const jobCost = ethers.getBigInt(20)
   const mediationFee = ethers.getBigInt(5)
+
+  async function getBalances(token: LilypadToken, accountName: string) {
+    const tokens = await token.balanceOf(getAddress(accountName))
+    const escrow = await token.escrowBalanceOf(getAddress(accountName))
+    return {
+      tokens,
+      escrow,
+    }
+  }
+
+  async function checkDeal(storage: LilypadStorage, party: string) {
+    const deal = await storage.getDeal(dealID)
+
+    expect(deal.dealId).to.equal(dealID)
+    expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
+    expect(deal.jobCreator).to.equal(getAddress('job_creator'))
+    expect(deal.instructionPrice).to.equal(instructionPrice)
+    expect(deal.timeout).to.equal(timeout)
+    expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
+    expect(deal.paymentCollateral).to.equal(paymentCollateral)
+    expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
+    expect(deal.mediationFee).to.equal(mediationFee)
+
+    expect(await storage.hasDeal(dealID))
+      .to.equal(true)
+
+    expect(await storage.getDealsForParty(getAddress(party)))
+      .to.deep.equal([dealID])
+  }
+
+  async function checkAgreement(storage: LilypadStorage, desiredState: string) {
+    const agreement = await storage.getAgreement(dealID)
+    expect(agreement.state).to.equal(getAgreementState(desiredState))
+  }
+
+  async function agree(controller: LilypadController, party: string) {
+    return controller
+      .connect(getWallet(party))
+      .agree(
+        dealID,
+        getAddress('resource_provider'),
+        getAddress('job_creator'),
+        instructionPrice,
+        timeout,
+        timeoutCollateral,
+        paymentCollateral,
+        resultsCollateralMultiple,
+        mediationFee,
+      )
+  }
 
   async function setupController() {
     const {
@@ -62,53 +114,12 @@ describe.only("Controller", () => {
     }
   }
 
-  async function getBalances(token: LilypadToken, accountName: string) {
-    const tokens = await token.balanceOf(getAddress(accountName))
-    const escrow = await token.escrowBalanceOf(getAddress(accountName))
-    return {
-      tokens,
-      escrow,
-    }
+  async function setupControllerWithDeal() {
+    const ret = await setupController()
+    await agree(ret.controller, 'job_creator')
+    await agree(ret.controller, 'resource_provider')
+    return ret
   }
-
-  const checkDeal = async (storage: LilypadStorage, party: string) => {
-    const deal = await storage.getDeal(dealID)
-
-    expect(deal.dealId).to.equal(dealID)
-    expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
-    expect(deal.jobCreator).to.equal(getAddress('job_creator'))
-    expect(deal.instructionPrice).to.equal(instructionPrice)
-    expect(deal.timeout).to.equal(timeout)
-    expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
-    expect(deal.paymentCollateral).to.equal(paymentCollateral)
-    expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
-    expect(deal.mediationFee).to.equal(mediationFee)
-
-    expect(await storage.hasDeal(dealID))
-      .to.equal(true)
-
-    expect(await storage.getDealsForParty(getAddress(party)))
-      .to.deep.equal([dealID])
-  }
-
-  const checkAgreement = async (storage: LilypadStorage, desiredState: string) => {
-    const agreement = await storage.getAgreement(dealID)
-    expect(agreement.state).to.equal(getAgreementState(desiredState))
-  }
-
-  const agree = async (controller: LilypadController, party: string) => controller
-    .connect(getWallet(party))
-    .agree(
-      dealID,
-      getAddress('resource_provider'),
-      getAddress('job_creator'),
-      instructionPrice,
-      timeout,
-      timeoutCollateral,
-      paymentCollateral,
-      resultsCollateralMultiple,
-      mediationFee,
-    )
 
   describe("Deals", () => {
 
@@ -212,11 +223,8 @@ describe.only("Controller", () => {
 
     it("Should agree both sides", async function () {
       const {
-        token,
-        payments,
         storage,
         controller,
-        tokenAddress,
       } = await loadFixture(setupController)
 
       await expect(
@@ -240,6 +248,67 @@ describe.only("Controller", () => {
         )
         
       await checkAgreement(storage, 'DealAgreed')
+    })
+  })
+
+  describe.only("Results", () => {
+    it("Post results as RP", async function () {
+      const {
+        token,
+        tokenAddress,
+        payments,
+        storage,
+        controller,
+      } = await loadFixture(setupControllerWithDeal)
+
+      const balancesBeforeRP = await getBalances(token, 'resource_provider')
+
+      await expect(controller
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount
+        )
+      )
+        .to.emit(controller, 'ResultAdded')
+        .withArgs(
+          dealID,
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('PaidIn'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('resource_provider'),
+          tokenAddress,
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+        )
+
+      const balancesAfterRP = await getBalances(token, 'resource_provider')
+
+      expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens + timeoutCollateral - resultsCollateral)
+      expect(balancesAfterRP.escrow).to.equal(balancesBeforeRP.escrow - timeoutCollateral + resultsCollateral)
+      await checkAgreement(storage, 'ResultsSubmitted')
     })
   })
 })
