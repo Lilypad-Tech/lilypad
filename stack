@@ -5,6 +5,7 @@ IFS=$'\n\t'
 export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export DEFAULT_DATA_DIR="/tmp/geth"
 export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
+export NETWORK=${NETWORK:="geth"}
 
 # if "$DIR/.env" exists then source it
 if [[ -f "$DIR/.env" ]]; then
@@ -74,11 +75,18 @@ function compile-contracts() {
   (
     set -euo pipefail
     cd hardhat
-    npx hardhat compile
     npx hardhat gobind
   )
   # for some reason the permissions on the generated files are 0600
   chmod 0644 pkg/contract/bindings/contracts/*.go
+}
+
+function deploy-contracts() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat deploy --network "$NETWORK"
+  )
 }
 
 function unit-tests() {
