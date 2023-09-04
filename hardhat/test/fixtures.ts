@@ -82,6 +82,11 @@ export async function setupPaymentsFixture({
   await (token as any)
     .connect(admin)
     .setControllerAddress(payments.getAddress())
+  if(controllerAddress) {
+    await (payments as any)
+      .connect(admin)
+      .setControllerAddress(controllerAddress)
+  }
   return {
     token,
     payments,

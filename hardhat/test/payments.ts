@@ -53,6 +53,21 @@ describe("Payments", () => {
     }
   }
 
+  function setupPaymentsNoTest() {
+    return setupPaymentsFixture({
+      testMode: false,
+      withFunds: true,
+    })
+  }
+
+  function setupPaymentsNoTestWithController() {
+    return setupPaymentsFixture({
+      testMode: false,
+      withFunds: true,
+      controllerAddress: getAddress('admin'),
+    })
+  }
+
   // get's the escrow setup to the stage that the agreement has been made
   // and now we are waiting for the results
   async function setupPaymentsWithAgreement() {
@@ -820,6 +835,295 @@ describe("Payments", () => {
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
       expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + resultsCollateral)
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+    })
+
+  })
+
+  describe("Access control", () => {
+    it("Can only run agreeResourceProvider if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run agreeResourceProvider  by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run agreeJobCreator if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .agreeJobCreator(
+          dealID,
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run agreeJobCreator  by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .agreeJobCreator(
+          dealID,
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run addResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run addResult  by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run acceptResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .acceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run acceptResult by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .acceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run checkResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .checkResult(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run checkResult by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .checkResult(
+          dealID,
+          getAddress('resource_provider'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run mediationAcceptResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationAcceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run mediationAcceptResult by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationAcceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run mediationRejectResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationRejectResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run mediationRejectResult by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationRejectResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutSubmitResults if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutSubmitResults(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutSubmitResults by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutSubmitResults(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutJudgeResults if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutJudgeResults(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutJudgeResults by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutJudgeResults(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutMediateResult if there is a controller address set", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTest)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutMediateResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutMediateResult by the controller", async function () {
+      const { payments } = await loadFixture(setupPaymentsNoTestWithController)
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .timeoutMediateResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
 
   })
