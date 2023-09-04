@@ -78,10 +78,57 @@ function compile-contracts() {
   (
     set -euo pipefail
     cd hardhat
-    npx hardhat gobind
+    npx hardhat compile
   )
-  # for some reason the permissions on the generated files are 0600
-  chmod 0644 pkg/contract/bindings/contracts/*.go
+}
+
+function go-binding() {
+  local name="$1"
+  local pkg="$2"
+  mkdir -p "pkg/contract/bindings/$name"
+
+  # compile the sol files into bytecode and ABI
+  docker run --rm \
+    -v $DIR/hardhat:/src \
+    -w /src \
+    --entrypoint solc \
+    solc \
+       --base-path . \
+       --include-path node_modules \
+       --overwrite \
+      --abi --bin \
+      "contracts/$name.sol" \
+      -o artifacts
+
+  sudo chown -R $USER:$USER hardhat/artifacts
+  mkdir -p hardhat/artifacts/bindings/$pkg
+
+  # generate the go bindings
+  docker run --rm \
+    -v $DIR/hardhat:/src \
+    -w /src \
+    --entrypoint abigen \
+    solc \
+      "--bin=artifacts/$name.bin" \
+      "--abi=artifacts/$name.abi" \
+      "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
+
+  sudo chown -R $USER:$USER hardhat/artifacts/bindings/$pkg
+  sudo chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
+
+  echo "Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
+}
+
+function generate-bindings() {
+  compile-contracts
+  docker build -t solc hardhat/solc
+  go-binding LilypadToken token
+  go-binding LilypadPayments payments
+  go-binding LilypadStorage storage
+  go-binding LilypadController controller
+  mkdir -p pkg/contract/bindings/
+  cp -r hardhat/artifacts/bindings/* pkg/contract/bindings/
+  echo "Generated all go bindings pkg/contract/bindings/"
 }
 
 function deploy-contracts() {
