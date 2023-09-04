@@ -687,7 +687,7 @@ describe("Payments", () => {
       expect(balanceAfterAdmin.tokens).to.equal(balanceBeforeAdmin.tokens + timeoutCollateral)
     })
 
-    it.only("Should timeout judge results", async function () {
+    it("Should timeout judge results", async function () {
       const {
         token,
         payments,
@@ -749,6 +749,78 @@ describe("Payments", () => {
       expect(balanceAfterAdmin.tokens).to.equal(balanceBeforeAdmin.tokens + timeoutCollateral)
     })
 
+    it.only("Should timeout mediate results", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithResults)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+      const balanceBeforeRP = await getBalances(token, 'resource_provider')
+
+      await expect(payments
+        .connect(getWallet('resource_provider'))
+        .timeoutMediateResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          paymentCollateral,
+          resultsCollateral,
+          mediationFee,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          mediationFee,
+          getPaymentReason('MediationFee'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          mediationFee,
+        )
+
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+      const balanceAfterRP = await getBalances(token, 'resource_provider')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + paymentCollateral + mediationFee)
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
+      expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + resultsCollateral)
+      expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+    })
 
   })
 })
