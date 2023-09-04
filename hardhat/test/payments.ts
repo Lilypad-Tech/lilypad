@@ -26,8 +26,6 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-// https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
-
 describe("Payments", () => {
 
   const dealID = ethers.getBigInt(10)

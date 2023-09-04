@@ -6,6 +6,7 @@ import {
   deployToken,
   deployPayments,
   deployStorage,
+  deployController,
   fundAccountsWithTokens,
   DEFAULT_TOKEN_SUPPLY,
   DEFAULT_TOKENS_PER_ACCOUNT,
@@ -119,4 +120,39 @@ export async function setupStorageFixture({
       .setControllerAddress(controllerAddress)
   }
   return storage
+}
+
+export async function setupControllerFixture({
+  withFunds = false,
+}: {
+  withFunds?: boolean,
+}) {
+  const admin = getWallet('admin')
+  const {
+    token,
+    payments,
+  } = await setupPaymentsFixture({
+    withFunds,
+  })
+  const storage = await setupStorageFixture({})
+  const storageAddress = await storage.getAddress()
+  const paymentsAddress = await payments.getAddress()
+  const controller = await deployController(
+    admin,
+    storageAddress,
+    paymentsAddress,
+  )
+  const controllerAddress = await controller.getAddress()
+  await (payments as any)
+    .connect(admin)
+    .setControllerAddress(controllerAddress)
+  await (storage as any)
+    .connect(admin)
+    .setControllerAddress(controllerAddress)
+  return {
+    token,
+    payments,
+    storage,
+    controller,
+  }
 }
