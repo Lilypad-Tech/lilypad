@@ -438,7 +438,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
       dealId,
       resourceProvider,
       resultsCollateral,
-      PaymentReason.PaymentCollateral
+      PaymentReason.ResultsCollateral
     );
 
     // the slashing of the timeout collateral for the RP
