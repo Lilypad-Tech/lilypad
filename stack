@@ -70,6 +70,7 @@ function compile-contracts() {
     cd hardhat
     npx hardhat compile
   )
+  # for some reason the permissions on the generated files are 0600
   chmod 0644 pkg/contract/bindings/contracts/*.go
 }
 
