@@ -31,7 +31,7 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe.only("Controller", () => {
+describe("Controller", () => {
 
   const dealID = ethers.getBigInt(10)
   const resultsID = ethers.getBigInt(11)
@@ -413,14 +413,11 @@ describe.only("Controller", () => {
     })
   })
 
-  describe.only("End to end", () => {
+  describe("End to end", () => {
 
-    // TODO: we need a lot more tests for the unhappy path
     it("Runs a job in the happy path", async function () {
       const {
         token,
-        tokenAddress,
-        payments,
         storage,
         controller,
       } = await loadFixture(setupController)
@@ -450,6 +447,119 @@ describe.only("Controller", () => {
       expect(balancesAfterJC.tokens).to.equal(balancesBeforeJC.tokens - jobCost)
       
       await checkAgreement(storage, 'ResultsAccepted')
+    })
+
+    it("Runs a job in the mediation OK path", async function () {
+      const {
+        token,
+        storage,
+        controller,
+      } = await loadFixture(setupController)
+
+      const balancesBeforeJC = await getBalances(token, 'job_creator')
+      const balancesBeforeRP = await getBalances(token, 'resource_provider')
+      const balancesBeforeMediator = await getBalances(token, 'mediator')
+
+      await storage
+        .connect(getWallet('resource_provider'))
+        .updateUser(
+          ethers.getBigInt(1),
+          "",
+          [],
+          [
+            getAddress('mediator'),
+          ],
+          []
+        )
+
+      await agree(controller, 'job_creator')
+      await agree(controller, 'resource_provider')
+      await controller
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount
+        )
+      await controller
+        .connect(getWallet('job_creator'))
+        .checkResult(
+          dealID,
+          getAddress('mediator'),
+        )
+      await controller
+        .connect(getWallet('mediator'))
+        .mediationAcceptResult(
+          dealID,
+        )
+
+      const balancesAfterJC = await getBalances(token, 'job_creator')
+      const balancesAfterRP = await getBalances(token, 'resource_provider')
+      const balancesAfterMediator = await getBalances(token, 'mediator')
+
+      expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens + jobCost)
+      expect(balancesAfterJC.tokens).to.equal(balancesBeforeJC.tokens - jobCost - mediationFee)
+      expect(balancesAfterMediator.tokens).to.equal(balancesBeforeMediator.tokens + mediationFee)
+
+      await checkAgreement(storage, 'MediationAccepted')
+    })
+
+    it("Runs a job in the mediation not OK path", async function () {
+      const {
+        token,
+        storage,
+        controller,
+      } = await loadFixture(setupController)
+
+      const balancesBeforeJC = await getBalances(token, 'job_creator')
+      const balancesBeforeRP = await getBalances(token, 'resource_provider')
+      const balancesBeforeMediator = await getBalances(token, 'mediator')
+      const balancesBeforeAdmin = await getBalances(token, 'admin')
+
+      await storage
+        .connect(getWallet('resource_provider'))
+        .updateUser(
+          ethers.getBigInt(1),
+          "",
+          [],
+          [
+            getAddress('mediator'),
+          ],
+          []
+        )
+
+      await agree(controller, 'job_creator')
+      await agree(controller, 'resource_provider')
+      await controller
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          resultsID,
+          instructionCount
+        )
+      await controller
+        .connect(getWallet('job_creator'))
+        .checkResult(
+          dealID,
+          getAddress('mediator'),
+        )
+      await controller
+        .connect(getWallet('mediator'))
+        .mediationRejectResult(
+          dealID,
+        )
+
+      const balancesAfterJC = await getBalances(token, 'job_creator')
+      const balancesAfterRP = await getBalances(token, 'resource_provider')
+      const balancesAfterMediator = await getBalances(token, 'mediator')
+      const balancesAfterAdmin = await getBalances(token, 'admin')
+
+      expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens - resultsCollateral)
+      expect(balancesAfterJC.tokens).to.equal(balancesBeforeJC.tokens - mediationFee)
+      expect(balancesAfterMediator.tokens).to.equal(balancesBeforeMediator.tokens + mediationFee)
+      expect(balancesAfterAdmin.tokens).to.equal(balancesBeforeAdmin.tokens + resultsCollateral)
+
+      await checkAgreement(storage, 'MediationRejected')
     })
 
   })

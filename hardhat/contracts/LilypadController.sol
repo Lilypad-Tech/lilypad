@@ -205,7 +205,7 @@ contract LilypadController is Ownable, Initializable {
   // * check the JC is calling this
   // * check we are in Submitted state
   // * check the mediator is in the list of RP trusted mediators
-  // * mark the deal as results challenged
+  // * mark the deal as results checked
   // * charge the JC the mediation fee
   // * refund the JC the timeout collateral
   // * emit the Mediation event so the mediator kicks in
@@ -216,7 +216,7 @@ contract LilypadController is Ownable, Initializable {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
     require(!_hasJudgeResultsTimedOut(dealId), "Deal has timed out");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.jobCreator == tx.origin, "Only JC can challenge result");
+    require(deal.jobCreator == tx.origin, "Only JC can check result");
 
     // this function will require that the mediator is in the RP's list of trusted mediators
     storageContract.checkResult(dealId, mediator);
@@ -235,7 +235,7 @@ contract LilypadController is Ownable, Initializable {
    */
 
   // the mediator calls this to say that the resource provider did the correct job
-  // * check the state is ResultsChallenged
+  // * check the state is ResultsChecked
   // * check the mediator is calling this
   // * mark the deal as mediation accepted
   // * refund the JC what is left from the payment collateral (if any)
@@ -268,7 +268,7 @@ contract LilypadController is Ownable, Initializable {
   }
 
   // the mediator calls this to say that the resource provider did the bad job
-  // * check the state is ResultsChallenged
+  // * check the state is ResultsChecked
   // * check the mediator is calling this
   // * mark the deal as mediation rejected
   // * refund the JC their payment collateral
@@ -301,7 +301,7 @@ contract LilypadController is Ownable, Initializable {
   function _canMediateResult(
     uint256 dealId 
   ) private returns (bool) {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal is not in ResultsChallenged state");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal is not in ResultsChecked state");
     require(!_hasMediateResultsTimedOut(dealId), "Deal has timed out");
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
     require(agreement.mediator != address(0), "No mediator has been selected");
@@ -370,7 +370,7 @@ contract LilypadController is Ownable, Initializable {
     emit TimeoutJudgeResult(dealId);
   }
 
-  // either the JC or RP call this after the timeout has passed after results being challenged
+  // either the JC or RP call this after the timeout has passed after results being checked
   // this refunds both the payment and results collateral to both the JC and RP
   // * check the RP or JC is calling this
   // * mark the deal as timedout
@@ -380,7 +380,7 @@ contract LilypadController is Ownable, Initializable {
   function timeoutMediateResult(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal is not in ResultsChallenged state");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal is not in ResultsChecked state");
     require(_hasMediateResultsTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.resourceProvider == tx.origin || deal.jobCreator == tx.origin, "Only RP or JC can refund mediate results timeout");
@@ -425,7 +425,7 @@ contract LilypadController is Ownable, Initializable {
   ) private returns (bool) {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    return block.timestamp > agreement.resultsChallengedAt + deal.timeout;
+    return block.timestamp > agreement.resultsCheckedAt + deal.timeout;
   }
 
 }

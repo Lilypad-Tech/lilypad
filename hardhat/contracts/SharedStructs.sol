@@ -25,8 +25,8 @@ library SharedStructs {
     // the JC has accepted the results
     ResultsAccepted,
 
-    // the JC has challenged the results
-    ResultsChallenged,
+    // the JC has checked the results
+    ResultsChecked,
 
     // a mediator has accepted the results
     MediationAccepted,
@@ -109,7 +109,7 @@ library SharedStructs {
     // the current state of the agreement
     AgreementState state;
 
-    // if the JC has challenged the result
+    // if the JC has checked the result
     // what mediator did they choose?
     // (this must be in the list of the RP and JC's trusted mediators)
     address mediator;
@@ -120,7 +120,7 @@ library SharedStructs {
 
     uint256 resultsSubmittedAt;
     uint256 resultsAcceptedAt;
-    uint256 resultsChallengedAt;
+    uint256 resultsCheckedAt;
 
     uint256 mediationAcceptedAt;
     uint256 mediationRejectedAt;

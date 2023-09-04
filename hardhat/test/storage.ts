@@ -21,7 +21,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe("Storage", () => {
+describe.only("Storage", () => {
 
   const rpCID = ethers.getBigInt(123)
   const rpURL = "abc"
@@ -158,7 +158,7 @@ describe("Storage", () => {
       )
     )
       .to.emit(storage, "DealStateChange")
-      .withArgs(dealID, getAgreementState('ResultsChallenged'))
+      .withArgs(dealID, getAgreementState('ResultsChecked'))
     
     return storage
   }
@@ -796,11 +796,11 @@ describe("Storage", () => {
         )
       )
         .to.emit(storage, "DealStateChange")
-        .withArgs(dealID, getAgreementState('ResultsChallenged'))
+        .withArgs(dealID, getAgreementState('ResultsChecked'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.resultsChallengedAt).to.not.equal(ethers.getBigInt(0))
-      expect(agreement.state).to.equal(getAgreementState('ResultsChallenged'))
+      expect(agreement.resultsCheckedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.state).to.equal(getAgreementState('ResultsChecked'))
     })
 
     it("Should throw if we try to accept results and not in submitted state", async function () {
@@ -874,7 +874,7 @@ describe("Storage", () => {
         .mediationAcceptResult(
           dealID
         )
-      ).to.be.revertedWith('Deal not in ResultsChallenged state')
+      ).to.be.revertedWith('Deal not in ResultsChecked state')
     })
 
     it("Should throw if we try to challenge results and not in submitted state", async function () {
@@ -885,7 +885,7 @@ describe("Storage", () => {
         .mediationRejectResult(
           dealID
         )
-      ).to.be.revertedWith('Deal not in ResultsChallenged state')
+      ).to.be.revertedWith('Deal not in ResultsChecked state')
     })
 
   })

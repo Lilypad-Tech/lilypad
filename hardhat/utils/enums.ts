@@ -13,7 +13,7 @@ export const AgreementState = [
   'DealAgreed',
   'ResultsSubmitted',
   'ResultsAccepted',
-  'ResultsChallenged',
+  'ResultsChecked',
   'MediationAccepted',
   'MediationRejected',
   'TimeoutSubmitResults',

@@ -280,9 +280,9 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     SharedStructs.Deal memory deal = getDeal(dealId);
     require(_hasTrustedMediator(deal.resourceProvider, mediator), "Resource provider does not trust that mediator");
-    agreements[dealId].resultsChallengedAt = block.timestamp;
+    agreements[dealId].resultsCheckedAt = block.timestamp;
     agreements[dealId].mediator = mediator;
-    _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChallenged);
+    _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChecked);
 
   }
 
@@ -293,7 +293,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function mediationAcceptResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
     agreements[dealId].mediationAcceptedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationAccepted);
   }
@@ -301,7 +301,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function mediationRejectResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
     agreements[dealId].mediationRejectedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationRejected);
   }
@@ -334,7 +334,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function timeoutMediateResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChallenged), "Deal not in ResultsChallenged state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
     agreements[dealId].timeoutMediateResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutMediateResults);
   }
