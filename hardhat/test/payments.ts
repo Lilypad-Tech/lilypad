@@ -34,6 +34,8 @@ describe("Payments", () => {
   const timeoutCollateral = ethers.getBigInt(10)
   const resultsCollateral = ethers.getBigInt(40)
   const paymentCollateral = ethers.getBigInt(30)
+  const jobCost = ethers.getBigInt(20)
+  const mediationFee = ethers.getBigInt(5)
 
   async function setupPayments() {
     const {
@@ -77,6 +79,29 @@ describe("Payments", () => {
         timeoutCollateral,
       )
   
+    return {
+      payments,
+      token,
+      tokenAddress,
+    }
+  }
+
+  async function setupPaymentsWithResults() {
+    const {
+      payments,
+      token,
+      tokenAddress,
+    } = await setupPaymentsWithAgreement()
+
+    await payments
+      .connect(getWallet('resource_provider'))
+      .addResult(
+        dealID,
+        getAddress('resource_provider'),
+        resultsCollateral,
+        timeoutCollateral,
+      )
+
     return {
       payments,
       token,
@@ -240,6 +265,94 @@ describe("Payments", () => {
 
       expect(balanceAfter.tokens).to.equal(balanceBefore.tokens + timeoutCollateral - resultsCollateral)
       expect(balanceAfter.escrow).to.equal(balanceBefore.escrow - timeoutCollateral + resultsCollateral)
+    })
+
+    it.only("Should accept a result", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithResults)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+      const balanceBeforeRP = await getBalances(token, 'resource_provider')
+
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .acceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          jobCost,
+          paymentCollateral,
+          resultsCollateral,
+          timeoutCollateral,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          jobCost,
+          getPaymentReason('JobPayment'),
+          getPaymentDirection('PaidOut'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          timeoutCollateral,
+        )
+
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+      const balanceAfterRP = await getBalances(token, 'resource_provider')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + (paymentCollateral - jobCost) + timeoutCollateral)
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - timeoutCollateral - paymentCollateral)
+      expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + jobCost + resultsCollateral)
+      expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
     })
 
   })
