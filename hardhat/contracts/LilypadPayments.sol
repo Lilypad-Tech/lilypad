@@ -386,6 +386,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
    */
 
   // * pay back the JC's job collateral
+  // * pay back the JC's timeout collateral
   // * slash the RP's results collateral
   function timeoutSubmitResults(
     uint256 dealId,
@@ -401,6 +402,14 @@ contract LilypadPayments is ControllerOwnable, Initializable {
       jobCreator,
       paymentCollateral,
       PaymentReason.PaymentCollateral
+    );
+
+    // the refund of the job collateral to the JC
+    _refundEscrow(
+      dealId,
+      jobCreator,
+      timeoutCollateral,
+      PaymentReason.TimeoutCollateral
     );
     
     // the slashing of the timeout collateral for the RP

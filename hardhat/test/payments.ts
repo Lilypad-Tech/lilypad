@@ -433,7 +433,7 @@ describe("Payments", () => {
 
   })
 
-  describe.only("Mediation", () => {
+  describe("Mediation", () => {
 
     it("Should accept mediation results", async function () {
       const {
@@ -527,7 +527,7 @@ describe("Payments", () => {
       expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
     })
 
-    it.only("Should reject mediation results", async function () {
+    it("Should reject mediation results", async function () {
       const {
         token,
         payments,
@@ -536,6 +536,7 @@ describe("Payments", () => {
 
       const balanceBeforeJC = await getBalances(token, 'job_creator')
       const balanceBeforeRP = await getBalances(token, 'resource_provider')
+      const balanceBeforeAdmin = await getBalances(token, 'admin')
       const balanceBeforeMediator = await getBalances(token, 'mediator')
 
       await expect(payments
@@ -596,14 +597,96 @@ describe("Payments", () => {
 
       const balanceAfterJC = await getBalances(token, 'job_creator')
       const balanceAfterRP = await getBalances(token, 'resource_provider')
+      const balanceAfterAdmin = await getBalances(token, 'admin')
       const balanceAfterMediator = await getBalances(token, 'mediator')
 
       expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + paymentCollateral)
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
       expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens)
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+      expect(balanceAfterAdmin.tokens).to.equal(balanceAfterAdmin.tokens + resultsCollateral)
       expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
     })
+
+  })
+
+  describe.only("Timeouts", () => {
+
+    it.only("Should timeout submit results", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithAgreement)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+      const balanceBeforeRP = await getBalances(token, 'resource_provider')
+      const balanceBeforeAdmin = await getBalances(token, 'admin')
+
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .timeoutSubmitResults(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          paymentCollateral,
+          timeoutCollateral,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Slashed'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          timeoutCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('admin'),
+          timeoutCollateral,
+        )
+        
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+      const balanceAfterRP = await getBalances(token, 'resource_provider')
+      const balanceAfterAdmin = await getBalances(token, 'admin')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + paymentCollateral + timeoutCollateral)
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - timeoutCollateral)
+      expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens)
+      expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - timeoutCollateral)
+      expect(balanceAfterAdmin.tokens).to.equal(balanceBeforeAdmin.tokens + timeoutCollateral)
+    })
+
 
   })
 })
