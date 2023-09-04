@@ -8,6 +8,7 @@ import { ethers } from 'hardhat'
 import {
   getPaymentReason,
   getPaymentDirection,
+  getAgreementState,
 } from '../utils/enums'
 import {
   getWallet,
@@ -90,6 +91,11 @@ describe.only("Controller", () => {
       .to.deep.equal([dealID])
   }
 
+  const checkAgreement = async (storage: LilypadStorage, desiredState: string) => {
+    const agreement = await storage.getAgreement(dealID)
+    expect(agreement.state).to.equal(getAgreementState(desiredState))
+  }
+
   const agree = async (controller: LilypadController, party: string) => controller
     .connect(getWallet(party))
     .agree(
@@ -145,6 +151,7 @@ describe.only("Controller", () => {
       expect(balancesAfterAgreeRP.escrow).to.equal(balancesBeforeAgreeRP.escrow + timeoutCollateral)
 
       await checkDeal(storage, 'resource_provider')      
+      await checkAgreement(storage, 'DealNegotiating')
     })
 
     it("Should agreeJobCreator", async function () {
@@ -200,6 +207,7 @@ describe.only("Controller", () => {
       expect(balancesAfterAgreeJC.escrow).to.equal(balancesBeforeAgreeJC.escrow + timeoutCollateral + paymentCollateral)
 
       await checkDeal(storage, 'job_creator')
+      await checkAgreement(storage, 'DealNegotiating')
     })
 
     it("Should agree both sides", async function () {
@@ -229,7 +237,9 @@ describe.only("Controller", () => {
         .to.emit(controller, 'DealAgreed')
         .withArgs(
           dealID,
-        )        
+        )
+        
+      await checkAgreement(storage, 'DealAgreed')
     })
   })
 })
