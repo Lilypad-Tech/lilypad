@@ -14,11 +14,14 @@ import {
   getServiceType,
   getAgreementState,
 } from '../utils/enums'
+import {
+  setupStorageFixture,
+} from './fixtures'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe("Storage", () => {
+describe.only("Storage", () => {
 
   const rpCID = ethers.getBigInt(123)
   const rpURL = "abc"
@@ -30,10 +33,23 @@ describe("Storage", () => {
   const resultsID = ethers.getBigInt(11)
   const instructionCount = ethers.getBigInt(25)
 
-  async function setupStorage() {
-    const admin = getWallet('admin')
-    const storage = await deployStorage(admin)
-    return storage
+  function setupStorage() {
+    return setupStorageFixture({
+      testMode: true,
+    })
+  }
+
+  function setupStorageNoTest() {
+    return setupStorageFixture({
+      testMode: false,
+    })
+  }
+
+  function setupStorageNoTestWithControllerAddress() {
+    return setupStorageFixture({
+      testMode: false,
+      controllerAddress: getAddress('mediator'),
+    })
   }
 
   async function setupStorageWithUsers() {
@@ -136,7 +152,7 @@ describe("Storage", () => {
 
     await expect(storage
       .connect(getWallet('admin'))
-      .challengeResult(
+      .checkResult(
         dealID,
         getAddress('mediator')
       )
@@ -286,6 +302,273 @@ describe("Storage", () => {
       ).to.be.revertedWith('User is not part of that list')
     })
 
+  })
+
+  describe.only("Access control", () => {
+    it("Can only run ensureDeal if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .ensureDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1)
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run ensureDeal by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .ensureDeal(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+          ethers.getBigInt(1)
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run agreeResourceProvider if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run agreeResourceProvider by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .agreeResourceProvider(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run agreeJobCreator if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .agreeJobCreator(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run agreeJobCreator by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .agreeJobCreator(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+
+    it("Can only run addResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run addResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .addResult(
+          dealID,
+          ethers.getBigInt(1),
+          ethers.getBigInt(1),
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run acceptResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .acceptResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run acceptResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .acceptResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run checkResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .checkResult(
+          dealID,
+          getAddress('mediator')
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run checkResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .checkResult(
+          dealID,
+          getAddress('mediator')
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run mediationAcceptResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .mediationAcceptResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run mediationAcceptResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .mediationAcceptResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run mediationRejectResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .mediationRejectResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run mediationRejectResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .mediationRejectResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutSubmitResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutSubmitResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutSubmitResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutSubmitResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutJudgeResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutJudgeResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutJudgeResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutJudgeResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
+
+    it("Can only run timeoutMediateResult if there is a controller address set", async function () {
+      const storage = await loadFixture(setupStorageNoTest)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutMediateResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
+    })
+
+    it("Can only run timeoutMediateResult by the controller", async function () {
+      const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
+      
+      await expect(storage
+        .connect(getWallet('resource_provider'))
+        .timeoutMediateResult(
+          dealID,
+        )
+      ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
+    })
   })
 
   describe("Deals", () => {
@@ -544,7 +827,7 @@ describe("Storage", () => {
 
       await expect(storage
         .connect(getWallet('admin'))
-        .challengeResult(
+        .checkResult(
           dealID,
           getAddress('mediator')
         )
@@ -573,7 +856,7 @@ describe("Storage", () => {
 
       await expect(storage
         .connect(getWallet('admin'))
-        .challengeResult(
+        .checkResult(
           dealID,
           getAddress('mediator')
         )

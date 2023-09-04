@@ -5,6 +5,7 @@ import {
   getWallet,
   deployToken,
   deployPayments,
+  deployStorage,
   fundAccountsWithTokens,
   DEFAULT_TOKEN_SUPPLY,
   DEFAULT_TOKENS_PER_ACCOUNT,
@@ -85,4 +86,32 @@ export async function setupPaymentsFixture({
     token,
     payments,
   }
+}
+
+/*
+
+  TOKEN
+
+*/
+
+// setup the token in test mode so we can call functions on it directly
+// without the ControllerOwnable module kicking in
+export async function setupStorageFixture({
+  testMode = false,
+  controllerAddress,
+}: {
+  testMode?: boolean,
+  controllerAddress?: AddressLike,
+}) {
+  const admin = getWallet('admin')
+  const storage = await deployStorage(
+    admin,
+    testMode,
+  )
+  if(controllerAddress) {
+    await (storage as any)
+      .connect(admin)
+      .setControllerAddress(controllerAddress)
+  }
+  return storage
 }
