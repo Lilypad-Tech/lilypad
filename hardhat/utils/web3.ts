@@ -22,10 +22,12 @@ import {
   CONSTANTS
 
 */
-export const AMOUNT_TO_FUND = ethers.parseEther('10000')
 
-// a million tokens in total
-export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000')
+// how much ether to send to each account
+export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('1000000')
+
+// a billion tokens in total
+export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000000')
 
 // each service gets 1000 tokens
 export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.parseEther('1000')
@@ -50,7 +52,7 @@ export const getRandomWallet = () => {
 }
 
 export const transfer = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
-  const signer = new hre.ethers.Wallet(fromAccount.privateKey)
+  const signer = new hre.ethers.Wallet(fromAccount.privateKey, hre.ethers.provider)
 
   const tx = await signer.sendTransaction({
     to: toAccount.address,

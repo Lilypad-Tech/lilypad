@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
   gobind: {
     outdir: '../pkg/contract/bindings',
     deployable: false,
-    runOnCompile: true,
+    runOnCompile: false,
     verbose: false,
     onlyFiles: [
       'contracts',

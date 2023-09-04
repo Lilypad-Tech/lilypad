@@ -24,10 +24,16 @@ function geth() {
     --name geth \
     --network lilypad \
     -p 8545:8545 \
+    -p 8546:8546 \
     -v ${DATA_DIRECTORY}:/data/geth \
     ethereum/client-go \
       --datadir /data/geth \
       --dev \
+      --ws \
+      --ws.api web3,eth,net \
+      --ws.addr 0.0.0.0 \
+      --ws.port 8546 \
+      --ws.origins '*' \
       --http \
       --http.api web3,eth,net \
       --http.addr 0.0.0.0 \
@@ -54,7 +60,7 @@ function geth-stop() {
   docker rm -f geth 2> /dev/null || true
 }
 
-function geth-clean() {
+function clean() {
   sudo rm -rf ${DATA_DIRECTORY}
 }
 
@@ -69,6 +75,7 @@ function compile-contracts() {
     set -euo pipefail
     cd hardhat
     npx hardhat compile
+    npx hardhat gobind
   )
   # for some reason the permissions on the generated files are 0600
   chmod 0644 pkg/contract/bindings/contracts/*.go
@@ -92,15 +99,15 @@ function hardhat-script() {
 
 # print the env settings for the various accounts and private keys
 function print-env() {
-  hardhat-script scripts/print-env.js
+  hardhat-script scripts/print-env.ts | grep export
 }
 
 function fund-services() {
-  hardhat-script scripts/fund-services.js
+  hardhat-script scripts/fund-services.ts
 }
 
 function balances() {
-  hardhat-script scripts/balances.js
+  hardhat-script scripts/balances.ts
 }
 
 ############################################################################

@@ -5,14 +5,14 @@ import {
 } from '../utils/accounts'
 import {
   transfer,
-  AMOUNT_TO_FUND,
-} from '../utils/utils'
+  DEFAULT_ETHER_PER_ACCOUNT,
+} from '../utils/web3'
 
 async function main() {
   const adminAccount = getAccount('admin')
   await bluebird.mapSeries(ACCOUNTS, async (toAccount) => {
     if(toAccount.name === 'admin') return
-    await transfer(adminAccount, toAccount, AMOUNT_TO_FUND)
+    await transfer(adminAccount, toAccount, DEFAULT_ETHER_PER_ACCOUNT)
   })
 }
 
