@@ -146,13 +146,13 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
     _payEscrow(
       dealId,
-      timeoutCollateral,
-      PaymentReason.TimeoutCollateral
+      paymentCollateral,
+      PaymentReason.PaymentCollateral
     );
     _payEscrow(
       dealId,
-      paymentCollateral,
-      PaymentReason.PaymentCollateral
+      timeoutCollateral,
+      PaymentReason.TimeoutCollateral
     );
   }
 
@@ -169,16 +169,16 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     uint256 timeoutCollateral
   ) public onlyController {
     require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
+    _payEscrow(
+      dealId,
+      resultsCollateral,
+      PaymentReason.ResultsCollateral
+    );
     _refundEscrow(
       dealId,
       resourceProvider,
       timeoutCollateral,
       PaymentReason.TimeoutCollateral
-    );
-    _payEscrow(
-      dealId,
-      resultsCollateral,
-      PaymentReason.ResultsCollateral
     );
   }
 

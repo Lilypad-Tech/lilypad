@@ -19,29 +19,48 @@ import {
 import {
   setupPaymentsFixture,
 } from './fixtures'
+import {
+  LilypadToken,
+} from '../typechain-types'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe("Payments", () => {
+describe.only("Payments", () => {
 
   const dealID = ethers.getBigInt(10)
 
-  describe("Deals", () => {
+  function setupPayments() {
+    return setupPaymentsFixture({
+      testMode: true,
+      withFunds: true,
+    })
+  }
 
-    it("Should agree resource provider", async function () {
+  async function getBalances(token: LilypadToken, accountName: string) {
+    const tokens = await token.balanceOf(getAddress(accountName))
+    const escrow = await token.escrowBalanceOf(getAddress(accountName))
+    return {
+      tokens,
+      escrow,
+    }
+  }
+
+  describe.only("Deals", () => {
+
+    it("Should agreeResourceProvider", async function () {
 
       const timeoutCollateral = ethers.getBigInt(10)
 
       const {
-        token,
         payments,
-      } = await loadFixture(setupPaymentsFixture)
+        token,
+      } = await loadFixture(setupPayments)
 
-      const balanceBefore = await token.balanceOf(getAddress('resource_provider'))
-      const escrowBefore = await payments.getEscrowBalance(getAddress('resource_provider'))
+      const tokenAddress = await token.getAddress()
+      const balanceBefore = await getBalances(token, 'resource_provider')
 
       await expect(payments
         .connect(getWallet('resource_provider'))
@@ -59,26 +78,36 @@ describe("Payments", () => {
           getPaymentReason('TimeoutCollateral'),
           getPaymentDirection('PaidIn'),
         )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('resource_provider'),
+          tokenAddress,
+          timeoutCollateral,
+        )
 
-      const balanceAfter = await token.balanceOf(getAddress('resource_provider'))
-      const escrowAfter = await payments.getEscrowBalance(getAddress('resource_provider'))
+      const balanceAfter = await getBalances(token, 'resource_provider')
 
-      expect(balanceAfter).to.equal(balanceBefore - timeoutCollateral)
-      expect(escrowAfter).to.equal(escrowBefore + timeoutCollateral)
+      console.log({
+        balanceBefore,
+        balanceAfter
+      })
+
+      expect(balanceAfter.tokens).to.equal(balanceBefore.tokens - timeoutCollateral)
+      expect(balanceAfter.escrow).to.equal(balanceBefore.escrow + timeoutCollateral)
     })
 
-    it("Should agree job creator", async function () {
+    it.only("Should agreeJobCreator", async function () {
 
-      const payentCollateral = ethers.getBigInt(20)
+      const payentCollateral = ethers.getBigInt(0)
       const timeoutCollateral = ethers.getBigInt(10)
 
       const {
         token,
         payments,
-      } = await loadFixture(setupPaymentsFixture)
+      } = await loadFixture(setupPayments)
 
-      const balanceBefore = await token.balanceOf(getAddress('job_creator'))
-      const escrowBefore = await payments.getEscrowBalance(getAddress('job_creator'))
+      const tokenAddress = await token.getAddress()
+      const balanceBefore = await getBalances(token, 'job_creator')
 
       await expect(payments
         .connect(getWallet('job_creator'))
@@ -105,12 +134,23 @@ describe("Payments", () => {
           getPaymentReason('TimeoutCollateral'),
           getPaymentDirection('PaidIn'),
         )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('job_creator'),
+          tokenAddress,
+          payentCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('job_creator'),
+          tokenAddress,
+          timeoutCollateral,
+        )
 
-      const balanceAfter = await token.balanceOf(getAddress('job_creator'))
-      const escrowAfter = await payments.getEscrowBalance(getAddress('job_creator'))
+      const balanceAfter = await getBalances(token, 'job_creator')
 
-      expect(balanceAfter).to.equal(balanceBefore - payentCollateral - timeoutCollateral)
-      expect(escrowAfter).to.equal(escrowBefore + payentCollateral + timeoutCollateral)
+      expect(balanceAfter.tokens).to.equal(balanceBefore.tokens - payentCollateral - timeoutCollateral)
+      expect(balanceAfter.escrow).to.equal(balanceBefore.escrow + payentCollateral + timeoutCollateral)
     })
 
 
@@ -126,7 +166,7 @@ describe("Payments", () => {
       const {
         token,
         payments,
-      } = await loadFixture(setupPaymentsFixture)
+      } = await loadFixture(setupPayments)
 
       await expect(payments
         .connect(getWallet('resource_provider'))
@@ -138,7 +178,7 @@ describe("Payments", () => {
       ).to.not.be.reverted
 
       const balanceBefore = await token.balanceOf(getAddress('resource_provider'))
-      const escrowBefore = await payments.getEscrowBalance(getAddress('resource_provider'))
+      const escrowBefore = await token.escrowBalanceOf(getAddress('resource_provider'))
 
       await expect(payments
         .connect(getWallet('resource_provider'))
@@ -159,7 +199,7 @@ describe("Payments", () => {
         )
 
       const balanceAfter = await token.balanceOf(getAddress('resource_provider'))
-      const escrowAfter = await payments.getEscrowBalance(getAddress('resource_provider'))
+      const escrowAfter = await token.escrowBalanceOf(getAddress('resource_provider'))
 
       expect(balanceAfter).to.equal(balanceBefore - timeoutCollateral)
       expect(escrowAfter).to.equal(escrowBefore + timeoutCollateral)
