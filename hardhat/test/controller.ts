@@ -21,6 +21,8 @@ import {
 } from './fixtures'
 import {
   LilypadToken,
+  LilypadStorage,
+  LilypadController,
 } from '../typechain-types'
 
 chai.use(chaiAsPromised)
@@ -68,6 +70,40 @@ describe.only("Controller", () => {
     }
   }
 
+  const checkDeal = async (storage: LilypadStorage, party: string) => {
+    const deal = await storage.getDeal(dealID)
+
+    expect(deal.dealId).to.equal(dealID)
+    expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
+    expect(deal.jobCreator).to.equal(getAddress('job_creator'))
+    expect(deal.instructionPrice).to.equal(instructionPrice)
+    expect(deal.timeout).to.equal(timeout)
+    expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
+    expect(deal.paymentCollateral).to.equal(paymentCollateral)
+    expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
+    expect(deal.mediationFee).to.equal(mediationFee)
+
+    expect(await storage.hasDeal(dealID))
+      .to.equal(true)
+
+    expect(await storage.getDealsForParty(getAddress(party)))
+      .to.deep.equal([dealID])
+  }
+
+  const agree = async (controller: LilypadController, party: string) => controller
+    .connect(getWallet(party))
+    .agree(
+      dealID,
+      getAddress('resource_provider'),
+      getAddress('job_creator'),
+      instructionPrice,
+      timeout,
+      timeoutCollateral,
+      paymentCollateral,
+      resultsCollateralMultiple,
+      mediationFee,
+    )
+
   describe("Deals", () => {
 
     it("Should agreeResourceProvider", async function () {
@@ -81,19 +117,8 @@ describe.only("Controller", () => {
 
       const balancesBeforeAgreeRP = await getBalances(token, 'resource_provider')
 
-      await expect(controller
-        .connect(getWallet('resource_provider'))
-        .agree(
-          dealID,
-          getAddress('resource_provider'),
-          getAddress('job_creator'),
-          instructionPrice,
-          timeout,
-          timeoutCollateral,
-          paymentCollateral,
-          resultsCollateralMultiple,
-          mediationFee,
-        )
+      await expect(
+        agree(controller, 'resource_provider')
       )
         .to.emit(controller, 'ResourceProviderAgreed')
         .withArgs(
@@ -119,23 +144,7 @@ describe.only("Controller", () => {
       expect(balancesAfterAgreeRP.tokens).to.equal(balancesBeforeAgreeRP.tokens - timeoutCollateral)
       expect(balancesAfterAgreeRP.escrow).to.equal(balancesBeforeAgreeRP.escrow + timeoutCollateral)
 
-      const deal = await storage.getDeal(dealID)
-
-      expect(deal.dealId).to.equal(dealID)
-      expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
-      expect(deal.jobCreator).to.equal(getAddress('job_creator'))
-      expect(deal.instructionPrice).to.equal(instructionPrice)
-      expect(deal.timeout).to.equal(timeout)
-      expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
-      expect(deal.paymentCollateral).to.equal(paymentCollateral)
-      expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
-      expect(deal.mediationFee).to.equal(mediationFee)
-
-      expect(await storage.hasDeal(dealID))
-        .to.equal(true)
-
-      expect(await storage.getDealsForParty(getAddress('resource_provider')))
-        .to.deep.equal([dealID])
+      await checkDeal(storage, 'resource_provider')      
     })
 
     it("Should agreeJobCreator", async function () {
@@ -149,19 +158,8 @@ describe.only("Controller", () => {
 
       const balancesBeforeAgreeJC = await getBalances(token, 'job_creator')
 
-      await expect(controller
-        .connect(getWallet('job_creator'))
-        .agree(
-          dealID,
-          getAddress('resource_provider'),
-          getAddress('job_creator'),
-          instructionPrice,
-          timeout,
-          timeoutCollateral,
-          paymentCollateral,
-          resultsCollateralMultiple,
-          mediationFee,
-        )
+      await expect(
+        agree(controller, 'job_creator')
       )
         .to.emit(controller, 'JobCreatorAgreed')
         .withArgs(
@@ -201,23 +199,37 @@ describe.only("Controller", () => {
       expect(balancesAfterAgreeJC.tokens).to.equal(balancesBeforeAgreeJC.tokens - timeoutCollateral - paymentCollateral)
       expect(balancesAfterAgreeJC.escrow).to.equal(balancesBeforeAgreeJC.escrow + timeoutCollateral + paymentCollateral)
 
-      const deal = await storage.getDeal(dealID)
+      await checkDeal(storage, 'job_creator')
+    })
 
-      expect(deal.dealId).to.equal(dealID)
-      expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
-      expect(deal.jobCreator).to.equal(getAddress('job_creator'))
-      expect(deal.instructionPrice).to.equal(instructionPrice)
-      expect(deal.timeout).to.equal(timeout)
-      expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
-      expect(deal.paymentCollateral).to.equal(paymentCollateral)
-      expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
-      expect(deal.mediationFee).to.equal(mediationFee)
+    it("Should agree both sides", async function () {
+      const {
+        token,
+        payments,
+        storage,
+        controller,
+        tokenAddress,
+      } = await loadFixture(setupController)
 
-      expect(await storage.hasDeal(dealID))
-        .to.equal(true)
+      await expect(
+        agree(controller, 'job_creator')
+      )
+        .to.emit(controller, 'JobCreatorAgreed')
+        .withArgs(
+          dealID,
+        )
 
-      expect(await storage.getDealsForParty(getAddress('job_creator')))
-        .to.deep.equal([dealID])
+      await expect(
+        agree(controller, 'resource_provider')
+      )
+        .to.emit(controller, 'ResourceProviderAgreed')
+        .withArgs(
+          dealID,
+        )
+        .to.emit(controller, 'DealAgreed')
+        .withArgs(
+          dealID,
+        )        
     })
   })
 })
