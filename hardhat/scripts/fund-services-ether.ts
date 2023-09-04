@@ -4,7 +4,7 @@ import {
   getAccount,
 } from '../utils/accounts'
 import {
-  transfer,
+  transferEther,
   DEFAULT_ETHER_PER_ACCOUNT,
 } from '../utils/web3'
 
@@ -12,7 +12,7 @@ async function main() {
   const adminAccount = getAccount('admin')
   await bluebird.mapSeries(ACCOUNTS, async (toAccount) => {
     if(toAccount.name === 'admin') return
-    await transfer(adminAccount, toAccount, DEFAULT_ETHER_PER_ACCOUNT)
+    await transferEther(adminAccount, toAccount, DEFAULT_ETHER_PER_ACCOUNT)
   })
 }
 

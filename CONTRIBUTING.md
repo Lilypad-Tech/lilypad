@@ -24,9 +24,11 @@ We need to start geth, move funds to our admin account and then fund the various
 ```bash
 ./stack geth
 ./stack fund-admin
-./stack fund-services
+./stack fund-services-ether
 ./stack balances
 ```
+
+Geth is now running and each of our services has some ether allocated.
 
 ### compile contracts
 
@@ -34,10 +36,21 @@ We need to start geth, move funds to our admin account and then fund the various
 ./stack compile-contracts
 ```
 
+This will also generate go bindings in `pkg/contract/bindings/contracts`
+
 ### deploy contracts
 
 ```bash
 ./stack deploy-contracts
+```
+
+Contracts are now deployed - no services have any tokens though
+
+### fund tokens
+
+```bash
+./stack fund-services-tokens
+./stack balances
 ```
 
 ## stop stack

@@ -27,10 +27,10 @@ import {
 export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('1000000')
 
 // a billion tokens in total
-export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000000')
+export const DEFAULT_TOKEN_SUPPLY = ethers.getBigInt('1000000000')
 
 // each service gets 1000 tokens
-export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.parseEther('1000')
+export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.getBigInt('1000')
 
 /*
 
@@ -51,17 +51,25 @@ export const getRandomWallet = () => {
   return ethers.Wallet.createRandom()
 }
 
-export const transfer = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
+export const transferEther = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
   const signer = new hre.ethers.Wallet(fromAccount.privateKey, hre.ethers.provider)
-
   const tx = await signer.sendTransaction({
     to: toAccount.address,
     value: amount,
   })
   await tx.wait()
-
-  console.log(`Moved ${amount} from ${fromAccount.name} (${fromAccount.address}) to ${toAccount.name} (${toAccount.address}) - ${tx.hash}.`)
+  console.log(`Moved ${amount} ETHER from ${fromAccount.name} (${fromAccount.address}) to ${toAccount.name} (${toAccount.address}) - ${tx.hash}.`)
 }
+
+export const transferTokens = async (fromAccount: Account, toAccount: Account, amount: BigNumberish) => {
+  const token = await connectToken()
+  const tx = await token
+    .connect(getWallet(fromAccount.name))
+    .transfer(toAccount.address, amount)
+  await tx.wait()
+  console.log(`Moved ${amount} TOKENS from ${fromAccount.name} (${fromAccount.address}) to ${toAccount.name} (${toAccount.address}) - ${tx.hash}.`)
+}
+
 
 /*
 
@@ -86,18 +94,6 @@ export async function deployContract<T extends any>(
   TOKEN
 
 */
-export async function deployToken(
-  signer: Signer,
-  tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
-  testMode = false,
-) {
-  return deployContract<LilypadToken>(testMode ? 'LilypadTokenTestable' : 'LilypadToken', signer, [
-    'LilyPad',
-    'LLY',
-    tokenSupply,
-  ])
-}
-
 export async function fundTokens(
   tokenContract: LilypadToken,
   address: AddressLike,
@@ -116,54 +112,6 @@ export async function fundAccountsWithTokens(
     await fundTokens(tokenContract, account.address, amount)
   })
 }
-
-/*
-
-  PAYMENTS
-
-*/
-export async function deployPayments(
-  signer: Signer,
-  tokenAddress: AddressLike,
-  testMode = false,
-) {
-  const payments = await deployContract<LilypadPayments>(testMode ? 'LilypadPaymentsTestable' : 'LilypadPayments', signer)
-  await payments
-    .connect(signer)
-    .initialize(tokenAddress)
-  return payments
-}
-
-
-/*
-
-  STORAGE
-
-*/
-export async function deployStorage(
-  signer: Signer,
-  testMode = false,
-) {
-  return deployContract<LilypadStorage>(testMode ? 'LilypadStorageTestable' : 'LilypadStorage', signer)
-}
-
-/*
-
-  CONTROLLER
-
-*/
-export async function deployController(
-  signer: Signer,
-  storageAddress: AddressLike,
-  paymentsAddress: AddressLike,
-) {
-  const controller = await deployContract<LilypadController>('LilypadController', signer)
-  await controller
-    .connect(signer)
-    .initialize(storageAddress, paymentsAddress)
-  return controller
-}
-
 
 /*
 

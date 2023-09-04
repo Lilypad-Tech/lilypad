@@ -1,16 +1,81 @@
+import { ethers } from 'hardhat'
 import {
-  AddressLike
+  BigNumberish,
+  AddressLike,
+  Signer,
 } from 'ethers'
 import {
   getWallet,
-  deployToken,
-  deployPayments,
-  deployStorage,
-  deployController,
   fundAccountsWithTokens,
   DEFAULT_TOKEN_SUPPLY,
   DEFAULT_TOKENS_PER_ACCOUNT,
 } from '../utils/web3'
+import {
+  LilypadToken,
+  LilypadPayments,
+  LilypadStorage,
+  LilypadController,
+} from '../typechain-types'
+/*
+
+  DEPLOYMENT
+
+*/
+export async function deployContract<T extends any>(
+  name: string,
+  signer: Signer,
+  args: any[] = [],
+): Promise<T>{
+  const factory = await ethers.getContractFactory(
+    name,
+    signer,
+  )
+  const contract = await factory.deploy(...args) as unknown as T
+  return contract
+}
+
+export async function deployToken(
+  signer: Signer,
+  tokenSupply: BigNumberish = DEFAULT_TOKEN_SUPPLY,
+  testMode = false,
+) {
+  return deployContract<LilypadToken>(testMode ? 'LilypadTokenTestable' : 'LilypadToken', signer, [
+    'LilyPad',
+    'LLY',
+    tokenSupply,
+  ])
+}
+
+export async function deployPayments(
+  signer: Signer,
+  tokenAddress: AddressLike,
+  testMode = false,
+) {
+  const payments = await deployContract<LilypadPayments>(testMode ? 'LilypadPaymentsTestable' : 'LilypadPayments', signer)
+  await payments
+    .connect(signer)
+    .initialize(tokenAddress)
+  return payments
+}
+
+export async function deployStorage(
+  signer: Signer,
+  testMode = false,
+) {
+  return deployContract<LilypadStorage>(testMode ? 'LilypadStorageTestable' : 'LilypadStorage', signer)
+}
+
+export async function deployController(
+  signer: Signer,
+  storageAddress: AddressLike,
+  paymentsAddress: AddressLike,
+) {
+  const controller = await deployContract<LilypadController>('LilypadController', signer)
+  await controller
+    .connect(signer)
+    .initialize(storageAddress, paymentsAddress)
+  return controller
+}
 
 /*
 

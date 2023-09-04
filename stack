@@ -63,6 +63,9 @@ function geth-stop() {
 
 function clean() {
   sudo rm -rf ${DATA_DIRECTORY}
+  rm -rf ${DIR}/hardhat/artifacts
+  rm -rf ${DIR}/hardhat/cache
+  rm -rf ${DIR}/hardhat/deployments/geth
 }
 
 ############################################################################
@@ -110,8 +113,12 @@ function print-env() {
   hardhat-script scripts/print-env.ts | grep export
 }
 
-function fund-services() {
-  hardhat-script scripts/fund-services.ts
+function fund-services-ether() {
+  hardhat-script scripts/fund-services-ether.ts
+}
+
+function fund-services-tokens() {
+  hardhat-script scripts/fund-services-tokens.ts
 }
 
 function balances() {
