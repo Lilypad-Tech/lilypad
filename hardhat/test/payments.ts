@@ -435,7 +435,7 @@ describe("Payments", () => {
 
   describe.only("Mediation", () => {
 
-    it.only("Should accept mediation results", async function () {
+    it("Should accept mediation results", async function () {
       const {
         token,
         payments,
@@ -523,6 +523,84 @@ describe("Payments", () => {
       expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + (paymentCollateral - jobCost))
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
       expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + jobCost + resultsCollateral)
+      expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+      expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
+    })
+
+    it.only("Should reject mediation results", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithResultsCheck)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+      const balanceBeforeRP = await getBalances(token, 'resource_provider')
+      const balanceBeforeMediator = await getBalances(token, 'mediator')
+
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationRejectResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          paymentCollateral,
+          resultsCollateral,
+          mediationFee,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('Slashed'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('mediator'),
+          mediationFee,
+          getPaymentReason('MediationFee'),
+          getPaymentDirection('PaidOut'),
+        )
+        // this is the RP results collateral being slashed
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('admin'),
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('mediator'),
+          mediationFee,
+        )
+
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+      const balanceAfterRP = await getBalances(token, 'resource_provider')
+      const balanceAfterMediator = await getBalances(token, 'mediator')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + paymentCollateral)
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
+      expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens)
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
       expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
     })
