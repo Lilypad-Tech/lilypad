@@ -4,7 +4,6 @@ import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-chai-matchers'
 import 'hardhat-deploy'
-import '@solarity/hardhat-gobind'
 import * as dotenv from 'dotenv'
 
 import {
@@ -26,16 +25,6 @@ const config: HardhatUserConfig = {
       chainId: 1337,
       accounts: PRIVATE_KEYS,
     },
-  },
-  gobind: {
-    outdir: '../pkg/contract/bindings',
-    deployable: false,
-    runOnCompile: false,
-    verbose: false,
-    onlyFiles: [
-      'contracts',
-    ],
-    skipFiles: [],
   },
 };
 
