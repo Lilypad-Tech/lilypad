@@ -28,7 +28,7 @@ contract LilypadController is Ownable, Initializable {
   event DealAgreed(uint256 indexed dealId);
   event ResultAdded(uint256 indexed dealId);
   event ResultAccepted(uint256 indexed dealId);
-  event ResultChallenged(uint256 indexed dealId, address indexed mediator);
+  event ResultChecked(uint256 indexed dealId, address indexed mediator);
   event MediationAcceptResult(uint256 indexed dealId);
   event MediationRejectResult(uint256 indexed dealId);
   event TimeoutSubmitResult(uint256 indexed dealId);
@@ -209,7 +209,7 @@ contract LilypadController is Ownable, Initializable {
   // * charge the JC the mediation fee
   // * refund the JC the timeout collateral
   // * emit the Mediation event so the mediator kicks in
-  function challengeResult(
+  function checkResult(
     uint256 dealId,
     address mediator
   ) public {
@@ -227,7 +227,7 @@ contract LilypadController is Ownable, Initializable {
       deal.mediationFee
     );
     
-    emit ResultChallenged(dealId, mediator);
+    emit ResultChecked(dealId, mediator);
   }
 
   /**
