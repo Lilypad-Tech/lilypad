@@ -42,7 +42,7 @@ describe.only("Controller", () => {
   const resultsCollateralMultiple = ethers.getBigInt(4)
   const resultsCollateral = ethers.getBigInt(40)
   const paymentCollateral = ethers.getBigInt(30)
-  const jobCost = ethers.getBigInt(20)
+  const jobCost = ethers.getBigInt(10)
   const mediationFee = ethers.getBigInt(5)
 
   async function getBalances(token: LilypadToken, accountName: string) {
@@ -118,6 +118,18 @@ describe.only("Controller", () => {
     const ret = await setupController()
     await agree(ret.controller, 'job_creator')
     await agree(ret.controller, 'resource_provider')
+    return ret
+  }
+
+  async function setupControllerWithResults() {
+    const ret = await setupControllerWithDeal()
+    await ret.controller
+      .connect(getWallet('resource_provider'))
+      .addResult(
+        dealID,
+        resultsID,
+        instructionCount
+      )
     return ret
   }
 
@@ -309,6 +321,95 @@ describe.only("Controller", () => {
       expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens + timeoutCollateral - resultsCollateral)
       expect(balancesAfterRP.escrow).to.equal(balancesBeforeRP.escrow - timeoutCollateral + resultsCollateral)
       await checkAgreement(storage, 'ResultsSubmitted')
+    })
+
+    it.only("Accepts results as JC", async function () {
+      const {
+        token,
+        tokenAddress,
+        payments,
+        storage,
+        controller,
+      } = await loadFixture(setupControllerWithResults)
+
+      const balancesBeforeJC = await getBalances(token, 'job_creator')
+      const balancesBeforeRP = await getBalances(token, 'resource_provider')
+
+      await expect(controller
+        .connect(getWallet('job_creator'))
+        .acceptResult(
+          dealID,
+        )
+      )
+        .to.emit(controller, 'ResultAccepted')
+        .withArgs(
+          dealID,
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          jobCost,
+          getPaymentReason('JobPayment'),
+          getPaymentDirection('PaidOut'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          timeoutCollateral,
+        )
+      const balancesAfterJC = await getBalances(token, 'job_creator')
+      const balancesAfterRP = await getBalances(token, 'resource_provider')
+
+      expect(balancesAfterJC.tokens).to.equal(balancesBeforeJC.tokens + (paymentCollateral - jobCost) + timeoutCollateral)
+      expect(balancesAfterJC.escrow).to.equal(balancesBeforeJC.escrow - timeoutCollateral - paymentCollateral)
+      expect(balancesAfterRP.tokens).to.equal(balancesBeforeRP.tokens + jobCost + resultsCollateral)
+      expect(balancesAfterRP.escrow).to.equal(balancesBeforeRP.escrow - resultsCollateral)
+
+      await checkAgreement(storage, 'ResultsAccepted')
     })
   })
 })
