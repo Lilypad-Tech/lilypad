@@ -267,7 +267,7 @@ describe("Payments", () => {
       expect(balanceAfter.escrow).to.equal(balanceBefore.escrow - timeoutCollateral + resultsCollateral)
     })
 
-    it.only("Should accept a result", async function () {
+    it("Should accept a result", async function () {
       const {
         token,
         payments,
@@ -353,6 +353,59 @@ describe("Payments", () => {
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - timeoutCollateral - paymentCollateral)
       expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + jobCost + resultsCollateral)
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+    })
+
+    it.only("Should check a result", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithResults)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+
+      await expect(payments
+        .connect(getWallet('job_creator'))
+        .checkResult(
+          dealID,
+          getAddress('job_creator'),
+          timeoutCollateral,
+          mediationFee,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          timeoutCollateral,
+          getPaymentReason('TimeoutCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          mediationFee,
+          getPaymentReason('MediationFee'),
+          getPaymentDirection('PaidIn'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          timeoutCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          getAddress('job_creator'),
+          tokenAddress,
+          mediationFee,
+        )
+        
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + timeoutCollateral - mediationFee)
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - timeoutCollateral + mediationFee)
     })
 
   })
