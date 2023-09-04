@@ -21,7 +21,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe.only("Storage", () => {
+describe("Storage", () => {
 
   const rpCID = ethers.getBigInt(123)
   const rpURL = "abc"
