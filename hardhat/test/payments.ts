@@ -109,6 +109,29 @@ describe("Payments", () => {
     }
   }
 
+  async function setupPaymentsWithResultsCheck() {
+    const {
+      payments,
+      token,
+      tokenAddress,
+    } = await setupPaymentsWithResults()
+
+    await payments
+      .connect(getWallet('job_creator'))
+      .checkResult(
+        dealID,
+        getAddress('job_creator'),
+        timeoutCollateral,
+        mediationFee,
+      )
+
+    return {
+      payments,
+      token,
+      tokenAddress,
+    }
+  }
+
   async function getBalances(token: LilypadToken, accountName: string) {
     const tokens = await token.balanceOf(getAddress(accountName))
     const escrow = await token.escrowBalanceOf(getAddress(accountName))
@@ -212,7 +235,7 @@ describe("Payments", () => {
     })
   })
 
-  describe.only("Results", () => {
+  describe("Results", () => {
 
     it("Should add a result", async function () {
       const {
@@ -355,7 +378,7 @@ describe("Payments", () => {
       expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
     })
 
-    it.only("Should check a result", async function () {
+    it("Should check a result", async function () {
       const {
         token,
         payments,
@@ -406,6 +429,102 @@ describe("Payments", () => {
 
       expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + timeoutCollateral - mediationFee)
       expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - timeoutCollateral + mediationFee)
+    })
+
+  })
+
+  describe.only("Mediation", () => {
+
+    it.only("Should accept mediation results", async function () {
+      const {
+        token,
+        payments,
+        tokenAddress,
+      } = await loadFixture(setupPaymentsWithResultsCheck)
+
+      const balanceBeforeJC = await getBalances(token, 'job_creator')
+      const balanceBeforeRP = await getBalances(token, 'resource_provider')
+      const balanceBeforeMediator = await getBalances(token, 'mediator')
+
+      await expect(payments
+        .connect(getWallet('mediator'))
+        .mediationAcceptResult(
+          dealID,
+          getAddress('resource_provider'),
+          getAddress('job_creator'),
+          getAddress('mediator'),
+          jobCost,
+          paymentCollateral,
+          resultsCollateral,
+          mediationFee,
+        )
+      )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          jobCost,
+          getPaymentReason('JobPayment'),
+          getPaymentDirection('PaidOut'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('resource_provider'),
+          resultsCollateral,
+          getPaymentReason('ResultsCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+          getPaymentReason('PaymentCollateral'),
+          getPaymentDirection('Refunded'),
+        )
+        .to.emit(payments, 'Payment')
+        .withArgs(
+          dealID,
+          getAddress('mediator'),
+          mediationFee,
+          getPaymentReason('MediationFee'),
+          getPaymentDirection('PaidOut'),
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('resource_provider'),
+          resultsCollateral,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('job_creator'),
+          paymentCollateral - jobCost,
+        )
+        .to.emit(token, 'Transfer')
+        .withArgs(
+          tokenAddress,
+          getAddress('mediator'),
+          mediationFee,
+        )
+
+      const balanceAfterJC = await getBalances(token, 'job_creator')
+      const balanceAfterRP = await getBalances(token, 'resource_provider')
+      const balanceAfterMediator = await getBalances(token, 'mediator')
+
+      expect(balanceAfterJC.tokens).to.equal(balanceBeforeJC.tokens + (paymentCollateral - jobCost))
+      expect(balanceAfterJC.escrow).to.equal(balanceBeforeJC.escrow - paymentCollateral - mediationFee)
+      expect(balanceAfterRP.tokens).to.equal(balanceBeforeRP.tokens + jobCost + resultsCollateral)
+      expect(balanceAfterRP.escrow).to.equal(balanceBeforeRP.escrow - resultsCollateral)
+      expect(balanceAfterMediator.tokens).to.equal(balanceBeforeMediator.tokens + mediationFee)
     })
 
   })
