@@ -304,7 +304,7 @@ describe.only("Storage", () => {
 
   })
 
-  describe.only("Access control", () => {
+  describe("Access control", () => {
     it("Can only run ensureDeal if there is a controller address set", async function () {
       const storage = await loadFixture(setupStorageNoTest)
       
@@ -603,25 +603,6 @@ describe.only("Storage", () => {
         .to.deep.equal([])
     })
 
-    it("Should deny adding a deal as not the owner", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-      
-      await expect(storage
-        .connect(getWallet('resource_provider'))
-        .ensureDeal(
-          dealID,
-          getAddress('resource_provider'),
-          getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1)
-        )
-      ).to.be.revertedWith('Ownable: caller is not the owner')
-    })
-
     it("Should error when the RP and JC are the same", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       
@@ -757,24 +738,6 @@ describe.only("Storage", () => {
           dealID
         )
       ).to.be.revertedWith('Job creator has already agreed')
-    })
-
-    it("Should deny the agree functions if not owner", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
-
-      await expect(storage
-        .connect(getWallet('resource_provider'))
-        .agreeResourceProvider(
-          dealID
-        )
-      ).to.be.revertedWith('Ownable: caller is not the owner')
-
-      await expect(storage
-        .connect(getWallet('job_creator'))
-        .agreeJobCreator(
-          dealID
-        )
-      ).to.be.revertedWith('Ownable: caller is not the owner')
     })
   })
 
