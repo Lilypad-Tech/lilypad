@@ -11,12 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ServerOptions struct {
-	URL  string
-	Host string
-	Port int
-}
-
 type lilypadAPIServer struct {
 	Options    ServerOptions
 	Controller *controller.Controller

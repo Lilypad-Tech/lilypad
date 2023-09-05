@@ -6,27 +6,26 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bacalhau-project/lilypad/pkg/contract"
 	"github.com/bacalhau-project/lilypad/pkg/store"
 	"github.com/rs/zerolog/log"
 )
 
 type ControllerOptions struct {
-	Contract contract.Contract
-	Store    store.Store
+	// Contract contract.Contract
+	Store store.Store
 }
 
 type Controller struct {
-	Contract contract.Contract
-	Store    store.Store
+	// Contract contract.Contract
+	Store store.Store
 }
 
 func NewController(
 	options ControllerOptions,
 ) (*Controller, error) {
 	controller := &Controller{
-		Contract: options.Contract,
-		Store:    options.Store,
+		// Contract: options.Contract,
+		Store: options.Store,
 	}
 	return controller, nil
 }

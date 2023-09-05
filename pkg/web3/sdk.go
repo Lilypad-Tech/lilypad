@@ -1,94 +1,95 @@
-package contract
+package web3
 
 import (
-	"context"
 	"crypto/ecdsa"
-	"fmt"
-	"math/big"
-	"strconv"
 	"strings"
-	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog/log"
 )
 
-type ContractOptions struct {
-	Address     string
-	PrivateKey  string
-	RPCEndpoint string
-	ChainID     string
+type ContractSDK struct {
+	Client     *ethclient.Client
+	PrivateKey *ecdsa.PrivateKey
+	Options    Web3Options
 }
 
-type contractWrapper struct {
-	client       *ethclient.Client
-	contract     *Modicum
-	address      common.Address
-	chainID      *big.Int
-	privateKey   *ecdsa.PrivateKey
-	maxSeenBlock uint64
-	tickerTime   time.Duration
-}
-
-func NewContract(options ContractOptions) (Contract, error) {
-	if options.Address == "" {
-		return nil, fmt.Errorf("contract address option must be set")
+func NewContractSDK(options Web3Options) (*ContractSDK, error) {
+	optionsErr := checkOptions(options)
+	if optionsErr != nil {
+		return nil, optionsErr
 	}
-
-	if options.PrivateKey == "" {
-		return nil, fmt.Errorf("contract private key option must be set")
+	client, err := ethclient.Dial(options.RpcURL)
+	if err != nil {
+		return nil, err
 	}
-
-	if options.RPCEndpoint == "" {
-		return nil, fmt.Errorf("contract rpc endpoint option must be set")
-	}
-
-	if options.ChainID == "" {
-		return nil, fmt.Errorf("contract chain id option must be set")
-	}
-
-	address := common.HexToAddress(options.Address)
 	privateKey, err := crypto.HexToECDSA(strings.Replace(options.PrivateKey, "0x", "", 1))
 	if err != nil {
 		return nil, err
 	}
-
-	log.Debug().
-		Str("endpoint", options.RPCEndpoint).
-		Str("chainID", options.ChainID).
-		Str("address", options.Address).
-		Msg("Dial")
-	client, err := ethclient.Dial(options.RPCEndpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	chainId, err := strconv.ParseInt(options.ChainID, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-
-	contract, err := NewModicum(address, client)
-	if err != nil {
-		return nil, err
-	}
-
-	number, err := client.BlockNumber(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	return &contractWrapper{
-		client:       client,
-		contract:     contract,
-		chainID:      big.NewInt(chainId),
-		privateKey:   privateKey,
-		maxSeenBlock: number,
+	return &ContractSDK{
+		Client:     client,
+		PrivateKey: privateKey,
+		Options:    options,
 	}, nil
 }
+
+// func NewContracts(options ContractOptions) (Contract, error) {
+// 	if options.Address == "" {
+// 		return nil, fmt.Errorf("contract address option must be set")
+// 	}
+
+// 	if options.PrivateKey == "" {
+// 		return nil, fmt.Errorf("contract private key option must be set")
+// 	}
+
+// 	if options.RPCEndpoint == "" {
+// 		return nil, fmt.Errorf("contract rpc endpoint option must be set")
+// 	}
+
+// 	if options.ChainID == "" {
+// 		return nil, fmt.Errorf("contract chain id option must be set")
+// 	}
+
+// 	address := common.HexToAddress(options.Address)
+// 	privateKey, err := crypto.HexToECDSA(strings.Replace(options.PrivateKey, "0x", "", 1))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	log.Debug().
+// 		Str("endpoint", options.RPCEndpoint).
+// 		Str("chainID", options.ChainID).
+// 		Str("address", options.Address).
+// 		Msg("Dial")
+// 	client, err := ethclient.Dial(options.RPCEndpoint)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	chainId, err := strconv.ParseInt(options.ChainID, 10, 32)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	contract, err := NewModicum(address, client)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	number, err := client.BlockNumber(context.Background())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &contractWrapper{
+// 		client:       client,
+// 		contract:     contract,
+// 		chainID:      big.NewInt(chainId),
+// 		privateKey:   privateKey,
+// 		maxSeenBlock: number,
+// 	}, nil
+// }
 
 // func (r *realContract) GetImageIDs(
 // 	ctx context.Context,
@@ -304,32 +305,32 @@ func NewContract(options ContractOptions) (Contract, error) {
 // 	return nil
 // }
 
-func (r *contractWrapper) publicKey() *ecdsa.PublicKey {
-	return r.privateKey.Public().(*ecdsa.PublicKey)
-}
+// func (r *contractWrapper) publicKey() *ecdsa.PublicKey {
+// 	return r.privateKey.Public().(*ecdsa.PublicKey)
+// }
 
-func (r *contractWrapper) wallet() common.Address {
-	return crypto.PubkeyToAddress(*r.publicKey())
-}
+// func (r *contractWrapper) wallet() common.Address {
+// 	return crypto.PubkeyToAddress(*r.publicKey())
+// }
 
-func (r *contractWrapper) pendingNonce(ctx context.Context) (uint64, error) {
-	return r.client.PendingNonceAt(ctx, r.wallet())
-}
+// func (r *contractWrapper) pendingNonce(ctx context.Context) (uint64, error) {
+// 	return r.client.PendingNonceAt(ctx, r.wallet())
+// }
 
-func (r *contractWrapper) prepareTransaction(ctx context.Context) (*bind.TransactOpts, error) {
-	nonce, err := r.pendingNonce(ctx)
-	if err != nil {
-		return nil, err
-	}
+// func (r *contractWrapper) prepareTransaction(ctx context.Context) (*bind.TransactOpts, error) {
+// 	nonce, err := r.pendingNonce(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	opts, err := bind.NewKeyedTransactorWithChainID(r.privateKey, r.chainID)
-	if err != nil {
-		return nil, err
-	}
+// 	opts, err := bind.NewKeyedTransactorWithChainID(r.privateKey, r.chainID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	opts.Nonce = big.NewInt(int64(nonce))
-	opts.Value = big.NewInt(0)
-	opts.Context = ctx
+// 	opts.Nonce = big.NewInt(int64(nonce))
+// 	opts.Value = big.NewInt(0)
+// 	opts.Context = ctx
 
-	return opts, nil
-}
+// 	return opts, nil
+// }

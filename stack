@@ -74,18 +74,9 @@ function clean() {
 ############################################################################
 ############################################################################
 
-function compile-contracts() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat compile
-  )
-}
-
 function go-binding() {
   local name="$1"
   local pkg="$2"
-  mkdir -p "pkg/contract/bindings/$name"
 
   # compile the sol files into bytecode and ABI
   docker run --rm \
@@ -115,20 +106,30 @@ function go-binding() {
 
   sudo chown -R $USER:$USER hardhat/artifacts/bindings/$pkg
   sudo chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
+  cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
 
   echo "Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
 }
 
 function go-bindings() {
-  compile-contracts
   docker build -t lilypad-solc hardhat/solc
+  rm -rf pkg/web3/bindings
+  mkdir -p pkg/web3/bindings
   go-binding LilypadToken token
   go-binding LilypadPayments payments
   go-binding LilypadStorage storage
   go-binding LilypadController controller
-  mkdir -p pkg/contract/bindings/
-  cp -r hardhat/artifacts/bindings/* pkg/contract/bindings/
+
   echo "Generated all go bindings pkg/contract/bindings/"
+}
+
+function compile-contracts() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat compile
+  )
+  go-bindings
 }
 
 function deploy-contracts() {
