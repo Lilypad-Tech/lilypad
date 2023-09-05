@@ -15,16 +15,45 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+// these are the go-binding wrappers for the various deployed contracts
+type Contracts struct {
+	Token      *token.Token
+	Payments   *payments.Payments
+	Storage    *storage.Storage
+	Controller *controller.Controller
+}
+
 type ContractSDK struct {
 	Options    Web3Options
 	PrivateKey *ecdsa.PrivateKey
 	Client     *ethclient.Client
 	Auth       *bind.TransactOpts
-	// these are the go-binding wrappers for the various deployed contracts
-	Token      *token.Token
-	Payments   *payments.Payments
-	Storage    *storage.Storage
-	Controller *controller.Controller
+	Contracts  *Contracts
+}
+
+func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, error) {
+	token, err := token.NewToken(common.HexToAddress(options.TokenAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	payments, err := payments.NewPayments(common.HexToAddress(options.PaymentsAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	storage, err := storage.NewStorage(common.HexToAddress(options.StorageAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	return &Contracts{
+		Token:      token,
+		Payments:   payments,
+		Storage:    storage,
+		Controller: controller,
+	}, nil
 }
 
 func NewContractSDK(options Web3Options) (*ContractSDK, error) {
@@ -44,19 +73,7 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	token, err := token.NewToken(common.HexToAddress(options.TokenAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	payments, err := payments.NewPayments(common.HexToAddress(options.PaymentsAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	storage, err := storage.NewStorage(common.HexToAddress(options.StorageAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
+	contracts, err := NewContracts(options, client)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +82,7 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 		Options:    options,
 		Client:     client,
 		Auth:       auth,
-		Token:      token,
-		Payments:   payments,
-		Storage:    storage,
-		Controller: controller,
+		Contracts:  contracts,
 	}, nil
 }
 
