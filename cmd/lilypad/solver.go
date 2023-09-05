@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSolverOptions() *solver.SolverOptions {
-	return &solver.SolverOptions{
-		Server: *getDefaultServerOptions(),
-		Web3:   *getDefaultWeb3Options(),
+func NewSolverOptions() solver.SolverOptions {
+	return solver.SolverOptions{
+		Server: getDefaultServerOptions(),
+		Web3:   getDefaultWeb3Options(),
 	}
 }
 
@@ -31,13 +31,13 @@ func newSolverCmd() *cobra.Command {
 		},
 	}
 
-	addServerCliFlags(solverCmd, &options.Server)
-	addWeb3CliFlags(solverCmd, &options.Web3)
+	addServerCliFlags(solverCmd, options.Server)
+	addWeb3CliFlags(solverCmd, options.Web3)
 
 	return solverCmd
 }
 
-func runSolver(cmd *cobra.Command, options *solver.SolverOptions) error {
+func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	cm := system.NewCleanupManager()
@@ -45,6 +45,16 @@ func runSolver(cmd *cobra.Command, options *solver.SolverOptions) error {
 	ctx := cmd.Context()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
+
+	solver, err := solver.NewSolver(options)
+	if err != nil {
+		return err
+	}
+
+	err = solver.Start(ctx)
+	if err != nil {
+		return err
+	}
 
 	// // contract, err := contract.NewContract(options.ContractOptions)
 	// // if err != nil {
@@ -80,6 +90,6 @@ func runSolver(cmd *cobra.Command, options *solver.SolverOptions) error {
 	// 	}
 	// }()
 
-	// <-ctx.Done()
+	<-ctx.Done()
 	return nil
 }

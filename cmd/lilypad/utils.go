@@ -53,15 +53,15 @@ func FatalErrorHandler(cmd *cobra.Command, msg string, code int) {
 /*
 server options
 */
-func getDefaultServerOptions() *server.ServerOptions {
-	return &server.ServerOptions{
+func getDefaultServerOptions() server.ServerOptions {
+	return server.ServerOptions{
 		URL:  getDefaultServeOptionString("SERVER_URL", ""),
 		Host: getDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
 		Port: getDefaultServeOptionInt("SERVER_PORT", 80), //nolint:gomnd
 	}
 }
 
-func addServerCliFlags(cmd *cobra.Command, serverOptions *server.ServerOptions) {
+func addServerCliFlags(cmd *cobra.Command, serverOptions server.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.URL, "server-url", serverOptions.URL,
 		`The URL the api server is listening on.`,
@@ -79,8 +79,8 @@ func addServerCliFlags(cmd *cobra.Command, serverOptions *server.ServerOptions) 
 /*
 web3 options
 */
-func getDefaultWeb3Options() *web3.Web3Options {
-	return &web3.Web3Options{
+func getDefaultWeb3Options() web3.Web3Options {
+	return web3.Web3Options{
 		RpcURL:            getDefaultServeOptionString("WEB3_RPC_URL", ""),
 		PrivateKey:        getDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
 		ChainID:           getDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
@@ -91,7 +91,7 @@ func getDefaultWeb3Options() *web3.Web3Options {
 	}
 }
 
-func addWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
+func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.RpcURL, "web3-rpc-url", web3Options.RpcURL,
 		`The URL of the web3 RPC server.`,
