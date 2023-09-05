@@ -92,7 +92,7 @@ function go-binding() {
     -v $DIR/hardhat:/src \
     -w /src \
     --entrypoint solc \
-    solc \
+    lilypad-solc \
        --base-path . \
        --include-path node_modules \
        --overwrite \
@@ -108,7 +108,7 @@ function go-binding() {
     -v $DIR/hardhat:/src \
     -w /src \
     --entrypoint abigen \
-    solc \
+    lilypad-solc \
       "--bin=artifacts/$name.bin" \
       "--abi=artifacts/$name.abi" \
       "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
@@ -119,9 +119,9 @@ function go-binding() {
   echo "Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
 }
 
-function generate-bindings() {
+function go-bindings() {
   compile-contracts
-  docker build -t solc hardhat/solc
+  docker build -t lilypad-solc hardhat/solc
   go-binding LilypadToken token
   go-binding LilypadPayments payments
   go-binding LilypadStorage storage
