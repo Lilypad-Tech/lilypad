@@ -2,16 +2,29 @@ package web3
 
 import (
 	"crypto/ecdsa"
+	"math/big"
 	"strings"
 
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type ContractSDK struct {
-	Client     *ethclient.Client
-	PrivateKey *ecdsa.PrivateKey
 	Options    Web3Options
+	PrivateKey *ecdsa.PrivateKey
+	Client     *ethclient.Client
+	Auth       *bind.TransactOpts
+	// these are the go-binding wrappers for the various deployed contracts
+	Token      *token.Token
+	Payments   *payments.Payments
+	Storage    *storage.Storage
+	Controller *controller.Controller
 }
 
 func NewContractSDK(options Web3Options) (*ContractSDK, error) {
@@ -27,10 +40,35 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	if err != nil {
 		return nil, err
 	}
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(int64(options.ChainID)))
+	if err != nil {
+		return nil, err
+	}
+	token, err := token.NewToken(common.HexToAddress(options.TokenAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	payments, err := payments.NewPayments(common.HexToAddress(options.PaymentsAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	storage, err := storage.NewStorage(common.HexToAddress(options.StorageAddress), client)
+	if err != nil {
+		return nil, err
+	}
+	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
+	if err != nil {
+		return nil, err
+	}
 	return &ContractSDK{
-		Client:     client,
 		PrivateKey: privateKey,
 		Options:    options,
+		Client:     client,
+		Auth:       auth,
+		Token:      token,
+		Payments:   payments,
+		Storage:    storage,
+		Controller: controller,
 	}, nil
 }
 
