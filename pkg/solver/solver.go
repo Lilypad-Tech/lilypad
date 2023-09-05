@@ -9,9 +9,9 @@ import (
 
 	"github.com/bacalhau-project/lilypad/pkg/server"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/ethereum/go-ethereum"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type SolverOptions struct {
@@ -53,29 +53,53 @@ func (solver *Solver) Start(ctx context.Context) error {
 		}
 	}()
 
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{common.HexToAddress(solver.Web3.Options.TokenAddress)},
-	}
+	block := uint64(0)
 
-	logs := make(chan types.Log)
-	sub, err := solver.Web3.Client.SubscribeFilterLogs(context.Background(), query, logs)
+	eventCh := make(chan *token.TokenTransfer)
+	sub, err := solver.Web3.Contracts.Token.WatchTransfer(
+		&bind.WatchOpts{Start: &block, Context: ctx},
+		eventCh,
+		[]common.Address{},
+		[]common.Address{},
+	)
 	if err != nil {
-		log.Fatalf("Failed to subscribe to contract events: %v", err)
+		log.Fatalf("Failed to watch MyEvent: %v", err)
 	}
+	defer sub.Unsubscribe()
 
 	for {
 		select {
 		case err := <-sub.Err():
-			log.Fatalf("Received subscription error: %v", err)
-		case vLog := <-logs:
-			fmt.Printf("LOGS: %+v\n", vLog.Data)
-			// event := new(YourEventTypeHere)                              // Change this to your specific event type
-			// err := contractAbi.Unpack(event, "EventNameHere", vLog.Data) // Change "EventNameHere" to your specific event name
-			// if err != nil {
-			// 	log.Fatalf("Failed to unpack event: %v", err)
-			// }
-
-			// Access event fields and do something
+			log.Fatalf("Subscription error: %v", err)
+		case event := <-eventCh:
+			// Do something with the event data
+			log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 		}
 	}
+	// query := ethereum.FilterQuery{
+	// 	Addresses: []common.Address{common.HexToAddress(solver.Web3.Options.TokenAddress)},
+	// }
+
+	// logs := make(chan types.Log)
+	// sub, err := solver.Web3.Client.SubscribeFilterLogs(context.Background(), query, logs)
+	// if err != nil {
+	// 	log.Fatalf("Failed to subscribe to contract events: %v", err)
+	// }
+
+	// for {
+	// 	select {
+	// 	case err := <-sub.Err():
+	// 		log.Fatalf("Received subscription error: %v", err)
+	// 	case vLog := <-logs:
+	// 		fmt.Printf("LOGS: %+v\n", vLog.Data)
+	// 		//vLog.Topics
+	// 		// event := new(YourEventTypeHere)                              // Change this to your specific event type
+	// 		// err := contractAbi.Unpack(event, "EventNameHere", vLog.Data) // Change "EventNameHere" to your specific event name
+	// 		// if err != nil {
+	// 		// 	log.Fatalf("Failed to unpack event: %v", err)
+	// 		// }
+
+	// 		// Access event fields and do something
+	// 	}
+	// }
 }
