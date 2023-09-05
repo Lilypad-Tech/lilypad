@@ -154,6 +154,14 @@ export async function getTokenAddress() {
   return getContractAddress('LilypadToken')
 }
 
+export async function connectPayments() {
+  return connectContract<LilypadPayments>('LilypadPayments')
+}
+
+export async function getPaymentsAddress() {
+  return getContractAddress('LilypadPayments')
+}
+
 export async function connectController() {
   return connectContract<LilypadController>('LilypadController')
 }

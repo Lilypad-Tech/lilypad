@@ -64,15 +64,15 @@ func getDefaultServerOptions() server.ServerOptions {
 func addServerCliFlags(cmd *cobra.Command, serverOptions server.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.URL, "server-url", serverOptions.URL,
-		`The URL the api server is listening on.`,
+		`The URL the api server is listening on (SERVER_URL).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.Host, "server-host", serverOptions.Host,
-		`The host to bind the api server to.`,
+		`The host to bind the api server to (SERVER_HOST).`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.Port, "server-port", serverOptions.Port,
-		`The port to bind the api server to.`,
+		`The port to bind the api server to (SERVER_PORT).`,
 	)
 }
 
@@ -94,30 +94,30 @@ func getDefaultWeb3Options() web3.Web3Options {
 func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.RpcURL, "web3-rpc-url", web3Options.RpcURL,
-		`The URL of the web3 RPC server.`,
+		`The URL of the web3 RPC server (WEB3_RPC_URL).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.PrivateKey, "web3-private-key", web3Options.PrivateKey,
-		`The private key to use for signing web3 transactions.`,
+		`The private key to use for signing web3 transactions (WEB3_PRIVATE_KEY).`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&web3Options.ChainID, "web3-chain-id", web3Options.ChainID,
-		`The chain id for the web3 RPC server.`,
+		`The chain id for the web3 RPC server (WEB3_CHAIN_ID).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.ControllerAddress, "web3-controller-address", web3Options.ControllerAddress,
-		`The address of the controller contract.`,
+		`The address of the controller contract (WEB3_CONTROLLER_ADDRESS).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.PaymentsAddress, "web3-payments-address", web3Options.PaymentsAddress,
-		`The address of the payments contract.`,
+		`The address of the payments contract (WEB3_PAYMENTS_ADDRESS).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.StorageAddress, "web3-storage-address", web3Options.StorageAddress,
-		`The address of the storage contract.`,
+		`The address of the storage contract (WEB3_STORAGE_ADDRESS).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.TokenAddress, "web3-token-address", web3Options.TokenAddress,
-		`The address of the token contract.`,
+		`The address of the token contract (WEB3_TOKEN_ADDRESS).`,
 	)
 }

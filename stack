@@ -161,6 +161,15 @@ function print-env() {
   hardhat-script scripts/print-env.ts | grep export
 }
 
+function print-contract-env() {
+  hardhat-script scripts/print-contract-env.ts | grep export
+}
+
+function print-local-dev-env() {
+  print-contract-env
+  echo "export WEB3_RPC_URL=ws://localhost:8546"
+}
+
 function fund-services-ether() {
   hardhat-script scripts/fund-services-ether.ts
 }
