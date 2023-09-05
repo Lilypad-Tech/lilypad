@@ -19,7 +19,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "Lilypad",
 		Long:  `Lilypad`,
 	}
-	// RootCmd.AddCommand(newServeCmd())
+	RootCmd.AddCommand(newSolverCmd())
 	return RootCmd
 }
 
