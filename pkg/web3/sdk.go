@@ -86,6 +86,15 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	}, nil
 }
 
+func (sdk *ContractSDK) getBlockNumber() (uint64, error) {
+	var blockNumber uint64
+	err := sdk.Client.Client().Call(&blockNumber, "eth_blockNumber")
+	if err != nil {
+		return 0, err
+	}
+	return blockNumber, nil
+}
+
 // func NewContracts(options ContractOptions) (Contract, error) {
 // 	if options.Address == "" {
 // 		return nil, fmt.Errorf("contract address option must be set")

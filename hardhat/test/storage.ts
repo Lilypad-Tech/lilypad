@@ -8,7 +8,6 @@ import { ethers } from 'hardhat'
 import {
   getWallet,
   getAddress,
-  deployStorage,
 } from '../utils/web3'
 import {
   getServiceType,
@@ -21,7 +20,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe.only("Storage", () => {
+describe("Storage", () => {
 
   const rpCID = ethers.getBigInt(123)
   const rpURL = "abc"
