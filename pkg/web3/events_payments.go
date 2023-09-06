@@ -9,29 +9,48 @@ import (
 )
 
 type PaymentEventChannels struct {
-	Payment chan *payments.PaymentsPayment
+	paymentChan chan *payments.PaymentsPayment
+	paymentSubs []func(*payments.PaymentsPayment)
 }
 
 func NewPaymentEventChannels() (*PaymentEventChannels, error) {
 	return &PaymentEventChannels{
-		Payment: make(chan *payments.PaymentsPayment),
+		paymentChan: make(chan *payments.PaymentsPayment),
 	}, nil
 }
 
-func (paymentEventChannels *PaymentEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (p *PaymentEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err
 	}
-	sub, err := sdk.Contracts.Payments.WatchPayment(
+
+	paymentSub, err := sdk.Contracts.Payments.WatchPayment(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		paymentEventChannels.Payment,
+		p.paymentChan,
 		[]*big.Int{},
 	)
 	if err != nil {
 		return err
 	}
-	<-ctx.Done()
-	sub.Unsubscribe()
-	return nil
+
+	go func() {
+		<-ctx.Done()
+		paymentSub.Unsubscribe()
+	}()
+
+	for {
+		select {
+		case event := <-p.paymentChan:
+			for _, handler := range p.paymentSubs {
+				handler(event)
+			}
+		case err := <-paymentSub.Err():
+			return err
+		}
+	}
+}
+
+func (p *PaymentEventChannels) SubscribePayment(handler func(*payments.PaymentsPayment)) {
+	p.paymentSubs = append(p.paymentSubs, handler)
 }

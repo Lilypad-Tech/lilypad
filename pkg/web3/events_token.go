@@ -9,30 +9,49 @@ import (
 )
 
 type TokenEventChannels struct {
-	Transfer chan *token.TokenTransfer
+	transferChan chan *token.TokenTransfer
+	transferSubs []func(*token.TokenTransfer)
 }
 
 func NewTokenEventChannels() (*TokenEventChannels, error) {
 	return &TokenEventChannels{
-		Transfer: make(chan *token.TokenTransfer),
+		transferChan: make(chan *token.TokenTransfer),
 	}, nil
 }
 
-func (tokenEventChannels *TokenEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (t *TokenEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err
 	}
-	sub, err := sdk.Contracts.Token.WatchTransfer(
+
+	transferSub, err := sdk.Contracts.Token.WatchTransfer(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		tokenEventChannels.Transfer,
+		t.transferChan,
 		[]common.Address{},
 		[]common.Address{},
 	)
 	if err != nil {
 		return err
 	}
-	<-ctx.Done()
-	sub.Unsubscribe()
-	return nil
+
+	go func() {
+		<-ctx.Done()
+		transferSub.Unsubscribe()
+	}()
+
+	for {
+		select {
+		case event := <-t.transferChan:
+			for _, handler := range t.transferSubs {
+				handler(event)
+			}
+		case err := <-transferSub.Err():
+			return err
+		}
+	}
+}
+
+func (t *TokenEventChannels) SubscribeTransfer(handler func(*token.TokenTransfer)) {
+	t.transferSubs = append(t.transferSubs, handler)
 }

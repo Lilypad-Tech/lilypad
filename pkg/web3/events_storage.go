@@ -9,28 +9,45 @@ import (
 )
 
 type StorageEventChannels struct {
-	DealStateChange chan *storage.StorageDealStateChange
+	dealStateChangeChan chan *storage.StorageDealStateChange
+	dealStateChangeSubs []func(*storage.StorageDealStateChange)
 }
 
 func NewStorageEventChannels() (*StorageEventChannels, error) {
-	return &StorageEventChannels{}, nil
+	return &StorageEventChannels{
+		dealStateChangeChan: make(chan *storage.StorageDealStateChange),
+	}, nil
 }
 
-func (storageEventChannels *StorageEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (s *StorageEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err
 	}
-	sub, err := sdk.Contracts.Storage.WatchDealStateChange(
+
+	dealStateChangeSub, err := sdk.Contracts.Storage.WatchDealStateChange(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		storageEventChannels.DealStateChange,
+		s.dealStateChangeChan,
 		[]*big.Int{},
 		[]uint8{},
 	)
 	if err != nil {
 		return err
 	}
-	<-ctx.Done()
-	sub.Unsubscribe()
-	return nil
+
+	go func() {
+		<-ctx.Done()
+		dealStateChangeSub.Unsubscribe()
+	}()
+
+	for {
+		select {
+		case event := <-s.dealStateChangeChan:
+			for _, handler := range s.dealStateChangeSubs {
+				handler(event)
+			}
+		case err := <-dealStateChangeSub.Err():
+			return err
+		}
+	}
 }

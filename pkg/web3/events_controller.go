@@ -10,31 +10,64 @@ import (
 )
 
 type ControllerEventChannels struct {
-	ResourceProviderAgreed chan *controller.ControllerResourceProviderAgreed
-	JobCreatorAgreed       chan *controller.ControllerJobCreatorAgreed
-	DealAgreed             chan *controller.ControllerDealAgreed
-	ResultAdded            chan *controller.ControllerResultAdded
-	ResultAccepted         chan *controller.ControllerResultAccepted
-	ResultChecked          chan *controller.ControllerResultChecked
-	MediationAcceptResult  chan *controller.ControllerMediationAcceptResult
-	MediationRejectResult  chan *controller.ControllerMediationRejectResult
-	TimeoutSubmitResult    chan *controller.ControllerTimeoutSubmitResult
-	TimeoutJudgeResult     chan *controller.ControllerTimeoutJudgeResult
-	TimeoutMediateResult   chan *controller.ControllerTimeoutMediateResult
+	resourceProviderAgreedChan chan *controller.ControllerResourceProviderAgreed
+	resourceProviderAgreedSubs []func(*controller.ControllerResourceProviderAgreed)
+
+	jobCreatorAgreedChan chan *controller.ControllerJobCreatorAgreed
+	jobCreatorAgreedSubs []func(*controller.ControllerJobCreatorAgreed)
+
+	dealAgreedChan chan *controller.ControllerDealAgreed
+	dealAgreedSubs []func(*controller.ControllerDealAgreed)
+
+	resultAddedChan chan *controller.ControllerResultAdded
+	resultAddedSubs []func(*controller.ControllerResultAdded)
+
+	resultAcceptedChan chan *controller.ControllerResultAccepted
+	resultAcceptedSubs []func(*controller.ControllerResultAccepted)
+
+	resultCheckedChan chan *controller.ControllerResultChecked
+	resultCheckedSubs []func(*controller.ControllerResultChecked)
+
+	mediationAcceptResultChan chan *controller.ControllerMediationAcceptResult
+	mediationAcceptResultSubs []func(*controller.ControllerMediationAcceptResult)
+
+	mediationRejectResultChan chan *controller.ControllerMediationRejectResult
+	mediationRejectResultSubs []func(*controller.ControllerMediationRejectResult)
+
+	timeoutSubmitResultChan chan *controller.ControllerTimeoutSubmitResult
+	timeoutSubmitResultSubs []func(*controller.ControllerTimeoutSubmitResult)
+
+	timeoutJudgeResultChan chan *controller.ControllerTimeoutJudgeResult
+	timeoutJudgeResultSubs []func(*controller.ControllerTimeoutJudgeResult)
+
+	timeoutMediateResultChan chan *controller.ControllerTimeoutMediateResult
+	timeoutMediateResultSubs []func(*controller.ControllerTimeoutMediateResult)
 }
 
 func NewControllerEventChannels() (*ControllerEventChannels, error) {
-	return &ControllerEventChannels{}, nil
+	return &ControllerEventChannels{
+		resourceProviderAgreedChan: make(chan *controller.ControllerResourceProviderAgreed),
+		jobCreatorAgreedChan:       make(chan *controller.ControllerJobCreatorAgreed),
+		dealAgreedChan:             make(chan *controller.ControllerDealAgreed),
+		resultAddedChan:            make(chan *controller.ControllerResultAdded),
+		resultAcceptedChan:         make(chan *controller.ControllerResultAccepted),
+		resultCheckedChan:          make(chan *controller.ControllerResultChecked),
+		mediationAcceptResultChan:  make(chan *controller.ControllerMediationAcceptResult),
+		mediationRejectResultChan:  make(chan *controller.ControllerMediationRejectResult),
+		timeoutSubmitResultChan:    make(chan *controller.ControllerTimeoutSubmitResult),
+		timeoutJudgeResultChan:     make(chan *controller.ControllerTimeoutJudgeResult),
+		timeoutMediateResultChan:   make(chan *controller.ControllerTimeoutMediateResult),
+	}, nil
 }
 
-func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (c *ControllerEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err
 	}
 	resourceProviderAgreedSub, err := sdk.Contracts.Controller.WatchResourceProviderAgreed(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.ResourceProviderAgreed,
+		c.resourceProviderAgreedChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -42,7 +75,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	jobCreatorAgreedSub, err := sdk.Contracts.Controller.WatchJobCreatorAgreed(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.JobCreatorAgreed,
+		c.jobCreatorAgreedChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -50,7 +83,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	dealAgreedSub, err := sdk.Contracts.Controller.WatchDealAgreed(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.DealAgreed,
+		c.dealAgreedChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -58,7 +91,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	resultAddedSub, err := sdk.Contracts.Controller.WatchResultAdded(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.ResultAdded,
+		c.resultAddedChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -66,7 +99,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	resultAcceptedSub, err := sdk.Contracts.Controller.WatchResultAccepted(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.ResultAccepted,
+		c.resultAcceptedChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -74,7 +107,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	resultCheckedSub, err := sdk.Contracts.Controller.WatchResultChecked(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.ResultChecked,
+		c.resultCheckedChan,
 		[]*big.Int{},
 		[]common.Address{},
 	)
@@ -83,7 +116,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	mediationAcceptResultSub, err := sdk.Contracts.Controller.WatchMediationAcceptResult(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.MediationAcceptResult,
+		c.mediationAcceptResultChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -91,7 +124,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	mediationRejectResultSub, err := sdk.Contracts.Controller.WatchMediationRejectResult(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.MediationRejectResult,
+		c.mediationRejectResultChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -99,7 +132,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	timeoutSubmitResultSub, err := sdk.Contracts.Controller.WatchTimeoutSubmitResult(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.TimeoutSubmitResult,
+		c.timeoutSubmitResultChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -107,7 +140,7 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	timeoutJudgeResultSub, err := sdk.Contracts.Controller.WatchTimeoutJudgeResult(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.TimeoutJudgeResult,
+		c.timeoutJudgeResultChan,
 		[]*big.Int{},
 	)
 	if err != nil {
@@ -115,23 +148,106 @@ func (controllerEventChannels *ControllerEventChannels) Listen(ctx context.Conte
 	}
 	timeoutMediateResultSub, err := sdk.Contracts.Controller.WatchTimeoutMediateResult(
 		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		controllerEventChannels.TimeoutMediateResult,
+		c.timeoutMediateResultChan,
 		[]*big.Int{},
 	)
 	if err != nil {
 		return err
 	}
-	<-ctx.Done()
-	resourceProviderAgreedSub.Unsubscribe()
-	jobCreatorAgreedSub.Unsubscribe()
-	dealAgreedSub.Unsubscribe()
-	resultAddedSub.Unsubscribe()
-	resultAcceptedSub.Unsubscribe()
-	resultCheckedSub.Unsubscribe()
-	mediationAcceptResultSub.Unsubscribe()
-	mediationRejectResultSub.Unsubscribe()
-	timeoutSubmitResultSub.Unsubscribe()
-	timeoutJudgeResultSub.Unsubscribe()
-	timeoutMediateResultSub.Unsubscribe()
-	return nil
+
+	go func() {
+		<-ctx.Done()
+		resourceProviderAgreedSub.Unsubscribe()
+		jobCreatorAgreedSub.Unsubscribe()
+		dealAgreedSub.Unsubscribe()
+		resultAddedSub.Unsubscribe()
+		resultAcceptedSub.Unsubscribe()
+		resultCheckedSub.Unsubscribe()
+		mediationAcceptResultSub.Unsubscribe()
+		mediationRejectResultSub.Unsubscribe()
+		timeoutSubmitResultSub.Unsubscribe()
+		timeoutJudgeResultSub.Unsubscribe()
+		timeoutMediateResultSub.Unsubscribe()
+	}()
+
+	for {
+		select {
+		case event := <-c.resourceProviderAgreedChan:
+			for _, handler := range c.resourceProviderAgreedSubs {
+				handler(event)
+			}
+		case err := <-resourceProviderAgreedSub.Err():
+			return err
+
+		case event := <-c.jobCreatorAgreedChan:
+			for _, handler := range c.jobCreatorAgreedSubs {
+				handler(event)
+			}
+		case err := <-jobCreatorAgreedSub.Err():
+			return err
+
+		case event := <-c.dealAgreedChan:
+			for _, handler := range c.dealAgreedSubs {
+				handler(event)
+			}
+		case err := <-dealAgreedSub.Err():
+			return err
+
+		case event := <-c.resultAddedChan:
+			for _, handler := range c.resultAddedSubs {
+				handler(event)
+			}
+		case err := <-resultAddedSub.Err():
+			return err
+
+		case event := <-c.resultAcceptedChan:
+			for _, handler := range c.resultAcceptedSubs {
+				handler(event)
+			}
+		case err := <-resultAcceptedSub.Err():
+			return err
+
+		case event := <-c.resultCheckedChan:
+			for _, handler := range c.resultCheckedSubs {
+				handler(event)
+			}
+		case err := <-resultCheckedSub.Err():
+			return err
+
+		case event := <-c.mediationAcceptResultChan:
+			for _, handler := range c.mediationAcceptResultSubs {
+				handler(event)
+			}
+		case err := <-mediationAcceptResultSub.Err():
+			return err
+
+		case event := <-c.mediationRejectResultChan:
+			for _, handler := range c.mediationRejectResultSubs {
+				handler(event)
+			}
+		case err := <-mediationRejectResultSub.Err():
+			return err
+
+		case event := <-c.timeoutSubmitResultChan:
+			for _, handler := range c.timeoutSubmitResultSubs {
+				handler(event)
+			}
+		case err := <-timeoutSubmitResultSub.Err():
+			return err
+
+		case event := <-c.timeoutJudgeResultChan:
+			for _, handler := range c.timeoutJudgeResultSubs {
+				handler(event)
+			}
+		case err := <-timeoutJudgeResultSub.Err():
+			return err
+
+		case event := <-c.timeoutMediateResultChan:
+			for _, handler := range c.timeoutMediateResultSubs {
+				handler(event)
+			}
+		case err := <-timeoutMediateResultSub.Err():
+			return err
+		}
+	}
 }
