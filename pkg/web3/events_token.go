@@ -19,7 +19,7 @@ func NewTokenEventChannels() (*TokenEventChannels, error) {
 	}, nil
 }
 
-func (t *TokenEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (t *TokenEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ func NewPaymentEventChannels() (*PaymentEventChannels, error) {
 	}, nil
 }
 
-func (p *PaymentEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (p *PaymentEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

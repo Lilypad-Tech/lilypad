@@ -10,7 +10,7 @@ type EventChannels struct {
 	collections []EventChannelCollection
 }
 
-func NewEventChannels(sdk *ContractSDK) (*EventChannels, error) {
+func NewEventChannels() (*EventChannels, error) {
 	tokenChannels, err := NewTokenEventChannels()
 	if err != nil {
 		return nil, err
@@ -42,9 +42,9 @@ func NewEventChannels(sdk *ContractSDK) (*EventChannels, error) {
 	}, nil
 }
 
-func (eventChannels *EventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (eventChannels *EventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	for _, collection := range eventChannels.collections {
-		err := collection.Listen(ctx, sdk)
+		err := collection.Start(ctx, sdk)
 		if err != nil {
 			return err
 		}

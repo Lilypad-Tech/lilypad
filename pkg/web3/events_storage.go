@@ -19,7 +19,7 @@ func NewStorageEventChannels() (*StorageEventChannels, error) {
 	}, nil
 }
 
-func (s *StorageEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (s *StorageEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

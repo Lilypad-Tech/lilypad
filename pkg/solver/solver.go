@@ -10,7 +10,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/server"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -20,27 +19,38 @@ type SolverOptions struct {
 }
 
 type Solver struct {
-	Web3 *web3.ContractSDK
+	web3SDK    *web3.ContractSDK
+	web3Events *web3.EventChannels
 }
 
 func NewSolver(
 	options SolverOptions,
 ) (*Solver, error) {
-	web3, err := web3.NewContractSDK(options.Web3)
+	web3SDK, err := web3.NewContractSDK(options.Web3)
+	if err != nil {
+		return nil, err
+	}
+	web3Events, err := web3.NewEventChannels()
 	if err != nil {
 		return nil, err
 	}
 	solver := &Solver{
-		Web3: web3,
+		web3SDK:    web3SDK,
+		web3Events: web3Events,
 	}
 	return solver, nil
 }
 
 func (solver *Solver) Start(ctx context.Context) error {
+	err := solver.web3Events.Start(ctx, solver.web3SDK)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		for {
-			tx, err := solver.Web3.Contracts.Token.Transfer(
-				solver.Web3.Auth,
+			tx, err := solver.web3SDK.Contracts.Token.Transfer(
+				solver.web3SDK.Auth,
 				common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
 				big.NewInt(1),
 			)
@@ -53,53 +63,9 @@ func (solver *Solver) Start(ctx context.Context) error {
 		}
 	}()
 
-	block := uint64(0)
+	solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
+		log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+	})
 
-	eventCh := make(chan *token.TokenTransfer)
-	sub, err := solver.Web3.Contracts.Token.WatchTransfer(
-		&bind.WatchOpts{Start: &block, Context: ctx},
-		eventCh,
-		[]common.Address{},
-		[]common.Address{},
-	)
-	if err != nil {
-		log.Fatalf("Failed to watch MyEvent: %v", err)
-	}
-	defer sub.Unsubscribe()
-
-	for {
-		select {
-		case err := <-sub.Err():
-			log.Fatalf("Subscription error: %v", err)
-		case event := <-eventCh:
-			// Do something with the event data
-			log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
-		}
-	}
-	// query := ethereum.FilterQuery{
-	// 	Addresses: []common.Address{common.HexToAddress(solver.Web3.Options.TokenAddress)},
-	// }
-
-	// logs := make(chan types.Log)
-	// sub, err := solver.Web3.Client.SubscribeFilterLogs(context.Background(), query, logs)
-	// if err != nil {
-	// 	log.Fatalf("Failed to subscribe to contract events: %v", err)
-	// }
-
-	// for {
-	// 	select {
-	// 	case err := <-sub.Err():
-	// 		log.Fatalf("Received subscription error: %v", err)
-	// 	case vLog := <-logs:
-	// 		fmt.Printf("LOGS: %+v\n", vLog.Data)
-	// 		//vLog.Topics
-	// 		// event := new(YourEventTypeHere)                              // Change this to your specific event type
-	// 		// err := contractAbi.Unpack(event, "EventNameHere", vLog.Data) // Change "EventNameHere" to your specific event name
-	// 		// if err != nil {
-	// 		// 	log.Fatalf("Failed to unpack event: %v", err)
-	// 		// }
-
-	// 		// Access event fields and do something
-	// 	}
-	// }
+	return nil
 }

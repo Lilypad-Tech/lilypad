@@ -60,7 +60,7 @@ func NewControllerEventChannels() (*ControllerEventChannels, error) {
 	}, nil
 }
 
-func (c *ControllerEventChannels) Listen(ctx context.Context, sdk *ContractSDK) error {
+func (c *ControllerEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

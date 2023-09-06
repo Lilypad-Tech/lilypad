@@ -15,5 +15,5 @@ type Web3Options struct {
 }
 
 type EventChannelCollection interface {
-	Listen(ctx context.Context, sdk *ContractSDK) error
+	Start(ctx context.Context, sdk *ContractSDK) error
 }
