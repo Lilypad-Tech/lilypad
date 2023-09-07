@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
@@ -19,7 +20,11 @@ func NewPaymentEventChannels() (*PaymentEventChannels, error) {
 	}, nil
 }
 
-func (p *PaymentEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
+func (p *PaymentEventChannels) Start(
+	sdk *ContractSDK,
+	ctx context.Context,
+	cm *system.CleanupManager,
+) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

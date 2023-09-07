@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
 
@@ -46,11 +47,15 @@ func NewEventChannels() (*EventChannels, error) {
 	}, nil
 }
 
-func (eventChannels *EventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
+func (eventChannels *EventChannels) Start(
+	sdk *ContractSDK,
+	ctx context.Context,
+	cm *system.CleanupManager,
+) error {
 	for _, collection := range eventChannels.collections {
 		c := collection
 		go func() {
-			err := c.Start(ctx, sdk)
+			err := c.Start(sdk, ctx, cm)
 			if err != nil {
 				log.Error().Msgf("error starting listeners: %s", err.Error())
 			}

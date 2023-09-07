@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,7 +21,11 @@ func NewTokenEventChannels() (*TokenEventChannels, error) {
 	}, nil
 }
 
-func (t *TokenEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
+func (t *TokenEventChannels) Start(
+	sdk *ContractSDK,
+	ctx context.Context,
+	cm *system.CleanupManager,
+) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

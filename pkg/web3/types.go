@@ -1,6 +1,10 @@
 package web3
 
-import "context"
+import (
+	"context"
+
+	"github.com/bacalhau-project/lilypad/pkg/system"
+)
 
 type Web3Options struct {
 	RpcURL     string `json:"rpc_url"`
@@ -15,5 +19,9 @@ type Web3Options struct {
 }
 
 type EventChannelCollection interface {
-	Start(ctx context.Context, sdk *ContractSDK) error
+	Start(
+		sdk *ContractSDK,
+		ctx context.Context,
+		cm *system.CleanupManager,
+	) error
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
@@ -19,7 +20,11 @@ func NewStorageEventChannels() (*StorageEventChannels, error) {
 	}, nil
 }
 
-func (s *StorageEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
+func (s *StorageEventChannels) Start(
+	sdk *ContractSDK,
+	ctx context.Context,
+	cm *system.CleanupManager,
+) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err

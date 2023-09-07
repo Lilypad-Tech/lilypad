@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,6 +22,7 @@ type SolverOptions struct {
 type Solver struct {
 	web3SDK    *web3.ContractSDK
 	web3Events *web3.EventChannels
+	server     *solverServer
 }
 
 func NewSolver(
@@ -34,16 +36,25 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
+	server, err := NewSolverServer(options.Server)
+	if err != nil {
+		return nil, err
+	}
 	solver := &Solver{
 		web3SDK:    web3SDK,
 		web3Events: web3Events,
+		server:     server,
 	}
 	return solver, nil
 }
 
-func (solver *Solver) Start(ctx context.Context) error {
+func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) error {
 	ticker := time.NewTicker(1 * time.Second)
-	err := solver.web3Events.Start(ctx, solver.web3SDK)
+	err := solver.web3Events.Start(solver.web3SDK, ctx, cm)
+	if err != nil {
+		return err
+	}
+	err = solver.server.ListenAndServe(ctx, cm)
 	if err != nil {
 		return err
 	}

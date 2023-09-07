@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -60,7 +61,11 @@ func NewControllerEventChannels() (*ControllerEventChannels, error) {
 	}, nil
 }
 
-func (c *ControllerEventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
+func (c *ControllerEventChannels) Start(
+	sdk *ContractSDK,
+	ctx context.Context,
+	cm *system.CleanupManager,
+) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
 		return err
