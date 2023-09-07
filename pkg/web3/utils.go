@@ -1,6 +1,12 @@
 package web3
 
-import "fmt"
+import (
+	"crypto/ecdsa"
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+)
 
 func checkOptions(options Web3Options) error {
 	// check each of the Web3Options for empty values and return and error
@@ -27,4 +33,26 @@ func checkOptions(options Web3Options) error {
 		return fmt.Errorf("--web3-token-address or WEB3_TOKEN_ADDRESS is empty")
 	}
 	return nil
+}
+
+func GetPublicKey(privateKey *ecdsa.PrivateKey) ecdsa.PublicKey {
+	return privateKey.PublicKey
+}
+
+func SignMessage(privateKey *ecdsa.PrivateKey, message []byte) ([]byte, error) {
+	hash := crypto.Keccak256Hash(message)
+	return crypto.Sign(hash.Bytes(), privateKey)
+}
+
+func GetAddressFromSignedMessage(message []byte, sig []byte) (common.Address, error) {
+	hash := crypto.Keccak256Hash(message)
+	sigPublicKey, err := crypto.Ecrecover(hash.Bytes(), sig)
+	if err != nil {
+		return common.Address{}, err
+	}
+	recoveredPubKey, err := crypto.UnmarshalPubkey(sigPublicKey)
+	if err != nil {
+		return common.Address{}, err
+	}
+	return crypto.PubkeyToAddress(*recoveredPubKey), nil
 }

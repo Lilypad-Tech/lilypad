@@ -42,16 +42,12 @@ func NewSolver(
 }
 
 func (solver *Solver) Start(ctx context.Context) error {
-	log.Info().Msgf("solver start")
 	ticker := time.NewTicker(1 * time.Second)
 	err := solver.web3Events.Start(ctx, solver.web3SDK)
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msgf("after start")
-
-	// write a function that will keep looping and wait 1 second
 	go func() {
 		for {
 			select {
@@ -74,9 +70,8 @@ func (solver *Solver) Start(ctx context.Context) error {
 	}()
 
 	solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
-		log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+		log.Debug().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 
-	log.Info().Msgf("solver end")
 	return nil
 }
