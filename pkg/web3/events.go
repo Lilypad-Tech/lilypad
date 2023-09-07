@@ -1,6 +1,10 @@
 package web3
 
-import "context"
+import (
+	"context"
+
+	"github.com/rs/zerolog/log"
+)
 
 type EventChannels struct {
 	Token       *TokenEventChannels
@@ -44,10 +48,13 @@ func NewEventChannels() (*EventChannels, error) {
 
 func (eventChannels *EventChannels) Start(ctx context.Context, sdk *ContractSDK) error {
 	for _, collection := range eventChannels.collections {
-		err := collection.Start(ctx, sdk)
-		if err != nil {
-			return err
-		}
+		c := collection
+		go func() {
+			err := c.Start(ctx, sdk)
+			if err != nil {
+				log.Error().Msgf("error starting listeners: %s", err.Error())
+			}
+		}()
 	}
 	return nil
 }

@@ -2,9 +2,15 @@ package solver
 
 import (
 	"context"
+	"fmt"
+	"math/big"
+	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/server"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog/log"
 )
 
 type SolverOptions struct {
@@ -36,36 +42,41 @@ func NewSolver(
 }
 
 func (solver *Solver) Start(ctx context.Context) error {
+	log.Info().Msgf("solver start")
+	ticker := time.NewTicker(1 * time.Second)
 	err := solver.web3Events.Start(ctx, solver.web3SDK)
 	if err != nil {
 		return err
 	}
 
-	// // write a function that will keep looping and wait 1 second
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-ctx.Done():
-	// 			return
-	// 		default:
-	// 			tx, err := solver.web3SDK.Contracts.Token.Transfer(
-	// 				solver.web3SDK.Auth,
-	// 				common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
-	// 				big.NewInt(1),
-	// 			)
-	// 			if err != nil {
-	// 				fmt.Printf("error sending tx: %s\n", err.Error())
-	// 				break
-	// 			}
-	// 			fmt.Printf("tx sent: %s\n", tx.Hash())
-	// 			time.Sleep(time.Second * 1)
-	// 		}
-	// 	}
-	// }()
+	log.Info().Msgf("after start")
 
-	// solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
-	// 	log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
-	// })
+	// write a function that will keep looping and wait 1 second
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				log.Info().Msgf("sending tx")
+				tx, err := solver.web3SDK.Contracts.Token.Transfer(
+					solver.web3SDK.Auth,
+					common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
+					big.NewInt(1),
+				)
+				if err != nil {
+					fmt.Printf("error sending tx: %s\n", err.Error())
+					break
+				}
+				fmt.Printf("tx sent: %s\n", tx.Hash())
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
+	solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
+		log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+	})
+
+	log.Info().Msgf("solver end")
 	return nil
 }
