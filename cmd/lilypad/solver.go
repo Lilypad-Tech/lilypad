@@ -51,7 +51,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
-	err = solver.Start(ctx)
+	err = solver.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
