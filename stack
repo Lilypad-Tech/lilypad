@@ -62,10 +62,23 @@ function geth-stop() {
 }
 
 function clean() {
+  docker rm -f $(docker ps -aq) || true
   sudo rm -rf ${DATA_DIRECTORY}
   rm -rf ${DIR}/hardhat/artifacts
   rm -rf ${DIR}/hardhat/cache
   rm -rf ${DIR}/hardhat/deployments/geth
+}
+
+function boot() {
+  clean
+  geth
+  sleep 5
+  fund-admin
+  fund-services-ether
+  compile-contracts
+  deploy-contracts
+  fund-services-tokens
+  balances
 }
 
 ############################################################################
