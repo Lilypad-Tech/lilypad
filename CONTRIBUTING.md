@@ -17,7 +17,13 @@ Get the node modules installed and generate a local .env file with private keys 
 
 ## boot stack
 
-### geth
+```bash
+./stack boot
+```
+
+This does the following things:
+
+#### geth
 
 We need to start geth, move funds to our admin account and then fund the various other accounts.
 
@@ -30,7 +36,7 @@ We need to start geth, move funds to our admin account and then fund the various
 
 Geth is now running and each of our services has some ether allocated.
 
-### compile contracts
+#### compile contracts
 
 ```bash
 ./stack compile-contracts
@@ -38,7 +44,7 @@ Geth is now running and each of our services has some ether allocated.
 
 This will also generate go bindings in `pkg/contract/bindings/contracts`
 
-### deploy contracts
+#### deploy contracts
 
 ```bash
 ./stack deploy-contracts
@@ -46,12 +52,34 @@ This will also generate go bindings in `pkg/contract/bindings/contracts`
 
 Contracts are now deployed - no services have any tokens though
 
-### fund tokens
+#### fund tokens
 
 ```bash
 ./stack fund-services-tokens
 ./stack balances
 ```
+
+### run services
+
+First we need to export the env that will configure the web3 client with the contract addresses:
+
+```bash
+source .env
+eval $(./stack print-local-dev-env)
+```
+
+Then we export the private key for the service we want to run:
+
+```bash
+export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+```
+
+Then we run the service:
+
+```bash
+go run . solver
+```
+
 
 ## stop stack
 

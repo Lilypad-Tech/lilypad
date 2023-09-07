@@ -2,15 +2,9 @@ package solver
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"math/big"
-	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/server"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type SolverOptions struct {
@@ -47,25 +41,31 @@ func (solver *Solver) Start(ctx context.Context) error {
 		return err
 	}
 
-	go func() {
-		for {
-			tx, err := solver.web3SDK.Contracts.Token.Transfer(
-				solver.web3SDK.Auth,
-				common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
-				big.NewInt(1),
-			)
-			if err != nil {
-				fmt.Printf("error sending tx: %s\n", err.Error())
-				break
-			}
-			fmt.Printf("tx sent: %s\n", tx.Hash())
-			time.Sleep(time.Second * 1)
-		}
-	}()
+	// // write a function that will keep looping and wait 1 second
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			return
+	// 		default:
+	// 			tx, err := solver.web3SDK.Contracts.Token.Transfer(
+	// 				solver.web3SDK.Auth,
+	// 				common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
+	// 				big.NewInt(1),
+	// 			)
+	// 			if err != nil {
+	// 				fmt.Printf("error sending tx: %s\n", err.Error())
+	// 				break
+	// 			}
+	// 			fmt.Printf("tx sent: %s\n", tx.Hash())
+	// 			time.Sleep(time.Second * 1)
+	// 		}
+	// 	}
+	// }()
 
-	solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
-		log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
-	})
+	// solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
+	// 	log.Printf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+	// })
 
 	return nil
 }

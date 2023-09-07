@@ -29,9 +29,9 @@ func NewEventChannels() (*EventChannels, error) {
 	}
 	collections := []EventChannelCollection{
 		tokenChannels,
-		paymentChannels,
-		storageChannels,
-		controllerChannels,
+		// paymentChannels,
+		// storageChannels,
+		// controllerChannels,
 	}
 	return &EventChannels{
 		Token:       tokenChannels,

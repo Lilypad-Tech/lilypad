@@ -3,6 +3,7 @@ package web3
 import (
 	"crypto/ecdsa"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
@@ -13,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog/log"
 )
 
 // these are the go-binding wrappers for the various deployed contracts
@@ -87,12 +89,14 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 }
 
 func (sdk *ContractSDK) getBlockNumber() (uint64, error) {
-	var blockNumber uint64
-	err := sdk.Client.Client().Call(&blockNumber, "eth_blockNumber")
+	var blockNumberHex string
+	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
+		log.Error().Msgf("error for getBlockNumber: %s", err.Error())
 		return 0, err
 	}
-	return blockNumber, nil
+	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")
+	return strconv.ParseUint(blockNumberHex, 16, 64)
 }
 
 // func NewContracts(options ContractOptions) (Contract, error) {
