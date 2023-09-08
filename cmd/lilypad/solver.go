@@ -1,7 +1,6 @@
 package lilypad
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 
@@ -64,48 +63,10 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
-	fmt.Printf("after solver construct\n")
-
 	err = solver.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("after solver start\n")
-
-	// // contract, err := contract.NewContract(options.ContractOptions)
-	// // if err != nil {
-	// // 	return err
-	// // }
-
-	// store, err := store.NewPostgresStore(options.StoreOptions)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// controller, err := controller.NewController(controller.ControllerOptions{
-	// 	// Contract: contract,
-	// 	Store: store,
-	// })
-
-	// err = controller.Start(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// server, err := server.NewServer(options.ServerOptions, controller)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// log.Info().Msgf("lilypad server listening on %s:%d", options.ServerOptions.Host, options.ServerOptions.Port)
-
-	// go func() {
-	// 	err := server.ListenAndServe(ctx, cm)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
 
 	<-ctx.Done()
 	return nil
