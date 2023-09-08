@@ -2,8 +2,6 @@ package data
 
 import (
 	"math/big"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // used by resource providers to describe their resources
@@ -41,28 +39,35 @@ type Module struct {
 // the solvers job is to propose the most efficient match
 // for the job creator
 type Deal struct {
-	ResourceProvider          common.Address `json:"resource_provider"`
-	JobCreator                common.Address `json:"job_creator"`
-	InstructionPrice          big.Int        `json:"instruction_price"`
-	Timeout                   big.Int        `json:"timeout"`
-	TimeoutCollateral         big.Int        `json:"timeout_collateral"`
-	PaymentCollateral         big.Int        `json:"payment_collateral"`
-	ResultsCollateralMultiple big.Int        `json:"results_collateral_multiple"`
-	MediationFee              big.Int        `json:"mediation_fee"`
+	// this is the cid of the deal where ID is set to empty string
+	ID                        string  `json:"id"`
+	ResourceProvider          string  `json:"resource_provider"`
+	JobCreator                string  `json:"job_creator"`
+	InstructionPrice          big.Int `json:"instruction_price"`
+	Timeout                   big.Int `json:"timeout"`
+	TimeoutCollateral         big.Int `json:"timeout_collateral"`
+	PaymentCollateral         big.Int `json:"payment_collateral"`
+	ResultsCollateralMultiple big.Int `json:"results_collateral_multiple"`
+	MediationFee              big.Int `json:"mediation_fee"`
 }
 
 type Result struct {
-	DealID           string  `json:"deal_id"`
-	ResultsID        string  `json:"results_id"`
+	// this is the cid of the result where ID is set to empty string
+	ID     string `json:"id"`
+	DealID string `json:"deal_id"`
+	// the CID of the actual results
+	DataID           string  `json:"results_id"`
 	InstructionCount big.Int `json:"instruction_count"`
 }
 
 // posted to the solver by a job creator
 type JobOffer struct {
+	// this is the cid of the job offer where ID is set to empty string
+	ID string `json:"id"`
 	// the address of the job creator
 	JobCreator string `json:"job_creator"`
 	// this is the CID of the Module description
-	ModuleID string `json:"id"`
+	ModuleID string `json:"module_id"`
 	// the actual module that is being offered
 	// this must hash to the ModuleID above
 	Module Module `json:"module"`
@@ -73,6 +78,8 @@ type JobOffer struct {
 
 // posted to the solver by a resource provider
 type ResourceOffer struct {
+	// this is the cid of the resource offer where ID is set to empty string
+	ID string `json:"id"`
 	// the address of the job creator
 	ResourceProvider string `json:"resource_provider"`
 	// the spec being offered

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,14 +29,18 @@ func (e HTTPError) Error() string {
 }
 
 func extractUserAddress(userPayload string, signature string) (string, error) {
-	return "", nil
+	address, err := web3.GetAddressFromSignedMessage([]byte(userPayload), []byte(signature))
+	if err != nil {
+		return "", err
+	}
+	return address.String(), nil
 }
 
-func setRequestAddress(ctx context.Context, address string) context.Context {
+func setContextAddress(ctx context.Context, address string) context.Context {
 	return context.WithValue(ctx, CONTEXT_ADDRESS, address)
 }
 
-func getRequestAddress(ctx context.Context) string {
+func GetContextAddress(ctx context.Context) string {
 	address, ok := ctx.Value(CONTEXT_ADDRESS).(string)
 	if !ok {
 		return ""
@@ -55,7 +60,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(res, err.Error(), http.StatusForbidden)
 			return
 		}
-		req = req.WithContext(setRequestAddress(req.Context(), address))
+		req = req.WithContext(setContextAddress(req.Context(), address))
 		next.ServeHTTP(res, req)
 	})
 }
@@ -68,6 +73,15 @@ func CorsMiddleware(next http.Handler) http.Handler {
 }
 
 type httpWrapper[T any] func(res http.ResponseWriter, req *http.Request) (T, error)
+
+func ReadBody[T any](req *http.Request) (T, error) {
+	var data T
+	err := json.NewDecoder(req.Body).Decode(&data)
+	if err != nil {
+		return data, err
+	}
+	return data, nil
+}
 
 // wrap a http handler with some error handling
 // so if it returns an error we handle it

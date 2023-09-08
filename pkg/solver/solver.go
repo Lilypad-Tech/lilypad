@@ -43,7 +43,7 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server, controller)
+	server, err := NewSolverServer(options.Server, controller, store)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func NewSolver(
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) error {
 	ticker := time.NewTicker(1 * time.Second)
-	err := solver.controller.Start(ctx, cm)
+	err := solver.controller.start(ctx, cm)
 	if err != nil {
 		return err
 	}

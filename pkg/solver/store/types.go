@@ -11,8 +11,8 @@ type GetResourceOffersQuery struct {
 }
 
 type SolverStore interface {
-	AddJobOffer(jobOffer data.JobOffer) error
-	AddResourceOffer(jobOffer data.ResourceOffer) error
+	AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error)
+	AddResourceOffer(jobOffer data.ResourceOffer) (*data.ResourceOffer, error)
 	GetJobOffers(query GetJobOffersQuery) ([]data.JobOffer, error)
 	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOffer, error)
 	GetJobOffer(id string) (*data.JobOffer, error)

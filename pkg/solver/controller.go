@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -30,25 +31,25 @@ func NewSolverController(
 	return controller, nil
 }
 
-func (controller *SolverController) Solve() error {
+func (controller *SolverController) solve() error {
 	log.Info().Msgf("solving")
 	return nil
 }
 
-func (controller *SolverController) Subscribe() error {
+func (controller *SolverController) subscribe() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
 		log.Debug().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }
 
-func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (controller *SolverController) start(ctx context.Context, cm *system.CleanupManager) error {
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				err := controller.Solve()
+				err := controller.solve()
 				if err != nil {
 					log.Error().Err(err).Msgf("error solving")
 					return
@@ -59,4 +60,24 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		}
 	}()
 	return nil
+}
+
+func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
+	jobOffer.ID = ""
+	id, err := data.CalculateCID(jobOffer)
+	if err != nil {
+		return nil, err
+	}
+	jobOffer.ID = id
+	return controller.store.AddJobOffer(jobOffer)
+}
+
+func (controller *SolverController) addResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
+	resourceOffer.ID = ""
+	id, err := data.CalculateCID(resourceOffer)
+	if err != nil {
+		return nil, err
+	}
+	resourceOffer.ID = id
+	return controller.store.AddResourceOffer(resourceOffer)
 }

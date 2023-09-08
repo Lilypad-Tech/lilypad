@@ -16,24 +16,16 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	return &SolverStoreMemory{}, nil
 }
 
-func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) error {
-	id, err := data.CalculateCID(jobOffer)
-	if err != nil {
-		return err
-	}
+func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
 	s.jobOffers = append(s.jobOffers, jobOffer)
-	s.jobOfferMap[id] = jobOffer
-	return nil
+	s.jobOfferMap[jobOffer.ID] = jobOffer
+	return &jobOffer, nil
 }
 
-func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) error {
-	id, err := data.CalculateCID(resourceOffer)
-	if err != nil {
-		return err
-	}
+func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
 	s.resourceOffers = append(s.resourceOffers, resourceOffer)
-	s.resourceOfferMap[id] = resourceOffer
-	return nil
+	s.resourceOfferMap[resourceOffer.ID] = resourceOffer
+	return &resourceOffer, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {

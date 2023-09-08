@@ -6,21 +6,28 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/gorilla/mux"
 )
 
 type solverServer struct {
-	options server.ServerOptions
+	options    server.ServerOptions
+	controller *SolverController
+	store      store.SolverStore
 }
 
 func NewSolverServer(
 	options server.ServerOptions,
 	controller *SolverController,
+	store store.SolverStore,
 ) (*solverServer, error) {
 	server := &solverServer{
-		options: options,
+		options:    options,
+		controller: controller,
+		store:      store,
 	}
 	return server, nil
 }
@@ -81,10 +88,28 @@ func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req
 	return []string{"job1", "job2"}, nil
 }
 
-func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http.Request) ([]string, error) {
-	return []string{"job1", "job2"}, nil
+func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http.Request) (*data.JobOffer, error) {
+	signerAddress := server.GetContextAddress(req.Context())
+	jobOffer, err := server.ReadBody[data.JobOffer](req)
+	if err != nil {
+		return nil, err
+	}
+	// only the job creator can post a job offer
+	if signerAddress != jobOffer.JobCreator {
+		return nil, fmt.Errorf("job creator address does not match signer address")
+	}
+	return solverServer.controller.addJobOffer(jobOffer)
 }
 
-func (solverServer *solverServer) addResourceOffer(res http.ResponseWriter, req *http.Request) ([]string, error) {
-	return []string{"job1", "job2"}, nil
+func (solverServer *solverServer) addResourceOffer(res http.ResponseWriter, req *http.Request) (*data.ResourceOffer, error) {
+	signerAddress := server.GetContextAddress(req.Context())
+	resourceOffer, err := server.ReadBody[data.ResourceOffer](req)
+	if err != nil {
+		return nil, err
+	}
+	// only the job creator can post a job offer
+	if signerAddress != resourceOffer.ResourceProvider {
+		return nil, fmt.Errorf("resource provider address does not match signer address")
+	}
+	return solverServer.controller.addResourceOffer(resourceOffer)
 }
