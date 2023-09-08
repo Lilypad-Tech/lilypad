@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
@@ -25,6 +26,14 @@ type HTTPError struct {
 
 func (e HTTPError) Error() string {
 	return e.Message
+}
+
+func getWsURL(url string) string {
+	// replace http(s) with ws(s)
+	// e.g. return strings.Replace(s, old, new, n)
+	url = strings.Replace(url, "https://", "wss://", 1)
+	url = strings.Replace(url, "http://", "ws://", 1)
+	return url
 }
 
 func extractUserAddress(userPayload string, signature string) (string, error) {

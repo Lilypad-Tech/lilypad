@@ -5,3 +5,8 @@ type ServerOptions struct {
 	Host string
 	Port int
 }
+
+type ClientOptions struct {
+	URL        string
+	PrivateKey string
+}
