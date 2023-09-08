@@ -13,7 +13,12 @@ type SolverStoreMemory struct {
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
-	return &SolverStoreMemory{}, nil
+	return &SolverStoreMemory{
+		jobOffers:        []data.JobOffer{},
+		resourceOffers:   []data.ResourceOffer{},
+		jobOfferMap:      map[string]data.JobOffer{},
+		resourceOfferMap: map[string]data.ResourceOffer{},
+	}, nil
 }
 
 func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
