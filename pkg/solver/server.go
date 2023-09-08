@@ -32,7 +32,25 @@ func NewSolverServer(
 	return server, nil
 }
 
+func (solverServer *solverServer) listenToControllerEvents(ctx context.Context, cm *system.CleanupManager) error {
+	go func() {
+		select {
+		case ev := <-solverServer.controller.getEventChannel():
+			// we write this event to all connected web socket connections
+			fmt.Printf("got controller event: %+v\n", ev)
+			return
+		case <-ctx.Done():
+			return
+		}
+	}()
+	return nil
+}
+
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
+	err := solverServer.listenToControllerEvents(ctx, cm)
+	if err != nil {
+		return err
+	}
 	router := mux.NewRouter()
 
 	subrouter := router.PathPrefix("/api/v1").Subrouter()

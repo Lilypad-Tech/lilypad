@@ -12,10 +12,28 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// add an enum for various types of event
+type SolverEventType int
+
+const (
+	JobOfferAdded SolverEventType = iota
+	ResourceOfferAdded
+	MatchFound
+)
+
+type SolverEvent struct {
+	EventType     SolverEventType     `json:"event_type"`
+	JobOffer      *data.JobOffer      `json:"job_offer"`
+	ResourceOffer *data.ResourceOffer `json:"resource_offer"`
+}
+
+type SolverEventChannel chan SolverEvent
+
 type SolverController struct {
-	web3SDK    *web3.ContractSDK
-	web3Events *web3.EventChannels
-	store      store.SolverStore
+	web3SDK             *web3.ContractSDK
+	web3Events          *web3.EventChannels
+	store               store.SolverStore
+	solverEventChannels []SolverEventChannel
 }
 
 func NewSolverController(
@@ -35,16 +53,28 @@ func (controller *SolverController) solve() error {
 	return nil
 }
 
-func (controller *SolverController) subscribe() error {
+func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
 		log.Info().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }
 
+func (controller *SolverController) getEventChannel() SolverEventChannel {
+	eventChannel := make(SolverEventChannel)
+	controller.solverEventChannels = append(controller.solverEventChannels, eventChannel)
+	return eventChannel
+}
+
+func (controller *SolverController) writeEvent(ev SolverEvent) {
+	for _, eventChannel := range controller.solverEventChannels {
+		eventChannel <- ev
+	}
+}
+
 func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) error {
 	// get the local subscriptions setup
-	err := controller.subscribe()
+	err := controller.subscribeToWeb3()
 	if err != nil {
 		return err
 	}
@@ -79,7 +109,15 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 		return nil, err
 	}
 	jobOffer.ID = id
-	return controller.store.AddJobOffer(jobOffer)
+	ret, err := controller.store.AddJobOffer(jobOffer)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: JobOfferAdded,
+		JobOffer:  ret,
+	})
+	return ret, nil
 }
 
 func (controller *SolverController) addResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
@@ -89,5 +127,13 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, err
 	}
 	resourceOffer.ID = id
-	return controller.store.AddResourceOffer(resourceOffer)
+	ret, err := controller.store.AddResourceOffer(resourceOffer)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType:     ResourceOfferAdded,
+		ResourceOffer: ret,
+	})
+	return ret, nil
 }

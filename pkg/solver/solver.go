@@ -77,3 +77,7 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 
 	return solver.server.ListenAndServe(ctx, cm)
 }
+
+func (solver *Solver) GetEventChannel() SolverEventChannel {
+	return solver.controller.getEventChannel()
+}
