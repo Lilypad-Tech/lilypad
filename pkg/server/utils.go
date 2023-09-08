@@ -4,11 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
 
-	"github.com/bacalhau-project/lilypad/pkg/types"
 	"github.com/rs/zerolog/log"
 )
+
+// write some string constants for x-lilypad headers
+// this is the address of the user
+const X_LILYPAD_USER = "X-Lilypad-User"
+
+// this is the signature of the message
+const X_LILYPAD_SIGNATURE = "X-Lilypad-Signature"
+
+// the context name we keep the address
+const CONTEXT_ADDRESS = "address"
 
 type HTTPError struct {
 	Message    string
@@ -19,23 +27,35 @@ func (e HTTPError) Error() string {
 	return e.Message
 }
 
+func extractUserAddress(userPayload string, signature string) (string, error) {
+	return "", nil
+}
+
+func setRequestAddress(ctx context.Context, address string) context.Context {
+	return context.WithValue(ctx, CONTEXT_ADDRESS, address)
+}
+
+func getRequestAddress(ctx context.Context) string {
+	address, ok := ctx.Value(CONTEXT_ADDRESS).(string)
+	if !ok {
+		return ""
+	}
+	return address
+}
+
+// this will use the client headers to ensure that a message was signed
+// by the holder of a private key for a specific address
+// there is a "X-Lilypad-User" header that will contain the address
+// there is a "X-Lilypad-Signature" header that will contain the signature
+// we use the signature to verify that the message was signed by the private key
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		reqToken := req.Header.Get("Authorization")
-		splitToken := strings.Split(reqToken, "Bearer ")
-		reqToken = splitToken[1]
-		if reqToken != "" {
-			user, err := resolveAccessToken(reqToken)
-			if err != nil {
-				http.Error(res, err.Error(), 500)
-				return
-			}
-			// keycloak returned a user!
-			// let's set it on the request context so our routes can extract it
-			if user != nil {
-				req = req.WithContext(setRequestUser(req.Context(), user))
-			}
+		address, err := extractUserAddress(req.Header.Get(X_LILYPAD_USER), req.Header.Get(X_LILYPAD_SIGNATURE))
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusForbidden)
+			return
 		}
+		req = req.WithContext(setRequestAddress(req.Context(), address))
 		next.ServeHTTP(res, req)
 	})
 }
@@ -45,26 +65,6 @@ func CorsMiddleware(next http.Handler) http.Handler {
 		res.Header().Set("Access-Control-Allow-Origin", "*")
 		next.ServeHTTP(res, req)
 	})
-}
-
-// this is where we hook into keycloak and ping the JWT and hopefully
-// get some user information back in return
-func resolveAccessToken(token string) (*types.User, error) {
-	return &types.User{
-		Email: "bob@bob.com",
-	}, nil
-}
-
-func setRequestUser(ctx context.Context, u *types.User) context.Context {
-	return context.WithValue(ctx, "user", u)
-}
-
-func getRequestUser(ctx context.Context) *types.User {
-	user, ok := ctx.Value("user").(*types.User)
-	if !ok {
-		return nil
-	}
-	return user
 }
 
 type httpWrapper[T any] func(res http.ResponseWriter, req *http.Request) (T, error)

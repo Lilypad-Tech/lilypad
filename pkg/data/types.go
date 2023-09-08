@@ -60,7 +60,7 @@ type Result struct {
 // posted to the solver by a job creator
 type JobOffer struct {
 	// the address of the job creator
-	JobCreator common.Address `json:"job_creator"`
+	JobCreator string `json:"job_creator"`
 	// this is the CID of the Module description
 	ModuleID string `json:"id"`
 	// the actual module that is being offered
@@ -74,7 +74,7 @@ type JobOffer struct {
 // posted to the solver by a resource provider
 type ResourceOffer struct {
 	// the address of the job creator
-	ResourceProvider common.Address `json:"resource_provider"`
+	ResourceProvider string `json:"resource_provider"`
 	// the spec being offered
 	Spec Spec `json:"spec"`
 	// the module ID's that this resource provider can run

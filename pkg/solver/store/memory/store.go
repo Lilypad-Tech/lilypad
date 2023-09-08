@@ -1,6 +1,9 @@
 package store
 
-import "github.com/bacalhau-project/lilypad/pkg/data"
+import (
+	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/solver/store"
+)
 
 type SolverStoreMemory struct {
 	jobOffers        []data.JobOffer
@@ -33,11 +36,29 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) e
 	return nil
 }
 
-func (s *SolverStoreMemory) GetJobOffers() ([]data.JobOffer, error) {
+func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
+	if query.JobCreator != "" {
+		jobOffers := []data.JobOffer{}
+		for _, jobOffer := range s.jobOffers {
+			if jobOffer.JobCreator == query.JobCreator {
+				jobOffers = append(jobOffers, jobOffer)
+			}
+		}
+		return jobOffers, nil
+	}
 	return s.jobOffers, nil
 }
 
-func (s *SolverStoreMemory) GetResourceOffers() ([]data.ResourceOffer, error) {
+func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOffer, error) {
+	if query.ResourceProvider != "" {
+		resourceOffers := []data.ResourceOffer{}
+		for _, resourceOffer := range s.resourceOffers {
+			if resourceOffer.ResourceProvider == query.ResourceProvider {
+				resourceOffers = append(resourceOffers, resourceOffer)
+			}
+		}
+		return resourceOffers, nil
+	}
 	return s.resourceOffers, nil
 }
 
