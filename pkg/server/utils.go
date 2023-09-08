@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -36,33 +35,13 @@ func extractUserAddress(userPayload string, signature string) (string, error) {
 	return address.String(), nil
 }
 
-func setContextAddress(ctx context.Context, address string) context.Context {
-	return context.WithValue(ctx, CONTEXT_ADDRESS, address)
-}
-
-func GetContextAddress(ctx context.Context) string {
-	address, ok := ctx.Value(CONTEXT_ADDRESS).(string)
-	if !ok {
-		return ""
-	}
-	return address
-}
-
 // this will use the client headers to ensure that a message was signed
 // by the holder of a private key for a specific address
 // there is a "X-Lilypad-User" header that will contain the address
 // there is a "X-Lilypad-Signature" header that will contain the signature
 // we use the signature to verify that the message was signed by the private key
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		address, err := extractUserAddress(req.Header.Get(X_LILYPAD_USER), req.Header.Get(X_LILYPAD_SIGNATURE))
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusForbidden)
-			return
-		}
-		req = req.WithContext(setContextAddress(req.Context(), address))
-		next.ServeHTTP(res, req)
-	})
+func AuthHandler(req *http.Request) (string, error) {
+	return extractUserAddress(req.Header.Get(X_LILYPAD_USER), req.Header.Get(X_LILYPAD_SIGNATURE))
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {

@@ -80,16 +80,29 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	return nil
 }
 
-func (solverServer *solverServer) getJobOffers(res http.ResponseWriter, req *http.Request) ([]string, error) {
-	return []string{"job1", "job2"}, nil
+func (solverServer *solverServer) getJobOffers(res http.ResponseWriter, req *http.Request) ([]data.JobOffer, error) {
+	query := store.GetJobOffersQuery{}
+	// if there is a job_creator query param then assign it
+	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
+		query.JobCreator = jobCreator
+	}
+	return solverServer.store.GetJobOffers(query)
 }
 
-func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req *http.Request) ([]string, error) {
-	return []string{"job1", "job2"}, nil
+func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req *http.Request) ([]data.ResourceOffer, error) {
+	query := store.GetResourceOffersQuery{}
+	// if there is a job_creator query param then assign it
+	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
+		query.ResourceProvider = resourceProvider
+	}
+	return solverServer.store.GetResourceOffers(query)
 }
 
 func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http.Request) (*data.JobOffer, error) {
-	signerAddress := server.GetContextAddress(req.Context())
+	signerAddress, err := server.AuthHandler(req)
+	if err != nil {
+		return nil, err
+	}
 	jobOffer, err := server.ReadBody[data.JobOffer](req)
 	if err != nil {
 		return nil, err
@@ -102,7 +115,10 @@ func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http
 }
 
 func (solverServer *solverServer) addResourceOffer(res http.ResponseWriter, req *http.Request) (*data.ResourceOffer, error) {
-	signerAddress := server.GetContextAddress(req.Context())
+	signerAddress, err := server.AuthHandler(req)
+	if err != nil {
+		return nil, err
+	}
 	resourceOffer, err := server.ReadBody[data.ResourceOffer](req)
 	if err != nil {
 		return nil, err
