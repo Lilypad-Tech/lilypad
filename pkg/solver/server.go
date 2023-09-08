@@ -17,6 +17,7 @@ type solverServer struct {
 
 func NewSolverServer(
 	options server.ServerOptions,
+	controller *SolverController,
 ) (*solverServer, error) {
 	server := &solverServer{
 		options: options,

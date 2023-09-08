@@ -10,7 +10,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
@@ -24,6 +23,7 @@ type Solver struct {
 	web3SDK    *web3.ContractSDK
 	web3Events *web3.EventChannels
 	server     *solverServer
+	controller *SolverController
 	store      store.SolverStore
 }
 
@@ -39,22 +39,31 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server)
+	controller, err := NewSolverController(web3SDK, web3Events, store)
+	if err != nil {
+		return nil, err
+	}
+	server, err := NewSolverServer(options.Server, controller)
 	if err != nil {
 		return nil, err
 	}
 	solver := &Solver{
+		controller: controller,
+		store:      store,
+		server:     server,
 		web3SDK:    web3SDK,
 		web3Events: web3Events,
-		server:     server,
-		store:      store,
 	}
 	return solver, nil
 }
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) error {
 	ticker := time.NewTicker(1 * time.Second)
-	err := solver.web3Events.Start(solver.web3SDK, ctx, cm)
+	err := solver.controller.Start(ctx, cm)
+	if err != nil {
+		return err
+	}
+	err = solver.web3Events.Start(solver.web3SDK, ctx, cm)
 	if err != nil {
 		return err
 	}
@@ -83,10 +92,6 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 			}
 		}
 	}()
-
-	solver.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
-		log.Debug().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
-	})
 
 	return nil
 }
