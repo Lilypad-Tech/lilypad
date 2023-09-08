@@ -32,25 +32,6 @@ type Module struct {
 	Spec Spec `json:"spec"`
 }
 
-// represents the cost of a job
-// this is both the bid and ask in the 2 sided marketplace
-// job creators will attach this to their job offers
-// and resource providers will attach this to their resource offers
-// the solvers job is to propose the most efficient match
-// for the job creator
-type Deal struct {
-	// this is the cid of the deal where ID is set to empty string
-	ID                        string  `json:"id"`
-	ResourceProvider          string  `json:"resource_provider"`
-	JobCreator                string  `json:"job_creator"`
-	InstructionPrice          big.Int `json:"instruction_price"`
-	Timeout                   big.Int `json:"timeout"`
-	TimeoutCollateral         big.Int `json:"timeout_collateral"`
-	PaymentCollateral         big.Int `json:"payment_collateral"`
-	ResultsCollateralMultiple big.Int `json:"results_collateral_multiple"`
-	MediationFee              big.Int `json:"mediation_fee"`
-}
-
 type Result struct {
 	// this is the cid of the result where ID is set to empty string
 	ID     string `json:"id"`
@@ -87,4 +68,25 @@ type ResourceOffer struct {
 	// the module ID's that this resource provider can run
 	// an empty list means ALL modules
 	Modules []string `json:"modules"`
+}
+
+// represents the cost of a job
+// this is both the bid and ask in the 2 sided marketplace
+// job creators will attach this to their job offers
+// and resource providers will attach this to their resource offers
+// the solvers job is to propose the most efficient match
+// for the job creator
+type Deal struct {
+	// this is the cid of the deal where ID is set to empty string
+	ID                        string        `json:"id"`
+	ResourceProvider          string        `json:"resource_provider"`
+	JobCreator                string        `json:"job_creator"`
+	InstructionPrice          big.Int       `json:"instruction_price"`
+	Timeout                   big.Int       `json:"timeout"`
+	TimeoutCollateral         big.Int       `json:"timeout_collateral"`
+	PaymentCollateral         big.Int       `json:"payment_collateral"`
+	ResultsCollateralMultiple big.Int       `json:"results_collateral_multiple"`
+	MediationFee              big.Int       `json:"mediation_fee"`
+	JobOffer                  JobOffer      `json:"job_offer"`
+	ResourceOffer             ResourceOffer `json:"resource_offer"`
 }
