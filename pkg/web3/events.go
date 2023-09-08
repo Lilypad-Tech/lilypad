@@ -15,28 +15,16 @@ type EventChannels struct {
 	collections []EventChannelCollection
 }
 
-func NewEventChannels() (*EventChannels, error) {
-	tokenChannels, err := NewTokenEventChannels()
-	if err != nil {
-		return nil, err
-	}
-	paymentChannels, err := NewPaymentEventChannels()
-	if err != nil {
-		return nil, err
-	}
-	storageChannels, err := NewStorageEventChannels()
-	if err != nil {
-		return nil, err
-	}
-	controllerChannels, err := NewControllerEventChannels()
-	if err != nil {
-		return nil, err
-	}
+func NewEventChannels() *EventChannels {
+	tokenChannels := NewTokenEventChannels()
+	paymentChannels := NewPaymentEventChannels()
+	storageChannels := NewStorageEventChannels()
+	controllerChannels := NewControllerEventChannels()
 	collections := []EventChannelCollection{
 		tokenChannels,
-		// paymentChannels,
-		// storageChannels,
-		// controllerChannels,
+		paymentChannels,
+		storageChannels,
+		controllerChannels,
 	}
 	return &EventChannels{
 		Token:       tokenChannels,
@@ -44,7 +32,7 @@ func NewEventChannels() (*EventChannels, error) {
 		Storage:     storageChannels,
 		Controller:  controllerChannels,
 		collections: collections,
-	}, nil
+	}
 }
 
 func (eventChannels *EventChannels) Start(

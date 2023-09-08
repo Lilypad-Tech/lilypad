@@ -15,10 +15,10 @@ type TokenEventChannels struct {
 	transferSubs []func(*token.TokenTransfer)
 }
 
-func NewTokenEventChannels() (*TokenEventChannels, error) {
+func NewTokenEventChannels() *TokenEventChannels {
 	return &TokenEventChannels{
 		transferChan: make(chan *token.TokenTransfer),
-	}, nil
+	}
 }
 
 func (t *TokenEventChannels) Start(

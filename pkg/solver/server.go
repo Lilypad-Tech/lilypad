@@ -38,7 +38,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
 	subrouter.Use(server.CorsMiddleware)
-	subrouter.Use(server.AuthMiddleware)
+	//	subrouter.Use(server.AuthMiddleware)
 
 	subrouter.HandleFunc("/job_offers", server.Wrapper(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", server.Wrapper(solverServer.addJobOffer)).Methods("POST")

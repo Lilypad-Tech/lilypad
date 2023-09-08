@@ -14,10 +14,10 @@ type PaymentEventChannels struct {
 	paymentSubs []func(*payments.PaymentsPayment)
 }
 
-func NewPaymentEventChannels() (*PaymentEventChannels, error) {
+func NewPaymentEventChannels() *PaymentEventChannels {
 	return &PaymentEventChannels{
 		paymentChan: make(chan *payments.PaymentsPayment),
-	}, nil
+	}
 }
 
 func (p *PaymentEventChannels) Start(

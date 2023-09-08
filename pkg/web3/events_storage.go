@@ -14,10 +14,10 @@ type StorageEventChannels struct {
 	dealStateChangeSubs []func(*storage.StorageDealStateChange)
 }
 
-func NewStorageEventChannels() (*StorageEventChannels, error) {
+func NewStorageEventChannels() *StorageEventChannels {
 	return &StorageEventChannels{
 		dealStateChangeChan: make(chan *storage.StorageDealStateChange),
-	}, nil
+	}
 }
 
 func (s *StorageEventChannels) Start(

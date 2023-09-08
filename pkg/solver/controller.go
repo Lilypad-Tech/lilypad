@@ -20,12 +20,11 @@ type SolverController struct {
 
 func NewSolverController(
 	web3SDK *web3.ContractSDK,
-	web3Events *web3.EventChannels,
 	store store.SolverStore,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
-		web3Events: web3Events,
+		web3Events: web3.NewEventChannels(),
 		store:      store,
 	}
 	return controller, nil
@@ -38,12 +37,23 @@ func (controller *SolverController) solve() error {
 
 func (controller *SolverController) subscribe() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
-		log.Debug().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+		log.Info().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }
 
-func (controller *SolverController) start(ctx context.Context, cm *system.CleanupManager) error {
+func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) error {
+	// get the local subscriptions setup
+	err := controller.subscribe()
+	if err != nil {
+		return err
+	}
+	// activate the web3 event listeners
+	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
+	if err != nil {
+		return err
+	}
+
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {

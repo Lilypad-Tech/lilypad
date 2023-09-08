@@ -45,7 +45,7 @@ type ControllerEventChannels struct {
 	timeoutMediateResultSubs []func(*controller.ControllerTimeoutMediateResult)
 }
 
-func NewControllerEventChannels() (*ControllerEventChannels, error) {
+func NewControllerEventChannels() *ControllerEventChannels {
 	return &ControllerEventChannels{
 		resourceProviderAgreedChan: make(chan *controller.ControllerResourceProviderAgreed),
 		jobCreatorAgreedChan:       make(chan *controller.ControllerJobCreatorAgreed),
@@ -58,7 +58,7 @@ func NewControllerEventChannels() (*ControllerEventChannels, error) {
 		timeoutSubmitResultChan:    make(chan *controller.ControllerTimeoutSubmitResult),
 		timeoutJudgeResultChan:     make(chan *controller.ControllerTimeoutJudgeResult),
 		timeoutMediateResultChan:   make(chan *controller.ControllerTimeoutMediateResult),
-	}, nil
+	}
 }
 
 func (c *ControllerEventChannels) Start(

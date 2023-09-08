@@ -21,7 +21,6 @@ type SolverOptions struct {
 
 type Solver struct {
 	web3SDK    *web3.ContractSDK
-	web3Events *web3.EventChannels
 	server     *solverServer
 	controller *SolverController
 	store      store.SolverStore
@@ -30,16 +29,9 @@ type Solver struct {
 func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
+	web3SDK *web3.ContractSDK,
 ) (*Solver, error) {
-	web3SDK, err := web3.NewContractSDK(options.Web3)
-	if err != nil {
-		return nil, err
-	}
-	web3Events, err := web3.NewEventChannels()
-	if err != nil {
-		return nil, err
-	}
-	controller, err := NewSolverController(web3SDK, web3Events, store)
+	controller, err := NewSolverController(web3SDK, store)
 	if err != nil {
 		return nil, err
 	}
@@ -52,22 +44,16 @@ func NewSolver(
 		store:      store,
 		server:     server,
 		web3SDK:    web3SDK,
-		web3Events: web3Events,
 	}
 	return solver, nil
 }
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) error {
 	ticker := time.NewTicker(1 * time.Second)
-	err := solver.controller.start(ctx, cm)
+	err := solver.controller.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
-	err = solver.web3Events.Start(solver.web3SDK, ctx, cm)
-	if err != nil {
-		return err
-	}
-
 	go func() {
 		for {
 			select {
@@ -89,7 +75,5 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 		}
 	}()
 
-	return nil
-
-	// return solver.server.ListenAndServe(ctx, cm)
+	return solver.server.ListenAndServe(ctx, cm)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -48,12 +49,17 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
+	web3SDK, err := web3.NewContractSDK(options.Web3)
+	if err != nil {
+		return err
+	}
+
 	solverStore, err := memorystore.NewSolverStoreMemory()
 	if err != nil {
 		return err
 	}
 
-	solver, err := solver.NewSolver(options, solverStore)
+	solver, err := solver.NewSolver(options, solverStore, web3SDK)
 	if err != nil {
 		return err
 	}
