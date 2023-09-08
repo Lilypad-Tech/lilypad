@@ -20,6 +20,10 @@ func NewRootCmd() *cobra.Command {
 		Long:  `Lilypad`,
 	}
 	RootCmd.AddCommand(newSolverCmd())
+	RootCmd.AddCommand(newResourceProviderCmd())
+	RootCmd.AddCommand(newJobCreatorCmd())
+	RootCmd.AddCommand(newDirectoryCmd())
+	RootCmd.AddCommand(newMediatorCmd())
 	return RootCmd
 }
 

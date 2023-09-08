@@ -222,6 +222,21 @@ function job-creator() {
   go run . job-creator
 }
 
+function mediator() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
+  go run . mediator
+}
+
+function directory() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$DIRECTORY_PRIVATE_KEY
+  export SERVER_PORT=8081
+  go run . directory
+}
+
 ############################################################################
 ############################################################################
 # faucet
