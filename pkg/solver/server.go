@@ -2,6 +2,7 @@ package solver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type solverServer struct {
@@ -32,25 +34,7 @@ func NewSolverServer(
 	return server, nil
 }
 
-func (solverServer *solverServer) listenToControllerEvents(ctx context.Context, cm *system.CleanupManager) error {
-	go func() {
-		select {
-		case ev := <-solverServer.controller.getEventChannel():
-			// we write this event to all connected web socket connections
-			fmt.Printf("got controller event: %+v\n", ev)
-			return
-		case <-ctx.Done():
-			return
-		}
-	}()
-	return nil
-}
-
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
-	err := solverServer.listenToControllerEvents(ctx, cm)
-	if err != nil {
-		return err
-	}
 	router := mux.NewRouter()
 
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
@@ -62,6 +46,33 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.HandleFunc("/resource_offers", server.Wrapper(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", server.Wrapper(solverServer.addResourceOffer)).Methods("POST")
+
+	writeEventChannel := make(chan []byte)
+
+	// listen to events coming out of the controller and write them to all
+	// connected websocket connections
+	go func() {
+		select {
+		case ev := <-solverServer.controller.getEventChannel():
+			// we write this event to all connected web socket connections
+			fmt.Printf("got controller event: %+v\n", ev)
+			evBytes, err := json.Marshal(ev)
+			if err != nil {
+				log.Error().Msgf("Error marshalling event: %s", err.Error())
+			}
+			writeEventChannel <- evBytes
+			return
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	server.StartWebSocketServer(
+		subrouter,
+		"/ws",
+		writeEventChannel,
+		ctx,
+	)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", solverServer.options.Host, solverServer.options.Port),
