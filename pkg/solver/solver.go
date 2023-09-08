@@ -67,10 +67,6 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 	if err != nil {
 		return err
 	}
-	err = solver.server.ListenAndServe(ctx, cm)
-	if err != nil {
-		return err
-	}
 
 	go func() {
 		for {
@@ -94,4 +90,6 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 	}()
 
 	return nil
+
+	// return solver.server.ListenAndServe(ctx, cm)
 }

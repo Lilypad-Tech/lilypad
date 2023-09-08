@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -57,10 +58,14 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
+	fmt.Printf("after solver construct\n")
+
 	err = solver.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("after solver start\n")
 
 	// // contract, err := contract.NewContract(options.ContractOptions)
 	// // if err != nil {

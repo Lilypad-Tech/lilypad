@@ -47,7 +47,30 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 		IdleTimeout:       time.Minute * 60,
 		Handler:           router,
 	}
-	return srv.ListenAndServe()
+
+	// Create a channel to receive errors from ListenAndServe
+	serverErrors := make(chan error, 1)
+
+	// Run ListenAndServe in a goroutine because it blocks
+	go func() {
+		serverErrors <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-serverErrors:
+		return err
+	case <-ctx.Done():
+		// Create a context with a timeout for the server to close
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Attempt to gracefully shut down the server
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("failed to stop server: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (solverServer *solverServer) getJobOffers(res http.ResponseWriter, req *http.Request) ([]string, error) {
