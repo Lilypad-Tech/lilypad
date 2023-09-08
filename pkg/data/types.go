@@ -1,0 +1,83 @@
+package data
+
+import (
+	"math/big"
+
+	"github.com/ethereum/go-ethereum/common"
+)
+
+// used by resource providers to describe their resources
+// use by job offers to describe their requirements
+// when used by resource providers - these are absolute values
+// when used by job offers - these are minimum requirements
+type Spec struct {
+	GPU int `json:"gpu"`
+	CPU int `json:"cpu"`
+	RAM int `json:"ram"`
+}
+
+// describes a workload to be run
+// this pins a go-template.yaml file
+// that is a bacalhau job spec
+type Module struct {
+	// needs to be a http url for a git repo
+	// we must be able to clone it without credentials
+	Repo string `json:"repo"`
+	// the git hash to pin the module
+	// we will 'git checkout' this hash
+	Hash string `json:"hash"`
+	// once the checkout has been done
+	// this is the path to the module template
+	// within the repo
+	Path string `json:"path"`
+	// modules decide which resources they need
+	Spec Spec `json:"spec"`
+}
+
+// represents the cost of a job
+// this is both the bid and ask in the 2 sided marketplace
+// job creators will attach this to their job offers
+// and resource providers will attach this to their resource offers
+// the solvers job is to propose the most efficient match
+// for the job creator
+type Deal struct {
+	ResourceProvider          common.Address `json:"resource_provider"`
+	JobCreator                common.Address `json:"job_creator"`
+	InstructionPrice          big.Int        `json:"instruction_price"`
+	Timeout                   big.Int        `json:"timeout"`
+	TimeoutCollateral         big.Int        `json:"timeout_collateral"`
+	PaymentCollateral         big.Int        `json:"payment_collateral"`
+	ResultsCollateralMultiple big.Int        `json:"results_collateral_multiple"`
+	MediationFee              big.Int        `json:"mediation_fee"`
+}
+
+type Result struct {
+	DealID           string  `json:"deal_id"`
+	ResultsID        string  `json:"results_id"`
+	InstructionCount big.Int `json:"instruction_count"`
+}
+
+// posted to the solver by a job creator
+type JobOffer struct {
+	// the address of the job creator
+	JobCreator common.Address `json:"job_creator"`
+	// this is the CID of the Module description
+	ModuleID string `json:"id"`
+	// the actual module that is being offered
+	// this must hash to the ModuleID above
+	Module Module `json:"module"`
+	// the user inputs to the module
+	// these values will power the go template
+	Inputs map[string]string `json:"inputs"`
+}
+
+// posted to the solver by a resource provider
+type ResourceOffer struct {
+	// the address of the job creator
+	ResourceProvider common.Address `json:"resource_provider"`
+	// the spec being offered
+	Spec Spec `json:"spec"`
+	// the module ID's that this resource provider can run
+	// an empty list means ALL modules
+	Modules []string `json:"modules"`
+}

@@ -10,7 +10,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func authMiddleware(next http.Handler) http.Handler {
+type HTTPError struct {
+	Message    string
+	StatusCode int
+}
+
+func (e HTTPError) Error() string {
+	return e.Message
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		reqToken := req.Header.Get("Authorization")
 		splitToken := strings.Split(reqToken, "Bearer ")
@@ -31,7 +40,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Access-Control-Allow-Origin", "*")
 		next.ServeHTTP(res, req)
@@ -62,12 +71,17 @@ type httpWrapper[T any] func(res http.ResponseWriter, req *http.Request) (T, err
 
 // wrap a http handler with some error handling
 // so if it returns an error we handle it
-func wrapper[T any](handler httpWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
+func Wrapper[T any](handler httpWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			httpError, ok := err.(HTTPError)
+			if ok {
+				http.Error(res, httpError.Error(), httpError.StatusCode)
+			} else {
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		} else {
 			err = json.NewEncoder(res).Encode(data)

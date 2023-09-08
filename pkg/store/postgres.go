@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"embed"
 	"fmt"
 
@@ -10,7 +9,6 @@ import (
 	"database/sql"
 
 	sync "github.com/bacalhau-project/golang-mutex-tracer"
-	"github.com/bacalhau-project/lilypad/pkg/types"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
@@ -54,26 +52,26 @@ func NewPostgresStore(
 	return store, nil
 }
 
-func (d *PostgresStore) ListJobs(
-	ctx context.Context,
-	query ListJobsQuery,
-) ([]types.Job, error) {
-	return []types.Job{}, nil
-}
+// func (d *PostgresStore) ListJobs(
+// 	ctx context.Context,
+// 	query ListJobsQuery,
+// ) ([]types.Job, error) {
+// 	return []types.Job{}, nil
+// }
 
-func (d *PostgresStore) GetJob(
-	ctx context.Context,
-	id string,
-) (*types.Job, error) {
-	return &types.Job{}, nil
-}
+// func (d *PostgresStore) GetJob(
+// 	ctx context.Context,
+// 	id string,
+// ) (*types.Job, error) {
+// 	return &types.Job{}, nil
+// }
 
-func (d *PostgresStore) AddJob(
-	ctx context.Context,
-	data types.Job,
-) error {
-	return nil
-}
+// func (d *PostgresStore) AddJob(
+// 	ctx context.Context,
+// 	data types.Job,
+// ) error {
+// 	return nil
+// }
 
 func (d *PostgresStore) MigrateUp() error {
 	migrations, err := d.GetMigrations()

@@ -41,10 +41,10 @@ func (apiServer *lilypadAPIServer) ListenAndServe(ctx context.Context, cm *syste
 
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	subrouter.Use(authMiddleware)
-	subrouter.Use(corsMiddleware)
+	subrouter.Use(AuthMiddleware)
+	subrouter.Use(CorsMiddleware)
 
-	subrouter.HandleFunc("/status", wrapper(apiServer.status)).Methods("GET")
+	subrouter.HandleFunc("/status", Wrapper(apiServer.status)).Methods("GET")
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", apiServer.Options.Host, apiServer.Options.Port),
