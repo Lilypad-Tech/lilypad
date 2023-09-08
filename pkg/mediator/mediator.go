@@ -16,7 +16,7 @@ type Mediator struct {
 	controller *MediatorController
 }
 
-func NewResourceProvider(
+func NewMediator(
 	options MediatorOptions,
 	web3SDK *web3.ContractSDK,
 ) (*Mediator, error) {
