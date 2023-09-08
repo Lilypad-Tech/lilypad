@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
@@ -23,10 +24,12 @@ type Solver struct {
 	web3SDK    *web3.ContractSDK
 	web3Events *web3.EventChannels
 	server     *solverServer
+	store      store.SolverStore
 }
 
 func NewSolver(
 	options SolverOptions,
+	store store.SolverStore,
 ) (*Solver, error) {
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
@@ -44,6 +47,7 @@ func NewSolver(
 		web3SDK:    web3SDK,
 		web3Events: web3Events,
 		server:     server,
+		store:      store,
 	}
 	return solver, nil
 }

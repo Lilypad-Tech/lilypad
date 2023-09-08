@@ -9,8 +9,8 @@ type SolverStoreMemory struct {
 	resourceOfferMap map[string]data.ResourceOffer
 }
 
-func NewSolverStoreMemory() *SolverStoreMemory {
-	return &SolverStoreMemory{}
+func NewSolverStoreMemory() (*SolverStoreMemory, error) {
+	return &SolverStoreMemory{}, nil
 }
 
 func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) error {
