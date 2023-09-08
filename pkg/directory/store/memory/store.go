@@ -5,25 +5,25 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/directory/store"
 )
 
-type DealStoreMemory struct {
+type DirectoryStoreMemory struct {
 	deals   []data.Deal
 	dealMap map[string]data.Deal
 }
 
-func NewDealStoreMemory() (*DealStoreMemory, error) {
-	return &DealStoreMemory{
+func NewDirectoryStoreMemory() (*DirectoryStoreMemory, error) {
+	return &DirectoryStoreMemory{
 		deals:   []data.Deal{},
 		dealMap: map[string]data.Deal{},
 	}, nil
 }
 
-func (s *DealStoreMemory) AddDeal(deal data.Deal) (*data.Deal, error) {
+func (s *DirectoryStoreMemory) AddDeal(deal data.Deal) (*data.Deal, error) {
 	s.deals = append(s.deals, deal)
 	s.dealMap[deal.ID] = deal
 	return &deal, nil
 }
 
-func (s *DealStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, error) {
+func (s *DirectoryStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, error) {
 	if query.JobCreator != "" {
 		deals := []data.Deal{}
 		for _, deal := range s.deals {
@@ -44,7 +44,7 @@ func (s *DealStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, erro
 	return s.deals, nil
 }
 
-func (s *DealStoreMemory) GetDeal(id string) (*data.Deal, error) {
+func (s *DirectoryStoreMemory) GetDeal(id string) (*data.Deal, error) {
 	deal, ok := s.dealMap[id]
 	if !ok {
 		return nil, nil
