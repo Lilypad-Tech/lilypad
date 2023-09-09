@@ -14,6 +14,7 @@ type JobCreatorOptions struct {
 
 type JobCreator struct {
 	web3SDK    *web3.Web3SDK
+	options    JobCreatorOptions
 	controller *JobCreatorController
 }
 
@@ -24,12 +25,13 @@ func NewJobCreator(
 	if options.Web3.SolverAddress == "" {
 		return nil, fmt.Errorf("--web3-solver-address or WEB3_SOLVER_ADDRESS is empty")
 	}
-	controller, err := NewJobCreatorController(web3SDK)
+	controller, err := NewJobCreatorController(options, web3SDK)
 	if err != nil {
 		return nil, err
 	}
 	solver := &JobCreator{
 		controller: controller,
+		options:    options,
 		web3SDK:    web3SDK,
 	}
 	return solver, nil

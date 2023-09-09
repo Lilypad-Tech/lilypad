@@ -33,6 +33,9 @@ func NewResourceProviderController(
 		URL:        solverUrl,
 		PrivateKey: options.Web3.PrivateKey,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	controller := &ResourceProviderController{
 		solverClient: solverClient,
@@ -63,7 +66,6 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 }
 
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) error {
-	// get the subscription handlers setup
 	err := controller.subscribeToSolver()
 	if err != nil {
 		return err
@@ -72,13 +74,10 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 	if err != nil {
 		return err
 	}
-
-	// start the listeners
 	err = controller.solverClient.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
-
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
 		return err
