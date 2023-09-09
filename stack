@@ -69,15 +69,32 @@ function clean() {
   rm -rf ${DIR}/hardhat/deployments/geth
 }
 
+function boot-message() {
+  echo ""
+  echo "############################################################################"
+  echo "#"
+  echo "# $@"
+  echo "#"
+  echo "############################################################################"
+  echo ""
+}
+
 function boot() {
   clean
+  boot-message "Starting geth"
   geth
   sleep 5
+  boot-message "Funding admin account"
   fund-admin
+  boot-message "Funding services with ether"
   fund-services-ether
+  boot-message "Compiling contracts"
   compile-contracts
+  boot-message "Deploying contracts"
   deploy-contracts
+  boot-message "Funding services with tokens"
   fund-services-tokens
+  boot-message "Printing balances"
   balances
 }
 
