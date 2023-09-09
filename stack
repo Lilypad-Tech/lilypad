@@ -216,6 +216,7 @@ function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
+  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   go run . resource-provider
 }
 
@@ -223,6 +224,7 @@ function job-creator() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
+  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   go run . job-creator
 }
 
