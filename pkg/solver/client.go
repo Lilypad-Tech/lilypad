@@ -2,16 +2,16 @@ package solver
 
 import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 )
 
 type SolverClient struct {
-	options server.ClientOptions
+	options http.ClientOptions
 }
 
 func NewSolverClient(
-	options server.ClientOptions,
+	options http.ClientOptions,
 ) (*SolverClient, error) {
 	client := &SolverClient{
 		options: options,

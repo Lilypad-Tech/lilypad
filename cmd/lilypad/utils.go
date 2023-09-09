@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
@@ -53,15 +53,15 @@ func FatalErrorHandler(cmd *cobra.Command, msg string, code int) {
 /*
 server options
 */
-func getDefaultServerOptions() server.ServerOptions {
-	return server.ServerOptions{
+func getDefaultServerOptions() http.ServerOptions {
+	return http.ServerOptions{
 		URL:  getDefaultServeOptionString("SERVER_URL", ""),
 		Host: getDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
 		Port: getDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
 	}
 }
 
-func addServerCliFlags(cmd *cobra.Command, serverOptions server.ServerOptions) {
+func addServerCliFlags(cmd *cobra.Command, serverOptions http.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.URL, "server-url", serverOptions.URL,
 		`The URL the api server is listening on (SERVER_URL).`,

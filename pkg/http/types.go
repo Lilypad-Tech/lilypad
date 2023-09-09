@@ -1,4 +1,4 @@
-package server
+package http
 
 type ServerOptions struct {
 	URL  string

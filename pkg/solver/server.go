@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	corehttp "net/http"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/gorilla/mux"
@@ -16,13 +16,13 @@ import (
 )
 
 type solverServer struct {
-	options    server.ServerOptions
+	options    http.ServerOptions
 	controller *SolverController
 	store      store.SolverStore
 }
 
 func NewSolverServer(
-	options server.ServerOptions,
+	options http.ServerOptions,
 	controller *SolverController,
 	store store.SolverStore,
 ) (*solverServer, error) {
@@ -39,15 +39,18 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	subrouter.Use(server.CorsMiddleware)
+	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/job_offers", server.Wrapper(solverServer.getJobOffers)).Methods("GET")
-	subrouter.HandleFunc("/job_offers", server.Wrapper(solverServer.addJobOffer)).Methods("POST")
+	subrouter.HandleFunc("/job_offers", http.Wrapper(solverServer.getJobOffers)).Methods("GET")
+	subrouter.HandleFunc("/job_offers", http.Wrapper(solverServer.addJobOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/resource_offers", server.Wrapper(solverServer.getResourceOffers)).Methods("GET")
-	subrouter.HandleFunc("/resource_offers", server.Wrapper(solverServer.addResourceOffer)).Methods("POST")
+	subrouter.HandleFunc("/resource_offers", http.Wrapper(solverServer.getResourceOffers)).Methods("GET")
+	subrouter.HandleFunc("/resource_offers", http.Wrapper(solverServer.addResourceOffer)).Methods("POST")
 
-	writeEventChannel := make(chan []byte)
+	// this will fan out to all connected web socket connections
+	// we read all events coming from inside the solver controller
+	// and write them to anyone who is connected to us
+	websocketEventChannel := make(chan []byte)
 
 	// listen to events coming out of the controller and write them to all
 	// connected websocket connections
@@ -60,21 +63,21 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 			if err != nil {
 				log.Error().Msgf("Error marshalling event: %s", err.Error())
 			}
-			writeEventChannel <- evBytes
+			websocketEventChannel <- evBytes
 			return
 		case <-ctx.Done():
 			return
 		}
 	}()
 
-	server.StartWebSocketServer(
+	http.StartWebSocketServer(
 		subrouter,
 		"/ws",
-		writeEventChannel,
+		websocketEventChannel,
 		ctx,
 	)
 
-	srv := &http.Server{
+	srv := &corehttp.Server{
 		Addr:              fmt.Sprintf("%s:%d", solverServer.options.Host, solverServer.options.Port),
 		WriteTimeout:      time.Minute * 15,
 		ReadTimeout:       time.Minute * 15,
@@ -108,7 +111,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	return nil
 }
 
-func (solverServer *solverServer) getJobOffers(res http.ResponseWriter, req *http.Request) ([]data.JobOffer, error) {
+func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOffer, error) {
 	query := store.GetJobOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
@@ -117,7 +120,7 @@ func (solverServer *solverServer) getJobOffers(res http.ResponseWriter, req *htt
 	return solverServer.store.GetJobOffers(query)
 }
 
-func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req *http.Request) ([]data.ResourceOffer, error) {
+func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOffer, error) {
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -126,12 +129,12 @@ func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req
 	return solverServer.store.GetResourceOffers(query)
 }
 
-func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http.Request) (*data.JobOffer, error) {
-	signerAddress, err := server.GetAddressFromHeaders(req)
+func (solverServer *solverServer) addJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {
+	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}
-	jobOffer, err := server.ReadBody[data.JobOffer](req)
+	jobOffer, err := http.ReadBody[data.JobOffer](req)
 	if err != nil {
 		return nil, err
 	}
@@ -142,12 +145,12 @@ func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
-func (solverServer *solverServer) addResourceOffer(res http.ResponseWriter, req *http.Request) (*data.ResourceOffer, error) {
-	signerAddress, err := server.GetAddressFromHeaders(req)
+func (solverServer *solverServer) addResourceOffer(res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
+	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}
-	resourceOffer, err := server.ReadBody[data.ResourceOffer](req)
+	resourceOffer, err := http.ReadBody[data.ResourceOffer](req)
 	if err != nil {
 		return nil, err
 	}

@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/bacalhau-project/lilypad/pkg/directory/store"
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
 type DirectoryOptions struct {
 	Web3   web3.Web3Options
-	Server server.ServerOptions
+	Server http.ServerOptions
 }
 
 type Directory struct {

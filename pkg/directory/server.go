@@ -4,25 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	corehttp "net/http"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/directory/store"
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 type directoryServer struct {
-	options    server.ServerOptions
+	options    http.ServerOptions
 	controller *DirectoryController
 	store      store.DirectoryStore
 }
 
 func NewSolverServer(
-	options server.ServerOptions,
+	options http.ServerOptions,
 	controller *DirectoryController,
 	store store.DirectoryStore,
 ) (*directoryServer, error) {
@@ -39,10 +39,10 @@ func (directoryServer *directoryServer) ListenAndServe(ctx context.Context, cm *
 
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	subrouter.Use(server.CorsMiddleware)
+	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/deals", server.Wrapper(directoryServer.getDeals)).Methods("GET")
-	subrouter.HandleFunc("/deals", server.Wrapper(directoryServer.addDeal)).Methods("POST")
+	subrouter.HandleFunc("/deals", http.Wrapper(directoryServer.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals", http.Wrapper(directoryServer.addDeal)).Methods("POST")
 
 	writeEventChannel := make(chan []byte)
 
@@ -64,14 +64,14 @@ func (directoryServer *directoryServer) ListenAndServe(ctx context.Context, cm *
 		}
 	}()
 
-	server.StartWebSocketServer(
+	http.StartWebSocketServer(
 		subrouter,
 		"/ws",
 		writeEventChannel,
 		ctx,
 	)
 
-	srv := &http.Server{
+	srv := &corehttp.Server{
 		Addr:              fmt.Sprintf("%s:%d", directoryServer.options.Host, directoryServer.options.Port),
 		WriteTimeout:      time.Minute * 15,
 		ReadTimeout:       time.Minute * 15,
@@ -105,7 +105,7 @@ func (directoryServer *directoryServer) ListenAndServe(ctx context.Context, cm *
 	return nil
 }
 
-func (directoryServer *directoryServer) getDeals(res http.ResponseWriter, req *http.Request) ([]data.Deal, error) {
+func (directoryServer *directoryServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.Deal, error) {
 	query := store.GetDealsQuery{}
 	// if there is a job_creator query param then assign it
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
@@ -117,12 +117,12 @@ func (directoryServer *directoryServer) getDeals(res http.ResponseWriter, req *h
 	return directoryServer.store.GetDeals(query)
 }
 
-func (directoryServer *directoryServer) addDeal(res http.ResponseWriter, req *http.Request) (*data.Deal, error) {
-	signerAddress, err := server.GetAddressFromHeaders(req)
+func (directoryServer *directoryServer) addDeal(res corehttp.ResponseWriter, req *corehttp.Request) (*data.Deal, error) {
+	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}
-	deal, err := server.ReadBody[data.Deal](req)
+	deal, err := http.ReadBody[data.Deal](req)
 	if err != nil {
 		return nil, err
 	}

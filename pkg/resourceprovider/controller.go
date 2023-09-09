@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
@@ -11,8 +12,9 @@ import (
 )
 
 type ResourceProviderController struct {
-	web3SDK    *web3.ContractSDK
-	web3Events *web3.EventChannels
+	solverClient *solver.SolverClient
+	web3SDK      *web3.ContractSDK
+	web3Events   *web3.EventChannels
 }
 
 func NewResourceProviderController(

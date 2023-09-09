@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/bacalhau-project/lilypad/pkg/server"
+	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -16,7 +16,7 @@ import (
 
 type SolverOptions struct {
 	Web3   web3.Web3Options
-	Server server.ServerOptions
+	Server http.ServerOptions
 }
 
 type Solver struct {
