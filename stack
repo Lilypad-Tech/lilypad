@@ -125,7 +125,11 @@ function go-binding() {
 }
 
 function go-bindings() {
-  docker build -t lilypad-solc hardhat/solc
+  # check if the lilypad-solc image exists
+  # and only build it if it doesn't
+  if [[ -z $(docker images -q lilypad-solc) ]]; then
+    docker build -t lilypad-solc hardhat/solc
+  fi
   rm -rf pkg/web3/bindings
   mkdir -p pkg/web3/bindings
   go-binding LilypadToken token
