@@ -2,7 +2,6 @@ package resourceprovider
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/http"
@@ -50,9 +49,6 @@ func (controller *ResourceProviderController) solve() error {
 }
 
 func (controller *ResourceProviderController) subscribeToSolver() error {
-	if controller.solverClient == nil {
-		return fmt.Errorf("controller.solverClient has not been setup")
-	}
 	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
 		log.Info().Msgf("New solver event %+v", event)
 	})
