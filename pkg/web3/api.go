@@ -13,6 +13,7 @@ func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, e
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("List type: %d\n", solverType)
 	return sdk.Contracts.Storage.ShowUsersInList(
 		sdk.CallOpts,
 		solverType,

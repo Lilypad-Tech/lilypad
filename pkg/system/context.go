@@ -2,8 +2,10 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,12 +30,38 @@ func NewSystemContext(ctx context.Context) *CommandContext {
 	}
 }
 
+func NewTestingContext() *CommandContext {
+	go func() {
+		// Create a new channel to receive signal notifications.
+		sigChan := make(chan os.Signal, 1)
+
+		// Notify sends the incoming signals to the sigChan.
+		// We're only interested in SIGINT (CTRL+C) here,
+		// but you can add others if needed.
+		signal.Notify(sigChan, syscall.SIGINT)
+
+		// Wait for a signal to be caught.
+		sig := <-sigChan
+
+		// Handle the received signal.
+		fmt.Printf("Caught signal %s: shutting down.\n", sig)
+
+		// Perform your cleanup logic here,
+		// like closing database connections, terminating network activities, etc.
+
+		// Finally, exit the program.
+		os.Exit(0)
+	}()
+	return NewSystemContext(context.Background())
+}
+
 func NewCommandContext(cmd *cobra.Command) *CommandContext {
 	return NewSystemContext(cmd.Context())
 }
 
 func (cmdContext *CommandContext) Cleanup() {
 	cmdContext.Cm.Cleanup(cmdContext.CommandContext)
+	cmdContext.Cm.Cleanup(cmdContext.Ctx)
 	cmdContext.cancelFunc()
 }
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -40,7 +39,7 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 }
 
 func TestStack(t *testing.T) {
-	commandCtx := system.NewSystemContext(context.Background())
+	commandCtx := system.NewTestingContext()
 	defer commandCtx.Cleanup()
 
 	solver, err := getSolver(t, commandCtx)
