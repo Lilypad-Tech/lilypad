@@ -167,6 +167,7 @@ function unit-tests() {
 
 function integration-tests() {
   source .env
+  eval $(./stack print-local-dev-env)
   (
     set -euo pipefail
     cd test
