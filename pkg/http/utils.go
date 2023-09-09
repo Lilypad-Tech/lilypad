@@ -195,7 +195,9 @@ func Get[ResultType any](
 ) (ResultType, error) {
 	var result ResultType
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", URL(options, path), nil)
+
+	url := URL(options, path)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return result, err
 	}
@@ -210,6 +212,8 @@ func Get[ResultType any](
 	if err != nil {
 		return result, err
 	}
+
+	log.Info().Msgf("GET %s\n%s", URL(options, path), string(body))
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)
@@ -251,6 +255,8 @@ func Post[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
+
+	log.Info().Msgf("POST %s\n%s\n%s", URL(options, path), string(dataBytes), string(body))
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)

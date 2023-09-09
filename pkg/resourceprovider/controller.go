@@ -49,7 +49,6 @@ func NewResourceProviderController(
 
 func (controller *ResourceProviderController) solve() error {
 	log.Info().Msgf("adding resource offer")
-
 	controller.solverClient.AddResourceOffer(data.ResourceOffer{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
 	})
