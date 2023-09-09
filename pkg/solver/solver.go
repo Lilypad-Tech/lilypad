@@ -19,6 +19,7 @@ type Solver struct {
 	server     *solverServer
 	controller *SolverController
 	store      store.SolverStore
+	options    SolverOptions
 }
 
 func NewSolver(
@@ -26,7 +27,7 @@ func NewSolver(
 	store store.SolverStore,
 	web3SDK *web3.Web3SDK,
 ) (*Solver, error) {
-	controller, err := NewSolverController(web3SDK, store)
+	controller, err := NewSolverController(web3SDK, store, options)
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +40,7 @@ func NewSolver(
 		store:      store,
 		server:     server,
 		web3SDK:    web3SDK,
+		options:    options,
 	}
 	return solver, nil
 }

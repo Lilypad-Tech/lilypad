@@ -269,8 +269,8 @@ function unit-tests() {
   )
 }
 
+# this assumes boot having been run already
 function integration-tests() {
-  boot
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS

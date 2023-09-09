@@ -1,6 +1,7 @@
 package web3
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"math/big"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
@@ -107,6 +109,10 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	}
 	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")
 	return strconv.ParseUint(blockNumberHex, 16, 64)
+}
+
+func (sdk *Web3SDK) waitTx(tx *types.Transaction) (*types.Receipt, error) {
+	return bind.WaitMined(context.Background(), sdk.Client, tx)
 }
 
 func (sdk *Web3SDK) GetAddress() common.Address {

@@ -57,6 +57,6 @@ func TestStack(t *testing.T) {
 
 	fmt.Printf("Solver started\n")
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 5)
 
 }

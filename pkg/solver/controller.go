@@ -36,16 +36,19 @@ type SolverController struct {
 	web3Events          *web3.EventChannels
 	store               store.SolverStore
 	solverEventChannels []SolverEventChannel
+	options             SolverOptions
 }
 
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
+	options SolverOptions,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
 		web3Events: web3.NewEventChannels(),
 		store:      store,
+		options:    options,
 	}
 	return controller, nil
 }
@@ -103,6 +106,13 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		return err
 	}
 
+	// make sure we are registered as a solver
+	// so that users can lookup our URL
+	err = controller.registerAsSolver()
+	if err != nil {
+		return err
+	}
+
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
@@ -118,6 +128,34 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 			}
 		}
 	}()
+	return nil
+}
+
+func (controller *SolverController) registerAsSolver() error {
+	selfAddress := controller.web3SDK.GetAddress()
+	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
+	if err != nil {
+		return err
+	}
+	foundSolver := false
+	for _, existingSolver := range existingSolvers {
+		if existingSolver.String() == selfAddress.String() {
+			foundSolver = true
+			break
+		}
+	}
+	if !foundSolver {
+		// add the solver to the storage contract
+		err = controller.web3SDK.AddSolver(
+			big.NewInt(0),
+			controller.options.Server.URL,
+			[]common.Address{},
+			[]common.Address{},
+		)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
