@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
+	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	solvermemorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -40,6 +42,40 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 	return solver.NewSolver(solverOptions, solverStore, web3SDK)
 }
 
+func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*resourceprovider.ResourceProvider, error) {
+	resourceProviderOptions := optionsfactory.NewResourceProviderOptions()
+	resourceProviderOptions.Web3.PrivateKey = os.Getenv("RESOURCE_PROVIDER_PRIVATE_KEY")
+	if resourceProviderOptions.Web3.PrivateKey == "" {
+		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
+	}
+
+	spew.Dump(resourceProviderOptions)
+
+	web3SDK, err := web3.NewContractSDK(resourceProviderOptions.Web3)
+	if err != nil {
+		return nil, err
+	}
+
+	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK)
+}
+
+func getJobCreator(t *testing.T, systemContext *system.CommandContext) (*jobcreator.JobCreator, error) {
+	jobCreatorOptions := optionsfactory.NewJobCreatorOptions()
+	jobCreatorOptions.Web3.PrivateKey = os.Getenv("JOB_CREATOR_PRIVATE_KEY")
+	if jobCreatorOptions.Web3.PrivateKey == "" {
+		return nil, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
+	}
+
+	spew.Dump(jobCreatorOptions)
+
+	web3SDK, err := web3.NewContractSDK(jobCreatorOptions.Web3)
+	if err != nil {
+		return nil, err
+	}
+
+	return jobcreator.NewJobCreator(jobCreatorOptions, web3SDK)
+}
+
 func TestStack(t *testing.T) {
 	commandCtx := system.NewTestingContext()
 	defer commandCtx.Cleanup()
@@ -56,8 +92,17 @@ func TestStack(t *testing.T) {
 		return
 	}
 
-	fmt.Printf("Solver started\n")
+	resourceProvider, err := getResourceProvider(t, commandCtx)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
-	time.Sleep(time.Second * 5)
+	err = resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
+	time.Sleep(time.Second * 60)
 }
