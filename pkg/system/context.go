@@ -2,8 +2,37 @@ package system
 
 import (
 	"context"
+	"os"
+	"os/signal"
 	"time"
+
+	"github.com/spf13/cobra"
 )
+
+type CommandContext struct {
+	CommandContext context.Context
+	Ctx            context.Context
+	Cm             *CleanupManager
+	cancelFunc     context.CancelFunc
+}
+
+func NewCommandContext(cmd *cobra.Command) *CommandContext {
+	SetupLogging()
+	cm := NewCleanupManager()
+	commandContext := cmd.Context()
+	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)
+	return &CommandContext{
+		CommandContext: commandContext,
+		Ctx:            ctx,
+		Cm:             cm,
+		cancelFunc:     cancel,
+	}
+}
+
+func (cmdContext *CommandContext) Cleanup() {
+	cmdContext.Cm.Cleanup(cmdContext.CommandContext)
+	cmdContext.cancelFunc()
+}
 
 // NewDetachedContext produces a new context that has a separate cancellation mechanism from its parent. This should be
 // used when having to continue using a context after it has been canceled, such as cleaning up Docker resources

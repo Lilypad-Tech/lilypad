@@ -1,9 +1,6 @@
 package lilypad
 
 import (
-	"os"
-	"os/signal"
-
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -35,12 +32,8 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
-	system.SetupLogging()
-	cm := system.NewCleanupManager()
-	defer cm.Cleanup(cmd.Context())
-	ctx := cmd.Context()
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
+	commandCtx := system.NewCommandContext(cmd)
+	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
@@ -52,11 +45,11 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	err = solver.Start(ctx, cm)
+	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
 	if err != nil {
 		return err
 	}
 
-	<-ctx.Done()
+	<-commandCtx.Ctx.Done()
 	return nil
 }

@@ -1,9 +1,6 @@
 package lilypad
 
 import (
-	"os"
-	"os/signal"
-
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -38,12 +35,8 @@ func newSolverCmd() *cobra.Command {
 }
 
 func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
-	system.SetupLogging()
-	cm := system.NewCleanupManager()
-	defer cm.Cleanup(cmd.Context())
-	ctx := cmd.Context()
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
+	commandCtx := system.NewCommandContext(cmd)
+	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
@@ -60,11 +53,11 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
-	err = solver.Start(ctx, cm)
+	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
 	if err != nil {
 		return err
 	}
 
-	<-ctx.Done()
+	<-commandCtx.Ctx.Done()
 	return nil
 }
