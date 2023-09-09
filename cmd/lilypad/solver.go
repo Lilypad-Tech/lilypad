@@ -8,8 +8,6 @@ import (
 	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -40,8 +38,7 @@ func newSolverCmd() *cobra.Command {
 }
 
 func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	system.SetupLogging()
 	cm := system.NewCleanupManager()
 	defer cm.Cleanup(cmd.Context())
 	ctx := cmd.Context()

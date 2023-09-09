@@ -165,6 +165,14 @@ function unit-tests() {
   )
 }
 
+function integration-tests() {
+  (
+    set -euo pipefail
+    cd test
+    go test -v -count 1 .
+  )
+}
+
 function hardhat-script() {
   (
     set -euo pipefail
