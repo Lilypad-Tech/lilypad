@@ -157,24 +157,6 @@ function deploy-contracts() {
   )
 }
 
-function unit-tests() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat test --network hardhat
-  )
-}
-
-function integration-tests() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  (
-    set -euo pipefail
-    cd test
-    go test -v -count 1 .
-  )
-}
-
 function hardhat-script() {
   (
     set -euo pipefail
@@ -251,6 +233,31 @@ function directory() {
   export WEB3_PRIVATE_KEY=$DIRECTORY_PRIVATE_KEY
   export SERVER_PORT=8081
   go run . directory
+}
+
+############################################################################
+############################################################################
+# tests
+############################################################################
+############################################################################
+
+function unit-tests() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat test --network hardhat
+  )
+}
+
+function integration-tests() {
+  boot
+  source .env
+  eval $(./stack print-local-dev-env)
+  (
+    set -euo pipefail
+    cd test
+    go test -v -count 1 .
+  )
 }
 
 ############################################################################
