@@ -39,12 +39,19 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 }
 
 func TestStack(t *testing.T) {
-	systemContext := system.NewSystemContext(context.Background())
-	defer systemContext.Cleanup()
+	commandCtx := system.NewSystemContext(context.Background())
+	defer commandCtx.Cleanup()
 
-	_, err := getSolver(t, systemContext)
+	solver, err := getSolver(t, commandCtx)
 	if err != nil {
 		t.Error(err)
+		return
+	}
+
+	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
+	if err != nil {
+		t.Error(err)
+		return
 	}
 
 }
