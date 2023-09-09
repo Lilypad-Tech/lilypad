@@ -4,7 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func stack(args []string) error {
@@ -26,12 +28,14 @@ func stopStack() error {
 }
 
 func TestStack(t *testing.T) {
-	system.SetupLogging()
-	err := bootStack()
-	if err != nil {
-		t.Error(err)
-	}
-	defer stopStack()
+	// system.SetupLogging()
+	// err := bootStack()
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+	// defer stopStack()
 
-	//solverOptions := options.
+	solverOptions := optionsfactory.NewSolverOptions()
+
+	spew.Dump(solverOptions)
 }

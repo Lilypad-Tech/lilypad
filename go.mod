@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/bacalhau-project/golang-mutex-tracer v0.0.0-20230214151516-bb996d6e8b46
+	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/gorilla/mux v1.8.0
@@ -17,7 +18,6 @@ require (
 require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
