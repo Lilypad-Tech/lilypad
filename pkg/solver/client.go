@@ -20,8 +20,17 @@ func NewSolverClient(
 }
 
 func (client *SolverClient) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
-	//url := fmt.Sprintf("%s/api/v1/job_offers", client.options.URL)
-	// do a http request and get the response
-	// parse the response and return the data
-	return []data.JobOffer{}, nil
+	return http.Get[[]data.JobOffer](client.options, "/job_offers")
+}
+
+func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOffer, error) {
+	return http.Post[data.JobOffer, data.JobOffer](client.options, "/job_offers", jobOffer)
+}
+
+func (client *SolverClient) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOffer, error) {
+	return http.Get[[]data.ResourceOffer](client.options, "/resource_offers")
+}
+
+func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (data.ResourceOffer, error) {
+	return http.Post[data.ResourceOffer, data.ResourceOffer](client.options, "/resource_offers", resourceOffer)
 }

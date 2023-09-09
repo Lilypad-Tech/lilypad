@@ -184,7 +184,7 @@ func Get[ResultType any](
 ) (ResultType, error) {
 	var result ResultType
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", options.URL, path), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s%s", options.URL, API_SUB_PATH, path), nil)
 	if err != nil {
 		return result, err
 	}
@@ -224,7 +224,7 @@ func Post[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", options.URL, path), bytes.NewBuffer(dataBytes))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s%s", options.URL, API_SUB_PATH, path), bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return result, err
 	}
