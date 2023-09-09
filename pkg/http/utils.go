@@ -26,6 +26,9 @@ const CONTEXT_ADDRESS = "address"
 // the sub path any API's are served over
 const API_SUB_PATH = "/api/v1"
 
+// the sub path the websocket server is mounted on
+const WEBSOCKET_SUB_PATH = "/ws"
+
 type HTTPError struct {
 	Message    string
 	StatusCode int
@@ -141,6 +144,14 @@ func CorsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func URL(options ClientOptions, path string) string {
+	return fmt.Sprintf("%s%s%s", options.URL, API_SUB_PATH, path)
+}
+
+func WebsocketURL(options ClientOptions, path string) string {
+	return getWsURL(URL(options, path))
+}
+
 type httpWrapper[T any] func(res http.ResponseWriter, req *http.Request) (T, error)
 
 func ReadBody[T any](req *http.Request) (T, error) {
@@ -184,7 +195,7 @@ func Get[ResultType any](
 ) (ResultType, error) {
 	var result ResultType
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s%s", options.URL, API_SUB_PATH, path), nil)
+	req, err := http.NewRequest("GET", URL(options, path), nil)
 	if err != nil {
 		return result, err
 	}
@@ -224,7 +235,7 @@ func Post[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s%s", options.URL, API_SUB_PATH, path), bytes.NewBuffer(dataBytes))
+	req, err := http.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return result, err
 	}

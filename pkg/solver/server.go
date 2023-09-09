@@ -73,7 +73,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	http.StartWebSocketServer(
 		subrouter,
-		"/ws",
+		http.WEBSOCKET_SUB_PATH,
 		websocketEventChannel,
 		ctx,
 	)

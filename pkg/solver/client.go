@@ -50,6 +50,11 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 			}
 		}
 	}()
+	http.ConnectWebSocket(
+		http.WebsocketURL(client.options, http.WEBSOCKET_SUB_PATH),
+		websocketEventChannel,
+		ctx,
+	)
 	return nil
 }
 
