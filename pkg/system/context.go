@@ -16,17 +16,20 @@ type CommandContext struct {
 	cancelFunc     context.CancelFunc
 }
 
-func NewCommandContext(cmd *cobra.Command) *CommandContext {
+func NewSystemContext(ctx context.Context) *CommandContext {
 	SetupLogging()
 	cm := NewCleanupManager()
-	commandContext := cmd.Context()
-	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	return &CommandContext{
-		CommandContext: commandContext,
+		CommandContext: ctx,
 		Ctx:            ctx,
 		Cm:             cm,
 		cancelFunc:     cancel,
 	}
+}
+
+func NewCommandContext(cmd *cobra.Command) *CommandContext {
+	return NewSystemContext(cmd.Context())
 }
 
 func (cmdContext *CommandContext) Cleanup() {
