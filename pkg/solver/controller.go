@@ -53,47 +53,6 @@ func NewSolverController(
 	return controller, nil
 }
 
-func (controller *SolverController) solve() error {
-	log.Info().Msgf("solving")
-
-	// THIS IS JUST FOR TESTING
-	log.Info().Msgf("sending tx")
-	tx, err := controller.web3SDK.Contracts.Token.Transfer(
-		controller.web3SDK.TransactOpts,
-		common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
-		big.NewInt(1),
-	)
-	if err != nil {
-		log.Info().Msgf("error sending tx: %s\n", err.Error())
-
-	} else {
-		log.Info().Msgf("tx sent: %s\n", tx.Hash())
-	}
-	return nil
-}
-
-func (controller *SolverController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("solver Transfer. From: %s, Value: %d", event.From.Hex(), event.Value)
-	})
-	return nil
-}
-
-// return a new event channel that will hear about events
-// coming out of this controller
-func (controller *SolverController) getEventChannel() SolverEventChannel {
-	eventChannel := make(SolverEventChannel)
-	controller.solverEventChannels = append(controller.solverEventChannels, eventChannel)
-	return eventChannel
-}
-
-// write the given event to all generated event channels
-func (controller *SolverController) writeEvent(ev SolverEvent) {
-	for _, eventChannel := range controller.solverEventChannels {
-		eventChannel <- ev
-	}
-}
-
 func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) error {
 	// get the local subscriptions setup
 	err := controller.subscribeToWeb3()
@@ -131,6 +90,47 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	return nil
 }
 
+func (controller *SolverController) solve() error {
+	//log.Info().Msgf("solver solving")
+
+	// THIS IS JUST FOR TESTING
+	// log.Info().Msgf("sending tx")
+	// tx, err := controller.web3SDK.Contracts.Token.Transfer(
+	// 	controller.web3SDK.TransactOpts,
+	// 	common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
+	// 	big.NewInt(1),
+	// )
+	// if err != nil {
+	// 	log.Info().Msgf("error sending tx: %s\n", err.Error())
+
+	// } else {
+	// 	log.Info().Msgf("tx sent: %s\n", tx.Hash())
+	// }
+	return nil
+}
+
+func (controller *SolverController) subscribeToWeb3() error {
+	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
+		log.Info().Msgf("solver Transfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+	})
+	return nil
+}
+
+// return a new event channel that will hear about events
+// coming out of this controller
+func (controller *SolverController) getEventChannel() SolverEventChannel {
+	eventChannel := make(SolverEventChannel)
+	controller.solverEventChannels = append(controller.solverEventChannels, eventChannel)
+	return eventChannel
+}
+
+// write the given event to all generated event channels
+func (controller *SolverController) writeEvent(ev SolverEvent) {
+	for _, eventChannel := range controller.solverEventChannels {
+		eventChannel <- ev
+	}
+}
+
 func (controller *SolverController) registerAsSolver() error {
 	selfAddress := controller.web3SDK.GetAddress()
 	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
@@ -140,11 +140,13 @@ func (controller *SolverController) registerAsSolver() error {
 	foundSolver := false
 	for _, existingSolver := range existingSolvers {
 		if existingSolver.String() == selfAddress.String() {
+			log.Info().Msgf("solver has been already registered: %s", selfAddress.String())
 			foundSolver = true
 			break
 		}
 	}
 	if !foundSolver {
+		log.Info().Msgf("solver has not been registered: %s", selfAddress.String())
 		// add the solver to the storage contract
 		err = controller.web3SDK.AddSolver(
 			big.NewInt(0),
@@ -155,6 +157,7 @@ func (controller *SolverController) registerAsSolver() error {
 		if err != nil {
 			return err
 		}
+		log.Info().Msgf("solver now registered: %s", selfAddress.String())
 	}
 	return nil
 }
