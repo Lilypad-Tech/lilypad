@@ -1,7 +1,7 @@
 package lilypad
 
 import (
-	"github.com/bacalhau-project/lilypad/pkg/options"
+	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -9,15 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSolverOptions() solver.SolverOptions {
-	return solver.SolverOptions{
-		Server: options.GetDefaultServerOptions(),
-		Web3:   options.GetDefaultWeb3Options(),
-	}
-}
-
 func newSolverCmd() *cobra.Command {
-	options := NewSolverOptions()
+	options := optionsfactory.NewSolverOptions()
 
 	solverCmd := &cobra.Command{
 		Use:     "solver",

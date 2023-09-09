@@ -2,20 +2,14 @@ package lilypad
 
 import (
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
-	"github.com/bacalhau-project/lilypad/pkg/options"
+	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
 
-func NewMediatorOptions() mediator.MediatorOptions {
-	return mediator.MediatorOptions{
-		Web3: options.GetDefaultWeb3Options(),
-	}
-}
-
 func newMediatorCmd() *cobra.Command {
-	options := NewMediatorOptions()
+	options := optionsfactory.NewMediatorOptions()
 
 	solverCmd := &cobra.Command{
 		Use:     "mediator",

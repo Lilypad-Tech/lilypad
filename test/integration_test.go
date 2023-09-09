@@ -32,4 +32,6 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 	}
 	defer stopStack()
+
+	//solverOptions := options.
 }

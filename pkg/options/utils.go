@@ -4,9 +4,46 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/bacalhau-project/lilypad/pkg/directory"
 	"github.com/bacalhau-project/lilypad/pkg/http"
+	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
+	"github.com/bacalhau-project/lilypad/pkg/mediator"
+	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
+	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
+
+func NewSolverOptions() solver.SolverOptions {
+	return solver.SolverOptions{
+		Server: GetDefaultServerOptions(),
+		Web3:   GetDefaultWeb3Options(),
+	}
+}
+
+func NewDirectoryOptions() directory.DirectoryOptions {
+	return directory.DirectoryOptions{
+		Server: GetDefaultServerOptions(),
+		Web3:   GetDefaultWeb3Options(),
+	}
+}
+
+func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
+	return jobcreator.JobCreatorOptions{
+		Web3: GetDefaultWeb3Options(),
+	}
+}
+
+func NewMediatorOptions() mediator.MediatorOptions {
+	return mediator.MediatorOptions{
+		Web3: GetDefaultWeb3Options(),
+	}
+}
+
+func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
+	return resourceprovider.ResourceProviderOptions{
+		Web3: GetDefaultWeb3Options(),
+	}
+}
 
 func GetDefaultServeOptionString(envName string, defaultValue string) string {
 	envValue := os.Getenv(envName)
