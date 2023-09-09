@@ -41,11 +41,11 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/job_offers", http.Wrapper(solverServer.getJobOffers)).Methods("GET")
-	subrouter.HandleFunc("/job_offers", http.Wrapper(solverServer.addJobOffer)).Methods("POST")
+	subrouter.HandleFunc("/job_offers", http.GetWrapper(solverServer.getJobOffers)).Methods("GET")
+	subrouter.HandleFunc("/job_offers", http.PostWrapper(solverServer.addJobOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/resource_offers", http.Wrapper(solverServer.getResourceOffers)).Methods("GET")
-	subrouter.HandleFunc("/resource_offers", http.Wrapper(solverServer.addResourceOffer)).Methods("POST")
+	subrouter.HandleFunc("/resource_offers", http.GetWrapper(solverServer.getResourceOffers)).Methods("GET")
+	subrouter.HandleFunc("/resource_offers", http.PostWrapper(solverServer.addResourceOffer)).Methods("POST")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -122,6 +122,7 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 }
 
 func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOffer, error) {
+	log.Info().Msgf("HERE GET")
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -130,12 +131,8 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 	return solverServer.store.GetResourceOffers(query)
 }
 
-func (solverServer *solverServer) addJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {
+func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
-	if err != nil {
-		return nil, err
-	}
-	jobOffer, err := http.ReadBody[data.JobOffer](req)
 	if err != nil {
 		return nil, err
 	}
@@ -146,12 +143,9 @@ func (solverServer *solverServer) addJobOffer(res corehttp.ResponseWriter, req *
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
-func (solverServer *solverServer) addResourceOffer(res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
+func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
+	log.Info().Msgf("HERE ADD")
 	signerAddress, err := http.GetAddressFromHeaders(req)
-	if err != nil {
-		return nil, err
-	}
-	resourceOffer, err := http.ReadBody[data.ResourceOffer](req)
 	if err != nil {
 		return nil, err
 	}

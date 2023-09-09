@@ -41,8 +41,8 @@ func (directoryServer *directoryServer) ListenAndServe(ctx context.Context, cm *
 
 	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/deals", http.Wrapper(directoryServer.getDeals)).Methods("GET")
-	subrouter.HandleFunc("/deals", http.Wrapper(directoryServer.addDeal)).Methods("POST")
+	subrouter.HandleFunc("/deals", http.GetWrapper(directoryServer.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals", http.PostWrapper(directoryServer.addDeal)).Methods("POST")
 
 	writeEventChannel := make(chan []byte)
 
@@ -117,12 +117,8 @@ func (directoryServer *directoryServer) getDeals(res corehttp.ResponseWriter, re
 	return directoryServer.store.GetDeals(query)
 }
 
-func (directoryServer *directoryServer) addDeal(res corehttp.ResponseWriter, req *corehttp.Request) (*data.Deal, error) {
+func (directoryServer *directoryServer) addDeal(deal data.Deal, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Deal, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
-	if err != nil {
-		return nil, err
-	}
-	deal, err := http.ReadBody[data.Deal](req)
 	if err != nil {
 		return nil, err
 	}

@@ -152,7 +152,8 @@ func WebsocketURL(options ClientOptions, path string) string {
 	return getWsURL(URL(options, path))
 }
 
-type httpWrapper[T any] func(res http.ResponseWriter, req *http.Request) (T, error)
+type httpGetWrapper[ResultType any] func(res http.ResponseWriter, req *http.Request) (ResultType, error)
+type httpPostWrapper[RequestType any, ResultType any] func(data RequestType, res http.ResponseWriter, req *http.Request) (ResultType, error)
 
 func ReadBody[T any](req *http.Request) (T, error) {
 	var data T
@@ -165,9 +166,38 @@ func ReadBody[T any](req *http.Request) (T, error) {
 
 // wrap a http handler with some error handling
 // so if it returns an error we handle it
-func Wrapper[T any](handler httpWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
+func GetWrapper[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
+		if err != nil {
+			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+			httpError, ok := err.(HTTPError)
+			if ok {
+				http.Error(res, httpError.Error(), httpError.StatusCode)
+			} else {
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		} else {
+			err = json.NewEncoder(res).Encode(data)
+			if err != nil {
+				log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+	return ret
+}
+
+func PostWrapper[RequestType any, ResultType any](handler httpPostWrapper[RequestType, ResultType]) func(res http.ResponseWriter, req *http.Request) {
+	ret := func(res http.ResponseWriter, req *http.Request) {
+		requestBody, err := ReadBody[RequestType](req)
+		if err != nil {
+			http.Error(res, fmt.Sprintf("Error parsing request body"), http.StatusBadRequest)
+			return
+		}
+		data, err := handler(requestBody, res, req)
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
@@ -229,6 +259,7 @@ func Post[RequestType any, ResultType any](
 	path string,
 	data RequestType,
 ) (ResultType, error) {
+	log.Info().Msgf("POST %s", URL(options, path))
 	var result ResultType
 	client := &http.Client{}
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
@@ -245,11 +276,15 @@ func Post[RequestType any, ResultType any](
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
 
+	log.Info().Msgf("after headers %s", URL(options, path))
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return result, err
 	}
 	defer resp.Body.Close()
+
+	log.Info().Msgf("after req %s", URL(options, path))
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
