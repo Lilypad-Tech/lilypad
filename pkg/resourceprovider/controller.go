@@ -63,19 +63,18 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 }
 
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) error {
-	// activate the solver event listeners
+	// get the subscription handlers setup
 	err := controller.subscribeToSolver()
 	if err != nil {
 		return err
 	}
-
-	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
+	err = controller.subscribeToWeb3()
 	if err != nil {
 		return err
 	}
 
-	// activate the web3 event listeners
-	err = controller.subscribeToWeb3()
+	// start the listeners
+	err = controller.solverClient.Start(ctx, cm)
 	if err != nil {
 		return err
 	}
