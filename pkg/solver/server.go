@@ -37,7 +37,7 @@ func NewSolverServer(
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
 	router := mux.NewRouter()
 
-	subrouter := router.PathPrefix("/api/v1").Subrouter()
+	subrouter := router.PathPrefix(http.API_SUB_PATH).Subrouter()
 
 	subrouter.Use(http.CorsMiddleware)
 

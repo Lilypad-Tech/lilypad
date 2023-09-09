@@ -23,6 +23,9 @@ const X_LILYPAD_SIGNATURE_HEADER = "X-Lilypad-Signature"
 // the context name we keep the address
 const CONTEXT_ADDRESS = "address"
 
+// the sub path any API's are served over
+const API_SUB_PATH = "/api/v1"
+
 type HTTPError struct {
 	Message    string
 	StatusCode int
