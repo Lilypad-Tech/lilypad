@@ -67,7 +67,7 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	privateKey, err := crypto.HexToECDSA(strings.Replace(options.PrivateKey, "0x", "", 1))
+	privateKey, err := ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return nil, err
 	}

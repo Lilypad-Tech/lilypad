@@ -3,6 +3,7 @@ package web3
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -39,6 +40,10 @@ func GetPublicKey(privateKey *ecdsa.PrivateKey) ecdsa.PublicKey {
 	return privateKey.PublicKey
 }
 
+func GetAddress(privateKey *ecdsa.PrivateKey) common.Address {
+	return crypto.PubkeyToAddress(privateKey.PublicKey)
+}
+
 func SignMessage(privateKey *ecdsa.PrivateKey, message []byte) ([]byte, error) {
 	hash := crypto.Keccak256Hash(message)
 	return crypto.Sign(hash.Bytes(), privateKey)
@@ -55,4 +60,8 @@ func GetAddressFromSignedMessage(message []byte, sig []byte) (common.Address, er
 		return common.Address{}, err
 	}
 	return crypto.PubkeyToAddress(*recoveredPubKey), nil
+}
+
+func ParsePrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
+	return crypto.HexToECDSA(strings.Replace(privateKey, "0x", "", 1))
 }

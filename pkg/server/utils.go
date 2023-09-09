@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
@@ -171,4 +172,34 @@ func Wrapper[T any](handler httpWrapper[T]) func(res http.ResponseWriter, req *h
 		}
 	}
 	return ret
+}
+
+func Get[ResultType any](
+	options ClientOptions,
+	path string,
+) (ResultType, error) {
+	var result ResultType
+	return result, nil
+}
+
+func Post[RequestType any, ResultType any](
+	options ClientOptions,
+	path string,
+	data RequestType,
+) (ResultType, error) {
+	var result ResultType
+	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
+	if err != nil {
+		return result, err
+	}
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return result, err
+	}
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", options.URL, path), bytes.NewBuffer(dataBytes))
+	if err != nil {
+		return result, err
+	}
+	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
+	return result, nil
 }
