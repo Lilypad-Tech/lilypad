@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog/log"
 )
 
 // ConnectWebSocket establishes a new WebSocket connection
@@ -20,13 +20,13 @@ func ConnectWebSocket(
 		var err error
 		conn, _, err = websocket.DefaultDialer.Dial(url, nil)
 		if err != nil {
-			log.Println("WebSocket connection failed:", err, "Reconnecting in 2 seconds...")
+			log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
 			time.Sleep(2 * time.Second)
 			continue
 		}
 		break
 	}
-	log.Println("WebSocket connected")
+	log.Info().Msgf("WebSocket connected")
 
 	conn.Close()
 	// Read loop
@@ -37,7 +37,8 @@ func ConnectWebSocket(
 				if closed {
 					return
 				}
-				log.Println("Read error:", err)
+				log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
+				time.Sleep(2 * time.Second)
 				conn = ConnectWebSocket(url, messageChan, ctx)
 				continue
 			}
