@@ -24,10 +24,22 @@ func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 ) (*ResourceProviderController, error) {
+	// we know the address of the solver but what is it's url?
+	solverUrl, err := web3SDK.GetSolverUrl(options.Web3.SolverAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	solverClient, err := solver.NewSolverClient(http.ClientOptions{
+		URL:        solverUrl,
+		PrivateKey: options.Web3.PrivateKey,
+	})
+
 	controller := &ResourceProviderController{
-		options:    options,
-		web3SDK:    web3SDK,
-		web3Events: web3.NewEventChannels(),
+		solverClient: solverClient,
+		options:      options,
+		web3SDK:      web3SDK,
+		web3Events:   web3.NewEventChannels(),
 	}
 	return controller, nil
 }
@@ -41,43 +53,37 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 	if controller.solverClient == nil {
 		return fmt.Errorf("controller.solverClient has not been setup")
 	}
-
+	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
+		log.Info().Msgf("New solver event %+v", event)
+	})
 	return nil
 }
 
 func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
+		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }
 
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) error {
-	// we know the address of the solver but what is it's url?
-	solverUrl, err := controller.web3SDK.GetSolverUrl(controller.options.Web3.SolverAddress)
-	if err != nil {
-		return err
-	}
-	// setup the solver client
-	controller.solverClient, err = solver.NewSolverClient(http.ClientOptions{
-		URL:        solverUrl,
-		PrivateKey: controller.options.Web3.PrivateKey,
-	})
+	// activate the solver event listeners
+	err := controller.subscribeToSolver()
 	if err != nil {
 		return err
 	}
 
-	err = controller.subscribeToSolver()
-	if err != nil {
-		return err
-	}
-
-	err = controller.subscribeToWeb3()
+	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
 		return err
 	}
 
 	// activate the web3 event listeners
+	err = controller.subscribeToWeb3()
+	if err != nil {
+		return err
+	}
+
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
 		return err
