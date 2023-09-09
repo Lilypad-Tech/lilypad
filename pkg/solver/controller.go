@@ -2,6 +2,7 @@ package solver
 
 import (
 	"context"
+	"math/big"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -9,6 +10,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,6 +52,20 @@ func NewSolverController(
 
 func (controller *SolverController) solve() error {
 	log.Info().Msgf("solving")
+
+	// THIS IS JUST FOR TESTING
+	log.Info().Msgf("sending tx")
+	tx, err := controller.web3SDK.Contracts.Token.Transfer(
+		controller.web3SDK.TransactOpts,
+		common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
+		big.NewInt(1),
+	)
+	if err != nil {
+		log.Info().Msgf("error sending tx: %s\n", err.Error())
+
+	} else {
+		log.Info().Msgf("tx sent: %s\n", tx.Hash())
+	}
 	return nil
 }
 
