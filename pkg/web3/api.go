@@ -38,7 +38,7 @@ func (sdk *Web3SDK) AddSolver(
 	if err != nil {
 		return err
 	}
-	tx, err := sdk.Contracts.Storage.UpdateUser(
+	updateUserTx, err := sdk.Contracts.Storage.UpdateUser(
 		sdk.TransactOpts,
 		metadataCID,
 		url,
@@ -49,7 +49,18 @@ func (sdk *Web3SDK) AddSolver(
 	if err != nil {
 		return err
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.waitTx(updateUserTx)
+	if err != nil {
+		return err
+	}
+	addToListTx, err := sdk.Contracts.Storage.AddUserToList(
+		sdk.TransactOpts,
+		solverType,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = sdk.waitTx(addToListTx)
 	if err != nil {
 		return err
 	}
