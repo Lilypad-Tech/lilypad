@@ -118,7 +118,7 @@ func (directoryServer *directoryServer) getDeals(res http.ResponseWriter, req *h
 }
 
 func (directoryServer *directoryServer) addDeal(res http.ResponseWriter, req *http.Request) (*data.Deal, error) {
-	signerAddress, err := server.AuthHandler(req)
+	signerAddress, err := server.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}

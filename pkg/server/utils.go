@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -86,7 +87,7 @@ func AddHeaders(
 // there is a "X-Lilypad-User" header that will contain the address
 // there is a "X-Lilypad-Signature" header that will contain the signature
 // we use the signature to verify that the message was signed by the private key
-func AuthHandler(req *http.Request) (string, error) {
+func GetAddressFromHeaders(req *http.Request) (string, error) {
 	userHeader := req.Header.Get(X_LILYPAD_USER_HEADER)
 	if userHeader == "" {
 		return "", HTTPError{
@@ -179,6 +180,29 @@ func Get[ResultType any](
 	path string,
 ) (ResultType, error) {
 	var result ResultType
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", options.URL, path), nil)
+	if err != nil {
+		return result, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return result, err
+	}
+
+	// parse body as json into result
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return result, err
+	}
+
 	return result, nil
 }
 
@@ -188,6 +212,7 @@ func Post[RequestType any, ResultType any](
 	data RequestType,
 ) (ResultType, error) {
 	var result ResultType
+	client := &http.Client{}
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return result, err
@@ -201,5 +226,23 @@ func Post[RequestType any, ResultType any](
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return result, err
+	}
+
+	// parse body as json into result
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return result, err
+	}
+
 	return result, nil
 }

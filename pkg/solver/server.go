@@ -127,7 +127,7 @@ func (solverServer *solverServer) getResourceOffers(res http.ResponseWriter, req
 }
 
 func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http.Request) (*data.JobOffer, error) {
-	signerAddress, err := server.AuthHandler(req)
+	signerAddress, err := server.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (solverServer *solverServer) addJobOffer(res http.ResponseWriter, req *http
 }
 
 func (solverServer *solverServer) addResourceOffer(res http.ResponseWriter, req *http.Request) (*data.ResourceOffer, error) {
-	signerAddress, err := server.AuthHandler(req)
+	signerAddress, err := server.GetAddressFromHeaders(req)
 	if err != nil {
 		return nil, err
 	}
