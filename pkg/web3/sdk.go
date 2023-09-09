@@ -25,7 +25,7 @@ type Contracts struct {
 	Controller *controller.Controller
 }
 
-type ContractSDK struct {
+type Web3SDK struct {
 	Options    Web3Options
 	PrivateKey *ecdsa.PrivateKey
 	Client     *ethclient.Client
@@ -58,7 +58,7 @@ func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, er
 	}, nil
 }
 
-func NewContractSDK(options Web3Options) (*ContractSDK, error) {
+func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	optionsErr := checkOptions(options)
 	if optionsErr != nil {
 		return nil, optionsErr
@@ -79,7 +79,7 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ContractSDK{
+	return &Web3SDK{
 		PrivateKey: privateKey,
 		Options:    options,
 		Client:     client,
@@ -88,7 +88,7 @@ func NewContractSDK(options Web3Options) (*ContractSDK, error) {
 	}, nil
 }
 
-func (sdk *ContractSDK) getBlockNumber() (uint64, error) {
+func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	var blockNumberHex string
 	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
@@ -99,6 +99,6 @@ func (sdk *ContractSDK) getBlockNumber() (uint64, error) {
 	return strconv.ParseUint(blockNumberHex, 16, 64)
 }
 
-func (sdk *ContractSDK) GetAddress() common.Address {
+func (sdk *Web3SDK) GetAddress() common.Address {
 	return crypto.PubkeyToAddress(GetPublicKey(sdk.PrivateKey))
 }

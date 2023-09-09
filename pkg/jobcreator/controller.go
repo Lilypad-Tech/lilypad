@@ -11,12 +11,12 @@ import (
 )
 
 type JobCreatorController struct {
-	web3SDK    *web3.ContractSDK
+	web3SDK    *web3.Web3SDK
 	web3Events *web3.EventChannels
 }
 
 func NewJobCreatorController(
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*JobCreatorController, error) {
 	controller := &JobCreatorController{
 		web3SDK:    web3SDK,

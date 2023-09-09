@@ -20,7 +20,7 @@ type SolverOptions struct {
 }
 
 type Solver struct {
-	web3SDK    *web3.ContractSDK
+	web3SDK    *web3.Web3SDK
 	server     *solverServer
 	controller *SolverController
 	store      store.SolverStore
@@ -29,7 +29,7 @@ type Solver struct {
 func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*Solver, error) {
 	controller, err := NewSolverController(web3SDK, store)
 	if err != nil {

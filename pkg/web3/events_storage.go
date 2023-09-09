@@ -21,7 +21,7 @@ func NewStorageEventChannels() *StorageEventChannels {
 }
 
 func (s *StorageEventChannels) Start(
-	sdk *ContractSDK,
+	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
 ) error {

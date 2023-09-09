@@ -13,12 +13,12 @@ import (
 
 type ResourceProviderController struct {
 	solverClient *solver.SolverClient
-	web3SDK      *web3.ContractSDK
+	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
 }
 
 func NewResourceProviderController(
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*ResourceProviderController, error) {
 	controller := &ResourceProviderController{
 		web3SDK:    web3SDK,

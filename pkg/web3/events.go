@@ -36,7 +36,7 @@ func NewEventChannels() *EventChannels {
 }
 
 func (eventChannels *EventChannels) Start(
-	sdk *ContractSDK,
+	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
 ) error {

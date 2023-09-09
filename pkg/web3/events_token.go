@@ -22,7 +22,7 @@ func NewTokenEventChannels() *TokenEventChannels {
 }
 
 func (t *TokenEventChannels) Start(
-	sdk *ContractSDK,
+	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
 ) error {

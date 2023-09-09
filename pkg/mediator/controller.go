@@ -11,12 +11,12 @@ import (
 )
 
 type MediatorController struct {
-	web3SDK    *web3.ContractSDK
+	web3SDK    *web3.Web3SDK
 	web3Events *web3.EventChannels
 }
 
 func NewMediatorController(
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*MediatorController, error) {
 	controller := &MediatorController{
 		web3SDK:    web3SDK,

@@ -30,14 +30,14 @@ type SolverEvent struct {
 type SolverEventChannel chan SolverEvent
 
 type SolverController struct {
-	web3SDK             *web3.ContractSDK
+	web3SDK             *web3.Web3SDK
 	web3Events          *web3.EventChannels
 	store               store.SolverStore
 	solverEventChannels []SolverEventChannel
 }
 
 func NewSolverController(
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
 ) (*SolverController, error) {
 	controller := &SolverController{

@@ -16,11 +16,12 @@ type Web3Options struct {
 	PaymentsAddress   string `json:"payments_address"`
 	StorageAddress    string `json:"storage_address"`
 	TokenAddress      string `json:"token_address"`
+	SolverAddress     string `json:"solver_address"`
 }
 
 type EventChannelCollection interface {
 	Start(
-		sdk *ContractSDK,
+		sdk *Web3SDK,
 		ctx context.Context,
 		cm *system.CleanupManager,
 	) error

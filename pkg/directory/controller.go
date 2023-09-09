@@ -27,14 +27,14 @@ type DirectoryEvent struct {
 type DirectoryEventChannel chan DirectoryEvent
 
 type DirectoryController struct {
-	web3SDK                *web3.ContractSDK
+	web3SDK                *web3.Web3SDK
 	web3Events             *web3.EventChannels
 	store                  store.DirectoryStore
 	directoryEventChannels []DirectoryEventChannel
 }
 
 func NewDirectoryController(
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 	store store.DirectoryStore,
 ) (*DirectoryController, error) {
 	controller := &DirectoryController{

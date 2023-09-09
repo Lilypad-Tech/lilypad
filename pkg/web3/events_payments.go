@@ -21,7 +21,7 @@ func NewPaymentEventChannels() *PaymentEventChannels {
 }
 
 func (p *PaymentEventChannels) Start(
-	sdk *ContractSDK,
+	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
 ) error {

@@ -15,7 +15,7 @@ type DirectoryOptions struct {
 }
 
 type Directory struct {
-	web3SDK    *web3.ContractSDK
+	web3SDK    *web3.Web3SDK
 	server     *directoryServer
 	controller *DirectoryController
 	store      store.DirectoryStore
@@ -24,7 +24,7 @@ type Directory struct {
 func NewDirectory(
 	options DirectoryOptions,
 	store store.DirectoryStore,
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*Directory, error) {
 	controller, err := NewDirectoryController(web3SDK, store)
 	if err != nil {

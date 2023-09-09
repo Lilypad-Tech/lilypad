@@ -12,13 +12,13 @@ type MediatorOptions struct {
 }
 
 type Mediator struct {
-	web3SDK    *web3.ContractSDK
+	web3SDK    *web3.Web3SDK
 	controller *MediatorController
 }
 
 func NewMediator(
 	options MediatorOptions,
-	web3SDK *web3.ContractSDK,
+	web3SDK *web3.Web3SDK,
 ) (*Mediator, error) {
 	controller, err := NewMediatorController(web3SDK)
 	if err != nil {
