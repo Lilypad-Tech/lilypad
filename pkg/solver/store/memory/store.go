@@ -1,6 +1,8 @@
 package store
 
 import (
+	"sync"
+
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 )
@@ -10,6 +12,7 @@ type SolverStoreMemory struct {
 	resourceOffers   []data.ResourceOffer
 	jobOfferMap      map[string]data.JobOffer
 	resourceOfferMap map[string]data.ResourceOffer
+	mutex            sync.Mutex
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
@@ -22,12 +25,16 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 }
 
 func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.jobOffers = append(s.jobOffers, jobOffer)
 	s.jobOfferMap[jobOffer.ID] = jobOffer
 	return &jobOffer, nil
 }
 
 func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.resourceOffers = append(s.resourceOffers, resourceOffer)
 	s.resourceOfferMap[resourceOffer.ID] = resourceOffer
 	return &resourceOffer, nil
@@ -76,6 +83,8 @@ func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOffer, er
 }
 
 func (s *SolverStoreMemory) RemoveJobOffer(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	newJobOffers := []data.JobOffer{}
 	for _, jobOffer := range s.jobOffers {
 		jobOfferId, err := data.CalculateCID(jobOffer)
@@ -93,6 +102,8 @@ func (s *SolverStoreMemory) RemoveJobOffer(id string) error {
 }
 
 func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	newResourceOffers := []data.ResourceOffer{}
 	for _, resourceOffer := range s.resourceOffers {
 		resourceOfferId, err := data.CalculateCID(resourceOffer)
