@@ -27,6 +27,10 @@ func newMediatorCmd() *cobra.Command {
 }
 
 func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
+	err := optionsfactory.CheckWeb3Options(options.Web3)
+	if err != nil {
+		return err
+	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

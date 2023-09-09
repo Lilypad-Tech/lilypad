@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -13,7 +14,6 @@ func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, e
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("List type: %d\n", solverType)
 	return sdk.Contracts.Storage.ShowUsersInList(
 		sdk.CallOpts,
 		solverType,
@@ -28,21 +28,27 @@ func (sdk *Web3SDK) GetDirectoryAddresses() ([]common.Address, error) {
 	return sdk.GetServiceAddresses("Directory")
 }
 
-func (sdk *Web3SDK) AddSolver(
+func (sdk *Web3SDK) GetUser(
+	address common.Address,
+) (storage.SharedStructsUser, error) {
+	return sdk.Contracts.Storage.GetUser(
+		sdk.CallOpts,
+		address,
+	)
+}
+
+func (sdk *Web3SDK) UpdateUser(
 	metadataCID *big.Int,
 	url string,
+	roles []uint8,
 	trustedMediators []common.Address,
 	trustedDirectories []common.Address,
 ) error {
-	solverType, err := data.GetServiceType("Solver")
-	if err != nil {
-		return err
-	}
 	updateUserTx, err := sdk.Contracts.Storage.UpdateUser(
 		sdk.TransactOpts,
 		metadataCID,
 		url,
-		[]uint8{solverType},
+		roles,
 		trustedMediators,
 		trustedDirectories,
 	)
@@ -53,9 +59,15 @@ func (sdk *Web3SDK) AddSolver(
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (sdk *Web3SDK) AddUserToList(
+	serviceType uint8,
+) error {
 	addToListTx, err := sdk.Contracts.Storage.AddUserToList(
 		sdk.TransactOpts,
-		solverType,
+		serviceType,
 	)
 	if err != nil {
 		return err

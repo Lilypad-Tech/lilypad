@@ -29,6 +29,14 @@ func newDirectoryCmd() *cobra.Command {
 }
 
 func runDirectory(cmd *cobra.Command, options directory.DirectoryOptions) error {
+	err := optionsfactory.CheckWeb3Options(options.Web3)
+	if err != nil {
+		return err
+	}
+	err = optionsfactory.CheckServerOptions(options.Server)
+	if err != nil {
+		return err
+	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

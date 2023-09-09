@@ -1,6 +1,7 @@
 package options
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -75,6 +76,13 @@ func GetDefaultServerOptions() http.ServerOptions {
 	}
 }
 
+func CheckServerOptions(options http.ServerOptions) error {
+	if options.URL == "" {
+		return fmt.Errorf("SERVER_URL is required")
+	}
+	return nil
+}
+
 /*
 web3 options
 */
@@ -90,4 +98,32 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		SolverAddress:     GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
 		DirectoryAddress:  GetDefaultServeOptionString("WEB3_DIRECTORY_ADDRESS", ""),
 	}
+}
+
+func CheckWeb3Options(options web3.Web3Options) error {
+	if options.RpcURL == "" {
+		return fmt.Errorf("WEB3_RPC_URL is required")
+	}
+	if options.PrivateKey == "" {
+		return fmt.Errorf("WEB3_PRIVATE_KEY is required")
+	}
+	if options.ControllerAddress == "" {
+		return fmt.Errorf("WEB3_CONTROLLER_ADDRESS is required")
+	}
+	if options.PaymentsAddress == "" {
+		return fmt.Errorf("WEB3_PAYMENTS_ADDRESS is required")
+	}
+	if options.StorageAddress == "" {
+		return fmt.Errorf("WEB3_STORAGE_ADDRESS is required")
+	}
+	if options.TokenAddress == "" {
+		return fmt.Errorf("WEB3_TOKEN_ADDRESS is required")
+	}
+	if options.SolverAddress == "" {
+		return fmt.Errorf("WEB3_SOLVER_ADDRESS is required")
+	}
+	if options.DirectoryAddress == "" {
+		return fmt.Errorf("WEB3_DIRECTORY_ADDRESS is required")
+	}
+	return nil
 }

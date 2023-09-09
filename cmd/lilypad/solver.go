@@ -29,6 +29,14 @@ func newSolverCmd() *cobra.Command {
 }
 
 func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
+	err := optionsfactory.CheckWeb3Options(options.Web3)
+	if err != nil {
+		return err
+	}
+	err = optionsfactory.CheckServerOptions(options.Server)
+	if err != nil {
+		return err
+	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

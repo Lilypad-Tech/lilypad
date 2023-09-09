@@ -133,6 +133,33 @@ func (controller *SolverController) writeEvent(ev SolverEvent) {
 
 func (controller *SolverController) registerAsSolver() error {
 	selfAddress := controller.web3SDK.GetAddress()
+	solverType, err := data.GetServiceType("Solver")
+	if err != nil {
+		return err
+	}
+
+	selfUser, err := controller.web3SDK.GetUser(selfAddress)
+	if err != nil {
+		return err
+	}
+
+	// TODO: check the other props and call update if they have changed
+	if selfUser.Url != controller.options.Server.URL {
+		log.Info().Msgf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL)
+		err = controller.web3SDK.UpdateUser(
+			big.NewInt(0),
+			controller.options.Server.URL,
+			[]uint8{solverType},
+			[]common.Address{},
+			[]common.Address{},
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Info().Msgf("solver url already correct: %s %s", selfAddress.String(), controller.options.Server.URL)
+	}
+
 	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
 	if err != nil {
 		return err
@@ -140,19 +167,16 @@ func (controller *SolverController) registerAsSolver() error {
 	foundSolver := false
 	for _, existingSolver := range existingSolvers {
 		if existingSolver.String() == selfAddress.String() {
-			log.Info().Msgf("solver has been already registered: %s", selfAddress.String())
+			log.Info().Msgf("solver has already been listed: %s", selfAddress.String())
 			foundSolver = true
 			break
 		}
 	}
 	if !foundSolver {
-		log.Info().Msgf("solver has not been registered: %s", selfAddress.String())
+		log.Info().Msgf("solver has not been listed: %s", selfAddress.String())
 		// add the solver to the storage contract
-		err = controller.web3SDK.AddSolver(
-			big.NewInt(0),
-			controller.options.Server.URL,
-			[]common.Address{},
-			[]common.Address{},
+		err = controller.web3SDK.AddUserToList(
+			solverType,
 		)
 		if err != nil {
 			return err

@@ -27,6 +27,10 @@ func newJobCreatorCmd() *cobra.Command {
 }
 
 func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
+	err := optionsfactory.CheckWeb3Options(options.Web3)
+	if err != nil {
+		return err
+	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
