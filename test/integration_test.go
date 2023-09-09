@@ -17,6 +17,8 @@ import (
 func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solver, error) {
 	solverOptions := optionsfactory.NewSolverOptions()
 	solverOptions.Web3.PrivateKey = os.Getenv("SOLVER_PRIVATE_KEY")
+	solverOptions.Server.Port = 8080
+	solverOptions.Server.URL = "http://localhost:8080"
 
 	// test that the solver private key is defined
 	if solverOptions.Web3.PrivateKey == "" {

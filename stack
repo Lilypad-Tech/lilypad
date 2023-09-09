@@ -218,6 +218,8 @@ function solver() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export SERVER_PORT=8080
+  export SERVER_URL=http://localhost:8080
   go run . solver
 }
 
@@ -252,6 +254,7 @@ function directory() {
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$DIRECTORY_PRIVATE_KEY
   export SERVER_PORT=8081
+  export SERVER_URL=http://localhost:8081
   go run . directory
 }
 
