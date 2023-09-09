@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -21,7 +22,21 @@ func StartWebSocketServer(
 	messageChan chan []byte,
 	ctx context.Context,
 ) {
+	var mutex = &sync.Mutex{}
+
 	connections := map[*websocket.Conn]bool{}
+
+	addConnection := func(conn *websocket.Conn) {
+		mutex.Lock()
+		defer mutex.Unlock()
+		connections[conn] = true
+	}
+
+	removeConnection := func(conn *websocket.Conn) {
+		mutex.Lock()
+		defer mutex.Unlock()
+		delete(connections, conn)
+	}
 
 	r.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -30,7 +45,7 @@ func StartWebSocketServer(
 			return
 		}
 		defer conn.Close()
-		connections[conn] = true
+		addConnection(conn)
 
 		wrappedCtx, wrappedCancel := context.WithCancel(ctx)
 
@@ -45,7 +60,7 @@ func StartWebSocketServer(
 						}
 					}
 				case <-wrappedCtx.Done():
-					delete(connections, conn)
+					removeConnection(conn)
 					return
 				}
 			}
