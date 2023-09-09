@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -10,8 +11,8 @@ import (
 
 func NewSolverOptions() solver.SolverOptions {
 	return solver.SolverOptions{
-		Server: getDefaultServerOptions(),
-		Web3:   getDefaultWeb3Options(),
+		Server: options.GetDefaultServerOptions(),
+		Web3:   options.GetDefaultWeb3Options(),
 	}
 }
 

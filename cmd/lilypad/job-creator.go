@@ -2,6 +2,7 @@ package lilypad
 
 import (
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
+	"github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
@@ -9,7 +10,7 @@ import (
 
 func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 	return jobcreator.JobCreatorOptions{
-		Web3: getDefaultWeb3Options(),
+		Web3: options.GetDefaultWeb3Options(),
 	}
 }
 

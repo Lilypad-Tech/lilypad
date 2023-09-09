@@ -53,14 +53,6 @@ func FatalErrorHandler(cmd *cobra.Command, msg string, code int) {
 /*
 server options
 */
-func getDefaultServerOptions() http.ServerOptions {
-	return http.ServerOptions{
-		URL:  getDefaultServeOptionString("SERVER_URL", ""),
-		Host: getDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
-		Port: getDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
-	}
-}
-
 func addServerCliFlags(cmd *cobra.Command, serverOptions http.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.URL, "server-url", serverOptions.URL,
@@ -79,19 +71,6 @@ func addServerCliFlags(cmd *cobra.Command, serverOptions http.ServerOptions) {
 /*
 web3 options
 */
-func getDefaultWeb3Options() web3.Web3Options {
-	return web3.Web3Options{
-		RpcURL:            getDefaultServeOptionString("WEB3_RPC_URL", ""),
-		PrivateKey:        getDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
-		ChainID:           getDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
-		ControllerAddress: getDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", ""),
-		PaymentsAddress:   getDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
-		StorageAddress:    getDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
-		TokenAddress:      getDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
-		SolverAddress:     getDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
-	}
-}
-
 func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.RpcURL, "web3-rpc-url", web3Options.RpcURL,

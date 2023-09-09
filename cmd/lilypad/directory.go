@@ -3,6 +3,7 @@ package lilypad
 import (
 	"github.com/bacalhau-project/lilypad/pkg/directory"
 	memorystore "github.com/bacalhau-project/lilypad/pkg/directory/store/memory"
+	"github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
@@ -10,8 +11,8 @@ import (
 
 func NewDirectoryOptions() directory.DirectoryOptions {
 	return directory.DirectoryOptions{
-		Server: getDefaultServerOptions(),
-		Web3:   getDefaultWeb3Options(),
+		Server: options.GetDefaultServerOptions(),
+		Web3:   options.GetDefaultWeb3Options(),
 	}
 }
 

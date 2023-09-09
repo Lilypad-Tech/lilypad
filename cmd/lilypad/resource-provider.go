@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -9,7 +10,7 @@ import (
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	return resourceprovider.ResourceProviderOptions{
-		Web3: getDefaultWeb3Options(),
+		Web3: options.GetDefaultWeb3Options(),
 	}
 }
 
