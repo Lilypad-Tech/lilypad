@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
@@ -53,5 +54,9 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	fmt.Printf("Solver started\n")
+
+	time.Sleep(time.Second * 2)
 
 }

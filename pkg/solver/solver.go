@@ -48,7 +48,13 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 	if err != nil {
 		return err
 	}
-	return solver.server.ListenAndServe(ctx, cm)
+	go func() {
+		err = solver.server.ListenAndServe(ctx, cm)
+		if err != nil {
+			panic(err)
+		}
+	}()
+	return nil
 }
 
 func (solver *Solver) GetEventChannel() SolverEventChannel {

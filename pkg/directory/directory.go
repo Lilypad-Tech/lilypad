@@ -48,8 +48,13 @@ func (directory *Directory) Start(ctx context.Context, cm *system.CleanupManager
 	if err != nil {
 		return err
 	}
-
-	return directory.server.ListenAndServe(ctx, cm)
+	go func() {
+		err = directory.server.ListenAndServe(ctx, cm)
+		if err != nil {
+			panic(err)
+		}
+	}()
+	return nil
 }
 
 func (directory *Directory) GetEventChannel() DirectoryEventChannel {
