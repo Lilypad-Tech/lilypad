@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
@@ -11,8 +12,9 @@ import (
 )
 
 type JobCreatorController struct {
-	web3SDK    *web3.Web3SDK
-	web3Events *web3.EventChannels
+	solverClient *solver.SolverClient
+	web3SDK      *web3.Web3SDK
+	web3Events   *web3.EventChannels
 }
 
 func NewJobCreatorController(
@@ -31,7 +33,7 @@ func (controller *JobCreatorController) solve() error {
 }
 
 func (controller *JobCreatorController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
+	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
 		log.Info().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil

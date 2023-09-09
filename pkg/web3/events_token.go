@@ -12,7 +12,7 @@ import (
 
 type TokenEventChannels struct {
 	transferChan chan *token.TokenTransfer
-	transferSubs []func(*token.TokenTransfer)
+	transferSubs []func(token.TokenTransfer)
 }
 
 func NewTokenEventChannels() *TokenEventChannels {
@@ -51,7 +51,7 @@ func (t *TokenEventChannels) Start(
 		case event := <-t.transferChan:
 			log.Info().Msgf("token event -> transfer: %+v", event)
 			for _, handler := range t.transferSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-transferSub.Err():
 			return err
@@ -59,6 +59,6 @@ func (t *TokenEventChannels) Start(
 	}
 }
 
-func (t *TokenEventChannels) SubscribeTransfer(handler func(*token.TokenTransfer)) {
+func (t *TokenEventChannels) SubscribeTransfer(handler func(token.TokenTransfer)) {
 	t.transferSubs = append(t.transferSubs, handler)
 }

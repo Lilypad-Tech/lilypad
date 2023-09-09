@@ -26,11 +26,12 @@ type Contracts struct {
 }
 
 type Web3SDK struct {
-	Options    Web3Options
-	PrivateKey *ecdsa.PrivateKey
-	Client     *ethclient.Client
-	Auth       *bind.TransactOpts
-	Contracts  *Contracts
+	Options      Web3Options
+	PrivateKey   *ecdsa.PrivateKey
+	Client       *ethclient.Client
+	CallOpts     *bind.CallOpts
+	TransactOpts *bind.TransactOpts
+	Contracts    *Contracts
 }
 
 func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, error) {
@@ -71,7 +72,15 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(int64(options.ChainID)))
+
+	callOpts := &bind.CallOpts{
+		Pending:     false,
+		From:        common.Address{},
+		BlockNumber: nil,
+		Context:     nil,
+	}
+
+	transactOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(int64(options.ChainID)))
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +89,12 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 		return nil, err
 	}
 	return &Web3SDK{
-		PrivateKey: privateKey,
-		Options:    options,
-		Client:     client,
-		Auth:       auth,
-		Contracts:  contracts,
+		PrivateKey:   privateKey,
+		Options:      options,
+		Client:       client,
+		CallOpts:     callOpts,
+		TransactOpts: transactOpts,
+		Contracts:    contracts,
 	}, nil
 }
 

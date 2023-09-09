@@ -60,7 +60,7 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) erro
 			case <-ticker.C:
 				log.Info().Msgf("sending tx")
 				tx, err := solver.web3SDK.Contracts.Token.Transfer(
-					solver.web3SDK.Auth,
+					solver.web3SDK.TransactOpts,
 					common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
 					big.NewInt(1),
 				)

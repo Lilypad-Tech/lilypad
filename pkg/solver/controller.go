@@ -54,7 +54,7 @@ func (controller *SolverController) solve() error {
 }
 
 func (controller *SolverController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event *token.TokenTransfer) {
+	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
 		log.Info().Msgf("New MyEvent. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil

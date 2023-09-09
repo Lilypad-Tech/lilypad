@@ -11,7 +11,7 @@ import (
 
 type PaymentEventChannels struct {
 	paymentChan chan *payments.PaymentsPayment
-	paymentSubs []func(*payments.PaymentsPayment)
+	paymentSubs []func(payments.PaymentsPayment)
 }
 
 func NewPaymentEventChannels() *PaymentEventChannels {
@@ -48,7 +48,7 @@ func (p *PaymentEventChannels) Start(
 		select {
 		case event := <-p.paymentChan:
 			for _, handler := range p.paymentSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-paymentSub.Err():
 			return err
@@ -56,6 +56,6 @@ func (p *PaymentEventChannels) Start(
 	}
 }
 
-func (p *PaymentEventChannels) SubscribePayment(handler func(*payments.PaymentsPayment)) {
+func (p *PaymentEventChannels) SubscribePayment(handler func(payments.PaymentsPayment)) {
 	p.paymentSubs = append(p.paymentSubs, handler)
 }

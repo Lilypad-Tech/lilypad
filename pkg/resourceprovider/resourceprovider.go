@@ -14,6 +14,7 @@ type ResourceProviderOptions struct {
 
 type ResourceProvider struct {
 	web3SDK    *web3.Web3SDK
+	options    ResourceProviderOptions
 	controller *ResourceProviderController
 }
 
@@ -24,12 +25,13 @@ func NewResourceProvider(
 	if options.Web3.SolverAddress == "" {
 		return nil, fmt.Errorf("--web3-solver-address or WEB3_SOLVER_ADDRESS is empty")
 	}
-	controller, err := NewResourceProviderController(web3SDK)
+	controller, err := NewResourceProviderController(options, web3SDK)
 	if err != nil {
 		return nil, err
 	}
 	solver := &ResourceProvider{
 		controller: controller,
+		options:    options,
 		web3SDK:    web3SDK,
 	}
 	return solver, nil

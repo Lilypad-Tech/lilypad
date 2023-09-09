@@ -12,37 +12,37 @@ import (
 
 type ControllerEventChannels struct {
 	resourceProviderAgreedChan chan *controller.ControllerResourceProviderAgreed
-	resourceProviderAgreedSubs []func(*controller.ControllerResourceProviderAgreed)
+	resourceProviderAgreedSubs []func(controller.ControllerResourceProviderAgreed)
 
 	jobCreatorAgreedChan chan *controller.ControllerJobCreatorAgreed
-	jobCreatorAgreedSubs []func(*controller.ControllerJobCreatorAgreed)
+	jobCreatorAgreedSubs []func(controller.ControllerJobCreatorAgreed)
 
 	dealAgreedChan chan *controller.ControllerDealAgreed
-	dealAgreedSubs []func(*controller.ControllerDealAgreed)
+	dealAgreedSubs []func(controller.ControllerDealAgreed)
 
 	resultAddedChan chan *controller.ControllerResultAdded
-	resultAddedSubs []func(*controller.ControllerResultAdded)
+	resultAddedSubs []func(controller.ControllerResultAdded)
 
 	resultAcceptedChan chan *controller.ControllerResultAccepted
-	resultAcceptedSubs []func(*controller.ControllerResultAccepted)
+	resultAcceptedSubs []func(controller.ControllerResultAccepted)
 
 	resultCheckedChan chan *controller.ControllerResultChecked
-	resultCheckedSubs []func(*controller.ControllerResultChecked)
+	resultCheckedSubs []func(controller.ControllerResultChecked)
 
 	mediationAcceptResultChan chan *controller.ControllerMediationAcceptResult
-	mediationAcceptResultSubs []func(*controller.ControllerMediationAcceptResult)
+	mediationAcceptResultSubs []func(controller.ControllerMediationAcceptResult)
 
 	mediationRejectResultChan chan *controller.ControllerMediationRejectResult
-	mediationRejectResultSubs []func(*controller.ControllerMediationRejectResult)
+	mediationRejectResultSubs []func(controller.ControllerMediationRejectResult)
 
 	timeoutSubmitResultChan chan *controller.ControllerTimeoutSubmitResult
-	timeoutSubmitResultSubs []func(*controller.ControllerTimeoutSubmitResult)
+	timeoutSubmitResultSubs []func(controller.ControllerTimeoutSubmitResult)
 
 	timeoutJudgeResultChan chan *controller.ControllerTimeoutJudgeResult
-	timeoutJudgeResultSubs []func(*controller.ControllerTimeoutJudgeResult)
+	timeoutJudgeResultSubs []func(controller.ControllerTimeoutJudgeResult)
 
 	timeoutMediateResultChan chan *controller.ControllerTimeoutMediateResult
-	timeoutMediateResultSubs []func(*controller.ControllerTimeoutMediateResult)
+	timeoutMediateResultSubs []func(controller.ControllerTimeoutMediateResult)
 }
 
 func NewControllerEventChannels() *ControllerEventChannels {
@@ -179,77 +179,77 @@ func (c *ControllerEventChannels) Start(
 		select {
 		case event := <-c.resourceProviderAgreedChan:
 			for _, handler := range c.resourceProviderAgreedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-resourceProviderAgreedSub.Err():
 			return err
 
 		case event := <-c.jobCreatorAgreedChan:
 			for _, handler := range c.jobCreatorAgreedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-jobCreatorAgreedSub.Err():
 			return err
 
 		case event := <-c.dealAgreedChan:
 			for _, handler := range c.dealAgreedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-dealAgreedSub.Err():
 			return err
 
 		case event := <-c.resultAddedChan:
 			for _, handler := range c.resultAddedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-resultAddedSub.Err():
 			return err
 
 		case event := <-c.resultAcceptedChan:
 			for _, handler := range c.resultAcceptedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-resultAcceptedSub.Err():
 			return err
 
 		case event := <-c.resultCheckedChan:
 			for _, handler := range c.resultCheckedSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-resultCheckedSub.Err():
 			return err
 
 		case event := <-c.mediationAcceptResultChan:
 			for _, handler := range c.mediationAcceptResultSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-mediationAcceptResultSub.Err():
 			return err
 
 		case event := <-c.mediationRejectResultChan:
 			for _, handler := range c.mediationRejectResultSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-mediationRejectResultSub.Err():
 			return err
 
 		case event := <-c.timeoutSubmitResultChan:
 			for _, handler := range c.timeoutSubmitResultSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-timeoutSubmitResultSub.Err():
 			return err
 
 		case event := <-c.timeoutJudgeResultChan:
 			for _, handler := range c.timeoutJudgeResultSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-timeoutJudgeResultSub.Err():
 			return err
 
 		case event := <-c.timeoutMediateResultChan:
 			for _, handler := range c.timeoutMediateResultSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-timeoutMediateResultSub.Err():
 			return err

@@ -11,7 +11,7 @@ import (
 
 type StorageEventChannels struct {
 	dealStateChangeChan chan *storage.StorageDealStateChange
-	dealStateChangeSubs []func(*storage.StorageDealStateChange)
+	dealStateChangeSubs []func(storage.StorageDealStateChange)
 }
 
 func NewStorageEventChannels() *StorageEventChannels {
@@ -49,7 +49,7 @@ func (s *StorageEventChannels) Start(
 		select {
 		case event := <-s.dealStateChangeChan:
 			for _, handler := range s.dealStateChangeSubs {
-				handler(event)
+				go handler(*event)
 			}
 		case err := <-dealStateChangeSub.Err():
 			return err

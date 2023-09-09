@@ -13,15 +13,16 @@ import (
 )
 
 type SolverClient struct {
-	options             http.ClientOptions
-	solverEventChannels []SolverEventChannel
+	options         http.ClientOptions
+	solverEventSubs []func(SolverEvent)
 }
 
 func NewSolverClient(
 	options http.ClientOptions,
 ) (*SolverClient, error) {
 	client := &SolverClient{
-		options: options,
+		options:         options,
+		solverEventSubs: []func(SolverEvent){},
 	}
 	return client, nil
 }
@@ -41,8 +42,8 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 				}
 				fmt.Printf("got websocket event: %+v\n", ev)
 				// loop over each event channel and write the event to it
-				for _, eventChannel := range client.solverEventChannels {
-					eventChannel <- ev
+				for _, handler := range client.solverEventSubs {
+					go handler(ev)
 				}
 			case <-ctx.Done():
 				return
@@ -52,10 +53,8 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 	return nil
 }
 
-func (client *SolverClient) GetEventChannel() SolverEventChannel {
-	eventChannel := make(SolverEventChannel)
-	client.solverEventChannels = append(client.solverEventChannels, eventChannel)
-	return eventChannel
+func (client *SolverClient) SubscribeEvents(handler func(SolverEvent)) {
+	client.solverEventSubs = append(client.solverEventSubs, handler)
 }
 
 func (client *SolverClient) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
