@@ -18,6 +18,7 @@ func ConnectWebSocket(
 	var conn *websocket.Conn
 	for {
 		var err error
+		log.Info().Msgf("WebSocket connection connecting: %s", url)
 		conn, _, err = websocket.DefaultDialer.Dial(url, nil)
 		if err != nil {
 			log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
@@ -28,8 +29,6 @@ func ConnectWebSocket(
 	}
 	log.Info().Msgf("WebSocket connected")
 
-	conn.Close()
-	// Read loop
 	go func() {
 		for {
 			messageType, p, err := conn.ReadMessage()
@@ -48,12 +47,12 @@ func ConnectWebSocket(
 		}
 	}()
 
-	// Wait for close
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				closed = true
+				conn.Close()
 				return
 			}
 		}
