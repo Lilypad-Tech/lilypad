@@ -1,7 +1,9 @@
 package server
 
 import (
+	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,10 +13,10 @@ import (
 
 // write some string constants for x-lilypad headers
 // this is the address of the user
-const X_LILYPAD_USER = "X-Lilypad-User"
+const X_LILYPAD_USER_HEADER = "X-Lilypad-User"
 
 // this is the signature of the message
-const X_LILYPAD_SIGNATURE = "X-Lilypad-Signature"
+const X_LILYPAD_SIGNATURE_HEADER = "X-Lilypad-Signature"
 
 // the context name we keep the address
 const CONTEXT_ADDRESS = "address"
@@ -22,6 +24,10 @@ const CONTEXT_ADDRESS = "address"
 type HTTPError struct {
 	Message    string
 	StatusCode int
+}
+
+type AuthUser struct {
+	Address string `json:"address"`
 }
 
 func (e HTTPError) Error() string {
@@ -36,12 +42,42 @@ func getWsURL(url string) string {
 	return url
 }
 
-func extractUserAddress(userPayload string, signature string) (string, error) {
+func decodeUserAddress(userPayload string, signature string) (string, error) {
 	address, err := web3.GetAddressFromSignedMessage([]byte(userPayload), []byte(signature))
 	if err != nil {
 		return "", err
 	}
 	return address.String(), nil
+}
+
+// returns userPayload and signature as strings ready to be written into request headers
+func encodeUserAddress(privateKey *ecdsa.PrivateKey, address string) (string, string, error) {
+	user := AuthUser{
+		Address: address,
+	}
+	userBytes, err := json.Marshal(user)
+	if err != nil {
+		return "", "", err
+	}
+	userSignature, err := web3.SignMessage(privateKey, userBytes)
+	if err != nil {
+		return "", "", err
+	}
+	return string(userBytes), string(userSignature), nil
+}
+
+func AddHeaders(
+	req *http.Request,
+	privateKey *ecdsa.PrivateKey,
+	address string,
+) error {
+	userPayload, userSignature, err := encodeUserAddress(privateKey, address)
+	if err != nil {
+		return err
+	}
+	req.Header.Add(X_LILYPAD_USER_HEADER, userPayload)
+	req.Header.Add(X_LILYPAD_SIGNATURE_HEADER, userSignature)
+	return nil
 }
 
 // this will use the client headers to ensure that a message was signed
@@ -50,7 +86,47 @@ func extractUserAddress(userPayload string, signature string) (string, error) {
 // there is a "X-Lilypad-Signature" header that will contain the signature
 // we use the signature to verify that the message was signed by the private key
 func AuthHandler(req *http.Request) (string, error) {
-	return extractUserAddress(req.Header.Get(X_LILYPAD_USER), req.Header.Get(X_LILYPAD_SIGNATURE))
+	userHeader := req.Header.Get(X_LILYPAD_USER_HEADER)
+	if userHeader == "" {
+		return "", HTTPError{
+			Message:    "missing user header",
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+	userSignature := req.Header.Get(X_LILYPAD_SIGNATURE_HEADER)
+	if userSignature == "" {
+		return "", HTTPError{
+			Message:    "missing signature header",
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	// decode the userHeader into a AuthUser struct
+	var authUser AuthUser
+	err := json.Unmarshal([]byte(userHeader), &authUser)
+	if err != nil {
+		return "", HTTPError{
+			Message:    fmt.Sprintf("invalid user header %s", err.Error()),
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	signatureAddress, err := decodeUserAddress(userHeader, userSignature)
+	if err != nil {
+		return "", HTTPError{
+			Message:    fmt.Sprintf("invalid user header or signature %s", err.Error()),
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	if signatureAddress != authUser.Address {
+		return "", HTTPError{
+			Message:    "invalid signature",
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	return signatureAddress, nil
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {
