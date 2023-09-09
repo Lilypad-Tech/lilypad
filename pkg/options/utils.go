@@ -88,5 +88,6 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
 		SolverAddress:     GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
+		DirectoryAddress:  GetDefaultServeOptionString("WEB3_DIRECTORY_ADDRESS", ""),
 	}
 }

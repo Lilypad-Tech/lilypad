@@ -226,6 +226,7 @@ function resource-provider() {
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   go run . resource-provider
 }
 
@@ -234,6 +235,7 @@ function job-creator() {
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   go run . job-creator
 }
 
@@ -241,6 +243,7 @@ function mediator() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   go run . mediator
 }
 
@@ -270,6 +273,8 @@ function integration-tests() {
   boot
   source .env
   eval $(./stack print-local-dev-env)
+  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   (
     set -euo pipefail
     cd test

@@ -16,7 +16,10 @@ type Web3Options struct {
 	PaymentsAddress   string `json:"payments_address"`
 	StorageAddress    string `json:"storage_address"`
 	TokenAddress      string `json:"token_address"`
-	SolverAddress     string `json:"solver_address"`
+
+	// the addresses of services we want to connect to
+	SolverAddress    string `json:"solver_address"`
+	DirectoryAddress string `json:"directory_address"`
 }
 
 type EventChannelCollection interface {
