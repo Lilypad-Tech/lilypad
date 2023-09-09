@@ -166,6 +166,7 @@ function unit-tests() {
 }
 
 function integration-tests() {
+  source .env
   (
     set -euo pipefail
     cd test
