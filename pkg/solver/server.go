@@ -51,12 +51,13 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	// we read all events coming from inside the solver controller
 	// and write them to anyone who is connected to us
 	websocketEventChannel := make(chan []byte)
+	controllerEvents := solverServer.controller.getEventChannel()
 
 	// listen to events coming out of the controller and write them to all
 	// connected websocket connections
 	go func() {
 		select {
-		case ev := <-solverServer.controller.getEventChannel():
+		case ev := <-controllerEvents:
 			// we write this event to all connected web socket connections
 			fmt.Printf("got controller event: %+v\n", ev)
 			evBytes, err := json.Marshal(ev)

@@ -60,12 +60,15 @@ func (controller *SolverController) subscribeToWeb3() error {
 	return nil
 }
 
+// return a new event channel that will hear about events
+// coming out of this controller
 func (controller *SolverController) getEventChannel() SolverEventChannel {
 	eventChannel := make(SolverEventChannel)
 	controller.solverEventChannels = append(controller.solverEventChannels, eventChannel)
 	return eventChannel
 }
 
+// write the given event to all generated event channels
 func (controller *SolverController) writeEvent(ev SolverEvent) {
 	for _, eventChannel := range controller.solverEventChannels {
 		eventChannel <- ev
