@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -47,7 +48,11 @@ func NewResourceProviderController(
 }
 
 func (controller *ResourceProviderController) solve() error {
-	log.Info().Msgf("solving")
+	log.Info().Msgf("adding resource offer")
+
+	controller.solverClient.AddResourceOffer(data.ResourceOffer{
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+	})
 	return nil
 }
 
