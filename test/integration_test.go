@@ -92,6 +92,10 @@ func TestStack(t *testing.T) {
 	}
 
 	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
+
+	// give the solver server a chance to boot before we get all the websockets
+	// up and trying to connect to it
+	time.Sleep(100 * time.Millisecond)
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	for {

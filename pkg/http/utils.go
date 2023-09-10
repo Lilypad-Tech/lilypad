@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,8 +52,17 @@ func getWsURL(url string) string {
 	return url
 }
 
+// we assume both userPayload and signature are base64 encoded
 func decodeUserAddress(userPayload string, signature string) (string, error) {
-	address, err := web3.GetAddressFromSignedMessage([]byte(userPayload), []byte(signature))
+	decodedUserPayload, err := base64.StdEncoding.DecodeString(userPayload)
+	if err != nil {
+		return "", err
+	}
+	decodedSignature, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return "", err
+	}
+	address, err := web3.GetAddressFromSignedMessage(decodedUserPayload, decodedSignature)
 	if err != nil {
 		return "", err
 	}
@@ -59,6 +70,7 @@ func decodeUserAddress(userPayload string, signature string) (string, error) {
 }
 
 // returns userPayload and signature as strings ready to be written into request headers
+// we encode these both as base64 so they can be included in http headers
 func encodeUserAddress(privateKey *ecdsa.PrivateKey, address string) (string, string, error) {
 	user := AuthUser{
 		Address: address,
@@ -71,7 +83,8 @@ func encodeUserAddress(privateKey *ecdsa.PrivateKey, address string) (string, st
 	if err != nil {
 		return "", "", err
 	}
-	return string(userBytes), string(userSignature), nil
+
+	return base64.StdEncoding.EncodeToString(userBytes), base64.StdEncoding.EncodeToString(userSignature), nil
 }
 
 func AddHeaders(
@@ -274,6 +287,7 @@ func Post[RequestType any, ResultType any](
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
+	spew.Dump(req.Header)
 	resp, err := client.Do(req)
 	if err != nil {
 		return result, err

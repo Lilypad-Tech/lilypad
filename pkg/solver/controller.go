@@ -98,7 +98,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 func (controller *SolverController) solve() error {
 	//log.Info().Msgf("solver solving")
 
-	// THIS IS JUST FOR TESTING
+	// // THIS IS JUST FOR TESTING
 	// log.Info().Msgf("sending tx")
 	// tx, err := controller.web3SDK.Contracts.Token.Transfer(
 	// 	controller.web3SDK.TransactOpts,

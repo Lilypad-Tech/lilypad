@@ -144,14 +144,15 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 }
 
 func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
-	log.Info().Msgf("HERE ADD")
-	signerAddress, err := http.GetAddressFromHeaders(req)
-	if err != nil {
-		return nil, err
-	}
-	// only the job creator can post a job offer
-	if signerAddress != resourceOffer.ResourceProvider {
-		return nil, fmt.Errorf("resource provider address does not match signer address")
-	}
-	return solverServer.controller.addResourceOffer(resourceOffer)
+	return &data.ResourceOffer{}, nil
+	// log.Info().Msgf("HERE ADD")
+	// signerAddress, err := http.GetAddressFromHeaders(req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// // only the job creator can post a job offer
+	// if signerAddress != resourceOffer.ResourceProvider {
+	// 	return nil, fmt.Errorf("resource provider address does not match signer address")
+	// }
+	// return solverServer.controller.addResourceOffer(resourceOffer)
 }
