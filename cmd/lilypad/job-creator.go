@@ -17,6 +17,23 @@ func newJobCreatorCmd() *cobra.Command {
 		Long:    "Start the lilypad resource-provider service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+
+			// map the options
+			newOfferOptions, err := optionsfactory.ProcessJobCreatorOfferOptions(options.Offer)
+			if err != nil {
+				return err
+			}
+			options.Offer = newOfferOptions
+
+			// check the options
+			err = optionsfactory.CheckWeb3Options(options.Web3, true)
+			if err != nil {
+				return err
+			}
+			err = optionsfactory.CheckJobCreatorOfferOptions(options.Offer)
+			if err != nil {
+				return err
+			}
 			return runJobCreator(cmd, options)
 		},
 	}
@@ -28,10 +45,6 @@ func newJobCreatorCmd() *cobra.Command {
 }
 
 func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3, true)
-	if err != nil {
-		return err
-	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

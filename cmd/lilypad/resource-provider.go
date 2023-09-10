@@ -17,7 +17,23 @@ func newResourceProviderCmd() *cobra.Command {
 		Long:    "Start the lilypad resource-provider service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			options.Offers = optionsfactory.ProcessResourceProviderOfferOptions(options.Offers)
+
+			// map the options
+			newOfferOptions, err := optionsfactory.ProcessResourceProviderOfferOptions(options.Offers)
+			if err != nil {
+				return err
+			}
+			options.Offers = newOfferOptions
+
+			// check the options
+			err = optionsfactory.CheckWeb3Options(options.Web3, true)
+			if err != nil {
+				return err
+			}
+			err = optionsfactory.CheckResourceProviderOfferOptions(options.Offers)
+			if err != nil {
+				return err
+			}
 			return runResourceProvider(cmd, options)
 		},
 	}
@@ -29,14 +45,6 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3, true)
-	if err != nil {
-		return err
-	}
-	err = optionsfactory.CheckResourceProviderOfferOptions(options.Offers)
-	if err != nil {
-		return err
-	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -50,11 +58,10 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	errChan := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
-
+	resourecProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {
 		select {
-		case err := <-errChan:
+		case err := <-resourecProviderErrors:
 			commandCtx.Cleanup()
 			return err
 		case <-commandCtx.Ctx.Done():

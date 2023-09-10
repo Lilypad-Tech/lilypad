@@ -21,6 +21,15 @@ type Spec struct {
 // this pins a go-template.yaml file
 // that is a bacalhau job spec
 type Module struct {
+
+	// used for the shortcuts
+	// this is in the modules package
+	// where we keep a map of named modules
+	// and their versions onto the
+	// repo, hash and path below
+	Name    string `json:"name"`
+	Version string `json:"version"`
+
 	// needs to be a http url for a git repo
 	// we must be able to clone it without credentials
 	Repo string `json:"repo"`
@@ -82,6 +91,9 @@ type JobOffer struct {
 	// the user inputs to the module
 	// these values will power the go template
 	Inputs map[string]string `json:"inputs"`
+	// whether the pricing should be used or if we should
+	// match against the best the market has to offer
+	LimitOrder bool `json:"limit_order"`
 	// the offered price
 	Pricing Pricing `json:"pricing"`
 }
@@ -117,8 +129,8 @@ type Match struct {
 	// how long the resource offer is valid for
 	Timeout uint64 `json:"timeout"`
 
-	ResourceOffer ResourceOffer `json:"resource_offer"`
-	JobOffer      JobOffer      `json:"job_offer"`
+	ResourceOffer string `json:"resource_offer"`
+	JobOffer      string `json:"job_offer"`
 }
 
 // represents the cost of a job

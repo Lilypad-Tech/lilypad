@@ -1,0 +1,34 @@
+{
+  "spec": {
+    "gpu": 0,
+    "cpu": 1000,
+    "ram": 100
+  },
+  "job": {
+    "APIVersion": "V1beta1",
+    "Spec": {
+      "Deal": {
+        "Concurrency": 1
+      },
+      "Docker": {
+        "Entrypoint": [
+          "/usr/games/cowsay",
+          "{{.Message}}",
+        ],
+        "Image": "grycap/cowsay:latest"
+      },
+      "Engine": "Docker",
+      "Network": {
+        "Type": "None"
+      },
+      "PublisherSpec": {
+        "Type": "Estuary"
+      },
+      "Resources": {
+        "GPU": ""
+      },
+      "Timeout": 1800,
+      "Verifier": "Noop"
+    }
+  }
+}

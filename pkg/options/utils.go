@@ -11,6 +11,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
+	"github.com/bacalhau-project/lilypad/pkg/modules"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -258,6 +259,10 @@ module options
 */
 func GetDefaultModuleOptions() data.Module {
 	return data.Module{
+		// the shortcut name
+		Name: GetDefaultServeOptionString("MODULE_NAME", ""),
+		// the shortcut version
+		Version: GetDefaultServeOptionString("MODULE_VERSION", ""),
 		// the repo we can clone from
 		Repo: GetDefaultServeOptionString("MODULE_REPO", ""),
 		// the hash to checkout the repo
@@ -268,6 +273,18 @@ func GetDefaultModuleOptions() data.Module {
 }
 
 func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Name, "module-name", moduleConfig.Name,
+		`The name of the shortcut module (MODULE_NAME)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Version, "module-version", moduleConfig.Version,
+		`The version of the shortcut module (MODULE_VERSION)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Repo, "module-repo", moduleConfig.Repo,
+		`The (http) git repo we can close (MODULE_REPO)`,
+	)
 	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Repo, "module-repo", moduleConfig.Repo,
 		`The (http) git repo we can close (MODULE_REPO)`,
@@ -280,6 +297,32 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
 		&moduleConfig.Path, "module-path", moduleConfig.Path,
 		`The path in the repo to the go template (MODULE_PATH)`,
 	)
+}
+
+// see if we have a shortcut and fill in the other values if we do
+func ProcessModuleOptions(options data.Module) (data.Module, error) {
+	// we have been given a shortcut
+	if options.Name != "" {
+		module, err := modules.GetModule(options.Name, options.Version)
+		if err != nil {
+			return options, err
+		}
+		return module, nil
+	}
+	return options, nil
+}
+
+func CheckModuleOptions(options data.Module) error {
+	if options.Repo == "" {
+		return fmt.Errorf("MODULE_REPO is required")
+	}
+	if options.Hash == "" {
+		return fmt.Errorf("MODULE_HASH is required")
+	}
+	if options.Path == "" {
+		return fmt.Errorf("MODULE_PATH is required")
+	}
+	return nil
 }
 
 /*
@@ -326,7 +369,7 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourcep
 	AddPricingCliFlags(cmd, offerOptions.DefaultPricing)
 }
 
-func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) resourceprovider.ResourceProviderOfferOptions {
+func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {
 	// if there are no specs then populate with the single spec
 	if len(options.Specs) == 0 {
 		// loop the number of machines we want to offer
@@ -334,11 +377,10 @@ func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProvid
 			options.Specs = append(options.Specs, options.OfferSpec)
 		}
 	}
-	return options
+	return options, nil
 }
 
 func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) error {
-
 	// loop over all specs and add up the total number of cpus
 	totalCPU := 0
 	for _, spec := range options.Specs {
@@ -380,4 +422,22 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobC
 		`Control the price of our job offers rather than use market pricing which is the default`,
 	)
 	AddPricingCliFlags(cmd, offerOptions.Pricing)
+	AddModuleCliFlags(cmd, offerOptions.Module)
+}
+
+func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {
+	moduleOptions, err := ProcessModuleOptions(options.Module)
+	if err != nil {
+		return options, err
+	}
+	options.Module = moduleOptions
+	return options, nil
+}
+
+func CheckJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) error {
+	err := CheckModuleOptions(options.Module)
+	if err != nil {
+		return err
+	}
+	return nil
 }
