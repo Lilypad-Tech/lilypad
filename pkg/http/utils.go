@@ -190,6 +190,9 @@ func ReadBody[T any](req *http.Request) (T, error) {
 func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
+		log.Debug().
+			Str("res", fmt.Sprintf("%+v", data)).
+			Msgf("GET %s", req.URL.String())
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
@@ -219,6 +222,11 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 			return
 		}
 		data, err := handler(requestBody, res, req)
+		log.Debug().
+			Str("req", fmt.Sprintf("%+v", requestBody)).
+			Str("res", fmt.Sprintf("%+v", data)).
+			Msgf("POST %s", req.URL.String())
+
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
@@ -264,8 +272,6 @@ func GetRequest[ResultType any](
 		return result, err
 	}
 
-	log.Debug().Msgf("GET %s\nRES: %s", URL(options, path), string(body))
-
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)
 	if err != nil {
@@ -304,8 +310,6 @@ func PostRequest[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
-
-	log.Debug().Msgf("POST %s\nREQ: %s\nRES: %s", URL(options, path), string(dataBytes), string(body))
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)

@@ -122,7 +122,6 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 }
 
 func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOffer, error) {
-
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -134,6 +133,7 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
 	}
 	// only the job creator can post a job offer
@@ -144,21 +144,14 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 }
 
 func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
-	log.Info().Msgf("addResourceOffer %+v", resourceOffer)
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
 	}
-	log.Info().Msgf("signerAddress %s", signerAddress)
-	return &data.ResourceOffer{}, nil
-	// signerAddress, err := http.GetAddressFromHeaders(req)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// // only the job creator can post a job offer
-	// if signerAddress != resourceOffer.ResourceProvider {
-	// 	return nil, fmt.Errorf("resource provider address does not match signer address")
-	// }
-	// return solverServer.controller.addResourceOffer(resourceOffer)
+	// only the job creator can post a job offer
+	if signerAddress != resourceOffer.ResourceProvider {
+		return nil, fmt.Errorf("resource provider address does not match signer address")
+	}
+	return solverServer.controller.addResourceOffer(resourceOffer)
 }

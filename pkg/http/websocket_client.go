@@ -42,7 +42,9 @@ func ConnectWebSocket(
 				continue
 			}
 			if messageType == websocket.TextMessage {
-				log.Debug().Msgf("Read websockets message:\n%s", string(p))
+				log.Debug().
+					Str("payload", string(p)).
+					Msgf("WS READ")
 				messageChan <- p
 			}
 		}
