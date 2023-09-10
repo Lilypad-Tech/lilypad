@@ -2,6 +2,7 @@ package solver
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -211,6 +212,11 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, err
 	}
 	resourceOffer.ID = id
+
+	log.Info().
+		Str("solver add resource offer", fmt.Sprintf("%+v", resourceOffer)).
+		Msgf("")
+
 	ret, err := controller.store.AddResourceOffer(resourceOffer)
 	if err != nil {
 		return nil, err

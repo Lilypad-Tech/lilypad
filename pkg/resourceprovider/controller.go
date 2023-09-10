@@ -182,7 +182,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 	// add the resource offers we need to add
 	for _, resourceOffer := range addResourceOffers {
 		log.Info().
-			Str("add resource offer", fmt.Sprintf("%+v", resourceOffer)).
+			Str("RP add resource offer", fmt.Sprintf("%+v", resourceOffer)).
 			Msgf("")
 		_, err := controller.solverClient.AddResourceOffer(resourceOffer)
 		if err != nil {

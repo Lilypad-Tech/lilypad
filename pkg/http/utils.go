@@ -222,13 +222,11 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 			http.Error(res, fmt.Sprintf("Error parsing request body"), http.StatusBadRequest)
 			return
 		}
-		data, err := handler(requestBody, res, req)
 		log.Debug().
-			Str("req", fmt.Sprintf("%+v", requestBody)).
-			Str("res", fmt.Sprintf("%+v", data)).
+			Str("requestBody", fmt.Sprintf("%+v", requestBody)).
 			Str("server POST", req.URL.String()).
 			Msgf("")
-
+		data, err := handler(requestBody, res, req)
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
