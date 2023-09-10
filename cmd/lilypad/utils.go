@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -129,28 +130,32 @@ func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourcep
 		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
 		`The modules you are willing to run (OFFER_MODULES).`,
 	)
+	addPricingCliFlags(cmd, offerOptions.DefaultPricing)
+}
+
+func addPricingCliFlags(cmd *cobra.Command, pricingConfig data.PricingConfig) {
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.InstructionPrice, "pricing-instruction-price", offerOptions.DefaultPricing.InstructionPrice,
+		&pricingConfig.InstructionPrice, "pricing-instruction-price", pricingConfig.InstructionPrice,
 		`The price per instruction to offer (PRICING_INSTRUCTION_PRICE)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.Timeout, "pricing-timeout", offerOptions.DefaultPricing.Timeout,
+		&pricingConfig.Timeout, "pricing-timeout", pricingConfig.Timeout,
 		`The timeout seconds (PRICING_TIMEOUT)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.TimeoutCollateral, "pricing-timeout-collateral", offerOptions.DefaultPricing.TimeoutCollateral,
+		&pricingConfig.TimeoutCollateral, "pricing-timeout-collateral", pricingConfig.TimeoutCollateral,
 		`The timeout collateral (PRICING_TIMEOUT_COLLATERAL)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.PaymentCollateral, "pricing-payment-collateral", offerOptions.DefaultPricing.PaymentCollateral,
+		&pricingConfig.PaymentCollateral, "pricing-payment-collateral", pricingConfig.PaymentCollateral,
 		`The payment collateral (PRICING_PAYMENT_COLLATERAL)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.ResultsCollateralMultiple, "pricing-results-collateral-multiple", offerOptions.DefaultPricing.ResultsCollateralMultiple,
+		&pricingConfig.ResultsCollateralMultiple, "pricing-results-collateral-multiple", pricingConfig.ResultsCollateralMultiple,
 		`The results collateral multiple (PRICING_RESULTS_COLLATERAL_MULTIPLE)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.MediationFee, "pricing-mediation-fee", offerOptions.DefaultPricing.MediationFee,
+		&pricingConfig.MediationFee, "pricing-mediation-fee", pricingConfig.MediationFee,
 		`The mediation fee (PRICING_MEDIATION_FEE)`,
 	)
 }
