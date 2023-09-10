@@ -21,7 +21,7 @@ func newJobCreatorCmd() *cobra.Command {
 		},
 	}
 
-	addWeb3CliFlags(solverCmd, options.Web3)
+	optionsfactory.AddWeb3CliFlags(solverCmd, options.Web3)
 
 	return solverCmd
 }

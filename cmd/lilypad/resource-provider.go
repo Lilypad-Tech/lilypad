@@ -22,8 +22,8 @@ func newResourceProviderCmd() *cobra.Command {
 		},
 	}
 
-	addWeb3CliFlags(resourceProviderCmd, options.Web3)
-	addResourceProviderOfferCliFlags(resourceProviderCmd, options.Offers)
+	optionsfactory.AddWeb3CliFlags(resourceProviderCmd, options.Web3)
+	optionsfactory.AddResourceProviderOfferCliFlags(resourceProviderCmd, options.Offers)
 
 	return resourceProviderCmd
 }

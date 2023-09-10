@@ -22,8 +22,8 @@ func newDirectoryCmd() *cobra.Command {
 		},
 	}
 
-	addServerCliFlags(solverCmd, options.Server)
-	addWeb3CliFlags(solverCmd, options.Web3)
+	optionsfactory.AddServerCliFlags(solverCmd, options.Server)
+	optionsfactory.AddWeb3CliFlags(solverCmd, options.Web3)
 
 	return solverCmd
 }
