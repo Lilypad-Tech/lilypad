@@ -57,10 +57,13 @@ func StartWebSocketServer(
 						Str("payload", string(message)).
 						Msgf("WS WRITE")
 					for conn := range connections {
-						if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-							log.Error().Msgf("Error writing to websocket: %s", err.Error())
-							return
-						}
+						c := conn
+						go func() {
+							if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
+								log.Error().Msgf("Error writing to websocket: %s", err.Error())
+								return
+							}
+						}()
 					}
 				case <-wrappedCtx.Done():
 					removeConnection(conn)

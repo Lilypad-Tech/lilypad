@@ -55,7 +55,3 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) chan
 	}()
 	return errorChan
 }
-
-func (solver *Solver) GetEventChannel() SolverEventChannel {
-	return solver.controller.getEventChannel()
-}

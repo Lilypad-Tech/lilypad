@@ -29,14 +29,12 @@ type SolverEvent struct {
 	ResourceOffer *data.ResourceOffer `json:"resource_offer"`
 }
 
-type SolverEventChannel chan SolverEvent
-
 type SolverController struct {
-	web3SDK             *web3.Web3SDK
-	web3Events          *web3.EventChannels
-	store               store.SolverStore
-	solverEventChannels []SolverEventChannel
-	options             SolverOptions
+	web3SDK         *web3.Web3SDK
+	web3Events      *web3.EventChannels
+	store           store.SolverStore
+	solverEventSubs []func(SolverEvent)
+	options         SolverOptions
 }
 
 func NewSolverController(
@@ -123,16 +121,14 @@ func (controller *SolverController) subscribeToWeb3() error {
 
 // return a new event channel that will hear about events
 // coming out of this controller
-func (controller *SolverController) getEventChannel() SolverEventChannel {
-	eventChannel := make(SolverEventChannel)
-	controller.solverEventChannels = append(controller.solverEventChannels, eventChannel)
-	return eventChannel
+func (controller *SolverController) subscribeEvents(handler func(SolverEvent)) {
+	controller.solverEventSubs = append(controller.solverEventSubs, handler)
 }
 
 // write the given event to all generated event channels
 func (controller *SolverController) writeEvent(ev SolverEvent) {
-	for _, eventChannel := range controller.solverEventChannels {
-		eventChannel <- ev
+	for _, handler := range controller.solverEventSubs {
+		go handler(ev)
 	}
 }
 
