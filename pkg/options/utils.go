@@ -368,7 +368,7 @@ job creator options
 
 func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
-		MarketOrder: true,
+		LimitOrders: false,
 		Module:      GetDefaultModuleOptions(),
 		Pricing:     GetDefaultPricingOptions(),
 	}
@@ -376,8 +376,8 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 
 func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobCreatorOfferOptions) {
 	cmd.PersistentFlags().BoolVar(
-		&offerOptions.MarketOrder, "offer-market", offerOptions.MarketOrder,
-		`Ignore the pricing config and pick the lowest priced resource offer.`,
+		&offerOptions.LimitOrders, "offer-limit", offerOptions.LimitOrders,
+		`Control the price of our job offers rather than use market pricing which is the default`,
 	)
 	AddPricingCliFlags(cmd, offerOptions.Pricing)
 }

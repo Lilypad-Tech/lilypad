@@ -15,7 +15,7 @@ type JobCreatorOfferOptions struct {
 	Module data.Module
 	// this means ignore the pricing settings and pick the
 	// lowest priced resource offer there is
-	MarketOrder bool
+	LimitOrders bool
 	// this is so clients can put limit orders for jobs
 	// and the solver will match as soon as a resource offer
 	// is added that matches the bid
