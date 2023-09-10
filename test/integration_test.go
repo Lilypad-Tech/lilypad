@@ -44,6 +44,7 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 
 func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*resourceprovider.ResourceProvider, error) {
 	resourceProviderOptions := optionsfactory.NewResourceProviderOptions()
+	resourceProviderOptions.Offers = optionsfactory.ProcessResourceProviderOfferOptions(resourceProviderOptions.Offers)
 	resourceProviderOptions.Web3.PrivateKey = os.Getenv("RESOURCE_PROVIDER_PRIVATE_KEY")
 	if resourceProviderOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
