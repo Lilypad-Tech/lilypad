@@ -110,47 +110,47 @@ func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 
 func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.CPU, "cpu", offerOptions.OfferSpec.CPU,
+		&offerOptions.OfferSpec.CPU, "offer-cpu", offerOptions.OfferSpec.CPU,
 		`How many milli-cpus to offer the network (OFFER_CPU).`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.GPU, "gpu", offerOptions.OfferSpec.GPU,
+		&offerOptions.OfferSpec.GPU, "offer-gpu", offerOptions.OfferSpec.GPU,
 		`How many milli-gpus to offer the network (OFFER_GPU).`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.RAM, "ram", offerOptions.OfferSpec.RAM,
+		&offerOptions.OfferSpec.RAM, "offer-ram", offerOptions.OfferSpec.RAM,
 		`How many megabytes of RAM to offer the network (OFFER_RAM).`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferCount, "ram", offerOptions.OfferCount,
+		&offerOptions.OfferCount, "offer-count", offerOptions.OfferCount,
 		`How many machines will we offer using the cpu, ram and gpu settings (OFFER_COUNT).`,
 	)
 	cmd.PersistentFlags().StringArrayVar(
-		&offerOptions.Modules, "modules", offerOptions.Modules,
+		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
 		`The modules you are willing to run (OFFER_MODULES).`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.InstructionPrice, "instruction-price", offerOptions.DefaultPricing.InstructionPrice,
+		&offerOptions.DefaultPricing.InstructionPrice, "pricing-instruction-price", offerOptions.DefaultPricing.InstructionPrice,
 		`The price per instruction to offer (PRICING_INSTRUCTION_PRICE)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.Timeout, "timeout", offerOptions.DefaultPricing.Timeout,
+		&offerOptions.DefaultPricing.Timeout, "pricing-timeout", offerOptions.DefaultPricing.Timeout,
 		`The timeout seconds (PRICING_TIMEOUT)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.TimeoutCollateral, "timeout-collateral", offerOptions.DefaultPricing.TimeoutCollateral,
+		&offerOptions.DefaultPricing.TimeoutCollateral, "pricing-timeout-collateral", offerOptions.DefaultPricing.TimeoutCollateral,
 		`The timeout collateral (PRICING_TIMEOUT_COLLATERAL)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.PaymentCollateral, "payment-collateral", offerOptions.DefaultPricing.PaymentCollateral,
+		&offerOptions.DefaultPricing.PaymentCollateral, "pricing-payment-collateral", offerOptions.DefaultPricing.PaymentCollateral,
 		`The payment collateral (PRICING_PAYMENT_COLLATERAL)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.ResultsCollateralMultiple, "results-collateral-multiple", offerOptions.DefaultPricing.ResultsCollateralMultiple,
+		&offerOptions.DefaultPricing.ResultsCollateralMultiple, "pricing-results-collateral-multiple", offerOptions.DefaultPricing.ResultsCollateralMultiple,
 		`The results collateral multiple (PRICING_RESULTS_COLLATERAL_MULTIPLE)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&offerOptions.DefaultPricing.MediationFee, "mediation-fee", offerOptions.DefaultPricing.MediationFee,
+		&offerOptions.DefaultPricing.MediationFee, "pricing-mediation-fee", offerOptions.DefaultPricing.MediationFee,
 		`The mediation fee (PRICING_MEDIATION_FEE)`,
 	)
 }
