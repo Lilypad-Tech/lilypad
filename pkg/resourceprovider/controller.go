@@ -49,10 +49,10 @@ func NewResourceProviderController(
 
 func (controller *ResourceProviderController) solve() error {
 	log.Info().Msgf("adding resource offer")
-	controller.solverClient.AddResourceOffer(data.ResourceOffer{
+	_, err := controller.solverClient.AddResourceOffer(data.ResourceOffer{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
 	})
-	return nil
+	return err
 }
 
 func (controller *ResourceProviderController) subscribeToSolver() error {
@@ -94,8 +94,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 			case <-ticker.C:
 				err := controller.solve()
 				if err != nil {
-					log.Error().Err(err).Msgf("error solving")
-					return
+					log.Error().Msgf("error solving: %s", err.Error())
 				}
 			case <-ctx.Done():
 				return
