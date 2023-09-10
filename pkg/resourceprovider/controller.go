@@ -3,6 +3,7 @@ package resourceprovider
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -121,6 +122,25 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 /*
 Ensure resource offers are posted to the solve
 */
+
+func convertStringToBigInt(st string) big.Int {
+	bigInt, _ := big.NewInt(0).SetString(st, 10)
+	return *bigInt
+}
+
+// convert the config string values into big ints
+func (controller *ResourceProviderController) getPricing() data.Pricing {
+	config := controller.options.Offers.DefaultPricing
+	return data.Pricing{
+		InstructionPrice:          convertStringToBigInt(config.InstructionPrice),
+		Timeout:                   convertStringToBigInt(config.Timeout),
+		TimeoutCollateral:         convertStringToBigInt(config.TimeoutCollateral),
+		PaymentCollateral:         convertStringToBigInt(config.PaymentCollateral),
+		ResultsCollateralMultiple: convertStringToBigInt(config.ResultsCollateralMultiple),
+		MediationFee:              convertStringToBigInt(config.MediationFee),
+	}
+}
+
 func (controller *ResourceProviderController) ensureResourceOffers() error {
 	existingResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -147,6 +167,8 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 			Index:            index,
 			Spec:             spec,
 			Modules:          controller.options.Offers.Modules,
+			DefaultPricing:   controller.getPricing(),
+			ModulePricing:    map[string]data.Pricing{},
 		}
 
 		resourceOfferID, err := data.GetResourceOfferID(resourceOffer)
