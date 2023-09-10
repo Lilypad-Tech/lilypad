@@ -53,7 +53,7 @@ func StartWebSocketServer(
 			for {
 				select {
 				case message := <-messageChan:
-					log.Info().Msgf("Writing websockets message:\n%s", string(message))
+					log.Debug().Msgf("Writing websockets message:\n%s", string(message))
 					for conn := range connections {
 						if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 							log.Error().Msgf("Error writing to websocket: %s", err.Error())
