@@ -144,8 +144,14 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 }
 
 func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
+	log.Info().Msgf("addResourceOffer %+v", resourceOffer)
+	signerAddress, err := http.GetAddressFromHeaders(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
+		return nil, err
+	}
+	log.Info().Msgf("signerAddress %s", signerAddress)
 	return &data.ResourceOffer{}, nil
-	// log.Info().Msgf("HERE ADD")
 	// signerAddress, err := http.GetAddressFromHeaders(req)
 	// if err != nil {
 	// 	return nil, err

@@ -122,8 +122,17 @@ func GetAddressFromHeaders(req *http.Request) (string, error) {
 	}
 
 	// decode the userHeader into a AuthUser struct
+	// let's remember this is in base64 format
+	decodedUserHeader, err := base64.StdEncoding.DecodeString(userHeader)
+	if err != nil {
+		return "", HTTPError{
+			Message:    fmt.Sprintf("invalid user header %s", err.Error()),
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
 	var authUser AuthUser
-	err := json.Unmarshal([]byte(userHeader), &authUser)
+	err = json.Unmarshal(decodedUserHeader, &authUser)
 	if err != nil {
 		return "", HTTPError{
 			Message:    fmt.Sprintf("invalid user header %s", err.Error()),
