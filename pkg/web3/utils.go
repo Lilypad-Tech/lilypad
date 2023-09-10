@@ -2,6 +2,7 @@ package web3
 
 import (
 	"crypto/ecdsa"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -36,4 +37,15 @@ func GetAddressFromSignedMessage(message []byte, sig []byte) (common.Address, er
 
 func ParsePrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(strings.Replace(privateKey, "0x", "", 1))
+}
+
+func EtherToWei(etherAmount float64) *big.Int {
+	ether := new(big.Float).SetFloat64(etherAmount)
+	weiMultiplier := new(big.Float).SetFloat64(1e18)
+	wei := new(big.Float).Mul(ether, weiMultiplier)
+
+	weiInt := new(big.Int)
+	wei.Int(weiInt)
+
+	return weiInt
 }

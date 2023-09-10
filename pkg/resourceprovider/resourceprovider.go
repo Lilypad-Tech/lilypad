@@ -25,6 +25,13 @@ type ResourceProviderOfferOptions struct {
 	// the list of modules we are willing to run
 	// an empty list means anything
 	Modules []string
+
+	// the default pricing for this resource provider
+	// for all modules that don't have a specific price
+	DefaultPricing data.Pricing
+
+	// allow different pricing for different modules
+	ModulePricing map[string]data.Pricing
 }
 
 type ResourceProviderOptions struct {
