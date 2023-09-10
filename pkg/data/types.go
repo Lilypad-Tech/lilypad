@@ -37,6 +37,9 @@ type Module struct {
 	Path string `json:"path"`
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
+	// the module file itself will contain this spec
+	// and so the module will need to be downloaded
+	// and executed for this spec to be known
 	Spec Spec `json:"spec"`
 }
 

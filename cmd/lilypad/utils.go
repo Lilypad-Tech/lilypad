@@ -7,6 +7,7 @@ import (
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
+	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
@@ -109,30 +110,9 @@ func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 	)
 }
 
-func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
-	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.CPU, "offer-cpu", offerOptions.OfferSpec.CPU,
-		`How many milli-cpus to offer the network (OFFER_CPU).`,
-	)
-	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.GPU, "offer-gpu", offerOptions.OfferSpec.GPU,
-		`How many milli-gpus to offer the network (OFFER_GPU).`,
-	)
-	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferSpec.RAM, "offer-ram", offerOptions.OfferSpec.RAM,
-		`How many megabytes of RAM to offer the network (OFFER_RAM).`,
-	)
-	cmd.PersistentFlags().IntVar(
-		&offerOptions.OfferCount, "offer-count", offerOptions.OfferCount,
-		`How many machines will we offer using the cpu, ram and gpu settings (OFFER_COUNT).`,
-	)
-	cmd.PersistentFlags().StringArrayVar(
-		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
-		`The modules you are willing to run (OFFER_MODULES).`,
-	)
-	addPricingCliFlags(cmd, offerOptions.DefaultPricing)
-}
-
+/*
+pricing options
+*/
 func addPricingCliFlags(cmd *cobra.Command, pricingConfig data.PricingConfig) {
 	cmd.PersistentFlags().StringVar(
 		&pricingConfig.InstructionPrice, "pricing-instruction-price", pricingConfig.InstructionPrice,
@@ -158,4 +138,42 @@ func addPricingCliFlags(cmd *cobra.Command, pricingConfig data.PricingConfig) {
 		&pricingConfig.MediationFee, "pricing-mediation-fee", pricingConfig.MediationFee,
 		`The mediation fee (PRICING_MEDIATION_FEE)`,
 	)
+}
+
+/*
+resource provider options
+*/
+func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.OfferSpec.CPU, "offer-cpu", offerOptions.OfferSpec.CPU,
+		`How many milli-cpus to offer the network (OFFER_CPU).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.OfferSpec.GPU, "offer-gpu", offerOptions.OfferSpec.GPU,
+		`How many milli-gpus to offer the network (OFFER_GPU).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.OfferSpec.RAM, "offer-ram", offerOptions.OfferSpec.RAM,
+		`How many megabytes of RAM to offer the network (OFFER_RAM).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.OfferCount, "offer-count", offerOptions.OfferCount,
+		`How many machines will we offer using the cpu, ram and gpu settings (OFFER_COUNT).`,
+	)
+	cmd.PersistentFlags().StringArrayVar(
+		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
+		`The modules you are willing to run (OFFER_MODULES).`,
+	)
+	addPricingCliFlags(cmd, offerOptions.DefaultPricing)
+}
+
+/*
+job creator options
+*/
+func addJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobCreatorOfferOptions) {
+	cmd.PersistentFlags().BoolVar(
+		&offerOptions.MarketOrder, "offer-market", offerOptions.MarketOrder,
+		`Ignore the pricing config and pick the lowest priced resource offer.`,
+	)
+	addPricingCliFlags(cmd, offerOptions.Pricing)
 }

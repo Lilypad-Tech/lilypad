@@ -174,6 +174,14 @@ func GetDefaultPricingOptions() data.PricingConfig {
 	}
 }
 
+func GetDefaultModuleOptions() data.Module {
+	return data.Module{
+		Repo: GetDefaultServeOptionString("MODULE_REPO", ""),
+		Hash: GetDefaultServeOptionString("MODULE_HASH", ""),
+		Path: GetDefaultServeOptionString("MODULE_PATH", ""),
+	}
+}
+
 /*
 resource provider options
 */
@@ -228,4 +236,16 @@ func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProvider
 	}
 
 	return nil
+}
+
+/*
+resource provider options
+*/
+
+func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
+	return jobcreator.JobCreatorOfferOptions{
+		MarketOrder: true,
+		Module:      GetDefaultModuleOptions(),
+		Pricing:     GetDefaultPricingOptions(),
+	}
 }

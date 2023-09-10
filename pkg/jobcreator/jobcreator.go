@@ -4,12 +4,27 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
+type JobCreatorOfferOptions struct {
+	// the module that is wanting to be run
+	// this contains the spec that is required to run the module
+	Module data.Module
+	// this means ignore the pricing settings and pick the
+	// lowest priced resource offer there is
+	MarketOrder bool
+	// this is so clients can put limit orders for jobs
+	// and the solver will match as soon as a resource offer
+	// is added that matches the bid
+	Pricing data.PricingConfig
+}
+
 type JobCreatorOptions struct {
-	Web3 web3.Web3Options
+	Offer JobCreatorOfferOptions
+	Web3  web3.Web3Options
 }
 
 type JobCreator struct {
