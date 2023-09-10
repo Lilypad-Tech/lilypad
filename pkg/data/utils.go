@@ -22,3 +22,13 @@ func CalculateCID(v interface{}) (string, error) {
 
 	return c.String(), nil
 }
+
+func GetResourceOfferID(offer ResourceOffer) (string, error) {
+	offer.ID = ""
+	return CalculateCID(offer)
+}
+
+func GetJobOfferID(offer JobOffer) (string, error) {
+	offer.ID = ""
+	return CalculateCID(offer)
+}

@@ -2,11 +2,13 @@ package resourceprovider
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
+	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
@@ -88,14 +90,20 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 	return errorChan
 }
 
+/*
+Solve
+*/
 func (controller *ResourceProviderController) solve() error {
-	log.Info().Msgf("adding resource offer")
-	_, err := controller.solverClient.AddResourceOffer(data.ResourceOffer{
-		ResourceProvider: controller.web3SDK.GetAddress().String(),
-	})
-	return err
+	err := controller.ensureResourceOffers()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
+/*
+Subscribe
+*/
 func (controller *ResourceProviderController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
 		log.Info().Msgf("New solver event %+v", event)
@@ -108,4 +116,63 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
+}
+
+/*
+Ensure resource offers are posted to the solve
+*/
+func (controller *ResourceProviderController) ensureResourceOffers() error {
+	existingResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+	})
+	if err != nil {
+		return err
+	}
+
+	// create a map of the ids of resource offers we have
+	// this will allow us to check if we need to create a new one
+	// or update an existing one
+	existingResourceOffersMap := map[string]data.ResourceOffer{}
+	for _, existingResourceOffer := range existingResourceOffers {
+		existingResourceOffersMap[existingResourceOffer.ID] = existingResourceOffer
+	}
+
+	addResourceOffers := []data.ResourceOffer{}
+
+	// map over the specs we have in the config
+	for index, spec := range controller.options.Offers.Specs {
+
+		resourceOffer := data.ResourceOffer{
+			ResourceProvider: controller.web3SDK.GetAddress().String(),
+			Index:            index,
+			Spec:             spec,
+			Modules:          controller.options.Offers.Modules,
+		}
+
+		resourceOfferID, err := data.GetResourceOfferID(resourceOffer)
+		if err != nil {
+			return err
+		}
+
+		// check if the resource offer already exists
+		// if it does then we need to update it
+		// if it doesn't then we need to add it
+		_, ok := existingResourceOffersMap[resourceOfferID]
+		if !ok {
+			addResourceOffers = append(addResourceOffers, resourceOffer)
+		}
+	}
+
+	// add the resource offers we need to add
+	for _, resourceOffer := range addResourceOffers {
+		log.Info().
+			Str("add resource offer", fmt.Sprintf("%+v", resourceOffer)).
+			Msgf("")
+		_, err := controller.solverClient.AddResourceOffer(resourceOffer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
 }
