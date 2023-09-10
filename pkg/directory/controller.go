@@ -45,6 +45,39 @@ func NewDirectoryController(
 	return controller, nil
 }
 
+func (controller *DirectoryController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := make(chan error)
+	// get the local subscriptions setup
+	err := controller.subscribeToWeb3()
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
+	// activate the web3 event listeners
+	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
+
+	go func() {
+		for {
+			err := controller.solve()
+			if err != nil {
+				log.Error().Err(err).Msgf("error solving")
+				errorChan <- err
+				return
+			}
+			select {
+			case <-time.After(1 * time.Second):
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return nil
+}
+
 func (controller *DirectoryController) solve() error {
 	log.Info().Msgf("solving")
 	return nil
@@ -67,39 +100,6 @@ func (controller *DirectoryController) writeEvent(ev DirectoryEvent) {
 	for _, eventChannel := range controller.directoryEventChannels {
 		eventChannel <- ev
 	}
-}
-
-func (controller *DirectoryController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error)
-	// get the local subscriptions setup
-	err := controller.subscribeToWeb3()
-	if err != nil {
-		errorChan <- err
-		return errorChan
-	}
-	// activate the web3 event listeners
-	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
-	if err != nil {
-		errorChan <- err
-		return errorChan
-	}
-
-	ticker := time.NewTicker(1 * time.Second)
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				err := controller.solve()
-				if err != nil {
-					log.Error().Err(err).Msgf("error solving")
-					errorChan <- err
-				}
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-	return nil
 }
 
 func (controller *DirectoryController) addDeal(deal data.Deal) (*data.Deal, error) {

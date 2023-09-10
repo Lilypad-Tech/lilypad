@@ -74,17 +74,16 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		return errorChan
 	}
 
-	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
+			err := controller.solve()
+			if err != nil {
+				log.Error().Err(err).Msgf("error solving")
+				errorChan <- err
+				return
+			}
 			select {
-			case <-ticker.C:
-				err := controller.solve()
-				if err != nil {
-					log.Error().Err(err).Msgf("error solving")
-					errorChan <- err
-					return
-				}
+			case <-time.After(1 * time.Second):
 			case <-ctx.Done():
 				return
 			}

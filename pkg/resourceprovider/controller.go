@@ -47,28 +47,6 @@ func NewResourceProviderController(
 	return controller, nil
 }
 
-func (controller *ResourceProviderController) solve() error {
-	log.Info().Msgf("adding resource offer")
-	_, err := controller.solverClient.AddResourceOffer(data.ResourceOffer{
-		ResourceProvider: controller.web3SDK.GetAddress().String(),
-	})
-	return err
-}
-
-func (controller *ResourceProviderController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
-		log.Info().Msgf("New solver event %+v", event)
-	})
-	return nil
-}
-
-func (controller *ResourceProviderController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
-	})
-	return nil
-}
-
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
@@ -92,20 +70,42 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		return errorChan
 	}
 
-	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
+			err := controller.solve()
+			if err != nil {
+				log.Error().Msgf("error solving: %s", err.Error())
+				errorChan <- err
+				return
+			}
 			select {
-			case <-ticker.C:
-				err := controller.solve()
-				if err != nil {
-					log.Error().Msgf("error solving: %s", err.Error())
-					errorChan <- err
-				}
+			case <-time.After(1 * time.Second):
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 	return errorChan
+}
+
+func (controller *ResourceProviderController) solve() error {
+	log.Info().Msgf("adding resource offer")
+	_, err := controller.solverClient.AddResourceOffer(data.ResourceOffer{
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+	})
+	return err
+}
+
+func (controller *ResourceProviderController) subscribeToSolver() error {
+	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
+		log.Info().Msgf("New solver event %+v", event)
+	})
+	return nil
+}
+
+func (controller *ResourceProviderController) subscribeToWeb3() error {
+	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
+		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+	})
+	return nil
 }

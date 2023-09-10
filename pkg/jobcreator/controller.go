@@ -46,25 +46,6 @@ func NewJobCreatorController(
 	return controller, nil
 }
 
-func (controller *JobCreatorController) solve() error {
-	log.Info().Msgf("solving")
-	return nil
-}
-
-func (controller *JobCreatorController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
-		log.Info().Msgf("New solver event %+v", event)
-	})
-	return nil
-}
-
-func (controller *JobCreatorController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
-	})
-	return nil
-}
-
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
@@ -88,20 +69,39 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		return errorChan
 	}
 
-	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
+			err := controller.solve()
+			if err != nil {
+				log.Error().Err(err).Msgf("error solving")
+				errorChan <- err
+				return
+			}
 			select {
-			case <-ticker.C:
-				err := controller.solve()
-				if err != nil {
-					log.Error().Err(err).Msgf("error solving")
-					errorChan <- err
-				}
+			case <-time.After(1 * time.Second):
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 	return errorChan
+}
+
+func (controller *JobCreatorController) solve() error {
+	log.Info().Msgf("solving")
+	return nil
+}
+
+func (controller *JobCreatorController) subscribeToSolver() error {
+	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
+		log.Info().Msgf("New solver event %+v", event)
+	})
+	return nil
+}
+
+func (controller *JobCreatorController) subscribeToWeb3() error {
+	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
+		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+	})
+	return nil
 }
