@@ -11,7 +11,7 @@ import (
 func newJobCreatorCmd() *cobra.Command {
 	options := optionsfactory.NewJobCreatorOptions()
 
-	solverCmd := &cobra.Command{
+	jobCreatorCmd := &cobra.Command{
 		Use:     "job-creator",
 		Short:   "Start the lilypad resource-provider service.",
 		Long:    "Start the lilypad resource-provider service.",
@@ -21,9 +21,10 @@ func newJobCreatorCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(solverCmd, options.Web3)
+	optionsfactory.AddWeb3CliFlags(jobCreatorCmd, options.Web3)
+	optionsfactory.AddJobCreatorOfferCliFlags(jobCreatorCmd, options.Offer)
 
-	return solverCmd
+	return jobCreatorCmd
 }
 
 func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
