@@ -37,6 +37,6 @@ func NewResourceProvider(
 	return solver, nil
 }
 
-func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	return resourceProvider.controller.Start(ctx, cm)
 }

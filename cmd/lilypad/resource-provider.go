@@ -44,11 +44,15 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		return err
-	}
+	errChan := solver.Start(commandCtx.Ctx, commandCtx.Cm)
 
-	<-commandCtx.Ctx.Done()
-	return nil
+	for {
+		select {
+		case err := <-errChan:
+			commandCtx.Cleanup()
+			return err
+		case <-commandCtx.Ctx.Done():
+			return nil
+		}
+	}
 }

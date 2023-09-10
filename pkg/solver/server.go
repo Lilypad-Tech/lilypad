@@ -122,7 +122,7 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 }
 
 func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOffer, error) {
-	log.Info().Msgf("HERE GET")
+
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {

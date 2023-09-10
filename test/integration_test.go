@@ -98,11 +98,21 @@ func TestStack(t *testing.T) {
 		return
 	}
 
-	err = resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
-	time.Sleep(time.Second * 60)
+	for {
+		select {
+		case err := <-resourceProviderErrors:
+			commandCtx.Cleanup()
+			t.Error(err)
+			return
+		case <-commandCtx.Ctx.Done():
+			t.Error("error: context cancelled")
+			return
+		case <-time.After(60 * time.Second):
+			commandCtx.Cleanup()
+			t.Error("error: timeout")
+			return
+		}
+	}
 }

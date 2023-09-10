@@ -15,7 +15,7 @@ type CommandContext struct {
 	CommandContext context.Context
 	Ctx            context.Context
 	Cm             *CleanupManager
-	cancelFunc     context.CancelFunc
+	CancelFunc     context.CancelFunc
 }
 
 func NewSystemContext(ctx context.Context) *CommandContext {
@@ -26,7 +26,7 @@ func NewSystemContext(ctx context.Context) *CommandContext {
 		CommandContext: ctx,
 		Ctx:            ctx,
 		Cm:             cm,
-		cancelFunc:     cancel,
+		CancelFunc:     cancel,
 	}
 }
 
@@ -62,7 +62,7 @@ func NewCommandContext(cmd *cobra.Command) *CommandContext {
 func (cmdContext *CommandContext) Cleanup() {
 	cmdContext.Cm.Cleanup(cmdContext.CommandContext)
 	cmdContext.Cm.Cleanup(cmdContext.Ctx)
-	cmdContext.cancelFunc()
+	cmdContext.CancelFunc()
 }
 
 // NewDetachedContext produces a new context that has a separate cancellation mechanism from its parent. This should be

@@ -259,7 +259,6 @@ func Post[RequestType any, ResultType any](
 	path string,
 	data RequestType,
 ) (ResultType, error) {
-	log.Info().Msgf("POST %s", URL(options, path))
 	var result ResultType
 	client := &http.Client{}
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
@@ -275,17 +274,11 @@ func Post[RequestType any, ResultType any](
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
-
-	log.Info().Msgf("after headers %s", URL(options, path))
-
 	resp, err := client.Do(req)
 	if err != nil {
 		return result, err
 	}
 	defer resp.Body.Close()
-
-	log.Info().Msgf("after req %s", URL(options, path))
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return result, err
