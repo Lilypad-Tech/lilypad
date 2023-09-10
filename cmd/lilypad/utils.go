@@ -141,6 +141,24 @@ func addPricingCliFlags(cmd *cobra.Command, pricingConfig data.PricingConfig) {
 }
 
 /*
+module options
+*/
+func addModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Repo, "module-repo", moduleConfig.Repo,
+		`The (http) git repo we can close (MODULE_REPO)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Hash, "module-hash", moduleConfig.Hash,
+		`The hash of the repo we can checkout (MODULE_HASH)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&moduleConfig.Path, "module-path", moduleConfig.Path,
+		`The path in the repo to the go template (MODULE_PATH)`,
+	)
+}
+
+/*
 resource provider options
 */
 func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {

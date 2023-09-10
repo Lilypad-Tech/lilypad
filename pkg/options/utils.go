@@ -174,10 +174,16 @@ func GetDefaultPricingOptions() data.PricingConfig {
 	}
 }
 
+/*
+module options
+*/
 func GetDefaultModuleOptions() data.Module {
 	return data.Module{
+		// the repo we can clone from
 		Repo: GetDefaultServeOptionString("MODULE_REPO", ""),
+		// the hash to checkout the repo
 		Hash: GetDefaultServeOptionString("MODULE_HASH", ""),
+		// the path to the go template file
 		Path: GetDefaultServeOptionString("MODULE_PATH", ""),
 	}
 }
