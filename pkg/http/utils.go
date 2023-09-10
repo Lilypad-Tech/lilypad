@@ -192,7 +192,8 @@ func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, 
 		data, err := handler(res, req)
 		log.Debug().
 			Str("res", fmt.Sprintf("%+v", data)).
-			Msgf("SERVER GET %s", req.URL.String())
+			Str("server GET", req.URL.String()).
+			Msgf("")
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
@@ -225,7 +226,8 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 		log.Debug().
 			Str("req", fmt.Sprintf("%+v", requestBody)).
 			Str("res", fmt.Sprintf("%+v", data)).
-			Msgf("SERVER POST %s", req.URL.String())
+			Str("server POST", req.URL.String()).
+			Msgf("")
 
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
@@ -257,7 +259,8 @@ func GetRequest[ResultType any](
 
 	url := URL(options, path)
 	log.Debug().
-		Msgf("CLIENT GET %s", url)
+		Str("client GET", url).
+		Msgf("")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return result, err
@@ -300,7 +303,8 @@ func PostRequest[RequestType any, ResultType any](
 	}
 	log.Debug().
 		Str("req", fmt.Sprintf("%+v", string(dataBytes))).
-		Msgf("CLIENT POST %s", URL(options, path))
+		Str("client POST", URL(options, path)).
+		Msgf("")
 	req, err := http.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return result, err

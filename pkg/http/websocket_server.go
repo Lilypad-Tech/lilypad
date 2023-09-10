@@ -54,8 +54,9 @@ func StartWebSocketServer(
 				select {
 				case message := <-messageChan:
 					log.Debug().
+						Str("action", "ws WRITE").
 						Str("payload", string(message)).
-						Msgf("WS WRITE")
+						Msgf("")
 					for conn := range connections {
 						c := conn
 						go func() {
