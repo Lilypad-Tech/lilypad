@@ -53,23 +53,27 @@ func NewSolverController(
 	return controller, nil
 }
 
-func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := make(chan error)
 	// get the local subscriptions setup
 	err := controller.subscribeToWeb3()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	// activate the web3 event listeners
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 
 	// make sure we are registered as a solver
 	// so that users can lookup our URL
 	err = controller.registerAsSolver()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -80,6 +84,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 				err := controller.solve()
 				if err != nil {
 					log.Error().Err(err).Msgf("error solving")
+					errorChan <- err
 					return
 				}
 			case <-ctx.Done():
@@ -87,7 +92,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 			}
 		}
 	}()
-	return nil
+	return errorChan
 }
 
 func (controller *SolverController) solve() error {

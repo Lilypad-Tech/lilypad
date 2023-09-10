@@ -39,16 +39,19 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 		return err
 	}
 
-	solver, err := mediator.NewMediator(options, web3SDK)
+	mediatorService, err := mediator.NewMediator(options, web3SDK)
 	if err != nil {
 		return err
 	}
 
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		return err
+	mediatorErrors := mediatorService.Start(commandCtx.Ctx, commandCtx.Cm)
+	for {
+		select {
+		case err := <-mediatorErrors:
+			commandCtx.Cleanup()
+			return err
+		case <-commandCtx.Ctx.Done():
+			return nil
+		}
 	}
-
-	<-commandCtx.Ctx.Done()
-	return nil
 }

@@ -85,23 +85,21 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
 	resourceProvider, err := getResourceProvider(t, commandCtx)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
+	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	for {
 		select {
+		case err := <-solverErrors:
+			commandCtx.Cleanup()
+			t.Error(err)
+			return
 		case err := <-resourceProviderErrors:
 			commandCtx.Cleanup()
 			t.Error(err)

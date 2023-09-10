@@ -50,16 +50,19 @@ func runDirectory(cmd *cobra.Command, options directory.DirectoryOptions) error 
 		return err
 	}
 
-	solver, err := directory.NewDirectory(options, directoryStore, web3SDK)
+	directoryService, err := directory.NewDirectory(options, directoryStore, web3SDK)
 	if err != nil {
 		return err
 	}
 
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		return err
+	directoryErrors := directoryService.Start(commandCtx.Ctx, commandCtx.Cm)
+	for {
+		select {
+		case err := <-directoryErrors:
+			commandCtx.Cleanup()
+			return err
+		case <-commandCtx.Ctx.Done():
+			return nil
+		}
 	}
-
-	<-commandCtx.Ctx.Done()
-	return nil
 }

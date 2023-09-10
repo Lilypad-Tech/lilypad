@@ -65,22 +65,27 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 	return nil
 }
 
-func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.subscribeToWeb3()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.solverClient.Start(ctx, cm)
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -91,12 +96,12 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 				err := controller.solve()
 				if err != nil {
 					log.Error().Err(err).Msgf("error solving")
-					return
+					errorChan <- err
 				}
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
-	return nil
+	return errorChan
 }

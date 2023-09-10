@@ -43,18 +43,15 @@ func NewDirectory(
 	return solver, nil
 }
 
-func (directory *Directory) Start(ctx context.Context, cm *system.CleanupManager) error {
-	err := directory.controller.Start(ctx, cm)
-	if err != nil {
-		return err
-	}
+func (directory *Directory) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := directory.controller.Start(ctx, cm)
 	go func() {
-		err = directory.server.ListenAndServe(ctx, cm)
+		err := directory.server.ListenAndServe(ctx, cm)
 		if err != nil {
-			panic(err)
+			errorChan <- err
 		}
 	}()
-	return nil
+	return errorChan
 }
 
 func (directory *Directory) GetEventChannel() DirectoryEventChannel {

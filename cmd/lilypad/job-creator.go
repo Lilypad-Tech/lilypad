@@ -39,16 +39,19 @@ func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) err
 		return err
 	}
 
-	solver, err := jobcreator.NewJobCreator(options, web3SDK)
+	jobCreatorService, err := jobcreator.NewJobCreator(options, web3SDK)
 	if err != nil {
 		return err
 	}
 
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		return err
+	jobCreatorErrors := jobCreatorService.Start(commandCtx.Ctx, commandCtx.Cm)
+	for {
+		select {
+		case err := <-jobCreatorErrors:
+			commandCtx.Cleanup()
+			return err
+		case <-commandCtx.Ctx.Done():
+			return nil
+		}
 	}
-
-	<-commandCtx.Ctx.Done()
-	return nil
 }

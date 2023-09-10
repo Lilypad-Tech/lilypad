@@ -45,18 +45,15 @@ func NewSolver(
 	return solver, nil
 }
 
-func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) error {
-	err := solver.controller.Start(ctx, cm)
-	if err != nil {
-		return err
-	}
+func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := solver.controller.Start(ctx, cm)
 	go func() {
-		err = solver.server.ListenAndServe(ctx, cm)
+		err := solver.server.ListenAndServe(ctx, cm)
 		if err != nil {
-			panic(err)
+			errorChan <- err
 		}
 	}()
-	return nil
+	return errorChan
 }
 
 func (solver *Solver) GetEventChannel() SolverEventChannel {

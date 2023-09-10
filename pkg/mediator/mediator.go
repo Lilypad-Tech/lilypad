@@ -31,6 +31,6 @@ func NewMediator(
 	return solver, nil
 }
 
-func (mediator *Mediator) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (mediator *Mediator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	return mediator.controller.Start(ctx, cm)
 }

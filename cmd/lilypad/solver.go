@@ -50,16 +50,20 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
-	solver, err := solver.NewSolver(options, solverStore, web3SDK)
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
 	if err != nil {
 		return err
 	}
 
-	err = solver.Start(commandCtx.Ctx, commandCtx.Cm)
-	if err != nil {
-		return err
-	}
+	solverErrors := solverService.Start(commandCtx.Ctx, commandCtx.Cm)
 
-	<-commandCtx.Ctx.Done()
-	return nil
+	for {
+		select {
+		case err := <-solverErrors:
+			commandCtx.Cleanup()
+			return err
+		case <-commandCtx.Ctx.Done():
+			return nil
+		}
+	}
 }

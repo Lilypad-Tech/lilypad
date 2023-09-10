@@ -37,6 +37,6 @@ func NewJobCreator(
 	return solver, nil
 }
 
-func (JobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (JobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	return JobCreator.controller.Start(ctx, cm)
 }

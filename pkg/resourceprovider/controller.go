@@ -70,26 +70,26 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 }
 
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errChan := make(chan error)
+	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
 	if err != nil {
-		errChan <- err
-		return errChan
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.subscribeToWeb3()
 	if err != nil {
-		errChan <- err
-		return errChan
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.solverClient.Start(ctx, cm)
 	if err != nil {
-		errChan <- err
-		return errChan
+		errorChan <- err
+		return errorChan
 	}
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
-		errChan <- err
-		return errChan
+		errorChan <- err
+		return errorChan
 	}
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -100,12 +100,12 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 				err := controller.solve()
 				if err != nil {
 					log.Error().Msgf("error solving: %s", err.Error())
-					errChan <- err
+					errorChan <- err
 				}
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
-	return errChan
+	return errorChan
 }

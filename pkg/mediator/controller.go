@@ -37,16 +37,19 @@ func (controller *MediatorController) subscribeToWeb3() error {
 	return nil
 }
 
-func (controller *MediatorController) Start(ctx context.Context, cm *system.CleanupManager) error {
+func (controller *MediatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	errorChan := make(chan error)
 	// get the local subscriptions setup
 	err := controller.subscribeToWeb3()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	// activate the web3 event listeners
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -57,12 +60,12 @@ func (controller *MediatorController) Start(ctx context.Context, cm *system.Clea
 				err := controller.solve()
 				if err != nil {
 					log.Error().Err(err).Msgf("error solving")
-					return
+					errorChan <- err
 				}
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
-	return nil
+	return errorChan
 }

@@ -39,12 +39,12 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	solver, err := resourceprovider.NewResourceProvider(options, web3SDK)
+	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK)
 	if err != nil {
 		return err
 	}
 
-	errChan := solver.Start(commandCtx.Ctx, commandCtx.Cm)
+	errChan := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	for {
 		select {
