@@ -7,17 +7,19 @@ import (
 )
 
 type Web3Options struct {
+
+	// core settings
 	RpcURL     string `json:"rpc_url"`
 	PrivateKey string `json:"private_key"`
 	ChainID    int    `json:"chain_id"`
 
-	// the deplpoyed contract addresses
+	// contract addresses
 	ControllerAddress string `json:"controller_address"`
 	PaymentsAddress   string `json:"payments_address"`
 	StorageAddress    string `json:"storage_address"`
 	TokenAddress      string `json:"token_address"`
 
-	// the addresses of services we want to connect to
+	// service addresses
 	SolverAddress    string `json:"solver_address"`
 	DirectoryAddress string `json:"directory_address"`
 }

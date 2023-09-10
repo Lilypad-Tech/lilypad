@@ -29,7 +29,7 @@ func newSolverCmd() *cobra.Command {
 }
 
 func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3)
+	err := optionsfactory.CheckWeb3Options(options.Web3, false)
 	if err != nil {
 		return err
 	}

@@ -220,7 +220,8 @@ function solver() {
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
-  go run . solver
+  env
+  # go run . solver
 }
 
 function resource-provider() {

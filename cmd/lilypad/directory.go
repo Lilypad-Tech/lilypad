@@ -29,7 +29,7 @@ func newDirectoryCmd() *cobra.Command {
 }
 
 func runDirectory(cmd *cobra.Command, options directory.DirectoryOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3)
+	err := optionsfactory.CheckWeb3Options(options.Web3, false)
 	if err != nil {
 		return err
 	}

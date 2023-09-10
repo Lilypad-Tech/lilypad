@@ -88,25 +88,35 @@ web3 options
 */
 func GetDefaultWeb3Options() web3.Web3Options {
 	return web3.Web3Options{
-		RpcURL:            GetDefaultServeOptionString("WEB3_RPC_URL", ""),
-		PrivateKey:        GetDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
-		ChainID:           GetDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
+
+		// core settings
+		RpcURL:     GetDefaultServeOptionString("WEB3_RPC_URL", ""),
+		PrivateKey: GetDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
+		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
+
+		// contract addresses
 		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", ""),
 		PaymentsAddress:   GetDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
-		SolverAddress:     GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
-		DirectoryAddress:  GetDefaultServeOptionString("WEB3_DIRECTORY_ADDRESS", ""),
+
+		// service addresses
+		SolverAddress:    GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
+		DirectoryAddress: GetDefaultServeOptionString("WEB3_DIRECTORY_ADDRESS", ""),
 	}
 }
 
-func CheckWeb3Options(options web3.Web3Options) error {
+func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
+
+	// core settings
 	if options.RpcURL == "" {
 		return fmt.Errorf("WEB3_RPC_URL is required")
 	}
 	if options.PrivateKey == "" {
 		return fmt.Errorf("WEB3_PRIVATE_KEY is required")
 	}
+
+	// contract addresses
 	if options.ControllerAddress == "" {
 		return fmt.Errorf("WEB3_CONTROLLER_ADDRESS is required")
 	}
@@ -119,11 +129,16 @@ func CheckWeb3Options(options web3.Web3Options) error {
 	if options.TokenAddress == "" {
 		return fmt.Errorf("WEB3_TOKEN_ADDRESS is required")
 	}
-	if options.SolverAddress == "" {
-		return fmt.Errorf("WEB3_SOLVER_ADDRESS is required")
+
+	if checkForServices {
+		// service addresses
+		if options.SolverAddress == "" {
+			return fmt.Errorf("WEB3_SOLVER_ADDRESS is required")
+		}
+		if options.DirectoryAddress == "" {
+			return fmt.Errorf("WEB3_DIRECTORY_ADDRESS is required")
+		}
 	}
-	if options.DirectoryAddress == "" {
-		return fmt.Errorf("WEB3_DIRECTORY_ADDRESS is required")
-	}
+
 	return nil
 }

@@ -27,7 +27,7 @@ func newJobCreatorCmd() *cobra.Command {
 }
 
 func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3)
+	err := optionsfactory.CheckWeb3Options(options.Web3, true)
 	if err != nil {
 		return err
 	}

@@ -62,10 +62,6 @@ func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, er
 }
 
 func NewContractSDK(options Web3Options) (*Web3SDK, error) {
-	optionsErr := checkOptions(options)
-	if optionsErr != nil {
-		return nil, optionsErr
-	}
 	client, err := ethclient.Dial(options.RpcURL)
 	if err != nil {
 		return nil, err

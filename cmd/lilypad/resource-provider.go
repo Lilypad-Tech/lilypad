@@ -27,7 +27,7 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3)
+	err := optionsfactory.CheckWeb3Options(options.Web3, true)
 	if err != nil {
 		return err
 	}
