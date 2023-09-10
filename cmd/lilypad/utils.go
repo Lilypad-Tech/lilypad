@@ -110,19 +110,19 @@ func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 
 func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.Machine.CPU, "cpu", offerOptions.Machine.CPU,
+		&offerOptions.OfferSpec.CPU, "cpu", offerOptions.OfferSpec.CPU,
 		`How many milli-cpus to offer the network.`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.Machine.GPU, "gpu", offerOptions.Machine.GPU,
+		&offerOptions.OfferSpec.GPU, "gpu", offerOptions.OfferSpec.GPU,
 		`How many milli-gpus to offer the network.`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.Machine.RAM, "ram", offerOptions.Machine.RAM,
+		&offerOptions.OfferSpec.RAM, "ram", offerOptions.OfferSpec.RAM,
 		`How many megabytes of RAM to offer the network.`,
 	)
 	cmd.PersistentFlags().IntVar(
-		&offerOptions.MachineCount, "ram", offerOptions.MachineCount,
+		&offerOptions.OfferCount, "ram", offerOptions.OfferCount,
 		`How many machines will we offer using the cpu, ram and gpu settings.`,
 	)
 	cmd.PersistentFlags().StringArrayVar(

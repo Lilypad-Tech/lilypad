@@ -161,14 +161,14 @@ resource provider options
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
 	return resourceprovider.ResourceProviderOfferOptions{
 		// by default let's offer 1 CPU, 0 GPU and 1GB RAM
-		Machine: data.Spec{
+		OfferSpec: data.Spec{
 			CPU: GetDefaultServeOptionInt("OFFER_CPU", 1),    //nolint:gomnd
 			GPU: GetDefaultServeOptionInt("OFFER_GPU", 0),    //nolint:gomnd
 			RAM: GetDefaultServeOptionInt("OFFER_RAM", 1024), //nolint:gomnd
 		},
-		MachineCount: GetDefaultServeOptionInt("OFFER_MACHINES", 1), //nolint:gomnd
-		Specs:        []data.Spec{},
-		Modules:      GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+		OfferCount: GetDefaultServeOptionInt("OFFER_COUNT", 1), //nolint:gomnd
+		Specs:      []data.Spec{},
+		Modules:    GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
 	}
 }
 
@@ -176,8 +176,8 @@ func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProvid
 	// if there are no specs then populate with the single spec
 	if len(options.Specs) == 0 {
 		// loop the number of machines we want to offer
-		for i := 0; i < options.MachineCount; i++ {
-			options.Specs = append(options.Specs, options.Machine)
+		for i := 0; i < options.OfferCount; i++ {
+			options.Specs = append(options.Specs, options.OfferSpec)
 		}
 	}
 	return options

@@ -72,7 +72,7 @@ type ResourceOffer struct {
 	ResourceProvider string `json:"resource_provider"`
 	// allows a resource provider to manage multiple offers
 	// that are essentially the same
-	Nonce int `json:"nonce"`
+	Index int `json:"index"`
 	// the spec being offered
 	Spec Spec `json:"spec"`
 	// the module ID's that this resource provider can run

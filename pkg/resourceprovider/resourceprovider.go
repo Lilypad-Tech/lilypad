@@ -13,9 +13,9 @@ import (
 type ResourceProviderOfferOptions struct {
 	// if we are configuring a single machine then
 	// these values are populated by the flags
-	Machine data.Spec
+	OfferSpec data.Spec
 	// we can dupliate the single spec to create a list of specs
-	MachineCount int
+	OfferCount int
 	// this represents how many machines we will keep
 	// offering to the network
 	// we can configure this with a config file
