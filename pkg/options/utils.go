@@ -2,7 +2,6 @@ package options
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -72,17 +71,6 @@ func GetDefaultServeOptionInt(envName string, defaultValue int) int {
 		i, err := strconv.Atoi(envValue)
 		if err == nil {
 			return i
-		}
-	}
-	return defaultValue
-}
-
-func GetDefaultServeOptionBigInt(envName string, defaultValue big.Int) big.Int {
-	envValue := os.Getenv(envName)
-	if envValue != "" {
-		i, err := strconv.Atoi(envValue)
-		if err == nil {
-			return *big.NewInt(int64(i))
 		}
 	}
 	return defaultValue
@@ -169,20 +157,20 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 /*
 pricing options
 */
-func GetDefaultPricingOptions() data.Pricing {
-	return data.Pricing{
+func GetDefaultPricingOptions() data.PricingConfig {
+	return data.PricingConfig{
 		// let's make the default price 1 ether
-		InstructionPrice: GetDefaultServeOptionBigInt("PRICING_INSTRUCTION_PRICE", *web3.EtherToWei(1)),
+		InstructionPrice: GetDefaultServeOptionString("PRICING_INSTRUCTION_PRICE", "1"),
 		// 1 hour timeout
-		Timeout: GetDefaultServeOptionBigInt("PRICING_TIMEOUT", *big.NewInt(60 * 60)),
+		Timeout: GetDefaultServeOptionString("PRICING_TIMEOUT", "3600"),
 		// 1 ether for timeout collateral
-		TimeoutCollateral: GetDefaultServeOptionBigInt("PRICING_TIMEOUT_COLLATERAL", *web3.EtherToWei(1)),
+		TimeoutCollateral: GetDefaultServeOptionString("PRICING_TIMEOUT_COLLATERAL", "1"),
 		// 2 x ether for payment collateral (assuming modules that have a single instruction count)
-		PaymentCollateral: GetDefaultServeOptionBigInt("PRICING_PAYMENT_COLLATERAL", *web3.EtherToWei(2)),
+		PaymentCollateral: GetDefaultServeOptionString("PRICING_PAYMENT_COLLATERAL", "2"),
 		// 2 x results collateral multiple
-		ResultsCollateralMultiple: GetDefaultServeOptionBigInt("PRICING_RESULTS_COLLATERAL_MULTIPLE", *big.NewInt(2)),
+		ResultsCollateralMultiple: GetDefaultServeOptionString("PRICING_RESULTS_COLLATERAL_MULTIPLE", "2"),
 		// 1 ether for mediation fee
-		MediationFee: GetDefaultServeOptionBigInt("PRICING_MEDIATION_FEE", *web3.EtherToWei(1)),
+		MediationFee: GetDefaultServeOptionString("PRICING_MEDIATION_FEE", "1"),
 	}
 }
 
@@ -202,7 +190,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		Specs:          []data.Spec{},
 		Modules:        GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
 		DefaultPricing: GetDefaultPricingOptions(),
-		ModulePricing:  map[string]data.Pricing{},
+		ModulePricing:  map[string]data.PricingConfig{},
 	}
 }
 

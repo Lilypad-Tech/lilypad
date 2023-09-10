@@ -28,10 +28,10 @@ type ResourceProviderOfferOptions struct {
 
 	// the default pricing for this resource provider
 	// for all modules that don't have a specific price
-	DefaultPricing data.Pricing
+	DefaultPricing data.PricingConfig
 
 	// allow different pricing for different modules
-	ModulePricing map[string]data.Pricing
+	ModulePricing map[string]data.PricingConfig
 }
 
 type ResourceProviderOptions struct {

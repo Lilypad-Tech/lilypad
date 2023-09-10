@@ -59,6 +59,16 @@ type Pricing struct {
 	MediationFee              big.Int `json:"mediation_fee"`
 }
 
+// all these values are in ether
+type PricingConfig struct {
+	InstructionPrice          string `json:"instruction_price"`
+	Timeout                   string `json:"timeout"`
+	TimeoutCollateral         string `json:"timeout_collateral"`
+	PaymentCollateral         string `json:"payment_collateral"`
+	ResultsCollateralMultiple string `json:"results_collateral_multiple"`
+	MediationFee              string `json:"mediation_fee"`
+}
+
 // posted to the solver by a job creator
 type JobOffer struct {
 	// this is the cid of the job offer where ID is set to empty string
