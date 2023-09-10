@@ -12,7 +12,7 @@ import (
 func newDirectoryCmd() *cobra.Command {
 	options := optionsfactory.NewDirectoryOptions()
 
-	solverCmd := &cobra.Command{
+	directoryCmd := &cobra.Command{
 		Use:     "directory",
 		Short:   "Start the lilypad directory service.",
 		Long:    "Start the lilypad directory service.",
@@ -22,10 +22,10 @@ func newDirectoryCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddServerCliFlags(solverCmd, options.Server)
-	optionsfactory.AddWeb3CliFlags(solverCmd, options.Web3)
+	optionsfactory.AddServerCliFlags(directoryCmd, options.Server)
+	optionsfactory.AddWeb3CliFlags(directoryCmd, options.Web3)
 
-	return solverCmd
+	return directoryCmd
 }
 
 func runDirectory(cmd *cobra.Command, options directory.DirectoryOptions) error {

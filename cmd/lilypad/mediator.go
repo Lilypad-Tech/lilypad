@@ -11,7 +11,7 @@ import (
 func newMediatorCmd() *cobra.Command {
 	options := optionsfactory.NewMediatorOptions()
 
-	solverCmd := &cobra.Command{
+	mediatorCmd := &cobra.Command{
 		Use:     "mediator",
 		Short:   "Start the lilypad mediator service.",
 		Long:    "Start the lilypad mediator service.",
@@ -21,9 +21,9 @@ func newMediatorCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(solverCmd, options.Web3)
+	optionsfactory.AddWeb3CliFlags(mediatorCmd, options.Web3)
 
-	return solverCmd
+	return mediatorCmd
 }
 
 func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
