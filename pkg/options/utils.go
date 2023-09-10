@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/directory"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
@@ -42,7 +44,8 @@ func NewMediatorOptions() mediator.MediatorOptions {
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	return resourceprovider.ResourceProviderOptions{
-		Web3: GetDefaultWeb3Options(),
+		Offers: GetDefaultResourceProviderOfferOptions(),
+		Web3:   GetDefaultWeb3Options(),
 	}
 }
 
@@ -50,6 +53,14 @@ func GetDefaultServeOptionString(envName string, defaultValue string) string {
 	envValue := os.Getenv(envName)
 	if envValue != "" {
 		return envValue
+	}
+	return defaultValue
+}
+
+func GetDefaultServeOptionStringArray(envName string, defaultValue []string) []string {
+	envValue := os.Getenv(envName)
+	if envValue != "" {
+		return strings.Split(envValue, ",")
 	}
 	return defaultValue
 }
@@ -138,6 +149,56 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 		if options.DirectoryAddress == "" {
 			return fmt.Errorf("WEB3_DIRECTORY_ADDRESS is required")
 		}
+	}
+
+	return nil
+}
+
+/*
+resource provider options
+*/
+
+func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
+	return resourceprovider.ResourceProviderOfferOptions{
+		// by default let's offer 1 CPU, 0 GPU and 1GB RAM
+		SingleSpec: data.Spec{
+			CPU: GetDefaultServeOptionInt("OFFER_CPU", 1),    //nolint:gomnd
+			GPU: GetDefaultServeOptionInt("OFFER_GPU", 0),    //nolint:gomnd
+			RAM: GetDefaultServeOptionInt("OFFER_RAM", 1024), //nolint:gomnd
+		},
+		Specs:   []data.Spec{},
+		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+	}
+}
+
+func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) resourceprovider.ResourceProviderOfferOptions {
+	// if there are no specs then populate with the single spec
+	if len(options.Specs) == 0 {
+		options.Specs = append(options.Specs, options.SingleSpec)
+	}
+	return options
+}
+
+func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) error {
+
+	// loop over all specs and add up the total number of cpus
+	totalCPU := 0
+	for _, spec := range options.Specs {
+		totalCPU += spec.CPU
+	}
+
+	if totalCPU <= 0 {
+		return fmt.Errorf("OFFER_CPU cannot be zero")
+	}
+
+	// do the same for memory
+	totalRAM := 0
+	for _, spec := range options.Specs {
+		totalRAM += spec.RAM
+	}
+
+	if totalRAM <= 0 {
+		return fmt.Errorf("OFFER_RAM cannot be zero")
 	}
 
 	return nil

@@ -4,12 +4,30 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
+// this configures the resource offers we will keep track of
+type ResourceProviderOfferOptions struct {
+	// if we are configuring a single machine then
+	// these values are populated by the flags
+	SingleSpec data.Spec
+	// this represents how many machines we will keep
+	// offering to the network
+	// we can configure this with a config file
+	// to start with we will just add --cpu --gpu and --ram flags
+	// to the resource provider CLI which constrains them to a single machine
+	Specs []data.Spec
+	// the list of modules we are willing to run
+	// an empty list means anything
+	Modules []string
+}
+
 type ResourceProviderOptions struct {
-	Web3 web3.Web3Options
+	Offers ResourceProviderOfferOptions
+	Web3   web3.Web3Options
 }
 
 type ResourceProvider struct {

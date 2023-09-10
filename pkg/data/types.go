@@ -9,8 +9,15 @@ import (
 // when used by resource providers - these are absolute values
 // when used by job offers - these are minimum requirements
 type Spec struct {
+	// Milli-GPU
+	// Whilst it's unlikely that partial GPU's make sense
+	// let's not use a float and fix the precision to 1/1000
 	GPU int `json:"gpu"`
+
+	// Milli-CPU
 	CPU int `json:"cpu"`
+
+	// Megabytes
 	RAM int `json:"ram"`
 }
 
@@ -63,6 +70,9 @@ type ResourceOffer struct {
 	ID string `json:"id"`
 	// the address of the job creator
 	ResourceProvider string `json:"resource_provider"`
+	// allows a resource provider to manage multiple offers
+	// that are essentially the same
+	Nonce int `json:"nonce"`
 	// the spec being offered
 	Spec Spec `json:"spec"`
 	// the module ID's that this resource provider can run

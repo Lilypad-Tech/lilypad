@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/http"
+	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
@@ -104,5 +105,24 @@ func addWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.TokenAddress, "web3-solver-address", web3Options.SolverAddress,
 		`The address of the solver service (WEB3_SOLVER_ADDRESS).`,
+	)
+}
+
+func addResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.SingleSpec.CPU, "cpu", offerOptions.SingleSpec.CPU,
+		`How many milli-cpus to offer the network.`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.SingleSpec.GPU, "gpu", offerOptions.SingleSpec.GPU,
+		`How many milli-gpus to offer the network.`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&offerOptions.SingleSpec.RAM, "ram", offerOptions.SingleSpec.RAM,
+		`How many megabytes of RAM to offer the network.`,
+	)
+	cmd.PersistentFlags().StringArrayVar(
+		&offerOptions.Modules, "modules", offerOptions.Modules,
+		`The modules you are willing to run.`,
 	)
 }

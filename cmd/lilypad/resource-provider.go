@@ -11,23 +11,29 @@ import (
 func newResourceProviderCmd() *cobra.Command {
 	options := optionsfactory.NewResourceProviderOptions()
 
-	solverCmd := &cobra.Command{
+	resourceProviderCmd := &cobra.Command{
 		Use:     "resource-provider",
 		Short:   "Start the lilypad resource-provider service.",
 		Long:    "Start the lilypad resource-provider service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			options.Offers = optionsfactory.ProcessResourceProviderOfferOptions(options.Offers)
 			return runResourceProvider(cmd, options)
 		},
 	}
 
-	addWeb3CliFlags(solverCmd, options.Web3)
+	addWeb3CliFlags(resourceProviderCmd, options.Web3)
+	addResourceProviderOfferCliFlags(resourceProviderCmd, options.Offers)
 
-	return solverCmd
+	return resourceProviderCmd
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
 	err := optionsfactory.CheckWeb3Options(options.Web3, true)
+	if err != nil {
+		return err
+	}
+	err = optionsfactory.CheckResourceProviderOfferOptions(options.Offers)
 	if err != nil {
 		return err
 	}
