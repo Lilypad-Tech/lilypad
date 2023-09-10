@@ -1,9 +1,5 @@
 package data
 
-import (
-	"math/big"
-)
-
 // used by resource providers to describe their resources
 // use by job offers to describe their requirements
 // when used by resource providers - these are absolute values
@@ -48,18 +44,18 @@ type Result struct {
 	ID     string `json:"id"`
 	DealID string `json:"deal_id"`
 	// the CID of the actual results
-	DataID           string  `json:"results_id"`
-	InstructionCount big.Int `json:"instruction_count"`
+	DataID           string `json:"results_id"`
+	InstructionCount uint64 `json:"instruction_count"`
 }
 
 // represents the cost of a job
 type Pricing struct {
-	InstructionPrice          big.Int `json:"instruction_price"`
-	Timeout                   big.Int `json:"timeout"`
-	TimeoutCollateral         big.Int `json:"timeout_collateral"`
-	PaymentCollateral         big.Int `json:"payment_collateral"`
-	ResultsCollateralMultiple big.Int `json:"results_collateral_multiple"`
-	MediationFee              big.Int `json:"mediation_fee"`
+	InstructionPrice          uint64 `json:"instruction_price"`
+	Timeout                   uint64 `json:"timeout"`
+	TimeoutCollateral         uint64 `json:"timeout_collateral"`
+	PaymentCollateral         uint64 `json:"payment_collateral"`
+	ResultsCollateralMultiple uint64 `json:"results_collateral_multiple"`
+	MediationFee              uint64 `json:"mediation_fee"`
 }
 
 // all these values are in ether

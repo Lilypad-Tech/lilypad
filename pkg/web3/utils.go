@@ -54,3 +54,8 @@ func ConvertStringToBigInt(st string) big.Int {
 	bigInt, _ := big.NewInt(0).SetString(st, 10)
 	return *bigInt
 }
+
+func ConvertStringToInt64(st string) uint64 {
+	bigInt := ConvertStringToBigInt(st)
+	return bigInt.Uint64()
+}

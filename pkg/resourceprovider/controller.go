@@ -126,12 +126,12 @@ Ensure resource offers are posted to the solve
 func (controller *ResourceProviderController) getPricing() data.Pricing {
 	config := controller.options.Offers.DefaultPricing
 	return data.Pricing{
-		InstructionPrice:          web3.ConvertStringToBigInt(config.InstructionPrice),
-		Timeout:                   web3.ConvertStringToBigInt(config.Timeout),
-		TimeoutCollateral:         web3.ConvertStringToBigInt(config.TimeoutCollateral),
-		PaymentCollateral:         web3.ConvertStringToBigInt(config.PaymentCollateral),
-		ResultsCollateralMultiple: web3.ConvertStringToBigInt(config.ResultsCollateralMultiple),
-		MediationFee:              web3.ConvertStringToBigInt(config.MediationFee),
+		InstructionPrice:          web3.ConvertStringToInt64(config.InstructionPrice),
+		Timeout:                   web3.ConvertStringToInt64(config.Timeout),
+		TimeoutCollateral:         web3.ConvertStringToInt64(config.TimeoutCollateral),
+		PaymentCollateral:         web3.ConvertStringToInt64(config.PaymentCollateral),
+		ResultsCollateralMultiple: web3.ConvertStringToInt64(config.ResultsCollateralMultiple),
+		MediationFee:              web3.ConvertStringToInt64(config.MediationFee),
 	}
 }
 

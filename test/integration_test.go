@@ -86,6 +86,13 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
+
+	// give the solver server a chance to boot before we get all the websockets
+	// up and trying to connect to it
+	time.Sleep(100 * time.Millisecond)
+
 	resourceProvider, err := getResourceProvider(t, commandCtx)
 	if err != nil {
 		t.Error(err)
@@ -97,11 +104,6 @@ func TestStack(t *testing.T) {
 		return
 	}
 
-	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
-
-	// give the solver server a chance to boot before we get all the websockets
-	// up and trying to connect to it
-	time.Sleep(100 * time.Millisecond)
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 	jobCreatorErrors := jobCreator.Start(commandCtx.Ctx, commandCtx.Cm)
 
