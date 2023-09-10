@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -179,7 +178,7 @@ func ReadBody[T any](req *http.Request) (T, error) {
 
 // wrap a http handler with some error handling
 // so if it returns an error we handle it
-func GetWrapper[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
+func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
 		if err != nil {
@@ -203,7 +202,7 @@ func GetWrapper[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, 
 	return ret
 }
 
-func PostWrapper[RequestType any, ResultType any](handler httpPostWrapper[RequestType, ResultType]) func(res http.ResponseWriter, req *http.Request) {
+func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[RequestType, ResultType]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		requestBody, err := ReadBody[RequestType](req)
 		if err != nil {
@@ -232,7 +231,7 @@ func PostWrapper[RequestType any, ResultType any](handler httpPostWrapper[Reques
 	return ret
 }
 
-func Get[ResultType any](
+func GetRequest[ResultType any](
 	options ClientOptions,
 	path string,
 ) (ResultType, error) {
@@ -256,7 +255,7 @@ func Get[ResultType any](
 		return result, err
 	}
 
-	log.Info().Msgf("GET %s\n%s", URL(options, path), string(body))
+	log.Debug().Msgf("GET %s\nRES: %s", URL(options, path), string(body))
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)
@@ -267,7 +266,7 @@ func Get[ResultType any](
 	return result, nil
 }
 
-func Post[RequestType any, ResultType any](
+func PostRequest[RequestType any, ResultType any](
 	options ClientOptions,
 	path string,
 	data RequestType,
@@ -287,7 +286,6 @@ func Post[RequestType any, ResultType any](
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
-	spew.Dump(req.Header)
 	resp, err := client.Do(req)
 	if err != nil {
 		return result, err
@@ -298,7 +296,7 @@ func Post[RequestType any, ResultType any](
 		return result, err
 	}
 
-	log.Info().Msgf("POST %s\n%s\n%s", URL(options, path), string(dataBytes), string(body))
+	log.Debug().Msgf("POST %s\nREQ: %s\nRES: %s", URL(options, path), string(dataBytes), string(body))
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)

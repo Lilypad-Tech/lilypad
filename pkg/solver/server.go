@@ -41,11 +41,11 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/job_offers", http.GetWrapper(solverServer.getJobOffers)).Methods("GET")
-	subrouter.HandleFunc("/job_offers", http.PostWrapper(solverServer.addJobOffer)).Methods("POST")
+	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
+	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/resource_offers", http.GetWrapper(solverServer.getResourceOffers)).Methods("GET")
-	subrouter.HandleFunc("/resource_offers", http.PostWrapper(solverServer.addResourceOffer)).Methods("POST")
+	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
+	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller

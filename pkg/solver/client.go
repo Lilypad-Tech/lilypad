@@ -63,17 +63,17 @@ func (client *SolverClient) SubscribeEvents(handler func(SolverEvent)) {
 }
 
 func (client *SolverClient) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
-	return http.Get[[]data.JobOffer](client.options, "/job_offers")
+	return http.GetRequest[[]data.JobOffer](client.options, "/job_offers")
 }
 
 func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOffer, error) {
-	return http.Post[data.JobOffer, data.JobOffer](client.options, "/job_offers", jobOffer)
+	return http.PostRequest[data.JobOffer, data.JobOffer](client.options, "/job_offers", jobOffer)
 }
 
 func (client *SolverClient) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOffer, error) {
-	return http.Get[[]data.ResourceOffer](client.options, "/resource_offers")
+	return http.GetRequest[[]data.ResourceOffer](client.options, "/resource_offers")
 }
 
 func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (data.ResourceOffer, error) {
-	return http.Post[data.ResourceOffer, data.ResourceOffer](client.options, "/resource_offers", resourceOffer)
+	return http.PostRequest[data.ResourceOffer, data.ResourceOffer](client.options, "/resource_offers", resourceOffer)
 }

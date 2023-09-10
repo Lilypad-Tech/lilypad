@@ -41,8 +41,8 @@ func (directoryServer *directoryServer) ListenAndServe(ctx context.Context, cm *
 
 	subrouter.Use(http.CorsMiddleware)
 
-	subrouter.HandleFunc("/deals", http.GetWrapper(directoryServer.getDeals)).Methods("GET")
-	subrouter.HandleFunc("/deals", http.PostWrapper(directoryServer.addDeal)).Methods("POST")
+	subrouter.HandleFunc("/deals", http.GetHandler(directoryServer.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals", http.PostHandler(directoryServer.addDeal)).Methods("POST")
 
 	writeEventChannel := make(chan []byte)
 
