@@ -91,6 +91,11 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	jobCreator, err := getJobCreator(t, commandCtx)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
 
@@ -98,6 +103,7 @@ func TestStack(t *testing.T) {
 	// up and trying to connect to it
 	time.Sleep(100 * time.Millisecond)
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
+	jobCreatorErrors := jobCreator.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	for {
 		select {
@@ -106,6 +112,10 @@ func TestStack(t *testing.T) {
 			t.Error(err)
 			return
 		case err := <-resourceProviderErrors:
+			commandCtx.Cleanup()
+			t.Error(err)
+			return
+		case err := <-jobCreatorErrors:
 			commandCtx.Cleanup()
 			t.Error(err)
 			return
