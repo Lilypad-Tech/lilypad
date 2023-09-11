@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/rs/zerolog/log"
 )
 
 const REPO_DIR = "repos"
@@ -75,8 +76,15 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
 	if err == nil && fileInfo.IsDir() {
+		log.Debug().
+			Str("repo dir", repoDir).
+			Msgf("")
 		return git.PlainOpen(repoDir)
 	} else if os.IsNotExist(err) {
+		log.Debug().
+			Str("repo dir", repoDir).
+			Str("repo remote", module.Repo).
+			Msgf("")
 		return git.PlainClone(repoDir, false, &git.CloneOptions{
 			URL: module.Repo,
 		})
@@ -103,13 +111,17 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	repoDir := worktree.Filesystem.Root()
+	log.Debug().
+		Str("checkout hash", module.Hash).
+		Msgf(module.Repo)
 	err = worktree.Checkout(&git.CheckoutOptions{
 		Hash: plumbing.NewHash(module.Hash),
 	})
 	if err != nil {
 		return "", err
 	}
-	templatePath := filepath.Join(worktree.Filesystem.Root(), module.Path)
+	templatePath := filepath.Join(repoDir, module.Path)
 	_, err = os.Stat(templatePath)
 	if err != nil {
 		return "", err
@@ -118,6 +130,9 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Debug().
+		Str("read file", module.Path).
+		Msgf(string(fileContents))
 	return string(fileContents), nil
 }
 
