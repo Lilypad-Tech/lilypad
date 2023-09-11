@@ -19,6 +19,16 @@ type Spec struct {
 
 type ModuleInputs map[string]string
 
+// this is what is loaded from the template file in the git repo
+type Module struct {
+	// the min spec that this module requires
+	// e.g. does this module need a GPU?
+	// the module file itself will contain this spec
+	// and so the module will need to be downloaded
+	// and executed for this spec to be known
+	Spec Spec `json:"spec"`
+}
+
 // describes a workload to be run
 // this pins a go-template.yaml file
 // that is a bacalhau job spec
@@ -42,12 +52,6 @@ type ModuleConfig struct {
 	// this is the path to the module template
 	// within the repo
 	Path string `json:"path"`
-	// the min spec that this module requires
-	// e.g. does this module need a GPU?
-	// the module file itself will contain this spec
-	// and so the module will need to be downloaded
-	// and executed for this spec to be known
-	Spec Spec `json:"spec"`
 }
 
 type Result struct {
