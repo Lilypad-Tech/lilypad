@@ -331,14 +331,14 @@ resource provider options
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
 	return resourceprovider.ResourceProviderOfferOptions{
 		// by default let's offer 1 CPU, 0 GPU and 1GB RAM
-		OfferSpec: data.Spec{
+		OfferSpec: data.MachineSpec{
 			CPU: GetDefaultServeOptionInt("OFFER_CPU", 1000), //nolint:gomnd
 			GPU: GetDefaultServeOptionInt("OFFER_GPU", 0),    //nolint:gomnd
 			RAM: GetDefaultServeOptionInt("OFFER_RAM", 1024), //nolint:gomnd
 		},
 		OfferCount: GetDefaultServeOptionInt("OFFER_COUNT", 1), //nolint:gomnd
 		// this can be populated by a config file
-		Specs: []data.Spec{},
+		Specs: []data.MachineSpec{},
 		// if an RP wants to only run certain modules they list them here
 		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
 		// this is the default pricing for a module unless it has a specific price

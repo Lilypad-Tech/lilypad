@@ -8,7 +8,7 @@ import (
 // use by job offers to describe their requirements
 // when used by resource providers - these are absolute values
 // when used by job offers - these are minimum requirements
-type Spec struct {
+type MachineSpec struct {
 	// Milli-GPU
 	// Whilst it's unlikely that partial GPU's make sense
 	// let's not use a float and fix the precision to 1/1000
@@ -30,7 +30,7 @@ type Module struct {
 	// the module file itself will contain this spec
 	// and so the module will need to be downloaded
 	// and executed for this spec to be known
-	Spec Spec `json:"spec"`
+	Spec MachineSpec `json:"spec"`
 
 	// the bacalhau job spec
 	Job model.Job `json:"job"`
@@ -120,7 +120,7 @@ type ResourceOffer struct {
 	// that are essentially the same
 	Index int `json:"index"`
 	// the spec being offered
-	Spec Spec `json:"spec"`
+	Spec MachineSpec `json:"spec"`
 	// the module ID's that this resource provider can run
 	// an empty list means ALL modules
 	Modules []string `json:"modules"`
