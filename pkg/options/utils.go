@@ -11,7 +11,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
-	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
+	"github.com/bacalhau-project/lilypad/pkg/module"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -317,29 +317,11 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
 
 // see if we have a shortcut and fill in the other values if we do
 func ProcessModuleOptions(options data.Module) (data.Module, error) {
-	// we have been given a shortcut
-	// let's try to resolve this shortcut into a full module definition
-	if options.Name != "" {
-		module, err := shortcuts.GetModule(options.Name, options.Version)
-		if err != nil {
-			return options, err
-		}
-		return module, nil
-	}
-	return options, nil
+	return module.ProcessModule(options)
 }
 
 func CheckModuleOptions(options data.Module) error {
-	if options.Repo == "" {
-		return fmt.Errorf("MODULE_REPO is required")
-	}
-	if options.Hash == "" {
-		return fmt.Errorf("MODULE_HASH is required")
-	}
-	if options.Path == "" {
-		return fmt.Errorf("MODULE_PATH is required")
-	}
-	return nil
+	return module.CheckModuleOptions(options)
 }
 
 /*
