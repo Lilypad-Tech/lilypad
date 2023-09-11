@@ -76,11 +76,11 @@ func StartWebSocketServer(
 		for {
 			messageType, _, err := conn.ReadMessage()
 			if err != nil {
-				log.Info().Msgf("Client disconnected: %s", err.Error())
+				log.Trace().Msgf("Client disconnected: %s", err.Error())
 				break
 			}
 			if messageType == websocket.CloseMessage {
-				log.Info().Msgf("Received close frame from client.")
+				log.Trace().Msgf("Received close frame from client.")
 				break
 			}
 		}
