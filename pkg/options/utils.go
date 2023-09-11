@@ -302,6 +302,7 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
 // see if we have a shortcut and fill in the other values if we do
 func ProcessModuleOptions(options data.Module) (data.Module, error) {
 	// we have been given a shortcut
+	// let's try to resolve this shortcut into a full module definition
 	if options.Name != "" {
 		module, err := modules.GetModule(options.Name, options.Version)
 		if err != nil {

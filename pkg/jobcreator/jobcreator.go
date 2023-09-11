@@ -13,8 +13,9 @@ type JobCreatorOfferOptions struct {
 	// the module that is wanting to be run
 	// this contains the spec that is required to run the module
 	Module data.Module
-	// this means ignore the pricing settings and pick the
-	// lowest priced resource offer there is
+	// if limit orders is false it means "pick the best deal"
+	// whatever the price is
+	// if it's true - then it means "find me a resource provider offering these prices"
 	LimitOrders bool
 	// this is so clients can put limit orders for jobs
 	// and the solver will match as soon as a resource offer
