@@ -53,7 +53,7 @@ func StartWebSocketServer(
 			for {
 				select {
 				case message := <-messageChan:
-					log.Trace().
+					log.Debug().
 						Str("action", "ws WRITE").
 						Str("payload", string(message)).
 						Msgf("")

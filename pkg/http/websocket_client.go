@@ -34,7 +34,7 @@ func ConnectWebSocket(
 
 	for {
 		var err error
-		log.Info().Msgf("WebSocket connection connecting: %s", url)
+		log.Debug().Msgf("WebSocket connection connecting: %s", url)
 		conn, _, err = websocket.DefaultDialer.Dial(url, nil)
 		if err != nil {
 			log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
@@ -61,7 +61,7 @@ func ConnectWebSocket(
 				continue
 			}
 			if messageType == websocket.TextMessage {
-				log.Trace().
+				log.Debug().
 					Str("action", "ws READ").
 					Str("payload", string(p)).
 					Msgf("")

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	stdlog "log"
 	"net/http"
 	"strings"
 
@@ -191,10 +192,6 @@ func ReadBody[T any](req *http.Request) (T, error) {
 func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
-		log.Trace().
-			Str("res", fmt.Sprintf("%+v", data)).
-			Str("server GET", req.URL.String()).
-			Msgf("")
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
 			httpError, ok := err.(HTTPError)
@@ -205,6 +202,11 @@ func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, 
 			}
 			return
 		} else {
+			// get is trace because it does not mutate
+			log.Trace().
+				Str("method GET", req.URL.String()).
+				Str("res", fmt.Sprintf("%+v", data)).
+				Msgf("")
 			err = json.NewEncoder(res).Encode(data)
 			if err != nil {
 				log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
@@ -223,10 +225,6 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 			http.Error(res, fmt.Sprintf("Error parsing request body"), http.StatusBadRequest)
 			return
 		}
-		log.Trace().
-			Str("requestBody", fmt.Sprintf("%+v", requestBody)).
-			Str("server POST", req.URL.String()).
-			Msgf("")
 		data, err := handler(requestBody, res, req)
 		if err != nil {
 			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
@@ -238,6 +236,12 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 			}
 			return
 		} else {
+			// post is debug because it does mutate
+			log.Debug().
+				Str("method POST", req.URL.String()).
+				Str("req", fmt.Sprintf("%+v", requestBody)).
+				Str("res", fmt.Sprintf("%+v", data)).
+				Msgf("")
 			err = json.NewEncoder(res).Encode(data)
 			if err != nil {
 				log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
@@ -254,19 +258,14 @@ func GetRequest[ResultType any](
 	path string,
 ) (ResultType, error) {
 	var result ResultType
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 10
-
+	client := newRetryClient()
 	url := URL(options, path)
-	log.Debug().
-		Str("client GET", url).
-		Msgf("")
 	req, err := retryablehttp.NewRequest("GET", url, nil)
 	if err != nil {
 		return result, err
 	}
 
-	resp, err := retryClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return result, err
 	}
@@ -292,9 +291,7 @@ func PostRequest[RequestType any, ResultType any](
 	data RequestType,
 ) (ResultType, error) {
 	var result ResultType
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 10
-
+	client := newRetryClient()
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return result, err
@@ -303,16 +300,12 @@ func PostRequest[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
-	log.Trace().
-		Str("req", fmt.Sprintf("%+v", string(dataBytes))).
-		Str("client POST", URL(options, path)).
-		Msgf("")
 	req, err := retryablehttp.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
-	resp, err := retryClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return result, err
 	}
@@ -329,4 +322,26 @@ func PostRequest[RequestType any, ResultType any](
 	}
 
 	return result, nil
+}
+
+func newRetryClient() *retryablehttp.Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
+	retryClient.Logger = stdlog.New(io.Discard, "", stdlog.LstdFlags)
+	retryClient.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
+		switch {
+		case req.Method == "POST":
+			log.Debug().
+				Str(req.Method, req.URL.String()).
+				Int("attempt", attempt).
+				Msgf("")
+		default:
+			// GET, PUT, DELETE, etc.
+			log.Trace().
+				Str(req.Method, req.URL.String()).
+				Int("attempt", attempt).
+				Msgf("")
+		}
+	}
+	return retryClient
 }
