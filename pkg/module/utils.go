@@ -66,8 +66,10 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	return module, nil
 }
 
-// clone the given repo and return the full local path
-// to the repo
+// clone the given repo and return the full local path to the repo
+// TODO: check if we have the repo already cloned
+// handle fetching new changes perhaps the commit hash is not the latest
+// at the moment we will do the slow thing and clone the repo every time
 func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	repoPath, err := getRepoLocalPath(module.Repo)
 	if err != nil {
@@ -79,21 +81,18 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
 	if err == nil && fileInfo.IsDir() {
-		log.Debug().
-			Str("repo dir", repoDir).
-			Msgf("")
-		return git.PlainOpen(repoDir)
-	} else if os.IsNotExist(err) {
-		log.Debug().
-			Str("repo dir", repoDir).
-			Str("repo remote", module.Repo).
-			Msgf("")
-		return git.PlainClone(repoDir, false, &git.CloneOptions{
-			URL: module.Repo,
-		})
-	} else {
-		return nil, err
+		err := os.RemoveAll(repoDir)
+		if err != nil {
+			return nil, err
+		}
 	}
+	log.Debug().
+		Str("repo dir", repoDir).
+		Str("repo remote", module.Repo).
+		Msgf("")
+	return git.PlainClone(repoDir, false, &git.CloneOptions{
+		URL: module.Repo,
+	})
 }
 
 // get a module cloned and checked out then return the text content of the template
