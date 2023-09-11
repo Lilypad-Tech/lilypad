@@ -276,7 +276,6 @@ function integration-tests() {
   eval $(./stack print-local-dev-env)
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  export LOG_LEVEL=debug
   (
     set -euo pipefail
     cd test
