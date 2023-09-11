@@ -81,13 +81,31 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
 	if err == nil && fileInfo.IsDir() {
-		err := os.RemoveAll(repoDir)
+		repo, err := git.PlainOpen(repoDir)
+		// err := os.RemoveAll(repoDir)
 		if err != nil {
 			return nil, err
 		}
+		// Check if hash exists
+		_, err = repo.Storer.EncodedObject(plumbing.AnyObject, plumbing.NewHash(module.Hash))
+		if err != nil {
+			// this means there is no hash in the repo
+			// so let's clean it up and clone it again
+			err = os.RemoveAll(repoDir)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			log.Debug().
+				Str("repo exists", repoDir).
+				Str("repo remote", module.Repo).
+				Msgf("")
+			// this means we do have the hash locally so can just return the repo as is
+			return repo, nil
+		}
 	}
 	log.Debug().
-		Str("repo dir", repoDir).
+		Str("repo clone", repoDir).
 		Str("repo remote", module.Repo).
 		Msgf("")
 	return git.PlainClone(repoDir, false, &git.CloneOptions{
