@@ -306,10 +306,6 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
 		`The (http) git repo we can close (MODULE_REPO)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&moduleConfig.Repo, "module-repo", moduleConfig.Repo,
-		`The (http) git repo we can close (MODULE_REPO)`,
-	)
-	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Hash, "module-hash", moduleConfig.Hash,
 		`The hash of the repo we can checkout (MODULE_HASH)`,
 	)
