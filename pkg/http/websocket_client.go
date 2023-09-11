@@ -61,7 +61,7 @@ func ConnectWebSocket(
 				continue
 			}
 			if messageType == websocket.TextMessage {
-				log.Debug().
+				log.Trace().
 					Str("action", "ws READ").
 					Str("payload", string(p)).
 					Msgf("")

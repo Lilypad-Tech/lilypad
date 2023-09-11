@@ -190,7 +190,7 @@ func ReadBody[T any](req *http.Request) (T, error) {
 func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, req *http.Request) {
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
-		log.Debug().
+		log.Trace().
 			Str("res", fmt.Sprintf("%+v", data)).
 			Str("server GET", req.URL.String()).
 			Msgf("")
@@ -222,7 +222,7 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 			http.Error(res, fmt.Sprintf("Error parsing request body"), http.StatusBadRequest)
 			return
 		}
-		log.Debug().
+		log.Trace().
 			Str("requestBody", fmt.Sprintf("%+v", requestBody)).
 			Str("server POST", req.URL.String()).
 			Msgf("")
@@ -256,7 +256,7 @@ func GetRequest[ResultType any](
 	client := &http.Client{}
 
 	url := URL(options, path)
-	log.Debug().
+	log.Trace().
 		Str("client GET", url).
 		Msgf("")
 	req, err := http.NewRequest("GET", url, nil)
@@ -299,7 +299,7 @@ func PostRequest[RequestType any, ResultType any](
 	if err != nil {
 		return result, err
 	}
-	log.Debug().
+	log.Trace().
 		Str("req", fmt.Sprintf("%+v", string(dataBytes))).
 		Str("client POST", URL(options, path)).
 		Msgf("")
