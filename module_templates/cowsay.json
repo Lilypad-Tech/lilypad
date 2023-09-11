@@ -1,5 +1,5 @@
 {
-  "spec": {
+  "machine": {
     "gpu": 0,
     "cpu": 1000,
     "ram": 100

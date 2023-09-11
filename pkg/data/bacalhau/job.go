@@ -3,6 +3,7 @@ package bacalhau
 import (
 	"encoding/base64"
 	"fmt"
+	"regexp"
 	"time"
 
 	"k8s.io/apimachinery/pkg/selection"
@@ -156,6 +157,28 @@ const (
 	// run it successfully.
 	NetworkHTTP
 )
+
+var domainRegex = regexp.MustCompile(`\b([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}\b`)
+
+func ParseNetwork(s string) (Network, error) {
+	for typ := NetworkNone; typ <= NetworkHTTP; typ++ {
+		if equal(typ.String(), s) {
+			return typ, nil
+		}
+	}
+
+	return NetworkNone, fmt.Errorf("%T: unknown type '%s'", NetworkNone, s)
+}
+
+func (n Network) MarshalText() ([]byte, error) {
+	return []byte(n.String()), nil
+}
+
+func (n *Network) UnmarshalText(text []byte) (err error) {
+	name := string(text)
+	*n, err = ParseNetwork(name)
+	return
+}
 
 type NetworkConfig struct {
 	Type    Network  `json:"Type"`
