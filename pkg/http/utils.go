@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 )
 
@@ -87,7 +88,7 @@ func encodeUserAddress(privateKey *ecdsa.PrivateKey, address string) (string, st
 }
 
 func AddHeaders(
-	req *http.Request,
+	req *retryablehttp.Request,
 	privateKey *ecdsa.PrivateKey,
 	address string,
 ) error {
@@ -253,18 +254,19 @@ func GetRequest[ResultType any](
 	path string,
 ) (ResultType, error) {
 	var result ResultType
-	client := &http.Client{}
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
 
 	url := URL(options, path)
-	log.Trace().
+	log.Debug().
 		Str("client GET", url).
 		Msgf("")
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := retryablehttp.NewRequest("GET", url, nil)
 	if err != nil {
 		return result, err
 	}
 
-	resp, err := client.Do(req)
+	resp, err := retryClient.Do(req)
 	if err != nil {
 		return result, err
 	}
@@ -290,7 +292,9 @@ func PostRequest[RequestType any, ResultType any](
 	data RequestType,
 ) (ResultType, error) {
 	var result ResultType
-	client := &http.Client{}
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
+
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return result, err
@@ -303,12 +307,12 @@ func PostRequest[RequestType any, ResultType any](
 		Str("req", fmt.Sprintf("%+v", string(dataBytes))).
 		Str("client POST", URL(options, path)).
 		Msgf("")
-	req, err := http.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
+	req, err := retryablehttp.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return result, err
 	}
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
-	resp, err := client.Do(req)
+	resp, err := retryClient.Do(req)
 	if err != nil {
 		return result, err
 	}
