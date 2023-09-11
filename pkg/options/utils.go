@@ -59,6 +59,19 @@ func GetDefaultServeOptionString(envName string, defaultValue string) string {
 	return defaultValue
 }
 
+func GetDefaultServeOptionUint64(envName string, defaultValue uint64) uint64 {
+	envValue := os.Getenv(envName)
+	if envValue != "" {
+		// convert envValue to int
+		i, err := strconv.Atoi(envValue)
+		if err == nil {
+			return uint64(i)
+		}
+		return 0
+	}
+	return defaultValue
+}
+
 func GetDefaultServeOptionStringArray(envName string, defaultValue []string) []string {
 	envValue := os.Getenv(envName)
 	if envValue != "" {
@@ -210,45 +223,52 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 /*
 pricing options
 */
-func GetDefaultPricingOptions() data.PricingConfig {
-	return data.PricingConfig{
+func GetDefaultPricingOptions(mode data.PricingMode) data.Pricing {
+	return data.Pricing{
+		// let's default to Market Price
+		Mode: data.PricingMode(GetDefaultServeOptionString("PRICING_MODE", string(mode))),
 		// let's make the default price 1 ether
-		InstructionPrice: GetDefaultServeOptionString("PRICING_INSTRUCTION_PRICE", "1"),
+		InstructionPrice: GetDefaultServeOptionUint64("PRICING_INSTRUCTION_PRICE", 1),
 		// 1 hour timeout
-		Timeout: GetDefaultServeOptionString("PRICING_TIMEOUT", "3600"),
+		Timeout: GetDefaultServeOptionUint64("PRICING_TIMEOUT", 3600),
 		// 1 ether for timeout collateral
-		TimeoutCollateral: GetDefaultServeOptionString("PRICING_TIMEOUT_COLLATERAL", "1"),
+		TimeoutCollateral: GetDefaultServeOptionUint64("PRICING_TIMEOUT_COLLATERAL", 1),
 		// 2 x ether for payment collateral (assuming modules that have a single instruction count)
-		PaymentCollateral: GetDefaultServeOptionString("PRICING_PAYMENT_COLLATERAL", "2"),
+		PaymentCollateral: GetDefaultServeOptionUint64("PRICING_PAYMENT_COLLATERAL", 2),
 		// 2 x results collateral multiple
-		ResultsCollateralMultiple: GetDefaultServeOptionString("PRICING_RESULTS_COLLATERAL_MULTIPLE", "2"),
+		ResultsCollateralMultiple: GetDefaultServeOptionUint64("PRICING_RESULTS_COLLATERAL_MULTIPLE", 2),
 		// 1 ether for mediation fee
-		MediationFee: GetDefaultServeOptionString("PRICING_MEDIATION_FEE", "1"),
+		MediationFee: GetDefaultServeOptionUint64("PRICING_MEDIATION_FEE", 1),
 	}
 }
 
-func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.PricingConfig) {
+func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.Pricing) {
 	cmd.PersistentFlags().StringVar(
+		(*string)(&pricingConfig.Mode), "pricing-mode", string(pricingConfig.Mode),
+		"set pricing mode (MarketPrice/FixedPrice)",
+	)
+
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.InstructionPrice, "pricing-instruction-price", pricingConfig.InstructionPrice,
 		`The price per instruction to offer (PRICING_INSTRUCTION_PRICE)`,
 	)
-	cmd.PersistentFlags().StringVar(
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.Timeout, "pricing-timeout", pricingConfig.Timeout,
 		`The timeout seconds (PRICING_TIMEOUT)`,
 	)
-	cmd.PersistentFlags().StringVar(
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.TimeoutCollateral, "pricing-timeout-collateral", pricingConfig.TimeoutCollateral,
 		`The timeout collateral (PRICING_TIMEOUT_COLLATERAL)`,
 	)
-	cmd.PersistentFlags().StringVar(
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.PaymentCollateral, "pricing-payment-collateral", pricingConfig.PaymentCollateral,
 		`The payment collateral (PRICING_PAYMENT_COLLATERAL)`,
 	)
-	cmd.PersistentFlags().StringVar(
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.ResultsCollateralMultiple, "pricing-results-collateral-multiple", pricingConfig.ResultsCollateralMultiple,
 		`The results collateral multiple (PRICING_RESULTS_COLLATERAL_MULTIPLE)`,
 	)
-	cmd.PersistentFlags().StringVar(
+	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.MediationFee, "pricing-mediation-fee", pricingConfig.MediationFee,
 		`The mediation fee (PRICING_MEDIATION_FEE)`,
 	)
@@ -338,11 +358,15 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 			GPU: GetDefaultServeOptionInt("OFFER_GPU", 0),    //nolint:gomnd
 			RAM: GetDefaultServeOptionInt("OFFER_RAM", 1024), //nolint:gomnd
 		},
-		OfferCount:     GetDefaultServeOptionInt("OFFER_COUNT", 1), //nolint:gomnd
-		Specs:          []data.Spec{},
-		Modules:        GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
-		DefaultPricing: GetDefaultPricingOptions(),
-		ModulePricing:  map[string]data.PricingConfig{},
+		OfferCount: GetDefaultServeOptionInt("OFFER_COUNT", 1), //nolint:gomnd
+		// this can be populated by a config file
+		Specs: []data.Spec{},
+		// if an RP wants to only run certain modules they list them here
+		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+		// this is the default pricing for a module unless it has a specific price
+		DefaultPricing: GetDefaultPricingOptions(data.FixedPrice),
+		// allows an RP to list specific prices for each module
+		ModulePricing: map[string]data.Pricing{},
 	}
 }
 
@@ -411,17 +435,12 @@ job creator options
 
 func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
-		LimitOrders: false,
-		Module:      GetDefaultModuleOptions(),
-		Pricing:     GetDefaultPricingOptions(),
+		Module:  GetDefaultModuleOptions(),
+		Pricing: GetDefaultPricingOptions(data.MarketPrice),
 	}
 }
 
 func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobCreatorOfferOptions) {
-	cmd.PersistentFlags().BoolVar(
-		&offerOptions.LimitOrders, "offer-limit", offerOptions.LimitOrders,
-		`Control the price of our job offers rather than use market pricing which is the default`,
-	)
 	AddPricingCliFlags(cmd, offerOptions.Pricing)
 	AddModuleCliFlags(cmd, offerOptions.Module)
 }

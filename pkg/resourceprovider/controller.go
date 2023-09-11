@@ -122,17 +122,9 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 Ensure resource offers are posted to the solve
 */
 
-// convert the config string values into big ints
-func (controller *ResourceProviderController) getPricing() data.Pricing {
-	config := controller.options.Offers.DefaultPricing
-	return data.Pricing{
-		InstructionPrice:          web3.ConvertStringToInt64(config.InstructionPrice),
-		Timeout:                   web3.ConvertStringToInt64(config.Timeout),
-		TimeoutCollateral:         web3.ConvertStringToInt64(config.TimeoutCollateral),
-		PaymentCollateral:         web3.ConvertStringToInt64(config.PaymentCollateral),
-		ResultsCollateralMultiple: web3.ConvertStringToInt64(config.ResultsCollateralMultiple),
-		MediationFee:              web3.ConvertStringToInt64(config.MediationFee),
-	}
+// return the pricing for a resource offer to be made by this node
+func (controller *ResourceProviderController) getOfferPricing() data.Pricing {
+	return controller.options.Offers.DefaultPricing
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {
@@ -161,7 +153,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 			Index:            index,
 			Spec:             spec,
 			Modules:          controller.options.Offers.Modules,
-			DefaultPricing:   controller.getPricing(),
+			DefaultPricing:   controller.getOfferPricing(),
 			ModulePricing:    map[string]data.Pricing{},
 		}
 

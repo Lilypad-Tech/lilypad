@@ -57,24 +57,26 @@ type Result struct {
 	InstructionCount uint64 `json:"instruction_count"`
 }
 
+type PricingMode string
+
+// MarketPrice means - get me the best deal
+// job creators will do this by default i.e. "just buy me the cheapest"
+// FixedPrice means - take it or leave it
+// resource creators will do this by default i.e. "this is my price"
+const (
+	MarketPrice PricingMode = "MarketPrice"
+	FixedPrice  PricingMode = "FixedPrice"
+)
+
 // represents the cost of a job
 type Pricing struct {
-	InstructionPrice          uint64 `json:"instruction_price"`
-	Timeout                   uint64 `json:"timeout"`
-	TimeoutCollateral         uint64 `json:"timeout_collateral"`
-	PaymentCollateral         uint64 `json:"payment_collateral"`
-	ResultsCollateralMultiple uint64 `json:"results_collateral_multiple"`
-	MediationFee              uint64 `json:"mediation_fee"`
-}
-
-// all these values are in ether
-type PricingConfig struct {
-	InstructionPrice          string `json:"instruction_price"`
-	Timeout                   string `json:"timeout"`
-	TimeoutCollateral         string `json:"timeout_collateral"`
-	PaymentCollateral         string `json:"payment_collateral"`
-	ResultsCollateralMultiple string `json:"results_collateral_multiple"`
-	MediationFee              string `json:"mediation_fee"`
+	Mode                      PricingMode `json:"mode"`
+	InstructionPrice          uint64      `json:"instruction_price"`
+	Timeout                   uint64      `json:"timeout"`
+	TimeoutCollateral         uint64      `json:"timeout_collateral"`
+	PaymentCollateral         uint64      `json:"payment_collateral"`
+	ResultsCollateralMultiple uint64      `json:"results_collateral_multiple"`
+	MediationFee              uint64      `json:"mediation_fee"`
 }
 
 // posted to the solver by a job creator
@@ -91,9 +93,6 @@ type JobOffer struct {
 	// the user inputs to the module
 	// these values will power the go template
 	Inputs map[string]string `json:"inputs"`
-	// whether the pricing should be used or if we should
-	// match against the best the market has to offer
-	LimitOrder bool `json:"limit_order"`
 	// the offered price
 	Pricing Pricing `json:"pricing"`
 }
