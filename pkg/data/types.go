@@ -21,8 +21,6 @@ type MachineSpec struct {
 	RAM int `json:"ram"`
 }
 
-type ModuleInputs map[string]string
-
 // this is what is loaded from the template file in the git repo
 type Module struct {
 	// the min spec that this module requires
@@ -105,7 +103,7 @@ type JobOffer struct {
 	Module ModuleConfig `json:"module"`
 	// the user inputs to the module
 	// these values will power the go template
-	Inputs ModuleInputs `json:"inputs"`
+	Inputs map[string]string `json:"inputs"`
 	// the offered price
 	Pricing Pricing `json:"pricing"`
 }

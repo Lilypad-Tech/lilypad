@@ -124,6 +124,6 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 // - prepare the module - now we have the text of the template
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
-func LoadModule(module data.ModuleConfig, inputs data.ModuleInputs) error {
+func LoadModule(module data.ModuleConfig, inputs map[string]string) error {
 	return nil
 }
