@@ -1,7 +1,9 @@
 package bacalhau
 
 import (
+	"encoding/base64"
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/selection"
 )
@@ -255,4 +257,51 @@ type Spec struct {
 
 	// The deal the client has made, such as which job bids they have accepted.
 	Deal Deal `json:"Deal,omitempty"`
+}
+
+type PublicKey []byte
+
+func (pk PublicKey) MarshalText() ([]byte, error) {
+	return []byte(base64.StdEncoding.EncodeToString(pk)), nil
+}
+
+func (pk *PublicKey) UnmarshalText(text []byte) error {
+	ba, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return err
+	}
+	*pk = ba
+	return nil
+}
+
+type JobRequester struct {
+	// The ID of the requester node that owns this job.
+	RequesterNodeID string `json:"RequesterNodeID,omitempty" example:"QmXaXu9N5GNetatsvwnTfQqNtSeKAD6uCmarbh3LMRYAcF"`
+
+	// The public key of the Requester node that created this job
+	// This can be used to encrypt messages back to the creator
+	RequesterPublicKey PublicKey `json:"RequesterPublicKey,omitempty"`
+}
+
+type Metadata struct {
+	// The unique global ID of this job in the bacalhau network.
+	ID string `json:"ID,omitempty" example:"92d5d4ee-3765-4f78-8353-623f5f26df08"`
+
+	// Time the job was submitted to the bacalhau network.
+	CreatedAt time.Time `json:"CreatedAt,omitempty" example:"2022-11-17T13:29:01.871140291Z"`
+
+	// The ID of the client that created this job.
+	ClientID string `json:"ClientID,omitempty" example:"ac13188e93c97a9c2e7cf8e86c7313156a73436036f30da1ececc2ce79f9ea51"`
+
+	Requester JobRequester `json:"Requester,omitempty"`
+}
+
+type Job struct {
+	APIVersion string `json:"APIVersion" example:"V1beta1"`
+
+	// TODO this doesn't seem like it should be a part of the job as it cannot be known by a client ahead of time.
+	Metadata Metadata `json:"Metadata,omitempty"`
+
+	// The specification of this job.
+	Spec Spec `json:"Spec,omitempty"`
 }
