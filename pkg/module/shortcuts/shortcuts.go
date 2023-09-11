@@ -6,7 +6,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 )
 
-func getModuleVersions(name string) (string, map[string]data.Module, error) {
+func getModuleVersions(name string) (string, map[string]data.ModuleConfig, error) {
 	switch name {
 	case "cowsay":
 		return getCowsayVersions()
@@ -14,20 +14,20 @@ func getModuleVersions(name string) (string, map[string]data.Module, error) {
 	return "", nil, fmt.Errorf("no module found for %s", name)
 }
 
-func GetModule(name string, version string) (data.Module, error) {
+func GetModule(name string, version string) (data.ModuleConfig, error) {
 	if name == "" {
-		return data.Module{}, fmt.Errorf("module name is empty")
+		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
 	}
 	latestVersion, versions, err := getModuleVersions(name)
 	if err != nil {
-		return data.Module{}, err
+		return data.ModuleConfig{}, err
 	}
 	if version == "" {
 		version = latestVersion
 	}
 	module, ok := versions[version]
 	if !ok {
-		return data.Module{}, fmt.Errorf("no module version found for %s %s", name, version)
+		return data.ModuleConfig{}, fmt.Errorf("no module version found for %s %s", name, version)
 	}
 	return module, nil
 }

@@ -277,8 +277,8 @@ func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.Pricing) {
 /*
 module options
 */
-func GetDefaultModuleOptions() data.Module {
-	return data.Module{
+func GetDefaultModuleOptions() data.ModuleConfig {
+	return data.ModuleConfig{
 		// the shortcut name
 		Name: GetDefaultServeOptionString("MODULE_NAME", ""),
 		// the shortcut version
@@ -292,7 +292,7 @@ func GetDefaultModuleOptions() data.Module {
 	}
 }
 
-func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
+func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.ModuleConfig) {
 	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Name, "module-name", moduleConfig.Name,
 		`The name of the shortcut module (MODULE_NAME)`,
@@ -316,11 +316,11 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.Module) {
 }
 
 // see if we have a shortcut and fill in the other values if we do
-func ProcessModuleOptions(options data.Module) (data.Module, error) {
+func ProcessModuleOptions(options data.ModuleConfig) (data.ModuleConfig, error) {
 	return module.ProcessModule(options)
 }
 
-func CheckModuleOptions(options data.Module) error {
+func CheckModuleOptions(options data.ModuleConfig) error {
 	return module.CheckModuleOptions(options)
 }
 

@@ -12,7 +12,7 @@ import (
 type JobCreatorOfferOptions struct {
 	// the module that is wanting to be run
 	// this contains the spec that is required to run the module
-	Module data.Module
+	Module data.ModuleConfig
 	// this is so clients can put limit orders for jobs
 	// and the solver will match as soon as a resource offer
 	// is added that matches the bid

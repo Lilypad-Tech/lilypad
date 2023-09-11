@@ -30,7 +30,7 @@ func getRepoLocalPath(repoURL string) (string, error) {
 	return filepath.Join(REPO_DIR, pathParts[0], pathParts[1]), nil
 }
 
-func CheckModuleOptions(options data.Module) error {
+func CheckModuleOptions(options data.ModuleConfig) error {
 	if options.Repo == "" {
 		return fmt.Errorf("MODULE_REPO is required")
 	}
@@ -45,7 +45,7 @@ func CheckModuleOptions(options data.Module) error {
 
 // given a module - check if it's a shortcut and if yes
 // expand the shortcut into the other module props
-func ProcessModule(module data.Module) (data.Module, error) {
+func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	// we have been given a shortcut
 	// let's try to resolve this shortcut into a full module definition
 	if module.Name != "" {
@@ -64,7 +64,7 @@ func ProcessModule(module data.Module) (data.Module, error) {
 
 // clone the given repo and return the full local path
 // to the repo
-func CloneModule(module data.Module) (*git.Repository, error) {
+func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	repoPath, err := getRepoLocalPath(module.Repo)
 	if err != nil {
 		return nil, err
@@ -85,13 +85,12 @@ func CloneModule(module data.Module) (*git.Repository, error) {
 	}
 }
 
-// get a module cloned and checked out then return the
-// text content of the template
+// get a module cloned and checked out then return the text content of the template
 //   - process shortcuts
 //   - check if we have the repo cloned
 //   - checkout the correct hash
 //   - check and read the file
-func PrepareModule(module data.Module) (string, error) {
+func PrepareModule(module data.ModuleConfig) (string, error) {
 	module, err := ProcessModule(module)
 	if err != nil {
 		return "", err
@@ -122,9 +121,9 @@ func PrepareModule(module data.Module) (string, error) {
 	return string(fileContents), nil
 }
 
-// - prepare the module and
-// - replace the values using the go template
+// - prepare the module - now we have the text of the template
+// - inject the given values using template syntax
 // - JSON parse and check we don't have errors
-func ValidateModule(module data.Module) error {
+func LoadModule(module data.ModuleConfig, inputs data.ModuleInputs) error {
 	return nil
 }

@@ -17,10 +17,12 @@ type Spec struct {
 	RAM int `json:"ram"`
 }
 
+type ModuleInputs map[string]string
+
 // describes a workload to be run
 // this pins a go-template.yaml file
 // that is a bacalhau job spec
-type Module struct {
+type ModuleConfig struct {
 
 	// used for the shortcuts
 	// this is in the modules package
@@ -89,10 +91,10 @@ type JobOffer struct {
 	ModuleID string `json:"module_id"`
 	// the actual module that is being offered
 	// this must hash to the ModuleID above
-	Module Module `json:"module"`
+	Module ModuleConfig `json:"module"`
 	// the user inputs to the module
 	// these values will power the go template
-	Inputs map[string]string `json:"inputs"`
+	Inputs ModuleInputs `json:"inputs"`
 	// the offered price
 	Pricing Pricing `json:"pricing"`
 }
