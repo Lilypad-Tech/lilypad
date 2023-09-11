@@ -334,7 +334,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 	return resourceprovider.ResourceProviderOfferOptions{
 		// by default let's offer 1 CPU, 0 GPU and 1GB RAM
 		OfferSpec: data.Spec{
-			CPU: GetDefaultServeOptionInt("OFFER_CPU", 1),    //nolint:gomnd
+			CPU: GetDefaultServeOptionInt("OFFER_CPU", 1000), //nolint:gomnd
 			GPU: GetDefaultServeOptionInt("OFFER_GPU", 0),    //nolint:gomnd
 			RAM: GetDefaultServeOptionInt("OFFER_RAM", 1024), //nolint:gomnd
 		},
