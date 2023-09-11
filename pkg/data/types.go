@@ -1,9 +1,5 @@
 package data
 
-import (
-	"github.com/bacalhau-project/bacalhau/pkg/model"
-)
-
 // used by resource providers to describe their resources
 // use by job offers to describe their requirements
 // when used by resource providers - these are absolute values
@@ -33,7 +29,7 @@ type Module struct {
 	Machine MachineSpec `json:"machine"`
 
 	// the bacalhau job spec
-	Job model.Job `json:"job"`
+	// Job model.Job `json:"job"`
 }
 
 // describes a workload to be run
