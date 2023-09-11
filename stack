@@ -212,6 +212,15 @@ function balances() {
 ############################################################################
 ############################################################################
 
+function run() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export SERVER_PORT=8080
+  export SERVER_URL=http://localhost:8080
+  go run . run "$@" --help
+}
+
 function solver() {
   source .env
   eval $(./stack print-local-dev-env)
