@@ -50,6 +50,11 @@ func EtherToWei(etherAmount float64) *big.Int {
 	return weiInt
 }
 
+func EtherToWeiUint64(etherAmount float64) uint64 {
+	wei := EtherToWei(etherAmount)
+	return wei.Uint64()
+}
+
 func ConvertStringToBigInt(st string) big.Int {
 	bigInt, _ := big.NewInt(0).SetString(st, 10)
 	return *bigInt
