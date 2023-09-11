@@ -13,7 +13,7 @@
       "Docker": {
         "Entrypoint": [
           "/usr/games/cowsay",
-          "{{.message}}"
+          "{{.Message}}"
         ],
         "Image": "grycap/cowsay:latest"
       },

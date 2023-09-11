@@ -1,7 +1,10 @@
 package module
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -139,6 +142,26 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 // - prepare the module - now we have the text of the template
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
-func LoadModule(module data.ModuleConfig, inputs map[string]string) error {
-	return nil
+func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Module, error) {
+	moduleText, err := PrepareModule(module)
+	if err != nil {
+		return nil, err
+	}
+
+	templateName := fmt.Sprintf("%s-%s-%s", module.Repo, module.Path, module.Hash)
+	tmpl, err := template.New(templateName).Parse(moduleText)
+	if err != nil {
+		return nil, err
+	}
+	var template bytes.Buffer
+	if err := tmpl.Execute(&template, inputs); err != nil {
+		return nil, err
+	}
+
+	var moduleData data.Module
+	if err := json.Unmarshal([]byte(template.String()), &moduleData); err != nil {
+		return nil, err
+	}
+
+	return &moduleData, nil
 }
