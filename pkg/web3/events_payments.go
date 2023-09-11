@@ -7,6 +7,8 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/rs/zerolog/log"
 )
 
 type PaymentEventChannels struct {
@@ -30,11 +32,20 @@ func (p *PaymentEventChannels) Start(
 		return err
 	}
 
-	paymentSub, err := sdk.Contracts.Payments.WatchPayment(
-		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		p.paymentChan,
-		[]*big.Int{},
-	)
+	var paymentSub event.Subscription
+
+	connectPaymentSub := func() (event.Subscription, error) {
+		log.Debug().
+			Str("payments->connect", "Payment").
+			Msgf("")
+		return sdk.Contracts.Payments.WatchPayment(
+			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
+			p.paymentChan,
+			[]*big.Int{},
+		)
+	}
+
+	paymentSub, err = connectPaymentSub()
 	if err != nil {
 		return err
 	}
@@ -47,11 +58,18 @@ func (p *PaymentEventChannels) Start(
 	for {
 		select {
 		case event := <-p.paymentChan:
+			log.Debug().
+				Str("payments->event", "Payment").
+				Msgf("%+v", event)
 			for _, handler := range p.paymentSubs {
 				go handler(*event)
 			}
 		case err := <-paymentSub.Err():
-			return err
+			paymentSub.Unsubscribe()
+			paymentSub, err = connectPaymentSub()
+			if err != nil {
+				return err
+			}
 		}
 	}
 }

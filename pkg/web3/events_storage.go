@@ -7,6 +7,8 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/rs/zerolog/log"
 )
 
 type StorageEventChannels struct {
@@ -30,12 +32,21 @@ func (s *StorageEventChannels) Start(
 		return err
 	}
 
-	dealStateChangeSub, err := sdk.Contracts.Storage.WatchDealStateChange(
-		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		s.dealStateChangeChan,
-		[]*big.Int{},
-		[]uint8{},
-	)
+	var dealStateChangeSub event.Subscription
+
+	connectDealStateChangeSub := func() (event.Subscription, error) {
+		log.Debug().
+			Str("storage->connect", "DealStateChange").
+			Msgf("")
+		return sdk.Contracts.Storage.WatchDealStateChange(
+			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
+			s.dealStateChangeChan,
+			[]*big.Int{},
+			[]uint8{},
+		)
+	}
+
+	dealStateChangeSub, err = connectDealStateChangeSub()
 	if err != nil {
 		return err
 	}
@@ -48,11 +59,18 @@ func (s *StorageEventChannels) Start(
 	for {
 		select {
 		case event := <-s.dealStateChangeChan:
+			log.Debug().
+				Str("storage->event", "DealStateChange").
+				Msgf("%+v", event)
 			for _, handler := range s.dealStateChangeSubs {
 				go handler(*event)
 			}
 		case err := <-dealStateChangeSub.Err():
-			return err
+			dealStateChangeSub.Unsubscribe()
+			dealStateChangeSub, err = connectDealStateChangeSub()
+			if err != nil {
+				return err
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,12 +32,21 @@ func (t *TokenEventChannels) Start(
 		return err
 	}
 
-	transferSub, err := sdk.Contracts.Token.WatchTransfer(
-		&bind.WatchOpts{Start: &blockNumber, Context: ctx},
-		t.transferChan,
-		[]common.Address{},
-		[]common.Address{},
-	)
+	var transferSub event.Subscription
+
+	connectTransferSub := func() (event.Subscription, error) {
+		log.Debug().
+			Str("token->connect", "Transfer").
+			Msgf("")
+		return sdk.Contracts.Token.WatchTransfer(
+			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
+			t.transferChan,
+			[]common.Address{},
+			[]common.Address{},
+		)
+	}
+
+	transferSub, err = connectTransferSub()
 	if err != nil {
 		return err
 	}
@@ -49,12 +59,18 @@ func (t *TokenEventChannels) Start(
 	for {
 		select {
 		case event := <-t.transferChan:
-			log.Info().Msgf("token event -> transfer: %+v", event)
+			log.Debug().
+				Str("token->event", "Transfer").
+				Msgf("%+v", event)
 			for _, handler := range t.transferSubs {
 				go handler(*event)
 			}
 		case err := <-transferSub.Err():
-			return err
+			transferSub.Unsubscribe()
+			transferSub, err = connectTransferSub()
+			if err != nil {
+				return err
+			}
 		}
 	}
 }
