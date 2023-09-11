@@ -11,7 +11,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
-	"github.com/bacalhau-project/lilypad/pkg/modules"
+	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -320,7 +320,7 @@ func ProcessModuleOptions(options data.Module) (data.Module, error) {
 	// we have been given a shortcut
 	// let's try to resolve this shortcut into a full module definition
 	if options.Name != "" {
-		module, err := modules.GetModule(options.Name, options.Version)
+		module, err := shortcuts.GetModule(options.Name, options.Version)
 		if err != nil {
 			return options, err
 		}

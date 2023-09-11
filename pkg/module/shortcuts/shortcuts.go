@@ -1,4 +1,4 @@
-package modules
+package shortcuts
 
 import (
 	"fmt"
