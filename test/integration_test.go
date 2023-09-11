@@ -71,7 +71,6 @@ func getJobCreator(t *testing.T, systemContext *system.CommandContext) (*jobcrea
 		return nil, err
 	}
 	jobCreatorOptions.Offer = newOffersConfig
-
 	jobCreatorOptions.Web3.PrivateKey = os.Getenv("JOB_CREATOR_PRIVATE_KEY")
 	if jobCreatorOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
