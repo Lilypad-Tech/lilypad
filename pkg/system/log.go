@@ -10,8 +10,12 @@ import (
 
 func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	logLevelString := os.Getenv("LOG_LEVEL")
+	if logLevelString == "" {
+		logLevelString = "info"
+	}
 	logLevel := zerolog.InfoLevel
-	parsedLogLevel, err := zerolog.ParseLevel(os.Getenv("LOG_LEVEL"))
+	parsedLogLevel, err := zerolog.ParseLevel(logLevelString)
 	if err == nil {
 		logLevel = parsedLogLevel
 	}

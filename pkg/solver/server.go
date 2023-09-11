@@ -53,7 +53,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	websocketEventChannel := make(chan []byte)
 
 	solverServer.controller.subscribeEvents(func(ev SolverEvent) {
-		log.Info().Msgf("controller event: %+v", ev)
+		LogSolverEvent(ev)
 		evBytes, err := json.Marshal(ev)
 		if err != nil {
 			log.Error().Msgf("Error marshalling event: %s", err.Error())

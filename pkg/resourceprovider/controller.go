@@ -105,15 +105,17 @@ func (controller *ResourceProviderController) solve() error {
 Subscribe
 */
 func (controller *ResourceProviderController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
-		log.Info().Msgf("New solver event %+v", event)
+	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		solver.LogSolverEvent(ev)
 	})
 	return nil
 }
 
 func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+		log.Info().
+			Str("RP token event: Transfer", "").
+			Msgf("From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }
