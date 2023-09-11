@@ -30,10 +30,10 @@ type Module struct {
 	// the module file itself will contain this spec
 	// and so the module will need to be downloaded
 	// and executed for this spec to be known
-	MachineSpec MachineSpec `json:"machine_spec"`
+	Machine MachineSpec `json:"machine"`
 
 	// the bacalhau job spec
-	JobSpec model.Job `json:"job_spec"`
+	Job model.Job `json:"job"`
 }
 
 // describes a workload to be run
