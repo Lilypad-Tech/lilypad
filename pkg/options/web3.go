@@ -73,18 +73,10 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 		return fmt.Errorf("WEB3_PRIVATE_KEY is required")
 	}
 
-	// contract addresses
+	// this is the only address we actually need
+	// we can load the rest of the addresses from the controller address if needed
 	if options.ControllerAddress == "" {
 		return fmt.Errorf("WEB3_CONTROLLER_ADDRESS is required")
-	}
-	if options.PaymentsAddress == "" {
-		return fmt.Errorf("WEB3_PAYMENTS_ADDRESS is required")
-	}
-	if options.StorageAddress == "" {
-		return fmt.Errorf("WEB3_STORAGE_ADDRESS is required")
-	}
-	if options.TokenAddress == "" {
-		return fmt.Errorf("WEB3_TOKEN_ADDRESS is required")
 	}
 
 	if checkForServices {
