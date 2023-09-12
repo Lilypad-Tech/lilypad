@@ -29,10 +29,8 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
   function mediationRequest(
     SharedStructs.Deal memory deal
   ) public onlyController {
-    // pick a random mediator
-    // emit the event to trigger that mediator to run the job
-    // TODO: pick random
-    address mediator = deal.members.mediators[0];
+    uint randomIndex = uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % deal.members.mediators.length;
+    address mediator = deal.members.mediators[randomIndex];
     require(mediator != address(0), "mediator cannot be 0x0");
     mediators[deal.dealId] = mediator;
     emit MediationRequested(mediator, deal);
