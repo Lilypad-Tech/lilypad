@@ -36,3 +36,8 @@ func GetJobOfferID(offer JobOffer) (string, error) {
 	offer.ID = ""
 	return CalculateCID(offer)
 }
+
+func GetDealID(deal Deal) (string, error) {
+	deal.ID = ""
+	return CalculateCID(deal)
+}

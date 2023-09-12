@@ -24,6 +24,18 @@ func LogSolverEvent(ev SolverEvent) {
 	}
 }
 
+func getMutualTrustedParties(a []string, b []string) []string {
+	mutual := []string{}
+	for _, aParty := range a {
+		for _, bParty := range b {
+			if aParty == bParty {
+				mutual = append(mutual, aParty)
+			}
+		}
+	}
+	return mutual
+}
+
 // the most basic of matchers
 // basically just check if the resource offer >= job offer cpu, gpu & ram
 // if the job offer is zero then it will match any resource offer
@@ -68,15 +80,49 @@ func doOffersMatch(
 		}
 	}
 
+	mutualMediators := getMutualTrustedParties(resourceOffer.TrustedParties.Mediator, jobOffer.TrustedParties.Mediator)
+	if len(mutualMediators) == 0 {
+		return false
+	}
+
+	mutualDirectories := getMutualTrustedParties(resourceOffer.TrustedParties.Directory, jobOffer.TrustedParties.Directory)
+	if len(mutualDirectories) == 0 {
+		return false
+	}
+
 	return true
 }
 
-func getMatch(
-	resourceOffer data.ResourceOffer,
+func getDeal(
 	jobOffer data.JobOffer,
-) data.Match {
+	resourceOffer data.ResourceOffer,
+) (data.Deal, error) {
+	mutualMediators := getMutualTrustedParties(resourceOffer.TrustedParties.Mediator, jobOffer.TrustedParties.Mediator)
+	mutualDirectories := getMutualTrustedParties(resourceOffer.TrustedParties.Directory, jobOffer.TrustedParties.Directory)
 
-	// deal := data.Deal{}
+	dealData := data.Deal{
+		Members: data.DealMembers{
+			JobCreator:       jobOffer.JobCreator,
+			ResourceProvider: resourceOffer.ResourceProvider,
+			Directory:        mutualDirectories[0],
+			Mediators:        mutualMediators,
+		},
+		// TODO: this assumes marketing pricing for the client
+		// this should be configurable
+		Pricing: resourceOffer.DefaultPricing,
+		// TODO: this assumes resource provider timeouts
+		// this should be configurable
+		Timeouts:      resourceOffer.DefaultTimeouts,
+		JobOffer:      jobOffer,
+		ResourceOffer: resourceOffer,
+	}
 
-	return data.Match{}
+	id, err := data.GetDealID(dealData)
+
+	if err != nil {
+		return dealData, err
+	}
+
+	dealData.ID = id
+	return dealData, nil
 }

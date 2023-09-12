@@ -115,7 +115,41 @@ func (controller *SolverController) solve() error {
 		return err
 	}
 
-	// fmt.Printf("solving %d JOB and %d RESOURCE --------------------------------------\n", len(jobOffers), len(resourceOffers))
+	// matches, err := controller.store.GetMatches(store.GetMatchesQuery{})
+	// if err != nil {
+	// 	return err
+	// }
+
+	// get maps of the resource offers and job offers by ids so we can filter them out
+	// as we go
+	resourceOffersMap := map[string]data.ResourceOffer{}
+	for _, resourceOffer := range resourceOffers {
+		resourceOffersMap[resourceOffer.ID] = resourceOffer
+	}
+
+	jobOffersMap := map[string]data.JobOffer{}
+	for _, jobOffer := range jobOffers {
+		jobOffersMap[jobOffer.ID] = jobOffer
+	}
+
+	deals, err := controller.store.GetDeals(store.GetDealsQuery{})
+	if err != nil {
+		return err
+	}
+
+	// get maps of deal resource offers and job offers
+	// so we can filter them out as we go
+	dealsResourceOffersMap := map[string]data.ResourceOffer{}
+	dealsJobOffersMap := map[string]data.JobOffer{}
+	for _, deal := range deals {
+		dealsResourceOffersMap[deal.ResourceOffer.ID] = deal.ResourceOffer
+		dealsJobOffersMap[deal.JobOffer.ID] = deal.JobOffer
+	}
+
+	log.Debug().
+		Int("jobOffers", len(jobOffers)).
+		Int("resourceOffers", len(resourceOffers)).
+		Msgf("Solver solving")
 
 	for _, jobOffer := range jobOffers {
 		matchingResourceOffers := []data.ResourceOffer{}
@@ -130,14 +164,27 @@ func (controller *SolverController) solve() error {
 		if len(matchingResourceOffers) > 0 {
 			// now let's order the matching resource offers by price
 			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
-			// matchingResourceOffer := matchingResourceOffers[0]
+			offer := matchingResourceOffers[0]
 
-			// deal :=
-
-			// match := data.Match{}
+			err := controller.match(jobOffer, offer)
+			if err != nil {
+				log.Error().Err(err).Msgf("error matching")
+			} else {
+				// we don't need to keep looping we have matched
+				break
+			}
 
 		}
 	}
+
+	return nil
+}
+
+func (controller *SolverController) match(jobOffer data.JobOffer, resourceOffer data.ResourceOffer) error {
+	log.Info().
+		Str("solver match: jobOffer", fmt.Sprintf("%+v", jobOffer)).
+		Str("solver match: resourceOffer", fmt.Sprintf("%+v", resourceOffer)).
+		Msgf("")
 
 	return nil
 }
