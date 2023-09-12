@@ -18,30 +18,20 @@ func newDirectoryCmd() *cobra.Command {
 		Long:    "Start the lilypad directory service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
+			options, err := optionsfactory.ProcessDirectoryOptions(options)
 			if err != nil {
 				return err
 			}
-			options.Web3 = newWeb3Options
 			return runDirectory(cmd, options)
 		},
 	}
 
-	optionsfactory.AddServerCliFlags(directoryCmd, &options.Server)
-	optionsfactory.AddWeb3CliFlags(directoryCmd, &options.Web3)
+	optionsfactory.AddDirectoryCliFlags(directoryCmd, &options)
 
 	return directoryCmd
 }
 
 func runDirectory(cmd *cobra.Command, options directory.DirectoryOptions) error {
-	err := optionsfactory.CheckWeb3Options(options.Web3, false)
-	if err != nil {
-		return err
-	}
-	err = optionsfactory.CheckServerOptions(options.Server)
-	if err != nil {
-		return err
-	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

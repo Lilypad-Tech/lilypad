@@ -17,12 +17,7 @@ func newMediatorCmd() *cobra.Command {
 		Long:    "Start the lilypad mediator service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
-			if err != nil {
-				return err
-			}
-			options.Web3 = newWeb3Options
-			err = optionsfactory.CheckWeb3Options(options.Web3, false)
+			options, err := optionsfactory.ProcessMediatorOptions(options)
 			if err != nil {
 				return err
 			}
@@ -30,7 +25,7 @@ func newMediatorCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(mediatorCmd, &options.Web3)
+	optionsfactory.AddMediatorCliFlags(mediatorCmd, &options)
 
 	return mediatorCmd
 }
