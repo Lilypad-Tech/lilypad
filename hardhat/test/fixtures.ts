@@ -16,6 +16,10 @@ import {
   LilypadStorage,
   LilypadController,
 } from '../typechain-types'
+import {
+  SharedStructs,
+} from '../typechain-types/contracts/LilypadStorage'
+
 /*
 
   DEPLOYMENT
@@ -220,4 +224,39 @@ export async function setupControllerFixture({
     storage,
     controller,
   }
+}
+
+export const DEFAUT_TIMEOUT_TIME = 60 * 60
+export const DEFAUT_TIMEOUT_COLLATERAL = 1
+export const DEFAULT_PRICING_INSTRUCTION_PRICE = 1
+export const DEFAULT_PRICING_PAYMENT_COLLATERAL = 1
+export const DEFAULT_PRICING_RESULTS_COLLATERAL_MULTIPLE = 1
+export const DEFAULT_PRICING_MEDIATION_FEE = 1
+
+export function getDefaultTimeouts() {
+  const defaultTimeout: SharedStructs.DealTimeoutStruct = {
+    timeout: ethers.getBigInt(DEFAUT_TIMEOUT_TIME),
+    collateral: ethers.getBigInt(DEFAUT_TIMEOUT_COLLATERAL),
+  }
+  const defaultTimeoutNoCost: SharedStructs.DealTimeoutStruct = {
+    timeout: ethers.getBigInt(DEFAUT_TIMEOUT_TIME),
+    collateral: ethers.getBigInt(0),
+  }
+  const ret: SharedStructs.DealTimeoutsStruct = {
+    agree: defaultTimeoutNoCost,
+    submitResults: defaultTimeout,
+    judgeResults: defaultTimeout,
+    mediateResults: defaultTimeoutNoCost,
+  }
+  return ret
+}
+
+export function getDefaultPricing() {
+  const ret: SharedStructs.DealPricingStruct = {
+    instructionPrice: ethers.getBigInt(DEFAULT_PRICING_INSTRUCTION_PRICE),
+    paymentCollateral: ethers.getBigInt(DEFAULT_PRICING_PAYMENT_COLLATERAL),
+    resultsCollateralMultiple: ethers.getBigInt(DEFAULT_PRICING_RESULTS_COLLATERAL_MULTIPLE),
+    mediationFee: ethers.getBigInt(DEFAULT_PRICING_MEDIATION_FEE),
+  }
+  return ret
 }

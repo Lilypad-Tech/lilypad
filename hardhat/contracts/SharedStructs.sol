@@ -61,13 +61,11 @@ library SharedStructs {
 
   // the various addresses involved in runnig a deal
   struct DealMembers {
-    // the addresses of the RP and JC that have agreed to this deal
-    address resourceProvider;
-    address jobCreator;
-
     // the address of the directory service that the RP and JC have agreed to use
     address directory;
-
+    // the addresses of the RP and JC that have agreed to this deal
+    address jobCreator;
+    address resourceProvider;
     // the list of mediators that the RP and JC have agreed to use
     address[] mediators;
   }

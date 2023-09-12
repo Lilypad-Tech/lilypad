@@ -16,6 +16,7 @@ export const AgreementState = [
   'ResultsChecked',
   'MediationAccepted',
   'MediationRejected',
+  'TimeoutAgree',
   'TimeoutSubmitResults',
   'TimeoutJudgeResults',
   'TimeoutMediateResults',
