@@ -13,6 +13,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/davecgh/go-spew/spew"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/rs/zerolog/log"
@@ -179,6 +180,9 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	if err := json.Unmarshal([]byte(template.String()), &moduleData); err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("moduleData --------------------------------------\n")
+	spew.Dump(moduleData)
 
 	return &moduleData, nil
 }

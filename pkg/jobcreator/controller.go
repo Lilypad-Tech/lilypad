@@ -88,20 +88,22 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 }
 
 func (controller *JobCreatorController) solve() error {
-	log.Info().Msgf("solving")
+	log.Info().Msgf("JC solving")
 	return nil
 }
 
 func (controller *JobCreatorController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(event solver.SolverEvent) {
-		log.Info().Msgf("New solver event %+v", event)
+	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		solver.LogSolverEvent(ev)
 	})
 	return nil
 }
 
 func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("New SubscribeTransfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+		log.Info().
+			Str("JC token event: Transfer", "").
+			Msgf("From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
 }

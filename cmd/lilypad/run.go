@@ -84,13 +84,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 
-	// let's process our options into an actual job offer
-	// this will also validate the module we are asking for
-	offer, err := jobCreatorService.GetJobOfferFromOptions(options.Offer)
-	if err != nil {
-		return err
-	}
-
 	jobCreatorErrors := jobCreatorService.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	// start the error channels in a goroutine
@@ -108,8 +101,14 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		}
 	}()
 
+	// let's process our options into an actual job offer
+	// this will also validate the module we are asking for
+	offer, err := jobCreatorService.GetJobOfferFromOptions(options.Offer)
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf(" --------------------------------------\n")
-	spew.Dump(options)
 	spew.Dump(offer)
 
 	return nil

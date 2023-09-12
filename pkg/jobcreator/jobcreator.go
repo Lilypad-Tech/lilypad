@@ -8,6 +8,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/module"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type JobCreatorOfferOptions struct {
@@ -77,14 +78,15 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 		Module:     options.Module,
 		Spec:       loadedModule.Machine,
 		Inputs:     options.Inputs,
-		// // are will pay whatever the market is offering
-		// // TODO: put price limits here
-		// Pricing: data.PricingOffer{
-		// 	Mode: data.MarketPrice,
-		// },
+		Mode:       options.Mode,
+		Pricing:    options.Pricing,
+		Timeouts:   options.Timeouts,
 	}, nil
 }
 
-func (JobCreator *JobCreator) AddOffer(ctx context.Context, cm *system.CleanupManager) chan error {
-	return JobCreator.controller.Start(ctx, cm)
+// adds the job offer to the solver
+func (JobCreator *JobCreator) AddJobOffer(offer data.JobOffer) error {
+	fmt.Printf("offer --------------------------------------\n")
+	spew.Dump(offer)
+	return nil
 }
