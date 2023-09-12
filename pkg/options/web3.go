@@ -79,6 +79,7 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 		return fmt.Errorf("WEB3_CONTROLLER_ADDRESS is required")
 	}
 
+	//
 	if checkForServices {
 		// service addresses
 		if options.SolverAddress == "" {

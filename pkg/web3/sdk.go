@@ -38,27 +38,88 @@ type Web3SDK struct {
 	Contracts    *Contracts
 }
 
-func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, error) {
-	token, err := token.NewToken(common.HexToAddress(options.TokenAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	payments, err := payments.NewPayments(common.HexToAddress(options.PaymentsAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	storage, err := storage.NewStorage(common.HexToAddress(options.StorageAddress), client)
-	if err != nil {
-		return nil, err
-	}
-	mediation, err := mediation.NewMediation(common.HexToAddress(options.MediationAddress), client)
-	if err != nil {
-		return nil, err
-	}
+func NewContracts(
+	options Web3Options,
+	client *ethclient.Client,
+	callOpts *bind.CallOpts,
+) (*Contracts, error) {
 	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
 	if err != nil {
 		return nil, err
 	}
+
+	paymentsAddress := options.PaymentsAddress
+
+	if paymentsAddress == "" {
+		loadedPaymentsAddress, err := controller.GetPaymentsAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		paymentsAddress = loadedPaymentsAddress.String()
+		log.Debug().
+			Str("load payments address", paymentsAddress).
+			Msgf("")
+	}
+
+	payments, err := payments.NewPayments(common.HexToAddress(paymentsAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenAddress := options.TokenAddress
+
+	if tokenAddress == "" {
+		loadedTokenAddress, err := payments.GetTokenAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		tokenAddress = loadedTokenAddress.String()
+		log.Debug().
+			Str("load token address", tokenAddress).
+			Msgf("")
+	}
+
+	token, err := token.NewToken(common.HexToAddress(tokenAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	storageAddress := options.StorageAddress
+
+	if storageAddress == "" {
+		loadedStorageAddress, err := controller.GetStorageAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		storageAddress = loadedStorageAddress.String()
+		log.Debug().
+			Str("load storage address", storageAddress).
+			Msgf("")
+	}
+
+	storage, err := storage.NewStorage(common.HexToAddress(storageAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	mediationAddress := options.MediationAddress
+
+	if mediationAddress == "" {
+		loadedMediationAddress, err := controller.GetMediationAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		mediationAddress = loadedMediationAddress.String()
+		log.Debug().
+			Str("load mediation address", mediationAddress).
+			Msgf("")
+	}
+
+	mediation, err := mediation.NewMediation(common.HexToAddress(mediationAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Contracts{
 		Token:      token,
 		Payments:   payments,
@@ -89,7 +150,7 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	contracts, err := NewContracts(options, client)
+	contracts, err := NewContracts(options, client, callOpts)
 	if err != nil {
 		return nil, err
 	}
