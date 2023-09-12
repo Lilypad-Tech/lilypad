@@ -15,6 +15,7 @@ import {
   LilypadPayments,
   LilypadStorage,
   LilypadController,
+  LilypadMediationRandom,
 } from '../typechain-types'
 import {
   SharedStructs,
@@ -69,15 +70,22 @@ export async function deployStorage(
   return deployContract<LilypadStorage>(testMode ? 'LilypadStorageTestable' : 'LilypadStorage', signer)
 }
 
+export async function deployMediation(
+  signer: Signer
+) {
+  return deployContract<LilypadMediationRandom>('LilypadMediationRandom', signer)
+}
+
 export async function deployController(
   signer: Signer,
   storageAddress: AddressLike,
   paymentsAddress: AddressLike,
+  mediationAddress: AddressLike,
 ) {
   const controller = await deployContract<LilypadController>('LilypadController', signer)
   await controller
     .connect(signer)
-    .initialize(storageAddress, paymentsAddress)
+    .initialize(storageAddress, paymentsAddress, mediationAddress)
   return controller
 }
 
@@ -165,7 +173,7 @@ export async function setupPaymentsFixture({
 
 /*
 
-  TOKEN
+  STORAGE
 
 */
 
@@ -191,6 +199,37 @@ export async function setupStorageFixture({
   return storage
 }
 
+/*
+
+  MEDIATION
+
+*/
+
+// setup the token in test mode so we can call functions on it directly
+// without the ControllerOwnable module kicking in
+export async function setupMediationFixture({
+  controllerAddress,
+}: {
+  controllerAddress?: AddressLike,
+}) {
+  const admin = getWallet('admin')
+  const mediation = await deployMediation(
+    admin,
+  )
+  if(controllerAddress) {
+    await (mediation as any)
+      .connect(admin)
+      .setControllerAddress(controllerAddress)
+  }
+  return mediation
+}
+
+/*
+
+  CONTROLLER
+
+*/
+
 export async function setupControllerFixture({
   withFunds = false,
 }: {
@@ -204,18 +243,25 @@ export async function setupControllerFixture({
     withFunds,
   })
   const storage = await setupStorageFixture({})
-  const storageAddress = await storage.getAddress()
+  const mediation = await setupMediationFixture({})
   const paymentsAddress = await payments.getAddress()
+  const storageAddress = await storage.getAddress()
+  const mediationAddress = await mediation.getAddress()
+  
   const controller = await deployController(
     admin,
     storageAddress,
     paymentsAddress,
+    mediationAddress,
   )
   const controllerAddress = await controller.getAddress()
   await (payments as any)
     .connect(admin)
     .setControllerAddress(controllerAddress)
   await (storage as any)
+    .connect(admin)
+    .setControllerAddress(controllerAddress)
+  await (mediation as any)
     .connect(admin)
     .setControllerAddress(controllerAddress)
   return {

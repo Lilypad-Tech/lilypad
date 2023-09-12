@@ -21,7 +21,7 @@ contract LilypadController is Ownable, Initializable {
   ILilypadStorage private storageContract;
   ILilypadPayments private paymentsContract;
   ILilypadMediationHandler private mediationContract;
-  
+
   /**
    * Init
    */
@@ -38,19 +38,19 @@ contract LilypadController is Ownable, Initializable {
   }
 
   function setStorageAddress(address _storageAddress) public onlyOwner {
-    require(_storageAddress != address(0), "Storage address must be defined");
+    require(_storageAddress != address(0), "Storage address");
     storageAddress = _storageAddress;
     storageContract = ILilypadStorage(storageAddress);
   }
 
   function setPaymentsAddress(address _paymentsAddress) public onlyOwner {
-    require(_paymentsAddress != address(0), "Payments address must be defined");
+    require(_paymentsAddress != address(0), "Payments address");
     paymentsAddress = _paymentsAddress;
     paymentsContract = ILilypadPayments(_paymentsAddress);
   }
 
   function setMediationAddress(address _mediationAddress) public onlyOwner {
-    require(_mediationAddress != address(0), "Mediation address must be defined");
+    require(_mediationAddress != address(0), "Mediation address");
     mediationAddress = _mediationAddress;
     mediationContract = ILilypadMediationHandler(_mediationAddress);
   }
@@ -84,7 +84,7 @@ contract LilypadController is Ownable, Initializable {
     );
     bool isResourceProvider = tx.origin == deal.members.resourceProvider;
     bool isJobCreator = tx.origin == deal.members.jobCreator;
-    require(isResourceProvider || isJobCreator, "Only RP or JC can agree to deal");
+    require(isResourceProvider || isJobCreator, "Only RP / JC");
 
     if(isResourceProvider) {
       storageContract.agreeResourceProvider(dealId);
@@ -123,10 +123,9 @@ contract LilypadController is Ownable, Initializable {
     uint256 resultsId,
     uint256 instructionCount
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal is not in DealAgreed state");
-    require(!_hasSubmitResultsTimedOut(dealId), "Deal has timed out");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.resourceProvider == tx.origin, "Only RP can add results");
+    require(deal.members.resourceProvider == tx.origin, "Only RP");
 
     storageContract.addResult(
       dealId,
@@ -160,10 +159,9 @@ contract LilypadController is Ownable, Initializable {
   function acceptResult(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
-    require(!_hasJudgeResultsTimedOut(dealId), "Deal has timed out");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.jobCreator == tx.origin, "Only JC can accept result");
+    require(deal.members.jobCreator == tx.origin, "Only JC");
     
     uint256 jobCost = storageContract.getJobCost(dealId);
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
@@ -192,10 +190,9 @@ contract LilypadController is Ownable, Initializable {
     uint256 dealId,
     address mediator
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
-    require(!_hasJudgeResultsTimedOut(dealId), "Deal has timed out");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.jobCreator == tx.origin, "Only JC can check result");
+    require(deal.members.jobCreator == tx.origin, "Only JC");
 
     // this function will require that the mediator is in the RP's list of trusted mediators
     storageContract.checkResult(dealId, mediator);
@@ -206,6 +203,9 @@ contract LilypadController is Ownable, Initializable {
       deal.timeouts.judgeResults.collateral,
       deal.pricing.mediationFee
     );
+
+    // trigger the mediation process by calling the contract
+    mediationContract.mediationRequest(deal);
   }
 
   /**
@@ -223,7 +223,8 @@ contract LilypadController is Ownable, Initializable {
   function mediationAcceptResult(
     uint256 dealId
   ) public {
-    require(_canMediateResult(dealId), "Cannot mediate result");
+    require(mediationAddress == _msgSender(), "Only mediation");
+    require(_canMediateResult(dealId), "Cannot mediate");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
 
@@ -253,7 +254,9 @@ contract LilypadController is Ownable, Initializable {
   function mediationRejectResult(
     uint256 dealId
   ) public {
-    require(_canMediateResult(dealId), "Cannot mediate result");
+    // only the current mediation contract can call this
+    require(mediationAddress == _msgSender(), "Only mediation");
+    require(_canMediateResult(dealId), "Cannot mediate");
 
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
@@ -275,11 +278,10 @@ contract LilypadController is Ownable, Initializable {
   function _canMediateResult(
     uint256 dealId 
   ) private returns (bool) {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal is not in ResultsChecked state");
-    require(!_hasMediateResultsTimedOut(dealId), "Deal has timed out");
+    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    require(agreement.mediator != address(0), "No mediator has been selected");
-    require(agreement.mediator == tx.origin, "Only mediator can accept or reject result");
+    require(agreement.mediator != address(0), "No mediator");
+    require(agreement.mediator == tx.origin, "Only mediator");
     return true;
   }
 
@@ -290,11 +292,11 @@ contract LilypadController is Ownable, Initializable {
   function timeoutAgree(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal is not in DealNegotiating state");
-    require(_hasAgreeTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.jobCreator == tx.origin || deal.members.resourceProvider == tx.origin, "Only JC or RP can call timeoutAgree");
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    require(deal.members.jobCreator == tx.origin || deal.members.resourceProvider == tx.origin, "Only JC or RP");
+    require(agreement.state == SharedStructs.AgreementState.DealNegotiating, "Not correct state");
+    require(block.timestamp > agreement.dealCreatedAt + deal.timeouts.agree.timeout, "Not timed out");
     storageContract.timeoutAgree(dealId);
     if (agreement.resourceProviderAgreedAt > 0) {
       // this is an RP refund
@@ -323,11 +325,11 @@ contract LilypadController is Ownable, Initializable {
   function timeoutSubmitResult(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal is not in DealAgreed state");
-    require(_hasSubmitResultsTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.jobCreator == tx.origin, "Only JC can refund submit results timeout");
-
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    require(deal.members.jobCreator == tx.origin, "Only JC");
+    require(agreement.state == SharedStructs.AgreementState.DealAgreed, "Not correct state");
+    require(block.timestamp > agreement.dealAgreedAt + deal.timeouts.submitResults.timeout, "Not timed out");
     storageContract.timeoutSubmitResult(dealId);
     paymentsContract.timeoutSubmitResult(
       dealId,
@@ -350,13 +352,12 @@ contract LilypadController is Ownable, Initializable {
   function timeoutJudgeResult(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal is not in ResultsSubmitted state");
-    require(_hasJudgeResultsTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.resourceProvider == tx.origin, "Only RP can refund judge results timeout");
-
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    require(deal.members.resourceProvider == tx.origin, "Only RP");
+    require(agreement.state == SharedStructs.AgreementState.ResultsSubmitted, "Not correct state");
+    require(block.timestamp > agreement.resultsSubmittedAt + deal.timeouts.judgeResults.timeout, "Not timed out");
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
-
     storageContract.timeoutJudgeResult(dealId);    
     paymentsContract.timeoutJudgeResult(
       dealId,
@@ -377,13 +378,12 @@ contract LilypadController is Ownable, Initializable {
   function timeoutMediateResult(
     uint256 dealId
   ) public {
-    require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal is not in ResultsChecked state");
-    require(_hasMediateResultsTimedOut(dealId), "Deal has not timed out yet");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    require(deal.members.resourceProvider == tx.origin || deal.members.jobCreator == tx.origin, "Only RP or JC can refund mediate results timeout");
-
+    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
+    require(deal.members.resourceProvider == tx.origin || deal.members.jobCreator == tx.origin, "Only RP or JC");
+    require(agreement.state == SharedStructs.AgreementState.ResultsChecked, "Not correct state");
+    require(block.timestamp > agreement.resultsSubmittedAt + deal.timeouts.judgeResults.timeout, "Not timed out");
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
-
     storageContract.timeoutMediateResult(dealId);
     paymentsContract.timeoutMediateResult(
       dealId,
@@ -394,73 +394,4 @@ contract LilypadController is Ownable, Initializable {
       deal.pricing.mediationFee
     );
   }
-
-  /**
-   * Timeout checkers
-   */
-
-  function _hasAgreeTimedOut(
-    uint256 dealId
-  ) private returns (bool) {
-    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    // if we've not created the deal then we cannot have timed out
-    if(agreement.dealCreatedAt == 0) {
-      return false;
-    }
-    // if we've agreed the deal then we cannot have timed out
-    if(agreement.dealAgreedAt > 0) {
-      return false;
-    }
-    return block.timestamp > agreement.dealCreatedAt + deal.timeouts.submitResults.timeout;
-  }
-
-  function _hasSubmitResultsTimedOut(
-    uint256 dealId
-  ) private returns (bool) {
-    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    // if we've not agreed then we cannot have timed out
-    if(agreement.dealAgreedAt == 0) {
-      return false;
-    }
-    // if we have submitted results then we cannot have timed out
-    if(agreement.resultsSubmittedAt > 0) {
-      return false;
-    }
-    return block.timestamp > agreement.dealAgreedAt + deal.timeouts.submitResults.timeout;
-  }
-
-  function _hasJudgeResultsTimedOut(
-    uint256 dealId
-  ) private returns (bool) {
-    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    // if we've not submitted results then we cannot have timed out
-    if(agreement.resultsSubmittedAt == 0) {
-      return false;
-    }
-    // if we have accepted results then we cannot have timed out
-    if(agreement.resultsAcceptedAt > 0) {
-      return false;
-    }
-    // if we have accepted results then we cannot have timed out
-    if(agreement.resultsCheckedAt > 0) {
-      return false;
-    }
-    return block.timestamp > agreement.resultsSubmittedAt + deal.timeouts.judgeResults.timeout;
-  }
-
-  function _hasMediateResultsTimedOut(
-    uint256 dealId
-  ) private returns (bool) {
-    SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    // if we've not checked results then we cannot have timed out
-    if(agreement.resultsCheckedAt == 0) {
-      return false;
-    }
-    return block.timestamp > agreement.resultsCheckedAt + deal.timeouts.mediateResults.timeout;
-  }
-
 }
