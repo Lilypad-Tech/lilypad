@@ -36,6 +36,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		// allows an RP to list specific prices for each module
 		ModulePricing:  map[string]data.DealPricing{},
 		ModuleTimeouts: map[string]data.DealTimeouts{},
+		TrustedParties: GetDefaultTrustedPartyOptions(),
 	}
 }
 
@@ -63,6 +64,7 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, &offerOptions.DefaultPricing)
 	AddTimeoutCliFlags(cmd, &offerOptions.DefaultTimeouts)
+	AddTrustedPartyCliFlags(cmd, &offerOptions.TrustedParties)
 }
 
 func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {

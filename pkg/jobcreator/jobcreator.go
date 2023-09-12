@@ -26,6 +26,8 @@ type JobCreatorOfferOptions struct {
 	Timeouts data.DealTimeouts
 	// the inputs to the module
 	Inputs map[string]string
+	// which mediators and directories this RP will trust
+	TrustedParties data.TrustedParties
 }
 
 type JobCreatorOptions struct {
@@ -73,13 +75,14 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 	}
 
 	return data.JobOffer{
-		JobCreator: jobCreator.web3SDK.GetAddress().String(),
-		Module:     options.Module,
-		Spec:       loadedModule.Machine,
-		Inputs:     options.Inputs,
-		Mode:       options.Mode,
-		Pricing:    options.Pricing,
-		Timeouts:   options.Timeouts,
+		JobCreator:     jobCreator.web3SDK.GetAddress().String(),
+		Module:         options.Module,
+		Spec:           loadedModule.Machine,
+		Inputs:         options.Inputs,
+		Mode:           options.Mode,
+		Pricing:        options.Pricing,
+		Timeouts:       options.Timeouts,
+		TrustedParties: options.TrustedParties,
 	}, nil
 }
 

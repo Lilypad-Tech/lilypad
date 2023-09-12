@@ -24,10 +24,6 @@ func (sdk *Web3SDK) GetSolverAddresses() ([]common.Address, error) {
 	return sdk.GetServiceAddresses("Solver")
 }
 
-func (sdk *Web3SDK) GetDirectoryAddresses() ([]common.Address, error) {
-	return sdk.GetServiceAddresses("Directory")
-}
-
 func (sdk *Web3SDK) GetUser(
 	address common.Address,
 ) (storage.SharedStructsUser, error) {

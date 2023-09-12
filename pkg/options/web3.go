@@ -23,8 +23,7 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
 
 		// service addresses
-		SolverAddress:    GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
-		DirectoryAddress: GetDefaultServeOptionString("WEB3_DIRECTORY_ADDRESS", ""),
+		SolverAddress: GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
 	}
 }
 
@@ -88,9 +87,6 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 		// service addresses
 		if options.SolverAddress == "" {
 			return fmt.Errorf("WEB3_SOLVER_ADDRESS is required")
-		}
-		if options.DirectoryAddress == "" {
-			return fmt.Errorf("WEB3_DIRECTORY_ADDRESS is required")
 		}
 	}
 

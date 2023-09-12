@@ -135,6 +135,7 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
 		ModulePricing:    map[string]data.DealPricing{},
 		ModuleTimeouts:   map[string]data.DealTimeouts{},
+		TrustedParties:   controller.options.Offers.TrustedParties,
 	}
 }
 

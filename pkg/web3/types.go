@@ -21,8 +21,7 @@ type Web3Options struct {
 	TokenAddress      string `json:"token_address"`
 
 	// service addresses
-	SolverAddress    string `json:"solver_address"`
-	DirectoryAddress string `json:"directory_address"`
+	SolverAddress string `json:"solver_address"`
 }
 
 type EventChannelCollection interface {

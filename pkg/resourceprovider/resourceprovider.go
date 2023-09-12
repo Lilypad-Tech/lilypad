@@ -37,6 +37,9 @@ type ResourceProviderOfferOptions struct {
 	// allow different pricing for different modules
 	ModulePricing  map[string]data.DealPricing
 	ModuleTimeouts map[string]data.DealTimeouts
+
+	// which mediators and directories this RP will trust
+	TrustedParties data.TrustedParties
 }
 
 type ResourceProviderOptions struct {

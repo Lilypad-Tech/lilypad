@@ -17,10 +17,11 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
 		Module: GetDefaultModuleOptions(),
 		// this is the default pricing mode for an JC
-		Mode:     GetDefaultPricingMode(data.MarketPrice),
-		Pricing:  GetDefaultPricingOptions(),
-		Timeouts: GetDefaultTimeoutOptions(),
-		Inputs:   map[string]string{},
+		Mode:           GetDefaultPricingMode(data.MarketPrice),
+		Pricing:        GetDefaultPricingOptions(),
+		Timeouts:       GetDefaultTimeoutOptions(),
+		Inputs:         map[string]string{},
+		TrustedParties: GetDefaultTrustedPartyOptions(),
 	}
 }
 
@@ -32,6 +33,7 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 	AddPricingCliFlags(cmd, &offerOptions.Pricing)
 	AddTimeoutCliFlags(cmd, &offerOptions.Timeouts)
 	AddModuleCliFlags(cmd, &offerOptions.Module)
+	AddTrustedPartyCliFlags(cmd, &offerOptions.TrustedParties)
 }
 
 func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {
