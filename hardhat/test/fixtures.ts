@@ -268,6 +268,7 @@ export async function setupControllerFixture({
     token,
     payments,
     storage,
+    mediation,
     controller,
   }
 }

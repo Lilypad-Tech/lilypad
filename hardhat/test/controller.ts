@@ -119,6 +119,7 @@ describe("Controller", () => {
       token,
       payments,
       storage,
+      mediation,
       controller,
     } = await setupControllerFixture({
       withFunds: true,
@@ -128,6 +129,7 @@ describe("Controller", () => {
       token,
       payments,
       storage,
+      mediation,
       controller,
       tokenAddress,
     }
@@ -460,6 +462,7 @@ describe("Controller", () => {
         token,
         storage,
         controller,
+        mediation,
       } = await loadFixture(setupController)
 
       const balancesBeforeJC = await getBalances(token, 'job_creator')
@@ -493,7 +496,7 @@ describe("Controller", () => {
           dealID,
           getAddress('mediator'),
         )
-      await controller
+      await mediation
         .connect(getWallet('mediator'))
         .mediationAcceptResult(
           dealID,
@@ -514,6 +517,7 @@ describe("Controller", () => {
       const {
         token,
         storage,
+        mediation,
         controller,
       } = await loadFixture(setupController)
 
@@ -549,7 +553,7 @@ describe("Controller", () => {
           dealID,
           getAddress('mediator'),
         )
-      await controller
+      await mediation
         .connect(getWallet('mediator'))
         .mediationRejectResult(
           dealID,
