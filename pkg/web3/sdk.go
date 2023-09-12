@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
@@ -24,6 +25,7 @@ type Contracts struct {
 	Token      *token.Token
 	Payments   *payments.Payments
 	Storage    *storage.Storage
+	Mediation  *mediation.Mediation
 	Controller *controller.Controller
 }
 
@@ -49,6 +51,10 @@ func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, er
 	if err != nil {
 		return nil, err
 	}
+	mediation, err := mediation.NewMediation(common.HexToAddress(options.MediationAddress), client)
+	if err != nil {
+		return nil, err
+	}
 	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
 	if err != nil {
 		return nil, err
@@ -57,6 +63,7 @@ func NewContracts(options Web3Options, client *ethclient.Client) (*Contracts, er
 		Token:      token,
 		Payments:   payments,
 		Storage:    storage,
+		Mediation:  mediation,
 		Controller: controller,
 	}, nil
 }

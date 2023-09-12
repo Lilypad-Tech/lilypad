@@ -43,16 +43,28 @@ contract LilypadController is Ownable, Initializable {
     storageContract = ILilypadStorage(storageAddress);
   }
 
+  function getStorageAddress() public view returns(address) {
+    return storageAddress;
+  }
+
   function setPaymentsAddress(address _paymentsAddress) public onlyOwner {
     require(_paymentsAddress != address(0), "Payments address");
     paymentsAddress = _paymentsAddress;
     paymentsContract = ILilypadPayments(_paymentsAddress);
   }
 
+  function getPaymentsAddress() public view returns(address) {
+    return paymentsAddress;
+  }
+
   function setMediationAddress(address _mediationAddress) public onlyOwner {
     require(_mediationAddress != address(0), "Mediation address");
     mediationAddress = _mediationAddress;
     mediationContract = ILilypadMediationHandler(_mediationAddress);
+  }
+
+  function getMediationAddress() public view returns(address) {
+    return mediationAddress;
   }
 
   /**

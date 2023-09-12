@@ -104,6 +104,10 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     tokenContract = ILilypadToken(_tokenAddress);
   }
 
+  function getTokenAddress() public view returns(address) {
+    return tokenAddress;
+  }
+
   // set for canChangePaymentsAddress
   function disableChangeTokenAddress() public onlyOwner {
     canChangeTokenAddress = false;

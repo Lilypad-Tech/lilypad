@@ -17,6 +17,7 @@ type Web3Options struct {
 	ControllerAddress string `json:"controller_address"`
 	PaymentsAddress   string `json:"payments_address"`
 	StorageAddress    string `json:"storage_address"`
+	MediationAddress  string `json:"mediation_address"`
 	TokenAddress      string `json:"token_address"`
 
 	// service addresses
