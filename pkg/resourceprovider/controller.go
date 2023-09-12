@@ -124,9 +124,18 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 Ensure resource offers are posted to the solve
 */
 
-// return the pricing for a resource offer to be made by this node
-func (controller *ResourceProviderController) getOfferPricing() data.Pricing {
-	return controller.options.Offers.DefaultPricing
+func (controller *ResourceProviderController) getResourceOffer(index int, spec data.MachineSpec) data.ResourceOffer {
+	return data.ResourceOffer{
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+		Index:            index,
+		Spec:             spec,
+		Modules:          controller.options.Offers.Modules,
+		Mode:             controller.options.Offers.Mode,
+		DefaultPricing:   controller.options.Offers.DefaultPricing,
+		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
+		ModulePricing:    map[string]data.DealPricing{},
+		ModuleTimeouts:   map[string]data.DealTimeouts{},
+	}
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {
@@ -150,15 +159,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 	// map over the specs we have in the config
 	for index, spec := range controller.options.Offers.Specs {
 
-		resourceOffer := data.ResourceOffer{
-			ResourceProvider: controller.web3SDK.GetAddress().String(),
-			Index:            index,
-			Spec:             spec,
-			Modules:          controller.options.Offers.Modules,
-			DefaultPricing:   controller.getOfferPricing(),
-			ModulePricing:    map[string]data.Pricing{},
-		}
-
+		resourceOffer := controller.getResourceOffer(index, spec)
 		resourceOfferID, err := data.GetResourceOfferID(resourceOffer)
 		if err != nil {
 			return err

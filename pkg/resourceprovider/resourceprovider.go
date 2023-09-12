@@ -26,12 +26,17 @@ type ResourceProviderOfferOptions struct {
 	// an empty list means anything
 	Modules []string
 
+	// this will normally be FixedPrice for RP's
+	Mode data.PricingMode
+
 	// the default pricing for this resource provider
 	// for all modules that don't have a specific price
-	DefaultPricing data.Pricing
+	DefaultPricing  data.DealPricing
+	DefaultTimeouts data.DealTimeouts
 
 	// allow different pricing for different modules
-	ModulePricing map[string]data.Pricing
+	ModulePricing  map[string]data.DealPricing
+	ModuleTimeouts map[string]data.DealTimeouts
 }
 
 type ResourceProviderOptions struct {

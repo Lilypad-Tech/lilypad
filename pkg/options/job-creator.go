@@ -14,8 +14,12 @@ func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 
 func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
-		Module:  GetDefaultModuleOptions(),
-		Pricing: GetDefaultPricingOptions(data.MarketPrice),
+		Module: GetDefaultModuleOptions(),
+		// this is the default pricing mode for an JC
+		Mode:     GetDefaultPricingMode(data.MarketPrice),
+		Pricing:  GetDefaultPricingOptions(),
+		Timeouts: GetDefaultTimeoutOptions(),
+		Inputs:   map[string]string{},
 	}
 }
 
@@ -24,10 +28,11 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobC
 	AddModuleCliFlags(cmd, offerOptions.Module)
 
 	// add the inputs that we will merge into the module template file
-	cmd.PersistentFlags().StringToStringVarP(&offerOptions.Inputs, "input", "i", map[string]string{}, "Input key-value pairs")
+	cmd.PersistentFlags().StringToStringVarP(&offerOptions.Inputs, "input", "i", offerOptions.Inputs, "Input key-value pairs")
 }
 
 func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {
+	// parse the module flags
 	moduleOptions, err := ProcessModuleOptions(options.Module)
 	if err != nil {
 		return options, err

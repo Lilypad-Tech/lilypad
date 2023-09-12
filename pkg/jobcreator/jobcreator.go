@@ -16,10 +16,14 @@ type JobCreatorOfferOptions struct {
 	Module data.ModuleConfig
 	// the required spec hoisted from the module
 	Spec data.MachineSpec
+	// this will normally be MarketPrice for JC's
+	Mode data.PricingMode
 	// this is so clients can put limit orders for jobs
 	// and the solver will match as soon as a resource offer
 	// is added that matches the bid
-	Pricing data.Pricing
+	Pricing data.DealPricing
+	// the timeouts we are offering with the deal
+	Timeouts data.DealTimeouts
 	// the inputs to the module
 	Inputs map[string]string
 }
@@ -73,11 +77,11 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 		Module:     options.Module,
 		Spec:       loadedModule.Machine,
 		Inputs:     options.Inputs,
-		// are will pay whatever the market is offering
-		// TODO: put price limits here
-		Pricing: data.Pricing{
-			Mode: data.MarketPrice,
-		},
+		// // are will pay whatever the market is offering
+		// // TODO: put price limits here
+		// Pricing: data.PricingOffer{
+		// 	Mode: data.MarketPrice,
+		// },
 	}, nil
 }
 

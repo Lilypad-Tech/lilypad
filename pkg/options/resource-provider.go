@@ -28,10 +28,14 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		Specs: []data.MachineSpec{},
 		// if an RP wants to only run certain modules they list them here
 		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+		// this is the default pricing mode for an RP
+		Mode: GetDefaultPricingMode(data.FixedPrice),
 		// this is the default pricing for a module unless it has a specific price
-		DefaultPricing: GetDefaultPricingOptions(data.FixedPrice),
+		DefaultPricing:  GetDefaultPricingOptions(),
+		DefaultTimeouts: GetDefaultTimeoutOptions(),
 		// allows an RP to list specific prices for each module
-		ModulePricing: map[string]data.Pricing{},
+		ModulePricing:  map[string]data.DealPricing{},
+		ModuleTimeouts: map[string]data.DealTimeouts{},
 	}
 }
 

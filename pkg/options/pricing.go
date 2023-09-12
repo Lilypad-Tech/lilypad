@@ -5,16 +5,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetDefaultPricingOptions(mode data.PricingMode) data.Pricing {
-	return data.Pricing{
-		// let's default to Market Price
-		Mode: data.PricingMode(GetDefaultServeOptionString("PRICING_MODE", string(mode))),
+func GetDefaultPricingMode(mode data.PricingMode) data.PricingMode {
+	return data.PricingMode(GetDefaultServeOptionString("PRICING_MODE", string(mode)))
+}
+
+func GetDefaultPricingOptions() data.DealPricing {
+	return data.DealPricing{
 		// let's make the default price 1 ether
 		InstructionPrice: GetDefaultServeOptionUint64("PRICING_INSTRUCTION_PRICE", 1),
-		// 1 hour timeout
-		Timeout: GetDefaultServeOptionUint64("PRICING_TIMEOUT", 3600),
-		// 1 ether for timeout collateral
-		TimeoutCollateral: GetDefaultServeOptionUint64("PRICING_TIMEOUT_COLLATERAL", 1),
 		// 2 x ether for payment collateral (assuming modules that have a single instruction count)
 		PaymentCollateral: GetDefaultServeOptionUint64("PRICING_PAYMENT_COLLATERAL", 2),
 		// 2 x results collateral multiple
@@ -24,23 +22,17 @@ func GetDefaultPricingOptions(mode data.PricingMode) data.Pricing {
 	}
 }
 
-func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.Pricing) {
+func AddPricingModeCliFlags(cmd *cobra.Command, pricingMode data.PricingMode) {
 	cmd.PersistentFlags().StringVar(
-		(*string)(&pricingConfig.Mode), "pricing-mode", string(pricingConfig.Mode),
+		(*string)(&pricingMode), "pricing-mode", string(pricingMode),
 		"set pricing mode (MarketPrice/FixedPrice)",
 	)
+}
 
+func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.DealPricing) {
 	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.InstructionPrice, "pricing-instruction-price", pricingConfig.InstructionPrice,
 		`The price per instruction to offer (PRICING_INSTRUCTION_PRICE)`,
-	)
-	cmd.PersistentFlags().Uint64Var(
-		&pricingConfig.Timeout, "pricing-timeout", pricingConfig.Timeout,
-		`The timeout seconds (PRICING_TIMEOUT)`,
-	)
-	cmd.PersistentFlags().Uint64Var(
-		&pricingConfig.TimeoutCollateral, "pricing-timeout-collateral", pricingConfig.TimeoutCollateral,
-		`The timeout collateral (PRICING_TIMEOUT_COLLATERAL)`,
 	)
 	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.PaymentCollateral, "pricing-payment-collateral", pricingConfig.PaymentCollateral,
