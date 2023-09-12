@@ -217,9 +217,11 @@ function run() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
-  go run . run "$@" --help
+  go run . run "$@"
 }
 
 function solver() {
@@ -238,15 +240,6 @@ function resource-provider() {
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   go run . resource-provider "$@"
-}
-
-function job-creator() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
-  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  go run . job-creator "$@"
 }
 
 function mediator() {

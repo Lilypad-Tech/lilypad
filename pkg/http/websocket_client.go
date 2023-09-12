@@ -46,29 +46,30 @@ func ConnectWebSocket(
 		}
 		break
 	}
-	log.Info().Msgf("WebSocket connected")
 
-	go func() {
-		for {
-			messageType, p, err := conn.ReadMessage()
-			if err != nil {
-				if closed {
-					return
+	if !closed {
+		go func() {
+			for {
+				messageType, p, err := conn.ReadMessage()
+				if err != nil {
+					if closed {
+						return
+					}
+					log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
+					time.Sleep(2 * time.Second)
+					conn = ConnectWebSocket(url, messageChan, ctx)
+					continue
 				}
-				log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
-				time.Sleep(2 * time.Second)
-				conn = ConnectWebSocket(url, messageChan, ctx)
-				continue
+				if messageType == websocket.TextMessage {
+					log.Debug().
+						Str("action", "ws READ").
+						Str("payload", string(p)).
+						Msgf("")
+					messageChan <- p
+				}
 			}
-			if messageType == websocket.TextMessage {
-				log.Debug().
-					Str("action", "ws READ").
-					Str("payload", string(p)).
-					Msgf("")
-				messageChan <- p
-			}
-		}
-	}()
+		}()
+	}
 
 	return conn
 }
