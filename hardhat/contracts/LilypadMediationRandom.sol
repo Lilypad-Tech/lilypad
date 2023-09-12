@@ -29,7 +29,7 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
   function mediationRequest(
     SharedStructs.Deal memory deal
   ) public onlyController {
-    uint randomIndex = uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % deal.members.mediators.length;
+    uint randomIndex = uint(keccak256(abi.encodePacked(block.timestamp, deal.dealId))) % deal.members.mediators.length;
     address mediator = deal.members.mediators[randomIndex];
     require(mediator != address(0), "mediator cannot be 0x0");
     mediators[deal.dealId] = mediator;
