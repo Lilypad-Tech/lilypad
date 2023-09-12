@@ -11,6 +11,7 @@ type EventChannels struct {
 	Token       *TokenEventChannels
 	Payment     *PaymentEventChannels
 	Storage     *StorageEventChannels
+	Mediation   *MediationEventChannels
 	collections []EventChannelCollection
 }
 
@@ -18,15 +19,18 @@ func NewEventChannels() *EventChannels {
 	tokenChannels := NewTokenEventChannels()
 	paymentChannels := NewPaymentEventChannels()
 	storageChannels := NewStorageEventChannels()
+	mediationChannels := NewMediationEventChannels()
 	collections := []EventChannelCollection{
 		tokenChannels,
 		paymentChannels,
 		storageChannels,
+		mediationChannels,
 	}
 	return &EventChannels{
 		Token:       tokenChannels,
 		Payment:     paymentChannels,
 		Storage:     storageChannels,
+		Mediation:   mediationChannels,
 		collections: collections,
 	}
 }
