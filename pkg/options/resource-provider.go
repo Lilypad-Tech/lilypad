@@ -67,15 +67,9 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	AddTrustedPartyCliFlags(cmd, &offerOptions.TrustedParties)
 }
 
-func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {
-	// if there are no specs then populate with the single spec
-	if len(options.Specs) == 0 {
-		// loop the number of machines we want to offer
-		for i := 0; i < options.OfferCount; i++ {
-			options.Specs = append(options.Specs, options.OfferSpec)
-		}
-	}
-	return options, nil
+func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
+	AddWeb3CliFlags(cmd, &options.Web3)
+	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
 }
 
 func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) error {
@@ -100,4 +94,41 @@ func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProvider
 	}
 
 	return nil
+}
+
+func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptions) error {
+	err := CheckWeb3Options(options.Web3, true)
+	if err != nil {
+		return err
+	}
+	err = CheckResourceProviderOfferOptions(options.Offers)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {
+	// if there are no specs then populate with the single spec
+	if len(options.Specs) == 0 {
+		// loop the number of machines we want to offer
+		for i := 0; i < options.OfferCount; i++ {
+			options.Specs = append(options.Specs, options.OfferSpec)
+		}
+	}
+	return options, nil
+}
+
+func ProcessResourceProviderOptions(options resourceprovider.ResourceProviderOptions) (resourceprovider.ResourceProviderOptions, error) {
+	newOfferOptions, err := ProcessResourceProviderOfferOptions(options.Offers)
+	if err != nil {
+		return options, err
+	}
+	options.Offers = newOfferOptions
+	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+	if err != nil {
+		return options, err
+	}
+	options.Web3 = newWeb3Options
+	return options, CheckResourceProviderOptions(options)
 }

@@ -18,41 +18,7 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay v0.0.1",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
-			if err != nil {
-				return err
-			}
-			options.Web3 = newWeb3Options
-
-			name := ""
-			version := ""
-			if len(args) >= 2 {
-				version = args[1]
-			} else if len(args) == 1 {
-				name = args[0]
-			}
-
-			if name != "" {
-				options.Offer.Module.Name = name
-			}
-
-			if version != "" {
-				options.Offer.Module.Version = version
-			}
-
-			// map the options
-			newOfferOptions, err := optionsfactory.ProcessJobCreatorOfferOptions(options.Offer)
-			if err != nil {
-				return err
-			}
-			options.Offer = newOfferOptions
-
-			// check the options
-			err = optionsfactory.CheckWeb3Options(options.Web3, true)
-			if err != nil {
-				return err
-			}
-			err = optionsfactory.CheckJobCreatorOfferOptions(options.Offer)
+			options, err := optionsfactory.ProcessJobCreatorOptions(options, args)
 			if err != nil {
 				return err
 			}
@@ -60,8 +26,7 @@ func newRunCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(runCmd, &options.Web3)
-	optionsfactory.AddJobCreatorOfferCliFlags(runCmd, &options.Offer)
+	optionsfactory.AddJobCreatorCliFlags(runCmd, &options)
 
 	return runCmd
 }

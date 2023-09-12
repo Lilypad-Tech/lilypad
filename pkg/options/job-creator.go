@@ -36,20 +36,50 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 	AddTrustedPartyCliFlags(cmd, &offerOptions.TrustedParties)
 }
 
-func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {
-	// parse the module flags
-	moduleOptions, err := ProcessModuleOptions(options.Module)
-	if err != nil {
-		return options, err
-	}
-	options.Module = moduleOptions
-	return options, nil
+func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOptions) {
+	AddWeb3CliFlags(cmd, &options.Web3)
+	AddJobCreatorOfferCliFlags(cmd, &options.Offer)
 }
 
-func CheckJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) error {
-	err := CheckModuleOptions(options.Module)
+func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
+	err := CheckWeb3Options(options.Web3, true)
+	if err != nil {
+		return err
+	}
+	err = CheckModuleOptions(options.Offer.Module)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
+
+	name := ""
+	version := ""
+	if len(args) >= 2 {
+		version = args[1]
+	} else if len(args) == 1 {
+		name = args[0]
+	}
+
+	if name != "" {
+		options.Offer.Module.Name = name
+	}
+
+	if version != "" {
+		options.Offer.Module.Version = version
+	}
+
+	moduleOptions, err := ProcessModuleOptions(options.Offer.Module)
+	if err != nil {
+		return options, err
+	}
+	options.Offer.Module = moduleOptions
+	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+	if err != nil {
+		return options, err
+	}
+	options.Web3 = newWeb3Options
+	return options, CheckJobCreatorOptions(options)
 }

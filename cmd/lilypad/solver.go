@@ -18,16 +18,7 @@ func newSolverCmd() *cobra.Command {
 		Long:    "Start the lilypad solver service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
-			if err != nil {
-				return err
-			}
-			options.Web3 = newWeb3Options
-			err = optionsfactory.CheckWeb3Options(options.Web3, false)
-			if err != nil {
-				return err
-			}
-			err = optionsfactory.CheckServerOptions(options.Server)
+			options, err := optionsfactory.ProcessSolverOptions(options)
 			if err != nil {
 				return err
 			}
@@ -35,8 +26,7 @@ func newSolverCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddServerCliFlags(solverCmd, &options.Server)
-	optionsfactory.AddWeb3CliFlags(solverCmd, &options.Web3)
+	optionsfactory.AddSolverCliFlags(solverCmd, &options)
 
 	return solverCmd
 }
