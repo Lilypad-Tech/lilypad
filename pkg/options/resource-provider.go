@@ -60,7 +60,9 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourcep
 		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
 		`The modules you are willing to run (OFFER_MODULES).`,
 	)
+	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, offerOptions.DefaultPricing)
+	AddTimeoutCliFlags(cmd, offerOptions.DefaultTimeouts)
 }
 
 func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {

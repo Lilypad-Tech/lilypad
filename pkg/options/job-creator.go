@@ -24,11 +24,12 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 }
 
 func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobCreatorOfferOptions) {
-	AddPricingCliFlags(cmd, offerOptions.Pricing)
-	AddModuleCliFlags(cmd, offerOptions.Module)
-
 	// add the inputs that we will merge into the module template file
 	cmd.PersistentFlags().StringToStringVarP(&offerOptions.Inputs, "input", "i", offerOptions.Inputs, "Input key-value pairs")
+
+	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
+	AddPricingCliFlags(cmd, offerOptions.Pricing)
+	AddModuleCliFlags(cmd, offerOptions.Module)
 }
 
 func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {

@@ -22,9 +22,9 @@ func GetDefaultPricingOptions() data.DealPricing {
 	}
 }
 
-func AddPricingModeCliFlags(cmd *cobra.Command, pricingMode data.PricingMode) {
+func AddPricingModeCliFlags(cmd *cobra.Command, pricingMode *data.PricingMode) {
 	cmd.PersistentFlags().StringVar(
-		(*string)(&pricingMode), "pricing-mode", string(pricingMode),
+		(*string)(pricingMode), "pricing-mode", string(*pricingMode),
 		"set pricing mode (MarketPrice/FixedPrice)",
 	)
 }
