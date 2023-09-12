@@ -14,6 +14,8 @@ type SolverStoreMemory struct {
 	resourceOfferMap map[string]data.ResourceOffer
 	matches          []data.Match
 	matchMap         map[string]data.Match
+	deals            []data.Deal
+	dealMap          map[string]data.Deal
 	mutex            sync.Mutex
 }
 
@@ -22,9 +24,11 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 		jobOffers:        []data.JobOffer{},
 		resourceOffers:   []data.ResourceOffer{},
 		matches:          []data.Match{},
+		deals:            []data.Deal{},
 		jobOfferMap:      map[string]data.JobOffer{},
 		resourceOfferMap: map[string]data.ResourceOffer{},
 		matchMap:         map[string]data.Match{},
+		dealMap:          map[string]data.Deal{},
 	}, nil
 }
 
@@ -50,6 +54,12 @@ func (s *SolverStoreMemory) AddMatch(match data.Match) (*data.Match, error) {
 	s.matches = append(s.matches, match)
 	s.matchMap[match.ID] = match
 	return &match, nil
+}
+
+func (s *SolverStoreMemory) AddDeal(deal data.Deal) (*data.Deal, error) {
+	s.deals = append(s.deals, deal)
+	s.dealMap[deal.ID] = deal
+	return &deal, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
@@ -91,6 +101,27 @@ func (s *SolverStoreMemory) GetMatches(query store.GetMatchesQuery) ([]data.Matc
 	return s.matches, nil
 }
 
+func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, error) {
+	if query.JobCreator != "" {
+		deals := []data.Deal{}
+		for _, deal := range s.deals {
+			if deal.Members.JobCreator == query.JobCreator {
+				deals = append(deals, deal)
+			}
+		}
+		return deals, nil
+	} else if query.ResourceProvider != "" {
+		deals := []data.Deal{}
+		for _, deal := range s.deals {
+			if deal.Members.ResourceProvider == query.ResourceProvider {
+				deals = append(deals, deal)
+			}
+		}
+		return deals, nil
+	}
+	return s.deals, nil
+}
+
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOffer, error) {
 	jobOffer, ok := s.jobOfferMap[id]
 	if !ok {
@@ -113,6 +144,14 @@ func (s *SolverStoreMemory) GetMatch(id string) (*data.Match, error) {
 		return nil, nil
 	}
 	return &match, nil
+}
+
+func (s *SolverStoreMemory) GetDeal(id string) (*data.Deal, error) {
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	return &deal, nil
 }
 
 func (s *SolverStoreMemory) RemoveJobOffer(id string) error {

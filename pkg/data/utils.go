@@ -28,6 +28,10 @@ func GetResourceOfferID(offer ResourceOffer) (string, error) {
 	return CalculateCID(offer)
 }
 
+func GetModuleID(module ModuleConfig) (string, error) {
+	return CalculateCID(module)
+}
+
 func GetJobOfferID(offer JobOffer) (string, error) {
 	offer.ID = ""
 	return CalculateCID(offer)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"sort"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -93,22 +94,47 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	return errorChan
 }
 
+type ListOfResourceOffers []data.ResourceOffer
+
+func (a ListOfResourceOffers) Len() int { return len(a) }
+func (a ListOfResourceOffers) Less(i, j int) bool {
+	return a[i].DefaultPricing.InstructionPrice < a[j].DefaultPricing.InstructionPrice
+}
+func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
 func (controller *SolverController) solve() error {
-	//log.Info().Msgf("solver solving")
+	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{})
+	if err != nil {
+		return err
+	}
 
-	// // THIS IS JUST FOR TESTING
-	// log.Info().Msgf("sending tx")
-	// tx, err := controller.web3SDK.Contracts.Token.Transfer(
-	// 	controller.web3SDK.TransactOpts,
-	// 	common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
-	// 	big.NewInt(1),
-	// )
-	// if err != nil {
-	// 	log.Info().Msgf("error sending tx: %s\n", err.Error())
+	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{})
+	if err != nil {
+		return err
+	}
 
-	// } else {
-	// 	log.Info().Msgf("tx sent: %s\n", tx.Hash())
-	// }
+	for _, jobOffer := range jobOffers {
+		matchingResourceOffers := []data.ResourceOffer{}
+		for _, resourceOffer := range resourceOffers {
+			if doOffersMatch(resourceOffer, jobOffer) {
+				matchingResourceOffers = append(matchingResourceOffers, resourceOffer)
+			}
+		}
+
+		// yay - we've got some matching resource offers
+		// let's choose the cheapest one
+		if len(matchingResourceOffers) > 0 {
+			// now let's order the matching resource offers by price
+			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
+			// matchingResourceOffer := matchingResourceOffers[0]
+
+			// deal :=
+
+			// match := data.Match{}
+
+		}
+	}
+
 	return nil
 }
 
@@ -194,6 +220,11 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 		return nil, err
 	}
 	jobOffer.ID = id
+
+	log.Info().
+		Str("solver add job offer", fmt.Sprintf("%+v", jobOffer)).
+		Msgf("")
+
 	ret, err := controller.store.AddJobOffer(jobOffer)
 	if err != nil {
 		return nil, err
@@ -227,3 +258,19 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	})
 	return ret, nil
 }
+
+//log.Info().Msgf("solver solving")
+
+// // THIS IS JUST FOR TESTING
+// log.Info().Msgf("sending tx")
+// tx, err := controller.web3SDK.Contracts.Token.Transfer(
+// 	controller.web3SDK.TransactOpts,
+// 	common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
+// 	big.NewInt(1),
+// )
+// if err != nil {
+// 	log.Info().Msgf("error sending tx: %s\n", err.Error())
+
+// } else {
+// 	log.Info().Msgf("tx sent: %s\n", tx.Hash())
+// }
