@@ -27,7 +27,7 @@ func (s *DirectoryStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal,
 	if query.JobCreator != "" {
 		deals := []data.Deal{}
 		for _, deal := range s.deals {
-			if deal.JobCreator == query.JobCreator {
+			if deal.Members.JobCreator == query.JobCreator {
 				deals = append(deals, deal)
 			}
 		}
@@ -35,7 +35,7 @@ func (s *DirectoryStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal,
 	} else if query.ResourceProvider != "" {
 		deals := []data.Deal{}
 		for _, deal := range s.deals {
-			if deal.ResourceProvider == query.ResourceProvider {
+			if deal.Members.ResourceProvider == query.ResourceProvider {
 				deals = append(deals, deal)
 			}
 		}

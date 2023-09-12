@@ -123,7 +123,7 @@ func (directoryServer *directoryServer) addDeal(deal data.Deal, res corehttp.Res
 		return nil, err
 	}
 	// only the job creator can post a job offer
-	if signerAddress != deal.JobCreator && signerAddress != deal.ResourceProvider {
+	if signerAddress != deal.Members.JobCreator && signerAddress != deal.Members.ResourceProvider {
 		return nil, fmt.Errorf("job creator or resource provider address does not match signer address")
 	}
 	return directoryServer.controller.addDeal(deal)

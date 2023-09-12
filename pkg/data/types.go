@@ -136,17 +136,17 @@ type Match struct {
 	// this is the cid of the resource offer where ID is set to empty string
 	ID string `json:"id"`
 
-	// how long the resource offer is valid for
-	Timeout uint64 `json:"timeout"`
-
-	ResourceOffer string `json:"resource_offer"`
-	JobOffer      string `json:"job_offer"`
+	Deal             string `json:"deal"`
+	JobCreator       string `json:"job_creator"`
+	ResourceProvider string `json:"resource_provider"`
+	ResourceOffer    string `json:"resource_offer"`
+	JobOffer         string `json:"job_offer"`
 }
 
 type DealMembers struct {
-	Directory        string   `json:"directory"`
 	JobCreator       string   `json:"job_creator"`
 	ResourceProvider string   `json:"resource_provider"`
+	Directory        string   `json:"directory"`
 	Mediators        []string `json:"mediators"`
 }
 
@@ -174,9 +174,10 @@ type DealPricing struct {
 // the solver will publish this deal to the directory
 type Deal struct {
 	// this is the cid of the deal where ID is set to empty string
-	ID               string        `json:"id"`
-	ResourceProvider string        `json:"resource_provider"`
-	JobCreator       string        `json:"job_creator"`
-	JobOffer         JobOffer      `json:"job_offer"`
-	ResourceOffer    ResourceOffer `json:"resource_offer"`
+	ID            string        `json:"id"`
+	Members       DealMembers   `json:"members"`
+	Pricing       DealPricing   `json:"pricing"`
+	Timeouts      DealTimeouts  `json:"timeouts"`
+	JobOffer      JobOffer      `json:"job_offer"`
+	ResourceOffer ResourceOffer `json:"resource_offer"`
 }
