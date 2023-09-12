@@ -18,22 +18,6 @@ contract LilypadController is Ownable, Initializable {
 
   ILilypadStorage private storageContract;
   ILilypadPayments private paymentsContract;
-
-  /**
-   * Events
-   */
-
-  event ResourceProviderAgreed(uint256 indexed dealId);
-  event JobCreatorAgreed(uint256 indexed dealId);
-  event DealAgreed(uint256 indexed dealId);
-  event ResultAdded(uint256 indexed dealId);
-  event ResultAccepted(uint256 indexed dealId);
-  event ResultChecked(uint256 indexed dealId, address indexed mediator);
-  event MediationAcceptResult(uint256 indexed dealId);
-  event MediationRejectResult(uint256 indexed dealId);
-  event TimeoutSubmitResult(uint256 indexed dealId);
-  event TimeoutJudgeResult(uint256 indexed dealId);
-  event TimeoutMediateResult(uint256 indexed dealId);
   
   /**
    * Init
@@ -105,7 +89,6 @@ contract LilypadController is Ownable, Initializable {
         deal.resourceProvider,
         deal.timeoutCollateral
       );
-      emit ResourceProviderAgreed(dealId);
     }
     else if(isJobCreator) {
       storageContract.agreeJobCreator(dealId);
@@ -115,14 +98,7 @@ contract LilypadController is Ownable, Initializable {
         deal.paymentCollateral,
         deal.timeoutCollateral
       );
-      emit JobCreatorAgreed(dealId);
     }
-
-    // both sides have agreed!
-    if(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed)) {
-      emit DealAgreed(dealId);
-    }
-
     return storageContract.getAgreement(dealId);
   }
 
@@ -164,8 +140,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.timeoutCollateral
     );
-
-    emit ResultAdded(dealId);
   }
 
   // * check the JC is calling this
@@ -198,8 +172,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.timeoutCollateral
     );
-
-    emit ResultAccepted(dealId);
   }
 
   // * check the JC is calling this
@@ -226,8 +198,6 @@ contract LilypadController is Ownable, Initializable {
       deal.timeoutCollateral,
       deal.mediationFee
     );
-    
-    emit ResultChecked(dealId, mediator);
   }
 
   /**
@@ -263,8 +233,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.mediationFee
     );
-
-    emit MediationAcceptResult(dealId);
   }
 
   // the mediator calls this to say that the resource provider did the bad job
@@ -294,8 +262,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.mediationFee
     );
-
-    emit MediationRejectResult(dealId);
   }
 
   function _canMediateResult(
@@ -335,8 +301,6 @@ contract LilypadController is Ownable, Initializable {
       deal.paymentCollateral,
       deal.timeoutCollateral
     );
-
-    emit TimeoutSubmitResult(dealId);
   }
 
   // the resource provider calls this after the timeout has passed after submitting results
@@ -366,8 +330,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.timeoutCollateral
     );
-    
-    emit TimeoutJudgeResult(dealId);
   }
 
   // either the JC or RP call this after the timeout has passed after results being checked
@@ -396,8 +358,6 @@ contract LilypadController is Ownable, Initializable {
       resultsCollateral,
       deal.mediationFee
     );
-    
-    emit TimeoutMediateResult(dealId);
   }
 
   /**
