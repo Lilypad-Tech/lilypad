@@ -34,6 +34,10 @@ contract ControllerOwnable is Ownable {
     controllerAddress = _controllerAddress;
   }
 
+  function getControllerAddress() public view returns (address) {
+    return controllerAddress;
+  }
+
   function disableChangeControllerAddress() public onlyOwner {
     canChangeControllerAddress = false;
   }
