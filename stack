@@ -228,7 +228,7 @@ function solver() {
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
-  go run . solver
+  go run . solver "$@"
 }
 
 function resource-provider() {
@@ -237,7 +237,7 @@ function resource-provider() {
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  go run . resource-provider
+  go run . resource-provider "$@"
 }
 
 function job-creator() {
@@ -246,7 +246,7 @@ function job-creator() {
   export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  go run . job-creator
+  go run . job-creator "$@"
 }
 
 function mediator() {
@@ -254,7 +254,7 @@ function mediator() {
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  go run . mediator
+  go run . mediator "$@"
 }
 
 function directory() {
@@ -263,7 +263,7 @@ function directory() {
   export WEB3_PRIVATE_KEY=$DIRECTORY_PRIVATE_KEY
   export SERVER_PORT=8081
   export SERVER_URL=http://localhost:8081
-  go run . directory
+  go run . directory "$@"
 }
 
 ############################################################################

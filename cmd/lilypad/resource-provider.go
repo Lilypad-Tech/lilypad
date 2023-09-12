@@ -17,6 +17,11 @@ func newResourceProviderCmd() *cobra.Command {
 		Long:    "Start the lilypad resource-provider service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
+			if err != nil {
+				return err
+			}
+			options.Web3 = newWeb3Options
 
 			// map the options
 			newOfferOptions, err := optionsfactory.ProcessResourceProviderOfferOptions(options.Offers)

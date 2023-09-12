@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
@@ -32,8 +33,11 @@ func AddWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
 		&web3Options.RpcURL, "web3-rpc-url", web3Options.RpcURL,
 		`The URL of the web3 RPC server (WEB3_RPC_URL).`,
 	)
+
+	// don't use the env as the default here because otherwise it will show when --help is used
+	// instead we inject the env value into the options after boot if needed
 	cmd.PersistentFlags().StringVar(
-		&web3Options.PrivateKey, "web3-private-key", web3Options.PrivateKey,
+		&web3Options.PrivateKey, "web3-private-key", "",
 		`The private key to use for signing web3 transactions (WEB3_PRIVATE_KEY).`,
 	)
 	cmd.PersistentFlags().IntVar(
@@ -91,4 +95,11 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 	}
 
 	return nil
+}
+
+func ProcessWeb3Options(options web3.Web3Options) (web3.Web3Options, error) {
+	if options.PrivateKey == "" {
+		options.PrivateKey = os.Getenv("WEB3_PRIVATE_KEY")
+	}
+	return options, nil
 }
