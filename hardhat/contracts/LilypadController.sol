@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./SharedStructs.sol";
 import "./ILilypadStorage.sol";
 import "./ILilypadPayments.sol";
+import "./ILilypadMediation.sol";
 
 contract LilypadController is Ownable, Initializable {
 
@@ -15,18 +16,25 @@ contract LilypadController is Ownable, Initializable {
   
   address private storageAddress;
   address private paymentsAddress;
+  address private mediationAddress;
 
   ILilypadStorage private storageContract;
   ILilypadPayments private paymentsContract;
+  ILilypadMediationHandler private mediationContract;
   
   /**
    * Init
    */
 
   // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
-  function initialize(address _storageAddress, address _paymentsAddress) public initializer {
+  function initialize(
+    address _storageAddress,
+    address _paymentsAddress,
+    address _mediationAddress
+  ) public initializer {
     setStorageAddress(_storageAddress);
     setPaymentsAddress(_paymentsAddress);
+    setMediationAddress(_mediationAddress);
   }
 
   function setStorageAddress(address _storageAddress) public onlyOwner {
@@ -39,6 +47,12 @@ contract LilypadController is Ownable, Initializable {
     require(_paymentsAddress != address(0), "Payments address must be defined");
     paymentsAddress = _paymentsAddress;
     paymentsContract = ILilypadPayments(_paymentsAddress);
+  }
+
+  function setMediationAddress(address _mediationAddress) public onlyOwner {
+    require(_mediationAddress != address(0), "Mediation address must be defined");
+    mediationAddress = _mediationAddress;
+    mediationContract = ILilypadMediationHandler(_mediationAddress);
   }
 
   /**

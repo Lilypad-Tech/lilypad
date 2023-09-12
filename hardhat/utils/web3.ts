@@ -14,6 +14,7 @@ import {
   LilypadToken,
   LilypadPayments,
   LilypadStorage,
+  LilypadMediationRandom,
   LilypadController,
 } from '../typechain-types'
 
@@ -138,6 +139,11 @@ export async function getContractAddress(
   return deployment.address
 }
 
+/*
+
+  storage
+
+*/
 export async function connectStorage() {
   return connectContract<LilypadStorage>('LilypadStorage')
 }
@@ -146,6 +152,24 @@ export async function getStorageAddress() {
   return getContractAddress('LilypadStorage')
 }
 
+/*
+
+  mediation
+
+*/
+export async function connectMediation() {
+  return connectContract<LilypadMediationRandom>('LilypadMediationRandom')
+}
+
+export async function getMediationAddress() {
+  return getContractAddress('LilypadMediationRandom')
+}
+
+/*
+
+  token
+
+*/
 export async function connectToken() {
   return connectContract<LilypadToken>('LilypadToken')
 }
@@ -154,6 +178,11 @@ export async function getTokenAddress() {
   return getContractAddress('LilypadToken')
 }
 
+/*
+
+  payments
+
+*/
 export async function connectPayments() {
   return connectContract<LilypadPayments>('LilypadPayments')
 }
@@ -162,6 +191,11 @@ export async function getPaymentsAddress() {
   return getContractAddress('LilypadPayments')
 }
 
+/*
+
+  controller
+
+*/
 export async function connectController() {
   return connectContract<LilypadController>('LilypadController')
 }
