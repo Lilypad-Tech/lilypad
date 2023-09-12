@@ -30,7 +30,7 @@ func newMediatorCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(mediatorCmd, options.Web3)
+	optionsfactory.AddWeb3CliFlags(mediatorCmd, &options.Web3)
 
 	return mediatorCmd
 }

@@ -15,7 +15,7 @@ func GetDefaultServerOptions() http.ServerOptions {
 	}
 }
 
-func AddServerCliFlags(cmd *cobra.Command, serverOptions http.ServerOptions) {
+func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.URL, "server-url", serverOptions.URL,
 		`The URL the api server is listening on (SERVER_URL).`,

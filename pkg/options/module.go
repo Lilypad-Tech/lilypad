@@ -21,7 +21,7 @@ func GetDefaultModuleOptions() data.ModuleConfig {
 	}
 }
 
-func AddModuleCliFlags(cmd *cobra.Command, moduleConfig data.ModuleConfig) {
+func AddModuleCliFlags(cmd *cobra.Command, moduleConfig *data.ModuleConfig) {
 	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Name, "module-name", moduleConfig.Name,
 		`The name of the shortcut module (MODULE_NAME)`,

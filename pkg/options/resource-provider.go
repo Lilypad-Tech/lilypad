@@ -39,7 +39,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 	}
 }
 
-func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourceprovider.ResourceProviderOfferOptions) {
+func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resourceprovider.ResourceProviderOfferOptions) {
 	cmd.PersistentFlags().IntVar(
 		&offerOptions.OfferSpec.CPU, "offer-cpu", offerOptions.OfferSpec.CPU,
 		`How many milli-cpus to offer the network (OFFER_CPU).`,
@@ -61,8 +61,8 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions resourcep
 		`The modules you are willing to run (OFFER_MODULES).`,
 	)
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
-	AddPricingCliFlags(cmd, offerOptions.DefaultPricing)
-	AddTimeoutCliFlags(cmd, offerOptions.DefaultTimeouts)
+	AddPricingCliFlags(cmd, &offerOptions.DefaultPricing)
+	AddTimeoutCliFlags(cmd, &offerOptions.DefaultTimeouts)
 }
 
 func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {

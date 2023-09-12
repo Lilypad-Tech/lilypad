@@ -29,7 +29,7 @@ func AddPricingModeCliFlags(cmd *cobra.Command, pricingMode *data.PricingMode) {
 	)
 }
 
-func AddPricingCliFlags(cmd *cobra.Command, pricingConfig data.DealPricing) {
+func AddPricingCliFlags(cmd *cobra.Command, pricingConfig *data.DealPricing) {
 	cmd.PersistentFlags().Uint64Var(
 		&pricingConfig.InstructionPrice, "pricing-instruction-price", pricingConfig.InstructionPrice,
 		`The price per instruction to offer (PRICING_INSTRUCTION_PRICE)`,

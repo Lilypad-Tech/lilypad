@@ -26,7 +26,7 @@ func GetDefaultTimeoutOptions() data.DealTimeouts {
 	}
 }
 
-func AddTimeoutCliFlags(cmd *cobra.Command, timeoutConfig data.DealTimeouts) {
+func AddTimeoutCliFlags(cmd *cobra.Command, timeoutConfig *data.DealTimeouts) {
 	cmd.PersistentFlags().Uint64Var(
 		&timeoutConfig.Agree.Timeout, "timeout-agree-time", timeoutConfig.Agree.Timeout,
 		`The number of seconds to timeout a deal when agreeing (TIMEOUT_AGREE_TIME)`,

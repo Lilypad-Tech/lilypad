@@ -8,7 +8,8 @@ import (
 
 func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 	return jobcreator.JobCreatorOptions{
-		Web3: GetDefaultWeb3Options(),
+		Offer: GetDefaultJobCreatorOfferOptions(),
+		Web3:  GetDefaultWeb3Options(),
 	}
 }
 
@@ -23,13 +24,14 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	}
 }
 
-func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions jobcreator.JobCreatorOfferOptions) {
+func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.JobCreatorOfferOptions) {
 	// add the inputs that we will merge into the module template file
 	cmd.PersistentFlags().StringToStringVarP(&offerOptions.Inputs, "input", "i", offerOptions.Inputs, "Input key-value pairs")
 
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
-	AddPricingCliFlags(cmd, offerOptions.Pricing)
-	AddModuleCliFlags(cmd, offerOptions.Module)
+	AddPricingCliFlags(cmd, &offerOptions.Pricing)
+	AddTimeoutCliFlags(cmd, &offerOptions.Timeouts)
+	AddModuleCliFlags(cmd, &offerOptions.Module)
 }
 
 func ProcessJobCreatorOfferOptions(options jobcreator.JobCreatorOfferOptions) (jobcreator.JobCreatorOfferOptions, error) {

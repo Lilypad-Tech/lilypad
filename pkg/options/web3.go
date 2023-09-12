@@ -28,7 +28,7 @@ func GetDefaultWeb3Options() web3.Web3Options {
 	}
 }
 
-func AddWeb3CliFlags(cmd *cobra.Command, web3Options web3.Web3Options) {
+func AddWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.RpcURL, "web3-rpc-url", web3Options.RpcURL,
 		`The URL of the web3 RPC server (WEB3_RPC_URL).`,

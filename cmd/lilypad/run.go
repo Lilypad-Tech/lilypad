@@ -21,7 +21,6 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay v0.0.1",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			newWeb3Options, err := optionsfactory.ProcessWeb3Options(options.Web3)
 			if err != nil {
 				return err
@@ -64,8 +63,8 @@ func newRunCmd() *cobra.Command {
 		},
 	}
 
-	optionsfactory.AddWeb3CliFlags(runCmd, options.Web3)
-	optionsfactory.AddJobCreatorOfferCliFlags(runCmd, options.Offer)
+	optionsfactory.AddWeb3CliFlags(runCmd, &options.Web3)
+	optionsfactory.AddJobCreatorOfferCliFlags(runCmd, &options.Offer)
 
 	return runCmd
 }
@@ -110,6 +109,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	}()
 
 	fmt.Printf(" --------------------------------------\n")
+	spew.Dump(options)
 	spew.Dump(offer)
 
 	return nil
