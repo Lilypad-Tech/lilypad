@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
-	"github.com/bacalhau-project/lilypad/pkg/module"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -68,23 +68,23 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 
-	// process the given module
-	loadedModule, err := module.LoadModule(options.Offer.Module, options.Offer.Inputs)
-	if err != nil {
-		return fmt.Errorf("error loading module: %s", err.Error())
-	}
-
-	// the required machine spec is loaded from th emodule
-	options.Offer.Spec = loadedModule.Machine
-
 	// create the job creator and start it's control loop
 	jobCreatorService, err := jobcreator.NewJobCreator(options, web3SDK)
 	if err != nil {
 		return err
 	}
 
+	// let's process our options into an actual job offer
+	// this will also validate the module we are asking for
+	offer, err := jobCreatorService.GetJobOfferFromOptions(options.Offer)
+	if err != nil {
+		return err
+	}
+
 	jobCreatorErrors := jobCreatorService.Start(commandCtx.Ctx, commandCtx.Cm)
 
+	// start the error channels in a goroutine
+	// because we want to block on the actual job we are running
 	go func() {
 		for {
 			select {
@@ -98,8 +98,8 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		}
 	}()
 
-	// the job creator loop is now running
-	// let's add our job offer
+	fmt.Printf(" --------------------------------------\n")
+	spew.Dump(offer)
 
 	return nil
 }

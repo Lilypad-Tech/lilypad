@@ -96,8 +96,6 @@ type JobOffer struct {
 	ID string `json:"id"`
 	// the address of the job creator
 	JobCreator string `json:"job_creator"`
-	// this is the CID of the Module description
-	ModuleID string `json:"module_id"`
 	// the actual module that is being offered
 	// this must hash to the ModuleID above
 	Module ModuleConfig `json:"module"`

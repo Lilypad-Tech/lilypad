@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/module"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
@@ -53,6 +54,33 @@ func NewJobCreator(
 	return solver, nil
 }
 
-func (JobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+func (jobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	return jobCreator.controller.Start(ctx, cm)
+}
+
+// this will load the module in the offer options
+// and hoist the machine spec from the module into the offer
+func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOptions) (data.JobOffer, error) {
+	// process the given module so we know what spec the job is asking for
+	// this will also validate the module the user is asking for
+	loadedModule, err := module.LoadModule(options.Module, options.Inputs)
+	if err != nil {
+		return data.JobOffer{}, fmt.Errorf("error loading module: %s", err.Error())
+	}
+
+	return data.JobOffer{
+		JobCreator: jobCreator.web3SDK.GetAddress().String(),
+		Module:     options.Module,
+		Spec:       loadedModule.Machine,
+		Inputs:     options.Inputs,
+		// are will pay whatever the market is offering
+		// TODO: put price limits here
+		Pricing: data.Pricing{
+			Mode: data.MarketPrice,
+		},
+	}, nil
+}
+
+func (JobCreator *JobCreator) AddOffer(ctx context.Context, cm *system.CleanupManager) chan error {
 	return JobCreator.controller.Start(ctx, cm)
 }
