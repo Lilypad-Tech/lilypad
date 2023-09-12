@@ -50,14 +50,9 @@ interface ILilypadStorage {
 
   function ensureDeal(
     uint256 dealId,
-    address resourceProvider,
-    address jobCreator,
-    uint256 instructionPrice,
-    uint256 timeout,
-    uint256 timeoutCollateral,
-    uint256 jobCollateral,
-    uint256 resultsCollateral,
-    uint256 mediationFee
+    SharedStructs.DealMembers memory members,
+    SharedStructs.DealTimeouts memory timeouts,
+    SharedStructs.DealPricing memory pricing
   ) external returns (SharedStructs.Deal memory);
 
   /**
@@ -118,6 +113,9 @@ interface ILilypadStorage {
   /**
    * Timeouts
    */
+  function timeoutAgree(
+    uint256 dealId
+  ) external;
 
   function timeoutSubmitResult(
     uint256 dealId

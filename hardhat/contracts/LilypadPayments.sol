@@ -128,7 +128,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   ) public onlyController {
     // we check this here to double check who we are about to charge (the RP)
     // is who signed the TX and so we can take the money
-    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the JC");
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
     _payEscrow(
       dealId,
       timeoutCollateral,
@@ -384,6 +384,44 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   /**
    * Timeouts
    */
+  function timeoutAgreeRefundResourceProvider(
+    uint256 dealId,
+    address resourceProvider,
+    uint256 timeoutCollateral
+  ) public onlyController {
+    require(tx.origin == resourceProvider, "LilypadPayments: Can only be called by the RP");
+    // the refund of the job collateral to the JC
+    _refundEscrow(
+      dealId,
+      resourceProvider,
+      timeoutCollateral,
+      PaymentReason.TimeoutCollateral
+    );
+  }
+
+  function timeoutAgreeRefundJobCreator(
+    uint256 dealId,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
+  ) public onlyController {
+    require(tx.origin == jobCreator, "LilypadPayments: Can only be called by the JC");
+    // the refund of the job collateral to the JC
+    _refundEscrow(
+      dealId,
+      jobCreator,
+      paymentCollateral,
+      PaymentReason.PaymentCollateral
+    );
+
+    // the refund of the job collateral to the JC
+    _refundEscrow(
+      dealId,
+      jobCreator,
+      timeoutCollateral,
+      PaymentReason.TimeoutCollateral
+    );
+  }
 
   // * pay back the JC's job collateral
   // * pay back the JC's timeout collateral

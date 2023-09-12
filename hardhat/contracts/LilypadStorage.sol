@@ -159,49 +159,92 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     return dealsForParty[party];
   }
 
+  function checkDealMembers(
+    SharedStructs.DealMembers memory members
+  ) private pure {
+    require(members.resourceProvider != address(0), "Resource provider must be defined");
+    require(members.jobCreator != address(0), "Job creator must be defined");
+    require(members.directory != address(0), "Directory must be defined");
+    require(members.mediators.length > 0, "Mediators must have at least 1 address");
+    require(members.resourceProvider != members.jobCreator, "RP and JC cannot be the same");
+  }
+
+  function checkTimeouts(
+    SharedStructs.DealTimeouts memory timeouts
+  ) private pure {
+    // the cost of the agree timeout cannot be > 0 because the whole point is
+    // one party has not paid anything into the contract is what has timed out
+    require(timeouts.agree.collateral == 0, "Agree timeout collateral has to be zero");
+    // the same is true of the mediation timeout - it's cost cannot be zero
+    require(timeouts.mediateResults.collateral == 0, "Mediate results timeout collateral has to be zero");
+  }
+
+  function compareDealMembers(
+    SharedStructs.DealMembers memory members1,
+    SharedStructs.DealMembers memory members2
+  ) private pure {
+    require(members1.resourceProvider == members2.resourceProvider, "RP does not match");
+    require(members1.jobCreator == members2.jobCreator, "JC does not match");
+    require(members1.directory == members2.directory, "Directory does not match");
+    require(members1.mediators.length == members2.mediators.length, "Mediators length does not match");
+    for (uint256 i = 0; i < members1.mediators.length; i++) {
+      require(members1.mediators[i] == members2.mediators[i], "Mediator does not match");
+    }
+  }
+
+  function compareDealTimeout(
+    SharedStructs.DealTimeout memory timeout1,
+    SharedStructs.DealTimeout memory timeout2
+  ) private pure {
+    require(timeout1.timeout == timeout2.timeout, "Timeout does not match");
+    require(timeout1.collateral == timeout2.collateral, "Collateral does not match");
+  }
+  
+  function compareDealTimeouts(
+    SharedStructs.DealTimeouts memory timeouts1,
+    SharedStructs.DealTimeouts memory timeouts2
+  ) private pure {
+    compareDealTimeout(timeouts1.agree, timeouts2.agree);
+    compareDealTimeout(timeouts1.submitResults, timeouts2.submitResults);
+    compareDealTimeout(timeouts1.judgeResults, timeouts2.judgeResults);
+    compareDealTimeout(timeouts1.mediateResults, timeouts2.mediateResults);
+  }
+
+  function compareDealPricing(
+    SharedStructs.DealPricing memory pricing1,
+    SharedStructs.DealPricing memory pricing2
+  ) private pure {
+    require(pricing1.instructionPrice == pricing2.instructionPrice, "Instruction price does not match");
+    require(pricing1.paymentCollateral == pricing2.paymentCollateral, "Payment collateral does not match");
+    require(pricing1.resultsCollateralMultiple == pricing2.resultsCollateralMultiple, "Results collateral multiple does not match");
+    require(pricing1.mediationFee == pricing2.mediationFee, "Mediation fee does not match");
+  }
+  
   function ensureDeal(
     uint256 dealId,
-    address resourceProvider,
-    address jobCreator,
-    uint256 instructionPrice,
-    uint256 timeout,
-    uint256 timeoutCollateral,
-    uint256 paymentCollateral,
-    uint256 resultsCollateralMultiple,
-    uint256 mediationFee
+    SharedStructs.DealMembers memory members,
+    SharedStructs.DealTimeouts memory timeouts,
+    SharedStructs.DealPricing memory pricing
   ) public onlyController returns (SharedStructs.Deal memory) {
     require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal is not in DealNegotiating state");
-    require(resourceProvider != address(0), "Resource provider must be defined");
-    require(jobCreator != address(0), "Job creator must be defined");
-    require(resourceProvider != jobCreator, "RP and JC cannot be the same");
-
+    checkDealMembers(members);
+    checkTimeouts(timeouts);
     if(hasDeal(dealId)) {
       SharedStructs.Deal memory existingDeal = getDeal(dealId);
-      require(existingDeal.resourceProvider == resourceProvider, "RP does not match");
-      require(existingDeal.jobCreator == jobCreator, "JC does not match");
-      require(existingDeal.instructionPrice == instructionPrice, "Instruction price does not match");
-      require(existingDeal.timeout == timeout, "Timeout does not match");
-      require(existingDeal.timeoutCollateral == timeoutCollateral, "Timeout collateral does not match");
-      require(existingDeal.paymentCollateral == paymentCollateral, "Payment collateral does not match");
-      require(existingDeal.resultsCollateralMultiple == resultsCollateralMultiple, "Results collateral does not match");
-      require(existingDeal.mediationFee == mediationFee, "Mediation fee does not match");
+      compareDealMembers(existingDeal.members, members);
+      compareDealTimeouts(existingDeal.timeouts, timeouts);
+      compareDealPricing(existingDeal.pricing, pricing);
     }
     else {
       deals[dealId] = SharedStructs.Deal(
         dealId,
-        resourceProvider,
-        jobCreator,
-        instructionPrice,
-        timeout,
-        timeoutCollateral,
-        paymentCollateral,
-        resultsCollateralMultiple,
-        mediationFee
+        members,
+        timeouts,
+        pricing
       );
-      dealsForParty[resourceProvider].push(dealId);
-      dealsForParty[jobCreator].push(dealId);
+      dealsForParty[members.resourceProvider].push(dealId);
+      dealsForParty[members.jobCreator].push(dealId);
     }
-
     return deals[dealId];
   }
 
@@ -279,7 +322,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
     SharedStructs.Deal memory deal = getDeal(dealId);
-    require(_hasTrustedMediator(deal.resourceProvider, mediator), "Resource provider does not trust that mediator");
+    require(_hasTrustedMediator(deal.members.resourceProvider, mediator), "Resource provider does not trust that mediator");
     agreements[dealId].resultsCheckedAt = block.timestamp;
     agreements[dealId].mediator = mediator;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChecked);
@@ -287,7 +330,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   /**
-   * Mediation
+   * Mediati:
    */
 
   function mediationAcceptResult(
@@ -309,6 +352,16 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   /**
    * Timeouts
    */
+
+  // called because one party submitted a deal and the other party
+  // did not agree in time
+  function timeoutAgree(
+    uint256 dealId
+  ) public onlyController {
+    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal not in DealNegotiating state");
+    agreements[dealId].timeoutAgreeAt = block.timestamp;
+    _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutAgree);
+  }
 
   // called because the JC waited too long for a result to be submitted
   // and wants it's money back
@@ -346,13 +399,13 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function getJobCost(
     uint256 dealId
   ) public view returns (uint256) {
-    return deals[dealId].instructionPrice * results[dealId].instructionCount;
+    return deals[dealId].pricing.instructionPrice * results[dealId].instructionCount;
   }
 
   function getResultsCollateral(
     uint256 dealId
   ) public view returns (uint256) {
-    return deals[dealId].resultsCollateralMultiple * getJobCost(dealId);
+    return deals[dealId].pricing.resultsCollateralMultiple * getJobCost(dealId);
   }
 
   /**
@@ -388,6 +441,9 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     if(agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0) {
       agreements[dealId].dealAgreedAt = block.timestamp;
       _changeAgreementState(dealId, SharedStructs.AgreementState.DealAgreed);
+    } else {
+      // this is used so we can know if a party can call an agree timeout trigger
+      agreements[dealId].dealCreatedAt = block.timestamp;
     }
   }
 

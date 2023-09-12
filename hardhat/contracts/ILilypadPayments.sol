@@ -92,6 +92,19 @@ interface ILilypadPayments {
    * Timeouts
    */
 
+  function timeoutAgreeRefundResourceProvider(
+    uint256 dealId,
+    address resourceProvider,
+    uint256 timeoutCollateral
+  ) external;
+
+  function timeoutAgreeRefundJobCreator(
+    uint256 dealId,
+    address jobCreator,
+    uint256 paymentCollateral,
+    uint256 timeoutCollateral
+  ) external;
+
   function timeoutSubmitResult(
     uint256 dealId,
     address resourceProvider,

@@ -34,6 +34,9 @@ library SharedStructs {
     // a mediator has rejected the results
     MediationRejected,
 
+    // this means the counter-party did not agree to the deal in time
+    TimeoutAgree,
+
     // this means the RP did not submit results in time
     TimeoutSubmitResults,
 
@@ -56,27 +59,38 @@ library SharedStructs {
     address[] trustedDirectories;
   }
 
-  // a Deal forms the information that is agreed between both parties
-  // both parties must have called "agree_deal" with the exact
-  // same parameters before the deal is considered valid
-  // a Deal is immutable - nothing about it can be updated
-  struct Deal {
-    // the CID of the Deal document on IPFS (and directory service)
-    // this contains the job spec, the job offer and the resource offer
-    uint256 dealId;
-
+  // the various addresses involved in runnig a deal
+  struct DealMembers {
     // the addresses of the RP and JC that have agreed to this deal
     address resourceProvider;
     address jobCreator;
 
-    // agreed price per instruction
-    uint256 instructionPrice;
+    // the address of the directory service that the RP and JC have agreed to use
+    address directory;
 
-    // the max time we will wait for the results
+    // the list of mediators that the RP and JC have agreed to use
+    address[] mediators;
+  }
+
+  // a timeout represents the agreed amount of time and the penalty
+  // that is applied if the timeout is exceeded  
+  struct DealTimeout {
     uint256 timeout;
+    uint256 collateral;
+  }
+  
+  // the various forms of timeout a deal can have
+  struct DealTimeouts { 
+    DealTimeout agree;
+    DealTimeout submitResults;
+    DealTimeout judgeResults;
+    DealTimeout mediateResults;
+  }
 
-    // the collateral that the RP has put up to prevent timeouts
-    uint256 timeoutCollateral;
+  // configure the cost of a deal
+  struct DealPricing {
+  // agreed price per instruction
+    uint256 instructionPrice;
 
     // the collateral that the JC has put up to pay for the job
     // the final cost of the job will be deducted from this
@@ -89,6 +103,25 @@ library SharedStructs {
 
     // how much is the JC willing to pay the mediator to resolve disputes
     uint256 mediationFee;
+  }
+
+  // a Deal forms the information that is agreed between both parties
+  // both parties must have called "agree_deal" with the exact
+  // same parameters before the deal is considered valid
+  // a Deal is immutable - nothing about it can be updated
+  struct Deal {
+    // the CID of the Deal document on IPFS (and directory service)
+    // this contains the job spec, the job offer and the resource offer
+    uint256 dealId;
+
+    // who is participating in this deal
+    DealMembers members;
+    
+    // the timeout settings for a deal
+    DealTimeouts timeouts;
+
+    // the pricing settings for a deal
+    DealPricing pricing;    
   }
 
   // what the RP submits back once having run the job
@@ -116,6 +149,7 @@ library SharedStructs {
 
     uint256 resourceProviderAgreedAt;
     uint256 jobCreatorAgreedAt;
+    uint256 dealCreatedAt;
     uint256 dealAgreedAt;
 
     uint256 resultsSubmittedAt;
@@ -125,6 +159,7 @@ library SharedStructs {
     uint256 mediationAcceptedAt;
     uint256 mediationRejectedAt;
 
+    uint256 timeoutAgreeAt;
     uint256 timeoutSubmitResultsAt;
     uint256 timeoutJudgeResultsAt;
     uint256 timeoutMediateResultsAt;
