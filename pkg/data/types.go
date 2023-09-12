@@ -101,6 +101,9 @@ type JobOffer struct {
 	// the actual module that is being offered
 	// this must hash to the ModuleID above
 	Module ModuleConfig `json:"module"`
+	// the spec required by the module
+	// this will have been hoisted from the module itself
+	Spec MachineSpec `json:"spec"`
 	// the user inputs to the module
 	// these values will power the go template
 	Inputs map[string]string `json:"inputs"`
