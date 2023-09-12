@@ -162,11 +162,11 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function checkDealMembers(
     SharedStructs.DealMembers memory members
   ) private pure {
-    require(members.resourceProvider != address(0), "Resource provider must be defined");
-    require(members.jobCreator != address(0), "Job creator must be defined");
-    require(members.directory != address(0), "Directory must be defined");
-    require(members.mediators.length > 0, "Mediators must have at least 1 address");
-    require(members.resourceProvider != members.jobCreator, "RP and JC cannot be the same");
+    require(members.resourceProvider != address(0), "RP missing");
+    require(members.jobCreator != address(0), "JC missing");
+    require(members.directory != address(0), "Dir missing");
+    require(members.mediators.length > 0, "Mediators <= 0");
+    require(members.resourceProvider != members.jobCreator, "RP / JC same");
   }
 
   function checkTimeouts(
@@ -174,21 +174,21 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) private pure {
     // the cost of the agree timeout cannot be > 0 because the whole point is
     // one party has not paid anything into the contract is what has timed out
-    require(timeouts.agree.collateral == 0, "Agree timeout collateral has to be zero");
+    require(timeouts.agree.collateral == 0, "Agree deposit 0");
     // the same is true of the mediation timeout - it's cost cannot be zero
-    require(timeouts.mediateResults.collateral == 0, "Mediate results timeout collateral has to be zero");
+    require(timeouts.mediateResults.collateral == 0, "Mediate deposit 0");
   }
 
   function compareDealMembers(
     SharedStructs.DealMembers memory members1,
     SharedStructs.DealMembers memory members2
   ) private pure {
-    require(members1.resourceProvider == members2.resourceProvider, "RP does not match");
-    require(members1.jobCreator == members2.jobCreator, "JC does not match");
-    require(members1.directory == members2.directory, "Directory does not match");
-    require(members1.mediators.length == members2.mediators.length, "Mediators length does not match");
+    require(members1.resourceProvider == members2.resourceProvider, "RP");
+    require(members1.jobCreator == members2.jobCreator, "JC");
+    require(members1.directory == members2.directory, "Dir");
+    require(members1.mediators.length == members2.mediators.length, "Mediators");
     for (uint256 i = 0; i < members1.mediators.length; i++) {
-      require(members1.mediators[i] == members2.mediators[i], "Mediator does not match");
+      require(members1.mediators[i] == members2.mediators[i], "Mediator");
     }
   }
 
@@ -196,8 +196,8 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     SharedStructs.DealTimeout memory timeout1,
     SharedStructs.DealTimeout memory timeout2
   ) private pure {
-    require(timeout1.timeout == timeout2.timeout, "Timeout does not match");
-    require(timeout1.collateral == timeout2.collateral, "Collateral does not match");
+    require(timeout1.timeout == timeout2.timeout, "Timeout");
+    require(timeout1.collateral == timeout2.collateral, "Collateral");
   }
   
   function compareDealTimeouts(
@@ -214,10 +214,10 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     SharedStructs.DealPricing memory pricing1,
     SharedStructs.DealPricing memory pricing2
   ) private pure {
-    require(pricing1.instructionPrice == pricing2.instructionPrice, "Instruction price does not match");
-    require(pricing1.paymentCollateral == pricing2.paymentCollateral, "Payment collateral does not match");
-    require(pricing1.resultsCollateralMultiple == pricing2.resultsCollateralMultiple, "Results collateral multiple does not match");
-    require(pricing1.mediationFee == pricing2.mediationFee, "Mediation fee does not match");
+    require(pricing1.instructionPrice == pricing2.instructionPrice, "Price");
+    require(pricing1.paymentCollateral == pricing2.paymentCollateral, "Payment");
+    require(pricing1.resultsCollateralMultiple == pricing2.resultsCollateralMultiple, "Results");
+    require(pricing1.mediationFee == pricing2.mediationFee, "Mediation");
   }
   
   function ensureDeal(
@@ -226,7 +226,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     SharedStructs.DealTimeouts memory timeouts,
     SharedStructs.DealPricing memory pricing
   ) public onlyController returns (SharedStructs.Deal memory) {
-    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal is not in DealNegotiating state");
+    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "DealNegotiating");
     checkDealMembers(members);
     checkTimeouts(timeouts);
     if(hasDeal(dealId)) {
@@ -262,7 +262,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     uint256 dealId
   ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
-    require(agreements[dealId].resourceProviderAgreedAt == 0, "Resource provider has already agreed");
+    require(agreements[dealId].resourceProviderAgreedAt == 0, "RP has already agreed");
     agreements[dealId].resourceProviderAgreedAt = block.timestamp;
     _maybeAgreeDeal(dealId);
     return agreements[dealId];
@@ -272,7 +272,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     uint256 dealId
   ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
-    require(agreements[dealId].jobCreatorAgreedAt == 0, "Job creator has already agreed");
+    require(agreements[dealId].jobCreatorAgreedAt == 0, "JC has already agreed");
     agreements[dealId].jobCreatorAgreedAt = block.timestamp;
     _maybeAgreeDeal(dealId);
     return agreements[dealId];
@@ -293,7 +293,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     uint256 resultsId,
     uint256 instructionCount
   ) public onlyController returns (SharedStructs.Result memory) {
-    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
+    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
     agreements[dealId].resultsSubmittedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsSubmitted);
     results[dealId] = SharedStructs.Result(
@@ -311,7 +311,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function acceptResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].resultsAcceptedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsAccepted);
   }
@@ -320,9 +320,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     uint256 dealId,
     address mediator
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
-    SharedStructs.Deal memory deal = getDeal(dealId);
-    require(_hasTrustedMediator(deal.members.resourceProvider, mediator), "Resource provider does not trust that mediator");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].resultsCheckedAt = block.timestamp;
     agreements[dealId].mediator = mediator;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChecked);
@@ -336,7 +334,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function mediationAcceptResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].mediationAcceptedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationAccepted);
   }
@@ -344,7 +342,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function mediationRejectResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].mediationRejectedAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.MediationRejected);
   }
@@ -358,7 +356,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function timeoutAgree(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "Deal not in DealNegotiating state");
+    require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "DealNegotiating");
     agreements[dealId].timeoutAgreeAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutAgree);
   }
@@ -368,7 +366,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function timeoutSubmitResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "Deal not in DealAgreed state");
+    require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
     agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutSubmitResults);
   }
@@ -378,7 +376,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function timeoutJudgeResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "Deal not in ResultsSubmitted state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutJudgeResults);
   }
@@ -387,7 +385,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function timeoutMediateResult(
     uint256 dealId
   ) public onlyController {
-    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "Deal not in ResultsChecked state");
+    require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].timeoutMediateResultsAt = block.timestamp;
     _changeAgreementState(dealId, SharedStructs.AgreementState.TimeoutMediateResults);
   }
@@ -453,19 +451,5 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) private {
     agreements[dealId].state = state;
     emit DealStateChange(dealId, state);
-  }
-
-  function _hasTrustedMediator(
-    address userId,
-    address mediator
-  ) private view returns (bool) {
-    bool found = false;
-    for (uint256 i = 0; i < users[userId].trustedMediators.length; i++) {
-      if (users[userId].trustedMediators[i] == mediator) {
-        found = true;
-        break;
-      }
-    }
-    return found;
   }
 }
