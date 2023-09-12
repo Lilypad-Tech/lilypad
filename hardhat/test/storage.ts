@@ -17,12 +17,7 @@ import {
   setupStorageFixture,
   getDefaultTimeouts,
   getDefaultPricing,
-  DEFAUT_TIMEOUT_TIME,
-  DEFAUT_TIMEOUT_COLLATERAL,
-  DEFAULT_PRICING_INSTRUCTION_PRICE,
-  DEFAULT_PRICING_PAYMENT_COLLATERAL,
-  DEFAULT_PRICING_RESULTS_COLLATERAL_MULTIPLE,
-  DEFAULT_PRICING_MEDIATION_FEE,
+  DEFAULT_VALUES,
 } from './fixtures'
 
 import {
@@ -32,7 +27,7 @@ import {
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe.only("Storage", () => {
+describe("Storage", () => {
 
   const rpCID = ethers.getBigInt(123)
   const rpURL = "abc"
@@ -606,18 +601,18 @@ describe.only("Storage", () => {
       expect(deal.members.resourceProvider).to.equal(getAddress('resource_provider'))
       expect(deal.members.jobCreator).to.equal(getAddress('job_creator'))
 
-      expect(deal.pricing.instructionPrice).to.equal(ethers.getBigInt(1))
-      expect(deal.pricing.paymentCollateral).to.equal(ethers.getBigInt(1))
-      expect(deal.pricing.resultsCollateralMultiple).to.equal(ethers.getBigInt(1))
-      expect(deal.pricing.mediationFee).to.equal(ethers.getBigInt(1))
+      expect(deal.pricing.instructionPrice).to.equal(DEFAULT_VALUES.instructionPrice)
+      expect(deal.pricing.paymentCollateral).to.equal(DEFAULT_VALUES.paymentCollateral)
+      expect(deal.pricing.resultsCollateralMultiple).to.equal(DEFAULT_VALUES.resultsCollateralMultiple)
+      expect(deal.pricing.mediationFee).to.equal(DEFAULT_VALUES.mediationFee)
 
-      expect(deal.timeouts.agree.timeout).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_TIME))
+      expect(deal.timeouts.agree.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
       expect(deal.timeouts.agree.collateral).to.equal(ethers.getBigInt(0))
-      expect(deal.timeouts.submitResults.timeout).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_TIME))
-      expect(deal.timeouts.submitResults.collateral).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_COLLATERAL))
-      expect(deal.timeouts.judgeResults.timeout).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_TIME))
-      expect(deal.timeouts.judgeResults.collateral).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_COLLATERAL))
-      expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(DEFAUT_TIMEOUT_TIME))
+      expect(deal.timeouts.submitResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
+      expect(deal.timeouts.submitResults.collateral).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeoutCollateral))
+      expect(deal.timeouts.judgeResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
+      expect(deal.timeouts.judgeResults.collateral).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeoutCollateral))
+      expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
       expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.getBigInt(0))
 
       expect(await storage.hasDeal(dealID))

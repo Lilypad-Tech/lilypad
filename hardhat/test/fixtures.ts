@@ -226,20 +226,30 @@ export async function setupControllerFixture({
   }
 }
 
-export const DEFAUT_TIMEOUT_TIME = 60 * 60
-export const DEFAUT_TIMEOUT_COLLATERAL = 1
-export const DEFAULT_PRICING_INSTRUCTION_PRICE = 1
-export const DEFAULT_PRICING_PAYMENT_COLLATERAL = 1
-export const DEFAULT_PRICING_RESULTS_COLLATERAL_MULTIPLE = 1
-export const DEFAULT_PRICING_MEDIATION_FEE = 1
+export const DEFAULT_VALUES: Record<string, bigint> = {
+  dealID: ethers.getBigInt(10),
+  resultsID: ethers.getBigInt(11),
+  instructionPrice: ethers.getBigInt(10),
+  instructionCount: ethers.getBigInt(1),
+  resultsCollateralMultiple: ethers.getBigInt(4),
+  resultsCollateral: ethers.getBigInt(40),
+  paymentCollateral: ethers.getBigInt(30),
+  jobCost: ethers.getBigInt(10),
+  mediationFee: ethers.getBigInt(5),
+  timeout: ethers.getBigInt(100),
+  timeoutCollateral: ethers.getBigInt(10),
+}
 
-export function getDefaultTimeouts() {
+export function getDefaultTimeouts(
+  timeout = DEFAULT_VALUES.timeout,
+  collateral = DEFAULT_VALUES.timeoutCollateral,
+) {
   const defaultTimeout: SharedStructs.DealTimeoutStruct = {
-    timeout: ethers.getBigInt(DEFAUT_TIMEOUT_TIME),
-    collateral: ethers.getBigInt(DEFAUT_TIMEOUT_COLLATERAL),
+    timeout,
+    collateral,
   }
   const defaultTimeoutNoCost: SharedStructs.DealTimeoutStruct = {
-    timeout: ethers.getBigInt(DEFAUT_TIMEOUT_TIME),
+    timeout,
     collateral: ethers.getBigInt(0),
   }
   const ret: SharedStructs.DealTimeoutsStruct = {
@@ -251,12 +261,17 @@ export function getDefaultTimeouts() {
   return ret
 }
 
-export function getDefaultPricing() {
+export function getDefaultPricing(
+  instructionPrice = DEFAULT_VALUES.instructionPrice,
+  paymentCollateral = DEFAULT_VALUES.paymentCollateral,
+  resultsCollateralMultiple = DEFAULT_VALUES.resultsCollateralMultiple,
+  mediationFee = DEFAULT_VALUES.mediationFee,
+) {
   const ret: SharedStructs.DealPricingStruct = {
-    instructionPrice: ethers.getBigInt(DEFAULT_PRICING_INSTRUCTION_PRICE),
-    paymentCollateral: ethers.getBigInt(DEFAULT_PRICING_PAYMENT_COLLATERAL),
-    resultsCollateralMultiple: ethers.getBigInt(DEFAULT_PRICING_RESULTS_COLLATERAL_MULTIPLE),
-    mediationFee: ethers.getBigInt(DEFAULT_PRICING_MEDIATION_FEE),
+    instructionPrice,
+    paymentCollateral,
+    resultsCollateralMultiple,
+    mediationFee,
   }
   return ret
 }

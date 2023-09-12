@@ -19,12 +19,18 @@ import {
 } from '../utils/accounts'
 import {
   setupControllerFixture,
+  getDefaultTimeouts,
+  getDefaultPricing,
+  DEFAULT_VALUES,
 } from './fixtures'
 import {
   LilypadToken,
   LilypadStorage,
   LilypadController,
 } from '../typechain-types'
+import {
+  SharedStructs,
+} from '../typechain-types/contracts/LilypadStorage'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -32,18 +38,19 @@ const { expect } = chai
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
 describe("Controller", () => {
-
-  const dealID = ethers.getBigInt(10)
-  const resultsID = ethers.getBigInt(11)
-  const instructionPrice = ethers.getBigInt(10)
-  const instructionCount = ethers.getBigInt(1)
-  const timeout = ethers.getBigInt(100)
-  const timeoutCollateral = ethers.getBigInt(10)
-  const resultsCollateralMultiple = ethers.getBigInt(4)
-  const resultsCollateral = ethers.getBigInt(40)
-  const paymentCollateral = ethers.getBigInt(30)
-  const jobCost = ethers.getBigInt(10)
-  const mediationFee = ethers.getBigInt(5)
+  const {
+    dealID,
+    resultsID,
+    instructionPrice,
+    instructionCount,
+    resultsCollateralMultiple,
+    resultsCollateral,
+    paymentCollateral,
+    jobCost,
+    mediationFee,
+    timeout,
+    timeoutCollateral,
+  } = DEFAULT_VALUES
 
   async function getBalances(token: LilypadToken, accountName: string) {
     const tokens = await token.balanceOf(getAddress(accountName))
@@ -58,15 +65,22 @@ describe("Controller", () => {
     const deal = await storage.getDeal(dealID)
 
     expect(deal.dealId).to.equal(dealID)
-    expect(deal.resourceProvider).to.equal(getAddress('resource_provider'))
-    expect(deal.jobCreator).to.equal(getAddress('job_creator'))
-    expect(deal.instructionPrice).to.equal(instructionPrice)
-    expect(deal.timeout).to.equal(timeout)
-    expect(deal.timeoutCollateral).to.equal(timeoutCollateral)
-    expect(deal.paymentCollateral).to.equal(paymentCollateral)
-    expect(deal.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
-    expect(deal.mediationFee).to.equal(mediationFee)
+    expect(deal.members.resourceProvider).to.equal(getAddress('resource_provider'))
+    expect(deal.members.jobCreator).to.equal(getAddress('job_creator'))
+    expect(deal.pricing.instructionPrice).to.equal(instructionPrice)
+    expect(deal.pricing.paymentCollateral).to.equal(paymentCollateral)
+    expect(deal.pricing.resultsCollateralMultiple).to.equal(resultsCollateralMultiple)
+    expect(deal.pricing.mediationFee).to.equal(mediationFee)
 
+    expect(deal.timeouts.agree.timeout).to.equal(timeout)
+    expect(deal.timeouts.agree.collateral).to.equal(ethers.getBigInt(0))
+    expect(deal.timeouts.submitResults.timeout).to.equal(ethers.getBigInt(timeout))
+    expect(deal.timeouts.submitResults.collateral).to.equal(ethers.getBigInt(timeoutCollateral))
+    expect(deal.timeouts.judgeResults.timeout).to.equal(ethers.getBigInt(timeout))
+    expect(deal.timeouts.judgeResults.collateral).to.equal(ethers.getBigInt(timeoutCollateral))
+    expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(timeout))
+    expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.getBigInt(0))
+    
     expect(await storage.hasDeal(dealID))
       .to.equal(true)
 
@@ -80,18 +94,23 @@ describe("Controller", () => {
   }
 
   async function agree(controller: LilypadController, party: string) {
+
+    const members: SharedStructs.DealMembersStruct = {
+      directory: getAddress('directory'), 
+      jobCreator: getAddress('job_creator'),
+      resourceProvider: getAddress('resource_provider'),
+      mediators: [getAddress('mediator')],
+    }
+    const timeouts = getDefaultTimeouts()
+    const pricing = getDefaultPricing()
+
     return controller
       .connect(getWallet(party))
       .agree(
         dealID,
-        getAddress('resource_provider'),
-        getAddress('job_creator'),
-        instructionPrice,
-        timeout,
-        timeoutCollateral,
-        paymentCollateral,
-        resultsCollateralMultiple,
-        mediationFee,
+        members,
+        timeouts,
+        pricing,
       )
   }
 
@@ -149,10 +168,6 @@ describe("Controller", () => {
       await expect(
         agree(controller, 'resource_provider')
       )
-        .to.emit(controller, 'ResourceProviderAgreed')
-        .withArgs(
-          dealID,
-        )
         .to.emit(payments, 'Payment')
         .withArgs(
           dealID,
@@ -191,10 +206,6 @@ describe("Controller", () => {
       await expect(
         agree(controller, 'job_creator')
       )
-        .to.emit(controller, 'JobCreatorAgreed')
-        .withArgs(
-          dealID,
-        )
         .to.emit(payments, 'Payment')
         .withArgs(
           dealID,
@@ -241,24 +252,17 @@ describe("Controller", () => {
 
       await expect(
         agree(controller, 'job_creator')
-      )
-        .to.emit(controller, 'JobCreatorAgreed')
-        .withArgs(
-          dealID,
-        )
+      ).to.not.be.reverted
 
       await expect(
         agree(controller, 'resource_provider')
       )
-        .to.emit(controller, 'ResourceProviderAgreed')
+        .to.emit(storage, 'DealStateChange')
         .withArgs(
           dealID,
+          getAgreementState('DealAgreed')
         )
-        .to.emit(controller, 'DealAgreed')
-        .withArgs(
-          dealID,
-        )
-        
+                
       await checkAgreement(storage, 'DealAgreed')
     })
   })
@@ -283,9 +287,10 @@ describe("Controller", () => {
           instructionCount
         )
       )
-        .to.emit(controller, 'ResultAdded')
+        .to.emit(storage, 'DealStateChange')
         .withArgs(
           dealID,
+          getAgreementState('ResultsSubmitted')
         )
         .to.emit(payments, 'Payment')
         .withArgs(
@@ -341,9 +346,10 @@ describe("Controller", () => {
           dealID,
         )
       )
-        .to.emit(controller, 'ResultAccepted')
+        .to.emit(storage, 'DealStateChange')
         .withArgs(
           dealID,
+          getAgreementState('ResultsAccepted')
         )
         .to.emit(payments, 'Payment')
         .withArgs(
