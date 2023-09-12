@@ -103,6 +103,8 @@ func (a ListOfResourceOffers) Less(i, j int) bool {
 func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 func (controller *SolverController) solve() error {
+	log.Debug().Msgf("Solver solving")
+
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{})
 	if err != nil {
 		return err

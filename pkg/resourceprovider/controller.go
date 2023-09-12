@@ -94,6 +94,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 Solve
 */
 func (controller *ResourceProviderController) solve() error {
+	log.Debug().Msgf("RP solving")
 	err := controller.ensureResourceOffers()
 	if err != nil {
 		return err

@@ -89,7 +89,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 }
 
 func (controller *JobCreatorController) solve() error {
-	log.Info().Msgf("JC solving")
+	log.Debug().Msgf("JC solving")
 	return nil
 }
 
