@@ -1,13 +1,10 @@
 package lilypad
 
 import (
-	"fmt"
-
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -108,8 +105,10 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 
-	fmt.Printf(" --------------------------------------\n")
-	spew.Dump(offer)
+	_, err = jobCreatorService.AddJobOffer(offer)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

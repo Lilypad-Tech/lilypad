@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -106,4 +107,8 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 			Msgf("From: %s, Value: %d", event.From.Hex(), event.Value)
 	})
 	return nil
+}
+
+func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOffer, error) {
+	return controller.solverClient.AddJobOffer(offer)
 }
