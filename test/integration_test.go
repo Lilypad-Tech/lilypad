@@ -13,7 +13,6 @@ import (
 	solvermemorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solver, error) {
@@ -26,8 +25,6 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 	if solverOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("SOLVER_PRIVATE_KEY is not defined")
 	}
-
-	spew.Dump(solverOptions)
 
 	web3SDK, err := web3.NewContractSDK(solverOptions.Web3)
 	if err != nil {
@@ -54,8 +51,6 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
 	}
 
-	spew.Dump(resourceProviderOptions)
-
 	web3SDK, err := web3.NewContractSDK(resourceProviderOptions.Web3)
 	if err != nil {
 		return nil, err
@@ -64,25 +59,16 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK)
 }
 
-func getJobCreator(t *testing.T, systemContext *system.CommandContext) (*jobcreator.JobCreator, error) {
-	jobCreatorOptions, err := optionsfactory.ProcessJobCreatorOptions(optionsfactory.NewJobCreatorOptions(), []string{})
-	if err != nil {
-		return nil, err
-	}
-
+func getJobCreatorOptions() (jobcreator.JobCreatorOptions, error) {
+	jobCreatorOptions := optionsfactory.NewJobCreatorOptions()
 	jobCreatorOptions.Web3.PrivateKey = os.Getenv("JOB_CREATOR_PRIVATE_KEY")
 	if jobCreatorOptions.Web3.PrivateKey == "" {
-		return nil, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
+		return jobCreatorOptions, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
 	}
-
-	spew.Dump(jobCreatorOptions)
-
-	web3SDK, err := web3.NewContractSDK(jobCreatorOptions.Web3)
-	if err != nil {
-		return nil, err
-	}
-
-	return jobcreator.NewJobCreator(jobCreatorOptions, web3SDK)
+	return optionsfactory.ProcessJobCreatorOptions(jobCreatorOptions, []string{
+		// this should point to the shortcut
+		"cowsay",
+	})
 }
 
 func TestStack(t *testing.T) {
@@ -106,26 +92,36 @@ func TestStack(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	jobCreator, err := getJobCreator(t, commandCtx)
+
+	jobCreatorOptions, err := getJobCreatorOptions()
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
-	jobCreatorErrors := jobCreator.Start(commandCtx.Ctx, commandCtx.Cm)
+
+	var errorChan chan error
+
+	// watch a job happen and check it's status
+	go func() {
+		err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
+		if err != nil {
+			errorChan <- err
+		}
+	}()
 
 	for {
 		select {
+		case err := <-errorChan:
+			commandCtx.Cleanup()
+			t.Error(err)
+			return
 		case err := <-solverErrors:
 			commandCtx.Cleanup()
 			t.Error(err)
 			return
 		case err := <-resourceProviderErrors:
-			commandCtx.Cleanup()
-			t.Error(err)
-			return
-		case err := <-jobCreatorErrors:
 			commandCtx.Cleanup()
 			t.Error(err)
 			return

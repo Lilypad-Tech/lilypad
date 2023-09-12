@@ -113,7 +113,7 @@ func (controller *SolverController) solve() error {
 		return err
 	}
 
-	fmt.Printf("solving %d JOB and %d RESOURCE --------------------------------------\n", len(jobOffers), len(resourceOffers))
+	// fmt.Printf("solving %d JOB and %d RESOURCE --------------------------------------\n", len(jobOffers), len(resourceOffers))
 
 	for _, jobOffer := range jobOffers {
 		matchingResourceOffers := []data.ResourceOffer{}
