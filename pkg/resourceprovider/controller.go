@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -47,6 +48,39 @@ func NewResourceProviderController(
 		web3Events:   web3.NewEventChannels(),
 	}
 	return controller, nil
+}
+
+/*
+Subscribe
+*/
+func (controller *ResourceProviderController) subscribeToSolver() error {
+	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
+		// we need to agree to the deal now we've heard about it
+		if ev.EventType == solver.DealAdded {
+			if ev.Deal == nil {
+				log.Error().Msgf("RP received nil deal")
+				return
+			}
+
+			// check if this deal is for us
+			if ev.Deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
+				return
+			}
+		}
+	})
+	return nil
+}
+
+func (controller *ResourceProviderController) subscribeToWeb3() error {
+	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		log.Info().
+			Str(system.GetServiceString(system.ResourceProviderService, "deal state change"), fmt.Sprintf("%+v", ev)).
+			Str("deal id", ev.DealId.String()).
+			Str("state", data.GetAgreementStateString(ev.State)).
+			Msgf("deal state change")
+	})
+	return nil
 }
 
 func (controller *ResourceProviderController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
@@ -107,39 +141,6 @@ func (controller *ResourceProviderController) solve() error {
 }
 
 /*
-Subscribe
-*/
-func (controller *ResourceProviderController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
-		// we need to agree to the deal now we've heard about it
-		if ev.EventType == solver.DealAdded {
-			if ev.Deal == nil {
-				log.Error().Msgf("RP received nil deal")
-				return
-			}
-
-			// check if this deal is for us
-			if ev.Deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
-				return
-			}
-		}
-	})
-	return nil
-}
-
-func (controller *ResourceProviderController) subscribeToWeb3() error {
-	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		log.Info().
-			Str(system.GetServiceString(system.ResourceProviderService, "deal state change"), fmt.Sprintf("%+v", ev)).
-			Str("deal id", ev.DealId.String()).
-			Str("state", data.GetAgreementStateString(ev.State)).
-			Msgf("deal state change")
-	})
-	return nil
-}
-
-/*
 Ensure resource offers are posted to the solve
 */
 
@@ -164,10 +165,15 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 func (controller *ResourceProviderController) agreeToDeals() error {
 	// load the deals that are in DealNegotiating
 	// and do not have a TransactionsResourceProvider.Agree tx
-	_, err := controller.solverClient.GetDeals(store.GetDealsQuery{
+	negotiatingDeals, err := controller.solverClient.GetDeals(store.GetDealsQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
 		State:            "DealNegotiating",
 	})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("len(negotiatingDeals) --------------------------------------\n")
+	spew.Dump(len(negotiatingDeals))
 	return err
 }
 
