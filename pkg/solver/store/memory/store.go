@@ -9,11 +9,9 @@ import (
 
 type SolverStoreMemory struct {
 	jobOffers        []data.JobOffer
-	resourceOffers   []data.ResourceOffer
 	jobOfferMap      map[string]data.JobOffer
+	resourceOffers   []data.ResourceOffer
 	resourceOfferMap map[string]data.ResourceOffer
-	matches          []data.Match
-	matchMap         map[string]data.Match
 	deals            []data.Deal
 	dealMap          map[string]data.Deal
 	mutex            sync.Mutex
@@ -22,12 +20,10 @@ type SolverStoreMemory struct {
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	return &SolverStoreMemory{
 		jobOffers:        []data.JobOffer{},
-		resourceOffers:   []data.ResourceOffer{},
-		matches:          []data.Match{},
-		deals:            []data.Deal{},
 		jobOfferMap:      map[string]data.JobOffer{},
+		resourceOffers:   []data.ResourceOffer{},
 		resourceOfferMap: map[string]data.ResourceOffer{},
-		matchMap:         map[string]data.Match{},
+		deals:            []data.Deal{},
 		dealMap:          map[string]data.Deal{},
 	}, nil
 }
@@ -46,14 +42,6 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) (
 	s.resourceOffers = append(s.resourceOffers, resourceOffer)
 	s.resourceOfferMap[resourceOffer.ID] = resourceOffer
 	return &resourceOffer, nil
-}
-
-func (s *SolverStoreMemory) AddMatch(match data.Match) (*data.Match, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.matches = append(s.matches, match)
-	s.matchMap[match.ID] = match
-	return &match, nil
 }
 
 func (s *SolverStoreMemory) AddDeal(deal data.Deal) (*data.Deal, error) {
@@ -86,19 +74,6 @@ func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery
 		return resourceOffers, nil
 	}
 	return s.resourceOffers, nil
-}
-
-func (s *SolverStoreMemory) GetMatches(query store.GetMatchesQuery) ([]data.Match, error) {
-	if query.JobCreator != "" && query.ResourceProvider != "" {
-		matches := []data.Match{}
-		for _, match := range s.matches {
-			if match.JobCreator == query.JobCreator && match.ResourceProvider == query.ResourceProvider {
-				matches = append(matches, match)
-			}
-		}
-		return matches, nil
-	}
-	return s.matches, nil
 }
 
 func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, error) {
@@ -136,14 +111,6 @@ func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOffer, er
 		return nil, nil
 	}
 	return &resourceOffer, nil
-}
-
-func (s *SolverStoreMemory) GetMatch(id string) (*data.Match, error) {
-	match, ok := s.matchMap[id]
-	if !ok {
-		return nil, nil
-	}
-	return &match, nil
 }
 
 func (s *SolverStoreMemory) GetDeal(id string) (*data.Deal, error) {
@@ -189,24 +156,5 @@ func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 		}
 	}
 	s.resourceOffers = newResourceOffers
-	return nil
-}
-
-func (s *SolverStoreMemory) RemoveMatch(id string) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	newMatches := []data.Match{}
-	for _, match := range s.matches {
-		matchId, err := data.CalculateCID(match)
-		if err != nil {
-			return err
-		}
-		if matchId != id {
-			newMatches = append(newMatches, match)
-		} else {
-			delete(s.matchMap, id)
-		}
-	}
-	s.matches = newMatches
 	return nil
 }

@@ -47,7 +47,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/matches", http.GetHandler(solverServer.getMatches)).Methods("GET")
+	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -122,8 +122,8 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 	return solverServer.store.GetResourceOffers(query)
 }
 
-func (solverServer *solverServer) getMatches(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.Match, error) {
-	query := store.GetMatchesQuery{}
+func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.Deal, error) {
+	query := store.GetDealsQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
 		query.ResourceProvider = resourceProvider
@@ -131,7 +131,7 @@ func (solverServer *solverServer) getMatches(res corehttp.ResponseWriter, req *c
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
 		query.JobCreator = jobCreator
 	}
-	return solverServer.store.GetMatches(query)
+	return solverServer.store.GetDeals(query)
 }
 
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {

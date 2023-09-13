@@ -16,7 +16,7 @@ func (a ListOfResourceOffers) Less(i, j int) bool {
 }
 func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
-func getMatches(controller *SolverController) ([]data.Match, error) {
+func getMatches(controller *SolverController) ([]data.Deal, error) {
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{})
 	if err != nil {
 		return nil, err
