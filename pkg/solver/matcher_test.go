@@ -18,6 +18,9 @@ func TestDoOffersMatch(t *testing.T) {
 			GPU: 1000,
 			RAM: 1024,
 		},
+		DefaultPricing: data.DealPricing{
+			InstructionPrice: 10,
+		},
 		Mode:           data.FixedPrice,
 		TrustedParties: trustedParties,
 	}
@@ -58,6 +61,75 @@ func TestDoOffersMatch(t *testing.T) {
 				return offer
 			},
 			shouldMatch: false,
+		},
+		{
+			name: "Empty mediators",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.TrustedParties.Mediator = []string{}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.TrustedParties.Mediator = []string{}
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Mis-matched mediators",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.TrustedParties.Mediator = []string{"apples2"}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Different but matching mediators",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.TrustedParties.Mediator = []string{"apples2", "apples"}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Different but matching directories",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.TrustedParties.Directory = []string{"oranges2", "oranges"}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Fixed price - too expensive",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Mode = data.FixedPrice
+				offer.Pricing.InstructionPrice = 9
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Fixed price - can afford",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Mode = data.FixedPrice
+				offer.Pricing.InstructionPrice = 11
+				return offer
+			},
+			shouldMatch: true,
 		},
 	}
 

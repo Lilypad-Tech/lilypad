@@ -1,12 +1,11 @@
 package solver
 
 import (
-	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,17 +24,31 @@ func doOffersMatch(
 	resourceOffer data.ResourceOffer,
 	jobOffer data.JobOffer,
 ) bool {
-	fmt.Printf("resourceOffer --------------------------------------\n")
-	spew.Dump(resourceOffer)
-	fmt.Printf("jobOffer --------------------------------------\n")
-	spew.Dump(jobOffer)
 	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Int("resource CPU", resourceOffer.Spec.CPU).
+			Int("job CPU", jobOffer.Spec.CPU).
+			Msgf("did not match CPU")
 		return false
 	}
 	if resourceOffer.Spec.GPU < jobOffer.Spec.GPU {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Int("resource GPU", resourceOffer.Spec.GPU).
+			Int("job GPU", jobOffer.Spec.GPU).
+			Msgf("did not match GPU")
 		return false
 	}
 	if resourceOffer.Spec.RAM < jobOffer.Spec.RAM {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Int("resource RAM", resourceOffer.Spec.RAM).
+			Int("job RAM", jobOffer.Spec.RAM).
+			Msgf("did not match RAM")
 		return false
 	}
 
@@ -43,6 +56,9 @@ func doOffersMatch(
 	if len(resourceOffer.Modules) > 0 {
 		moduleID, err := data.GetModuleID(jobOffer.Module)
 		if err != nil {
+			log.Error().
+				Err(err).
+				Msgf("error getting module ID")
 			return false
 		}
 		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
@@ -55,31 +71,53 @@ func doOffersMatch(
 		}
 
 		if !hasModule {
+			log.Trace().
+				Str("resource offer", resourceOffer.ID).
+				Str("job offer", jobOffer.ID).
+				Str("modules", strings.Join(resourceOffer.Modules, ", ")).
+				Msgf("did not match modules")
 			return false
 		}
+	}
+
+	// we don't currently support market priced resource offers
+	if resourceOffer.Mode == data.MarketPrice {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Msgf("do not support market priced resource offers")
+		return false
 	}
 
 	// if both are fixed price then we filter out "cannot afford"
 	if resourceOffer.Mode == data.FixedPrice && jobOffer.Mode == data.FixedPrice {
 		if resourceOffer.DefaultPricing.InstructionPrice > jobOffer.Pricing.InstructionPrice {
+			log.Trace().
+				Str("resource offer", resourceOffer.ID).
+				Str("job offer", jobOffer.ID).
+				Msgf("fixed price job offer cannot afford resource offer")
 			return false
 		}
 	}
 
 	mutualMediators := getMutualTrustedParties(resourceOffer.TrustedParties.Mediator, jobOffer.TrustedParties.Mediator)
 	if len(mutualMediators) == 0 {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Msgf("no matching mutual mediators")
 		return false
 	}
 
 	mutualDirectories := getMutualTrustedParties(resourceOffer.TrustedParties.Directory, jobOffer.TrustedParties.Directory)
 	if len(mutualDirectories) == 0 {
+		log.Trace().
+			Str("resource offer", resourceOffer.ID).
+			Str("job offer", jobOffer.ID).
+			Msgf("no matching mutual directories")
 		return false
 	}
 
-	fmt.Printf("mutualMediators --------------------------------------\n")
-	spew.Dump(mutualMediators)
-	fmt.Printf("mutualDirectories --------------------------------------\n")
-	spew.Dump(mutualDirectories)
 	return true
 }
 
