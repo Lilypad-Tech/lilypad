@@ -126,3 +126,53 @@ func getDeal(
 	dealData.ID = id
 	return dealData, nil
 }
+
+func getJobOfferContainer(
+	jobOffer data.JobOffer,
+) (data.JobOfferContainer, error) {
+	state, err := data.GetAgreementState("DealNegotiating")
+	if err != nil {
+		return data.JobOfferContainer{}, err
+	}
+	return data.JobOfferContainer{
+		ID:         jobOffer.ID,
+		DealID:     "",
+		JobCreator: jobOffer.JobCreator,
+		State:      state,
+		JobOffer:   jobOffer,
+	}, nil
+}
+
+func getResourceOfferContainer(
+	resourceOffer data.ResourceOffer,
+) (data.ResourceOfferContainer, error) {
+	state, err := data.GetAgreementState("DealNegotiating")
+	if err != nil {
+		return data.ResourceOfferContainer{}, err
+	}
+	return data.ResourceOfferContainer{
+		ID:               resourceOffer.ID,
+		DealID:           "",
+		ResourceProvider: resourceOffer.ResourceProvider,
+		State:            state,
+		ResourceOffer:    resourceOffer,
+	}, nil
+}
+
+func getDealContainer(
+	deal data.Deal,
+) (data.DealContainer, error) {
+	state, err := data.GetAgreementState("DealNegotiating")
+	if err != nil {
+		return data.DealContainer{}, err
+	}
+	return data.DealContainer{
+		ID:               deal.ID,
+		JobCreator:       deal.JobOffer.JobCreator,
+		ResourceProvider: deal.ResourceOffer.ResourceProvider,
+		JobOffer:         deal.JobOffer.ID,
+		ResourceOffer:    deal.ResourceOffer.ID,
+		State:            state,
+		Deal:             deal,
+	}, nil
+}

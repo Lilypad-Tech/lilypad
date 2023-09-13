@@ -8,27 +8,27 @@ import (
 )
 
 type SolverStoreMemory struct {
-	jobOffers        []data.JobOffer
-	jobOfferMap      map[string]data.JobOffer
-	resourceOffers   []data.ResourceOffer
-	resourceOfferMap map[string]data.ResourceOffer
-	deals            []data.Deal
-	dealMap          map[string]data.Deal
+	jobOffers        []data.JobOfferContainer
+	jobOfferMap      map[string]data.JobOfferContainer
+	resourceOffers   []data.ResourceOfferContainer
+	resourceOfferMap map[string]data.ResourceOfferContainer
+	deals            []data.DealContainer
+	dealMap          map[string]data.DealContainer
 	mutex            sync.Mutex
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	return &SolverStoreMemory{
-		jobOffers:        []data.JobOffer{},
-		jobOfferMap:      map[string]data.JobOffer{},
-		resourceOffers:   []data.ResourceOffer{},
-		resourceOfferMap: map[string]data.ResourceOffer{},
-		deals:            []data.Deal{},
-		dealMap:          map[string]data.Deal{},
+		jobOffers:        []data.JobOfferContainer{},
+		jobOfferMap:      map[string]data.JobOfferContainer{},
+		resourceOffers:   []data.ResourceOfferContainer{},
+		resourceOfferMap: map[string]data.ResourceOfferContainer{},
+		deals:            []data.DealContainer{},
+		dealMap:          map[string]data.DealContainer{},
 	}, nil
 }
 
-func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
+func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.jobOffers = append(s.jobOffers, jobOffer)
@@ -36,7 +36,7 @@ func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer,
 	return &jobOffer, nil
 }
 
-func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
+func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.resourceOffers = append(s.resourceOffers, resourceOffer)
@@ -44,15 +44,15 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOffer) (
 	return &resourceOffer, nil
 }
 
-func (s *SolverStoreMemory) AddDeal(deal data.Deal) (*data.Deal, error) {
+func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContainer, error) {
 	s.deals = append(s.deals, deal)
 	s.dealMap[deal.ID] = deal
 	return &deal, nil
 }
 
-func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOffer, error) {
+func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
 	if query.JobCreator != "" {
-		jobOffers := []data.JobOffer{}
+		jobOffers := []data.JobOfferContainer{}
 		for _, jobOffer := range s.jobOffers {
 			if jobOffer.JobCreator == query.JobCreator {
 				jobOffers = append(jobOffers, jobOffer)
@@ -63,9 +63,9 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 	return s.jobOffers, nil
 }
 
-func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOffer, error) {
+func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
 	if query.ResourceProvider != "" {
-		resourceOffers := []data.ResourceOffer{}
+		resourceOffers := []data.ResourceOfferContainer{}
 		for _, resourceOffer := range s.resourceOffers {
 			if resourceOffer.ResourceProvider == query.ResourceProvider {
 				resourceOffers = append(resourceOffers, resourceOffer)
@@ -76,19 +76,19 @@ func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery
 	return s.resourceOffers, nil
 }
 
-func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, error) {
+func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealContainer, error) {
 	if query.JobCreator != "" {
-		deals := []data.Deal{}
+		deals := []data.DealContainer{}
 		for _, deal := range s.deals {
-			if deal.Members.JobCreator == query.JobCreator {
+			if deal.JobCreator == query.JobCreator {
 				deals = append(deals, deal)
 			}
 		}
 		return deals, nil
 	} else if query.ResourceProvider != "" {
-		deals := []data.Deal{}
+		deals := []data.DealContainer{}
 		for _, deal := range s.deals {
-			if deal.Members.ResourceProvider == query.ResourceProvider {
+			if deal.ResourceProvider == query.ResourceProvider {
 				deals = append(deals, deal)
 			}
 		}
@@ -97,7 +97,7 @@ func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.Deal, er
 	return s.deals, nil
 }
 
-func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOffer, error) {
+func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
 	jobOffer, ok := s.jobOfferMap[id]
 	if !ok {
 		return nil, nil
@@ -105,7 +105,7 @@ func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOffer, error) {
 	return &jobOffer, nil
 }
 
-func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOffer, error) {
+func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOfferContainer, error) {
 	resourceOffer, ok := s.resourceOfferMap[id]
 	if !ok {
 		return nil, nil
@@ -113,7 +113,7 @@ func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOffer, er
 	return &resourceOffer, nil
 }
 
-func (s *SolverStoreMemory) GetDeal(id string) (*data.Deal, error) {
+func (s *SolverStoreMemory) GetDeal(id string) (*data.DealContainer, error) {
 	deal, ok := s.dealMap[id]
 	if !ok {
 		return nil, nil
@@ -121,10 +121,39 @@ func (s *SolverStoreMemory) GetDeal(id string) (*data.Deal, error) {
 	return &deal, nil
 }
 
+func (s *SolverStoreMemory) UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
+	jobOffer, ok := s.jobOfferMap[id]
+	if !ok {
+		return nil, nil
+	}
+	jobOffer.DealID = dealID
+	jobOffer.State = state
+	return &jobOffer, nil
+}
+
+func (s *SolverStoreMemory) UpdateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
+	resourceOffer, ok := s.resourceOfferMap[id]
+	if !ok {
+		return nil, nil
+	}
+	resourceOffer.DealID = dealID
+	resourceOffer.State = state
+	return &resourceOffer, nil
+}
+
+func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealContainer, error) {
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	deal.State = state
+	return &deal, nil
+}
+
 func (s *SolverStoreMemory) RemoveJobOffer(id string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	newJobOffers := []data.JobOffer{}
+	newJobOffers := []data.JobOfferContainer{}
 	for _, jobOffer := range s.jobOffers {
 		jobOfferId, err := data.CalculateCID(jobOffer)
 		if err != nil {
@@ -143,7 +172,7 @@ func (s *SolverStoreMemory) RemoveJobOffer(id string) error {
 func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	newResourceOffers := []data.ResourceOffer{}
+	newResourceOffers := []data.ResourceOfferContainer{}
 	for _, resourceOffer := range s.resourceOffers {
 		resourceOfferId, err := data.CalculateCID(resourceOffer)
 		if err != nil {

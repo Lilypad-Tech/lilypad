@@ -104,7 +104,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	return nil
 }
 
-func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOffer, error) {
+func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOfferContainer, error) {
 	query := store.GetJobOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
@@ -113,7 +113,7 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	return solverServer.store.GetJobOffers(query)
 }
 
-func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOffer, error) {
+func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOfferContainer, error) {
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -122,7 +122,7 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 	return solverServer.store.GetResourceOffers(query)
 }
 
-func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.Deal, error) {
+func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.DealContainer, error) {
 	query := store.GetDealsQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -134,7 +134,7 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 	return solverServer.store.GetDeals(query)
 }
 
-func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOffer, error) {
+func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
@@ -147,7 +147,7 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
-func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOffer, error) {
+func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")

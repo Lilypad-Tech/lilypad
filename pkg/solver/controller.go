@@ -21,13 +21,15 @@ type SolverEventType int
 const (
 	JobOfferAdded SolverEventType = iota
 	ResourceOfferAdded
+	JobOfferUpdated
+	ResourceOfferUpdated
 	MatchFound
 )
 
 type SolverEvent struct {
-	EventType     SolverEventType     `json:"event_type"`
-	JobOffer      *data.JobOffer      `json:"job_offer"`
-	ResourceOffer *data.ResourceOffer `json:"resource_offer"`
+	EventType     SolverEventType              `json:"event_type"`
+	JobOffer      *data.JobOfferContainer      `json:"job_offer"`
+	ResourceOffer *data.ResourceOfferContainer `json:"resource_offer"`
 }
 
 type SolverController struct {
@@ -178,7 +180,7 @@ func (controller *SolverController) registerAsSolver() error {
 	return nil
 }
 
-func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error) {
+func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.JobOfferContainer, error) {
 	jobOffer.ID = ""
 	id, err := data.CalculateCID(jobOffer)
 	if err != nil {
@@ -189,8 +191,11 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	log.Info().
 		Str("solver add job offer", fmt.Sprintf("%+v", jobOffer)).
 		Msgf("")
-
-	ret, err := controller.store.AddJobOffer(jobOffer)
+	container, err := getJobOfferContainer(jobOffer)
+	if err != nil {
+		return nil, err
+	}
+	ret, err := controller.store.AddJobOffer(container)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +206,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	return ret, nil
 }
 
-func (controller *SolverController) addResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOffer, error) {
+func (controller *SolverController) addResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOfferContainer, error) {
 	resourceOffer.ID = ""
 	id, err := data.CalculateCID(resourceOffer)
 	if err != nil {
@@ -213,7 +218,11 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		Str("solver add resource offer", fmt.Sprintf("%+v", resourceOffer)).
 		Msgf("")
 
-	ret, err := controller.store.AddResourceOffer(resourceOffer)
+	container, err := getResourceOfferContainer(resourceOffer)
+	if err != nil {
+		return nil, err
+	}
+	ret, err := controller.store.AddResourceOffer(container)
 	if err != nil {
 		return nil, err
 	}

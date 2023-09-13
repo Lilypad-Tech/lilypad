@@ -16,15 +16,18 @@ type GetDealsQuery struct {
 }
 
 type SolverStore interface {
-	AddJobOffer(jobOffer data.JobOffer) (*data.JobOffer, error)
-	AddResourceOffer(jobOffer data.ResourceOffer) (*data.ResourceOffer, error)
-	AddDeal(deal data.Deal) (*data.Deal, error)
-	GetJobOffers(query GetJobOffersQuery) ([]data.JobOffer, error)
-	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOffer, error)
-	GetDeals(query GetDealsQuery) ([]data.Deal, error)
-	GetJobOffer(id string) (*data.JobOffer, error)
-	GetResourceOffer(id string) (*data.ResourceOffer, error)
-	GetDeal(id string) (*data.Deal, error)
+	AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error)
+	AddResourceOffer(jobOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error)
+	AddDeal(deal data.DealContainer) (*data.DealContainer, error)
+	GetJobOffers(query GetJobOffersQuery) ([]data.JobOfferContainer, error)
+	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOfferContainer, error)
+	GetDeals(query GetDealsQuery) ([]data.DealContainer, error)
+	GetJobOffer(id string) (*data.JobOfferContainer, error)
+	GetResourceOffer(id string) (*data.ResourceOfferContainer, error)
+	GetDeal(id string) (*data.DealContainer, error)
+	UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error)
+	UpdateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error)
+	UpdateDealState(id string, state uint8) (*data.DealContainer, error)
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
 }

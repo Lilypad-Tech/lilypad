@@ -34,12 +34,12 @@ func getMatches(controller *SolverController) ([]data.Deal, error) {
 
 	// get maps of the resource offers and job offers by ids so we can filter them out
 	// as we go
-	resourceOffersMap := map[string]data.ResourceOffer{}
+	resourceOffersMap := map[string]data.ResourceOfferContainer{}
 	for _, resourceOffer := range resourceOffers {
 		resourceOffersMap[resourceOffer.ID] = resourceOffer
 	}
 
-	jobOffersMap := map[string]data.JobOffer{}
+	jobOffersMap := map[string]data.JobOfferContainer{}
 	for _, jobOffer := range jobOffers {
 		jobOffersMap[jobOffer.ID] = jobOffer
 	}
@@ -51,12 +51,12 @@ func getMatches(controller *SolverController) ([]data.Deal, error) {
 
 	// get maps of deal resource offers and job offers
 	// so we can filter them out as we go
-	dealsResourceOffersMap := map[string]data.ResourceOffer{}
-	dealsJobOffersMap := map[string]data.JobOffer{}
+	dealsResourceOffersMap := map[string]bool{}
+	dealsJobOffersMap := map[string]bool{}
 
 	for _, deal := range deals {
-		dealsResourceOffersMap[deal.ResourceOffer.ID] = deal.ResourceOffer
-		dealsJobOffersMap[deal.JobOffer.ID] = deal.JobOffer
+		dealsResourceOffersMap[deal.ResourceOffer] = true
+		dealsJobOffersMap[deal.JobOffer] = true
 	}
 
 	log.Debug().
@@ -70,8 +70,8 @@ func getMatches(controller *SolverController) ([]data.Deal, error) {
 		// loop over resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
 		for _, resourceOffer := range resourceOffers {
-			if doOffersMatch(resourceOffer, jobOffer) {
-				matchingResourceOffers = append(matchingResourceOffers, resourceOffer)
+			if doOffersMatch(resourceOffer.ResourceOffer, jobOffer.JobOffer) {
+				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
 				break
 			}
 		}

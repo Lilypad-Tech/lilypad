@@ -118,9 +118,9 @@ type JobOffer struct {
 type JobOfferContainer struct {
 	ID         string   `json:"id"`
 	DealID     string   `json:"deal_id"`
+	JobCreator string   `json:"job_creator"`
 	State      uint8    `json:"state"`
 	JobOffer   JobOffer `json:"job_offer"`
-	JobCreator string   `json:"job_creator"`
 }
 
 // posted to the solver by a resource provider
@@ -160,9 +160,9 @@ type ResourceOffer struct {
 type ResourceOfferContainer struct {
 	ID               string        `json:"id"`
 	DealID           string        `json:"deal_id"`
+	ResourceProvider string        `json:"resource_provider"`
 	State            uint8         `json:"state"`
 	ResourceOffer    ResourceOffer `json:"job_offer"`
-	ResourceProvider string        `json:"resource_provider"`
 }
 
 type DealMembers struct {
@@ -202,4 +202,14 @@ type Deal struct {
 	Timeouts      DealTimeouts  `json:"timeouts"`
 	JobOffer      JobOffer      `json:"job_offer"`
 	ResourceOffer ResourceOffer `json:"resource_offer"`
+}
+
+type DealContainer struct {
+	ID               string `json:"id"`
+	JobCreator       string `json:"job_creator"`
+	ResourceProvider string `json:"resource_provider"`
+	JobOffer         string `json:"job_offer"`
+	ResourceOffer    string `json:"resource_offer"`
+	State            uint8  `json:"state"`
+	Deal             Deal   `json:"deal"`
 }
