@@ -64,16 +64,20 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 }
 
 func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
-	if query.ResourceProvider != "" {
-		resourceOffers := []data.ResourceOfferContainer{}
-		for _, resourceOffer := range s.resourceOffers {
-			if resourceOffer.ResourceProvider == query.ResourceProvider {
-				resourceOffers = append(resourceOffers, resourceOffer)
-			}
+	resourceOffers := []data.ResourceOfferContainer{}
+	for _, resourceOffer := range s.resourceOffers {
+		matching := true
+		if query.ResourceProvider != "" && resourceOffer.ResourceProvider != query.ResourceProvider {
+			matching = false
 		}
-		return resourceOffers, nil
+		if query.Active && !data.IsActiveAgreementState(resourceOffer.State) {
+			matching = false
+		}
+		if matching {
+			resourceOffers = append(resourceOffers, resourceOffer)
+		}
 	}
-	return s.resourceOffers, nil
+	return resourceOffers, nil
 }
 
 func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealContainer, error) {

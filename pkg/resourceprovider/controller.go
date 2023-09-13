@@ -145,6 +145,7 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 func (controller *ResourceProviderController) ensureResourceOffers() error {
 	existingResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
+		Active:           true,
 	})
 	if err != nil {
 		return err

@@ -65,8 +65,17 @@ func GetAgreementState(itemType string) (uint8, error) {
 	return GetTypeIndex("AgreementState", AgreementState, itemType)
 }
 
-func IsActiveAgreementState(itemType string) bool {
-	return itemType == "DealNegotiating" || itemType == "DealAgreed"
+func GetAgreementStateIndex(itemType string) uint8 {
+	index, _ := GetAgreementState(itemType)
+	return index
+}
+
+func GetDefaultAgreementState() uint8 {
+	return GetAgreementStateIndex("DealNegotiating")
+}
+
+func IsActiveAgreementState(itemType uint8) bool {
+	return itemType == GetAgreementStateIndex("DealNegotiating") || itemType == GetAgreementStateIndex("DealAgreed")
 }
 
 // GetPaymentReason corresponds to getPaymentReason in TypeScript

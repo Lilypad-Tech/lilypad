@@ -191,11 +191,8 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	log.Info().
 		Str("solver add job offer", fmt.Sprintf("%+v", jobOffer)).
 		Msgf("")
-	container, err := getJobOfferContainer(jobOffer)
-	if err != nil {
-		return nil, err
-	}
-	ret, err := controller.store.AddJobOffer(container)
+
+	ret, err := controller.store.AddJobOffer(getJobOfferContainer(jobOffer))
 	if err != nil {
 		return nil, err
 	}
@@ -218,11 +215,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		Str("solver add resource offer", fmt.Sprintf("%+v", resourceOffer)).
 		Msgf("")
 
-	container, err := getResourceOfferContainer(resourceOffer)
-	if err != nil {
-		return nil, err
-	}
-	ret, err := controller.store.AddResourceOffer(container)
+	ret, err := controller.store.AddResourceOffer(getResourceOfferContainer(resourceOffer))
 	if err != nil {
 		return nil, err
 	}
