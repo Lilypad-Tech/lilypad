@@ -91,6 +91,8 @@ type TrustedParties struct {
 type JobOffer struct {
 	// this is the cid of the job offer where ID is set to empty string
 	ID string `json:"id"`
+	// this is basically a nonce so we don't have one ID pointing at multiple offers
+	CreatedAt int `json:"created_at"`
 	// the address of the job creator
 	JobCreator string `json:"job_creator"`
 	// the actual module that is being offered
@@ -127,6 +129,8 @@ type JobOfferContainer struct {
 type ResourceOffer struct {
 	// this is the cid of the resource offer where ID is set to empty string
 	ID string `json:"id"`
+	// this is basically a nonce so we don't have one ID pointing at multiple offers
+	CreatedAt int `json:"created_at"`
 	// the address of the job creator
 	ResourceProvider string `json:"resource_provider"`
 	// allows a resource provider to manage multiple offers

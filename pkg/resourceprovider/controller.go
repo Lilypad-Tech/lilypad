@@ -127,6 +127,8 @@ Ensure resource offers are posted to the solve
 
 func (controller *ResourceProviderController) getResourceOffer(index int, spec data.MachineSpec) data.ResourceOffer {
 	return data.ResourceOffer{
+		// assign CreatedAt to the current millisecond timestamp
+		CreatedAt:        int(time.Now().UnixNano() / int64(time.Millisecond)),
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
 		Index:            index,
 		Spec:             spec,

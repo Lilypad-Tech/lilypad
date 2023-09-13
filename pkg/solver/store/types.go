@@ -8,6 +8,18 @@ type GetJobOffersQuery struct {
 
 type GetResourceOffersQuery struct {
 	ResourceProvider string `json:"resource_provider"`
+
+	// this means "currently occupied" - any free floating resource offers count
+	// as active (because they could be matched any moment)
+	// any resource offers of the following states are considered active:
+	// - DealNegotiating
+	// - DealAgreed
+	// if we hit results submitted (or anything after that point)
+	// then the resource offer is no longer considered active
+	// (because the compute side is done and now we are onto payment & mediation)
+	// this flag is used by the resource provider to ask "give me all my active resource offers"
+	// so that it knows when to post more reosurce offers to the solver
+	Active bool `json:"matched"`
 }
 
 type GetDealsQuery struct {

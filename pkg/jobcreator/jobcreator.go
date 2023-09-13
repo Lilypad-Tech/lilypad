@@ -3,6 +3,7 @@ package jobcreator
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/module"
@@ -75,6 +76,8 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 	}
 
 	return data.JobOffer{
+		// assign CreatedAt to the current millisecond timestamp
+		CreatedAt:      int(time.Now().UnixNano() / int64(time.Millisecond)),
 		JobCreator:     jobCreator.web3SDK.GetAddress().String(),
 		Module:         options.Module,
 		Spec:           loadedModule.Machine,
