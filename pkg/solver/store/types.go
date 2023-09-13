@@ -6,6 +6,8 @@ type GetJobOffersQuery struct {
 	JobCreator string `json:"job_creator"`
 	// this means job offers that have not been matched at all yet
 	// the solver will use this to load only non matched resource offers
+
+	// we use the DealID property of the jobOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
 }
 
@@ -26,12 +28,15 @@ type GetResourceOffersQuery struct {
 
 	// this means resource offers that have not been matched at all yet
 	// the solver will use this to load only non matched resource offers
+
+	// we use the DealID property of the resourceOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
 }
 
 type GetDealsQuery struct {
 	JobCreator       string `json:"job_creator"`
 	ResourceProvider string `json:"resource_provider"`
+	State            string `json:"state"`
 }
 
 type SolverStore interface {
@@ -49,6 +54,9 @@ type SolverStore interface {
 	UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error)
 	UpdateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error)
 	UpdateDealState(id string, state uint8) (*data.DealContainer, error)
+	UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error)
+	UpdateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error)
+	UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error)
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
 }

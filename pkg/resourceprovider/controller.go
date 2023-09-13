@@ -95,7 +95,11 @@ Solve
 */
 func (controller *ResourceProviderController) solve() error {
 	log.Debug().Msgf("RP solving")
-	err := controller.ensureResourceOffers()
+	err := controller.agreeToDeals()
+	if err != nil {
+		return err
+	}
+	err = controller.ensureResourceOffers()
 	if err != nil {
 		return err
 	}
@@ -108,6 +112,18 @@ Subscribe
 func (controller *ResourceProviderController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
 		solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
+		// we need to agree to the deal now we've heard about it
+		if ev.EventType == solver.DealAdded {
+			if ev.Deal == nil {
+				log.Error().Msgf("RP received nil deal")
+				return
+			}
+
+			// check if this deal is for us
+			if ev.Deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
+				return
+			}
+		}
 	})
 	return nil
 }
@@ -142,6 +158,11 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 		ModuleTimeouts:   map[string]data.DealTimeouts{},
 		TrustedParties:   controller.options.Offers.TrustedParties,
 	}
+}
+
+// list the deals we have been assigned to that we have not yet posted to the contract
+func (controller *ResourceProviderController) agreeToDeals() error {
+	return nil
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {

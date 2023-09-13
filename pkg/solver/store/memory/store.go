@@ -123,24 +123,26 @@ func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery
 func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
+	ret := s.deals
 	if query.JobCreator != "" {
-		deals := []data.DealContainer{}
-		for _, deal := range s.deals {
+		filteredDeals := []data.DealContainer{}
+		for _, deal := range ret {
 			if deal.JobCreator == query.JobCreator {
-				deals = append(deals, deal)
+				filteredDeals = append(filteredDeals, deal)
 			}
 		}
-		return deals, nil
-	} else if query.ResourceProvider != "" {
-		deals := []data.DealContainer{}
-		for _, deal := range s.deals {
-			if deal.ResourceProvider == query.ResourceProvider {
-				deals = append(deals, deal)
-			}
-		}
-		return deals, nil
+		ret = filteredDeals
 	}
-	return s.deals, nil
+	if query.ResourceProvider != "" {
+		filteredDeals := []data.DealContainer{}
+		for _, deal := range ret {
+			if deal.ResourceProvider == query.ResourceProvider {
+				filteredDeals = append(filteredDeals, deal)
+			}
+		}
+		ret = filteredDeals
+	}
+	return ret, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
@@ -216,6 +218,39 @@ func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealC
 		return nil, nil
 	}
 	deal.State = state
+	return &deal, nil
+}
+
+func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	deal.TransactionsJobCreator = data
+	return &deal, nil
+}
+
+func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	deal.TransactionsResourceProvider = data
+	return &deal, nil
+}
+
+func (s *SolverStoreMemory) UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	deal.TransactionsMediator = data
 	return &deal, nil
 }
 

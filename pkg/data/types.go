@@ -218,12 +218,42 @@ type Deal struct {
 	ResourceOffer ResourceOffer `json:"resource_offer"`
 }
 
+// we keep track of tx ids on behalf of resource providers
+// and job creators - we use these to "marK" a deal as having
+// had a transaction submitted but that tx has not yet been included
+// in a block - therefore, we let the job creator & resource provider
+// update these at will
+type DealTransactionsJobCreator struct {
+	Agree                string `json:"agree"`
+	AcceptResult         string `json:"accept_result"`
+	CheckResult          string `json:"check_result"`
+	TimeoutAgree         string `json:"timeout_agree"`
+	TimeoutSubmitResult  string `json:"timeout_submit_result"`
+	TimeoutMediateResult string `json:"timeout_mediate_result"`
+}
+
+type DealTransactionsResourceProvider struct {
+	Agree                string `json:"agree"`
+	AddResult            string `json:"add_result"`
+	TimeoutAgree         string `json:"timeout_agree"`
+	TimeoutJudgeResult   string `json:"timeout_judge_result"`
+	TimeoutMediateResult string `json:"timeout_mediate_result"`
+}
+
+type DealTransactionsMediator struct {
+	MediationAcceptResult string `json:"mediation_accept_result"`
+	MediationRejectResult string `json:"mediation_reject_result"`
+}
+
 type DealContainer struct {
-	ID               string `json:"id"`
-	JobCreator       string `json:"job_creator"`
-	ResourceProvider string `json:"resource_provider"`
-	JobOffer         string `json:"job_offer"`
-	ResourceOffer    string `json:"resource_offer"`
-	State            uint8  `json:"state"`
-	Deal             Deal   `json:"deal"`
+	ID                           string                           `json:"id"`
+	JobCreator                   string                           `json:"job_creator"`
+	ResourceProvider             string                           `json:"resource_provider"`
+	JobOffer                     string                           `json:"job_offer"`
+	ResourceOffer                string                           `json:"resource_offer"`
+	State                        uint8                            `json:"state"`
+	Deal                         Deal                             `json:"deal"`
+	TransactionsJobCreator       DealTransactionsJobCreator       `json:"job_creator_transactions"`
+	TransactionsResourceProvider DealTransactionsResourceProvider `json:"resource_provider_transactions"`
+	TransactionsMediator         DealTransactionsMediator         `json:"mediator_transactions"`
 }

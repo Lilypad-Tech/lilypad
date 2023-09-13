@@ -97,6 +97,18 @@ func (controller *JobCreatorController) solve() error {
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
 		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
+		// we need to agree to the deal now we've heard about it
+		if ev.EventType == solver.DealAdded {
+			if ev.Deal == nil {
+				log.Error().Msgf("JC received nil deal")
+				return
+			}
+
+			// check if this deal is for us
+			if ev.Deal.JobCreator != controller.web3SDK.GetAddress().String() {
+				return
+			}
+		}
 	})
 	return nil
 }
