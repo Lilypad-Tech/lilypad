@@ -180,8 +180,8 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 
 	// map over the deals and agree to them
 	for _, dealContainer := range negotiatingDeals {
-		system.Info(system.ResourceProviderService, "agree to deal", dealContainer)
-		_, err := controller.web3SDK.Agree(dealContainer.Deal)
+		system.Info(system.ResourceProviderService, "agree", dealContainer)
+		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
 			// TODO: we need a way of deciding based on certain classes of error what happens
 			// some will be retryable - otherwise will be fatal
@@ -189,6 +189,20 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
 			continue
 		}
+		system.Info(system.ResourceProviderService, "tx", tx)
+
+		// we have agreed to the deal so we need to update the deal in the solver
+		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
+			Agree: tx,
+		})
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
+			continue
+		}
+		system.Info(system.ResourceProviderService, "updated deal with agree tx", tx)
 
 	}
 
