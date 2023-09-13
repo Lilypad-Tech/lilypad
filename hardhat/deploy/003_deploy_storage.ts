@@ -7,10 +7,14 @@ const deployStorage: DeployFunction = async function (hre: HardhatRuntimeEnviron
   const {
     admin,
   } = await getNamedAccounts()
+  const sharedStructs = await deployments.get('SharedStructs')
   await deploy("LilypadStorage", {
     from: admin,
     args: [],
     log: true,
+    libraries: {
+      SharedStructs: sharedStructs.address,
+    },
   })
   await execute(
     'LilypadStorage',

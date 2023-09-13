@@ -4,37 +4,6 @@ pragma solidity ^0.8.6;
 import "./SharedStructs.sol";
 
 interface ILilypadStorage {
-
-  /**
-   * Users
-   */
-
-  function getUser(
-    address userAddress
-  ) external returns (SharedStructs.User memory);
-
-  function updateUser(
-    uint256 metadataCID,
-    string memory url,
-    SharedStructs.ServiceType[] memory roles,
-    address[] memory trustedMediators,
-    address[] memory trustedDirectories
-  ) external returns (SharedStructs.User memory);
-
-  // add the given user to a list of service types
-  // that can be easily discovered (e.g. how to list the solvers)
-  function addUserToList(
-    SharedStructs.ServiceType serviceType
-  ) external;
-
-  function removeUserFromList(
-    SharedStructs.ServiceType serviceType
-  ) external;
-
-  function showUsersInList(
-    SharedStructs.ServiceType serviceType
-  ) external returns (address[] memory);
-
   
   /**
    * Deals

@@ -39,7 +39,7 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe("Controller", () => {
+describe.only("Controller", () => {
   const {
     instructionPrice,
     instructionCount,

@@ -7,12 +7,16 @@ const deployController: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const {
     admin,
   } = await getNamedAccounts()
+  const sharedStructs = await deployments.get('SharedStructs')
   await deploy("LilypadController", {
     from: admin,
     args: [],
     log: true,
+    libraries: {
+      SharedStructs: sharedStructs.address,
+    },
   })
-
+  
   const controllerContract = await deployments.get('LilypadController')
   const storageContract = await deployments.get('LilypadStorage')
   const mediationContract = await deployments.get('LilypadMediationRandom')
