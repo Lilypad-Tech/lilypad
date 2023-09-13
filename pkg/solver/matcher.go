@@ -166,10 +166,6 @@ func getDeals(
 			}
 		}
 
-		log.Info().
-			Int("resourceOffers", len(resourceOffers)).
-			Msgf("MATCHING")
-
 		// yay - we've got some matching resource offers
 		// let's choose the cheapest one
 		if len(matchingResourceOffers) > 0 {
@@ -200,7 +196,7 @@ func getDeals(
 		}
 	}
 
-	log.Info().
+	log.Debug().
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
