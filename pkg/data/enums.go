@@ -65,6 +65,10 @@ func GetAgreementState(itemType string) (uint8, error) {
 	return GetTypeIndex("AgreementState", AgreementState, itemType)
 }
 
+func GetAgreementStateString(itemType uint8) string {
+	return AgreementState[itemType]
+}
+
 func GetAgreementStateIndex(itemType string) uint8 {
 	index, _ := GetAgreementState(itemType)
 	return index

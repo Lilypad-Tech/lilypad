@@ -21,15 +21,17 @@ type SolverEventType int
 const (
 	JobOfferAdded SolverEventType = iota
 	ResourceOfferAdded
-	JobOfferUpdated
-	ResourceOfferUpdated
-	MatchFound
+	DealAdded
+	JobOfferStateUpdated
+	ResourceOfferStateUpdated
+	DealStateUpdated
 )
 
 type SolverEvent struct {
 	EventType     SolverEventType              `json:"event_type"`
 	JobOffer      *data.JobOfferContainer      `json:"job_offer"`
 	ResourceOffer *data.ResourceOfferContainer `json:"resource_offer"`
+	Deal          *data.DealContainer          `json:"deal"`
 }
 
 type SolverController struct {
@@ -96,12 +98,20 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 }
 
 func (controller *SolverController) solve() error {
-	log.Debug().Msgf("Solver solving")
-	// _, err := getMatches(controller)
-	// if err != nil {
-	// 	return err
-	// }
 
+	// find out which deals we can make from matching the offers
+	deals, err := getDeals(controller)
+	if err != nil {
+		return err
+	}
+
+	// loop over each of the deals add add them to the store and emit events
+	for _, deal := range deals {
+		_, err := controller.addDeal(deal)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -181,8 +191,7 @@ func (controller *SolverController) registerAsSolver() error {
 }
 
 func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.JobOfferContainer, error) {
-	jobOffer.ID = ""
-	id, err := data.CalculateCID(jobOffer)
+	id, err := data.GetJobOfferID(jobOffer)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +213,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 }
 
 func (controller *SolverController) addResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOfferContainer, error) {
-	resourceOffer.ID = ""
-	id, err := data.CalculateCID(resourceOffer)
+	id, err := data.GetResourceOfferID(resourceOffer)
 	if err != nil {
 		return nil, err
 	}
@@ -223,6 +231,96 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		EventType:     ResourceOfferAdded,
 		ResourceOffer: ret,
 	})
+	return ret, nil
+}
+
+func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer, error) {
+	id, err := data.GetDealID(deal)
+	if err != nil {
+		return nil, err
+	}
+	deal.ID = id
+
+	log.Info().
+		Str("solver add deal", fmt.Sprintf("%+v", deal)).
+		Msgf("")
+
+	ret, err := controller.store.AddDeal(getDealContainer(deal))
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: DealAdded,
+		Deal:      ret,
+	})
+	_, err = controller.updateJobOfferState(ret.JobOffer, ret.ID, ret.State)
+	if err != nil {
+		return nil, err
+	}
+	_, err = controller.updateResourceOfferState(ret.ResourceOffer, ret.ID, ret.State)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
+func (controller *SolverController) updateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
+	log.Info().
+		Str("solver update job offer", id).
+		Str("state", data.GetAgreementStateString(state)).
+		Msgf("")
+
+	ret, err := controller.store.UpdateJobOfferState(id, dealID, state)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: JobOfferStateUpdated,
+		JobOffer:  ret,
+	})
+	return ret, nil
+}
+
+func (controller *SolverController) updateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
+	log.Info().
+		Str("solver update resource offer", id).
+		Str("state", data.GetAgreementStateString(state)).
+		Msgf("")
+
+	ret, err := controller.store.UpdateResourceOfferState(id, dealID, state)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType:     ResourceOfferStateUpdated,
+		ResourceOffer: ret,
+	})
+	return ret, nil
+}
+
+// this will also update the job and resource offer states
+func (controller *SolverController) updateDealState(id string, state uint8) (*data.DealContainer, error) {
+	log.Info().
+		Str("solver update deal", id).
+		Str("state", data.GetAgreementStateString(state)).
+		Msgf("")
+
+	ret, err := controller.store.UpdateDealState(id, state)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: DealStateUpdated,
+		Deal:      ret,
+	})
+	_, err = controller.updateJobOfferState(ret.JobOffer, ret.ID, ret.State)
+	if err != nil {
+		return nil, err
+	}
+	_, err = controller.updateResourceOfferState(ret.ResourceOffer, ret.ID, ret.State)
+	if err != nil {
+		return nil, err
+	}
 	return ret, nil
 }
 

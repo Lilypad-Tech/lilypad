@@ -23,16 +23,12 @@ func CalculateCID(v interface{}) (string, error) {
 	return c.String(), nil
 }
 
-func GetResourceOfferID(offer ResourceOffer) (string, error) {
+func GetJobOfferID(offer JobOffer) (string, error) {
 	offer.ID = ""
 	return CalculateCID(offer)
 }
 
-func GetModuleID(module ModuleConfig) (string, error) {
-	return CalculateCID(module)
-}
-
-func GetJobOfferID(offer JobOffer) (string, error) {
+func GetResourceOfferID(offer ResourceOffer) (string, error) {
 	offer.ID = ""
 	return CalculateCID(offer)
 }
@@ -40,4 +36,8 @@ func GetJobOfferID(offer JobOffer) (string, error) {
 func GetDealID(deal Deal) (string, error) {
 	deal.ID = ""
 	return CalculateCID(deal)
+}
+
+func GetModuleID(module ModuleConfig) (string, error) {
+	return CalculateCID(module)
 }
