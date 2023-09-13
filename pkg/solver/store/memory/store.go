@@ -51,16 +51,22 @@ func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContaine
 }
 
 func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
-	if query.JobCreator != "" {
-		jobOffers := []data.JobOfferContainer{}
-		for _, jobOffer := range s.jobOffers {
-			if jobOffer.JobCreator == query.JobCreator {
-				jobOffers = append(jobOffers, jobOffer)
+	jobOffers := []data.JobOfferContainer{}
+	for _, jobOffer := range s.jobOffers {
+		matching := true
+		if query.JobCreator != "" && jobOffer.JobCreator != query.JobCreator {
+			matching = false
+		}
+		if query.NotMatched {
+			if jobOffer.DealID != "" {
+				matching = false
 			}
 		}
-		return jobOffers, nil
+		if matching {
+			jobOffers = append(jobOffers, jobOffer)
+		}
 	}
-	return s.jobOffers, nil
+	return jobOffers, nil
 }
 
 func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
@@ -72,6 +78,11 @@ func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery
 		}
 		if query.Active && !data.IsActiveAgreementState(resourceOffer.State) {
 			matching = false
+		}
+		if query.NotMatched {
+			if resourceOffer.DealID != "" {
+				matching = false
+			}
 		}
 		if matching {
 			resourceOffers = append(resourceOffers, resourceOffer)

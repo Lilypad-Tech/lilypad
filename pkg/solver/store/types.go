@@ -4,6 +4,9 @@ import "github.com/bacalhau-project/lilypad/pkg/data"
 
 type GetJobOffersQuery struct {
 	JobCreator string `json:"job_creator"`
+	// this means job offers that have not been matched at all yet
+	// the solver will use this to load only non matched resource offers
+	NotMatched bool `json:"not_matched"`
 }
 
 type GetResourceOffersQuery struct {
@@ -19,7 +22,11 @@ type GetResourceOffersQuery struct {
 	// (because the compute side is done and now we are onto payment & mediation)
 	// this flag is used by the resource provider to ask "give me all my active resource offers"
 	// so that it knows when to post more reosurce offers to the solver
-	Active bool `json:"matched"`
+	Active bool `json:"active"`
+
+	// this means resource offers that have not been matched at all yet
+	// the solver will use this to load only non matched resource offers
+	NotMatched bool `json:"not_matched"`
 }
 
 type GetDealsQuery struct {
