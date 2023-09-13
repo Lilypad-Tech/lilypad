@@ -100,7 +100,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 func (controller *SolverController) solve() error {
 
 	// find out which deals we can make from matching the offers
-	deals, err := getDeals(controller)
+	deals, err := getDeals(controller.store)
 	if err != nil {
 		return err
 	}

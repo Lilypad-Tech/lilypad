@@ -121,17 +121,19 @@ func doOffersMatch(
 	return true
 }
 
-func getDeals(controller *SolverController) ([]data.Deal, error) {
+func getDeals(
+	db store.SolverStore,
+) ([]data.Deal, error) {
 	deals := []data.Deal{}
 
-	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
+	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{
+	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
@@ -144,8 +146,23 @@ func getDeals(controller *SolverController) ([]data.Deal, error) {
 		// loop over resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
 		for _, resourceOffer := range resourceOffers {
+			decision, err := db.GetMatchDecision(resourceOffer.ID, jobOffer.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			// if this exists it means we've already tried to match the two elements and should not try again
+			if decision != nil {
+				continue
+			}
+
 			if doOffersMatch(resourceOffer.ResourceOffer, jobOffer.JobOffer) {
 				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
+			} else {
+				_, err := db.AddMatchDecision(resourceOffer.ID, jobOffer.ID, "", false)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -160,11 +177,23 @@ func getDeals(controller *SolverController) ([]data.Deal, error) {
 			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
 
 			cheapestResourceOffer := matchingResourceOffers[0]
-
 			deal, err := getDeal(jobOffer.JobOffer, cheapestResourceOffer)
-
 			if err != nil {
 				return nil, err
+			}
+
+			// add the match decision for this job offer
+			for _, matchingResourceOffer := range matchingResourceOffers {
+
+				addDealID := ""
+				if cheapestResourceOffer.ID == matchingResourceOffer.ID {
+					addDealID = deal.ID
+				}
+
+				_, err := db.AddMatchDecision(matchingResourceOffer.ID, jobOffer.ID, addDealID, true)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			deals = append(deals, deal)
