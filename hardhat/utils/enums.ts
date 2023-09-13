@@ -3,7 +3,6 @@
 export const ServiceType = [
   'Solver',
   'Mediator',
-  'Directory',
   'ResourceProvider',
   'JobCreator',
 ]

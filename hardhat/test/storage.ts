@@ -60,6 +60,7 @@ describe("Storage", () => {
 
   async function setupStorageWithUsers() {
     const storage = await setupStorage()
+
     expect(await storage
       .connect(getWallet('resource_provider'))
       .updateUser(
@@ -68,14 +69,9 @@ describe("Storage", () => {
         [
           getServiceType('ResourceProvider'),
         ],
-        [
-          getAddress('mediator')
-        ],
-        [
-          getAddress('directory')
-        ]
       )
     ).to.not.be.reverted
+
     expect(await storage
       .connect(getWallet('job_creator'))
       .updateUser(
@@ -84,12 +80,6 @@ describe("Storage", () => {
         [
           getServiceType('JobCreator'),
         ],
-        [
-          getAddress('mediator')
-        ],
-        [
-          getAddress('directory')
-        ]
       )
     ).to.not.be.reverted
     return storage
@@ -99,7 +89,7 @@ describe("Storage", () => {
     const storage = await setupStorageWithUsers()
 
     const members: SharedStructs.DealMembersStruct = {
-      directory: getAddress('directory'), 
+      solver: getAddress('solver'), 
       jobCreator: getAddress('job_creator'),
       resourceProvider: getAddress('resource_provider'),
       mediators: [getAddress('mediator')],
@@ -194,14 +184,10 @@ describe("Storage", () => {
       expect(rp.metadataCID).to.equal(rpCID)
       expect(rp.url).to.equal(rpURL)
       expect(rp.roles).to.deep.equal([getServiceType('ResourceProvider')])
-      expect(rp.trustedMediators).to.deep.equal([getAddress('mediator')])
-      expect(rp.trustedDirectories).to.deep.equal([getAddress('directory')])
 
       expect(jc.metadataCID).to.equal(jcCID)
       expect(jc.url).to.equal(jcURL)
       expect(jc.roles).to.deep.equal([getServiceType('JobCreator')])
-      expect(jc.trustedMediators).to.deep.equal([getAddress('mediator')])
-      expect(jc.trustedDirectories).to.deep.equal([getAddress('directory')])
     })
 
     it("Should be able to update an existing user", async function () {
@@ -218,12 +204,6 @@ describe("Storage", () => {
           [
             getServiceType('JobCreator'),
           ],
-          [
-            getAddress('mediator')
-          ],
-          [
-            getAddress('directory')
-          ]
         )
       ).to.not.be.reverted
       
@@ -320,7 +300,7 @@ describe("Storage", () => {
       const storage = await loadFixture(setupStorageNoTest)
 
       const members: SharedStructs.DealMembersStruct = {
-        directory: getAddress('directory'), 
+        solver: getAddress('solver'), 
         jobCreator: getAddress('job_creator'),
         resourceProvider: getAddress('resource_provider'),
         mediators: [getAddress('mediator')],
@@ -343,7 +323,7 @@ describe("Storage", () => {
       const storage = await loadFixture(setupStorageNoTestWithControllerAddress)
       
       const members: SharedStructs.DealMembersStruct = {
-        directory: getAddress('directory'), 
+        solver: getAddress('solver'), 
         jobCreator: getAddress('job_creator'),
         resourceProvider: getAddress('resource_provider'),
         mediators: [getAddress('mediator')],
@@ -633,7 +613,7 @@ describe("Storage", () => {
     it("Should error when the RP and JC are the same", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       const members: SharedStructs.DealMembersStruct = {
-        directory: getAddress('directory'), 
+        solver: getAddress('solver'), 
         jobCreator: getAddress('resource_provider'),
         resourceProvider: getAddress('resource_provider'),
         mediators: [getAddress('mediator')],
@@ -655,7 +635,7 @@ describe("Storage", () => {
     it("Should error when the RP is empty", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       const members: SharedStructs.DealMembersStruct = {
-        directory: getAddress('directory'), 
+        solver: getAddress('solver'), 
         jobCreator: getAddress('job_creator'),
         resourceProvider: ethers.ZeroAddress,
         mediators: [getAddress('mediator')],
@@ -677,7 +657,7 @@ describe("Storage", () => {
     it("Should error when the JC is empty", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       const members: SharedStructs.DealMembersStruct = {
-        directory: getAddress('directory'), 
+        solver: getAddress('solver'), 
         jobCreator: ethers.ZeroAddress,
         resourceProvider: getAddress('resource_provider'),
         mediators: [getAddress('mediator')],

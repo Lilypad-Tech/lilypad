@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -38,7 +39,6 @@ func (sdk *Web3SDK) UpdateUser(
 	url string,
 	roles []uint8,
 	trustedMediators []common.Address,
-	trustedDirectories []common.Address,
 ) error {
 	updateUserTx, err := sdk.Contracts.Storage.UpdateUser(
 		sdk.TransactOpts,
@@ -46,7 +46,6 @@ func (sdk *Web3SDK) UpdateUser(
 		url,
 		roles,
 		trustedMediators,
-		trustedDirectories,
 	)
 	if err != nil {
 		return err
@@ -88,4 +87,29 @@ func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
 		return "", fmt.Errorf("no solver found for address: %s", address)
 	}
 	return solver.Url, nil
+}
+
+func (sdk *Web3SDK) Agree(
+	deal data.Deal,
+) (string, error) {
+	if len(deal.ID) != 32 {
+		return "", fmt.Errorf("The deal ID must be exactly 32 bytes long.")
+	}
+	var dealID big.Int
+	dealID.SetBytes([]byte(deal.ID))
+	tx, err := sdk.Contracts.Controller.Agree(
+		sdk.TransactOpts,
+		&dealID,
+		controller.SharedStructsDealMembers{},
+		controller.SharedStructsDealTimeouts{},
+		controller.SharedStructsDealPricing{},
+	)
+	if err != nil {
+		return "", err
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
 }

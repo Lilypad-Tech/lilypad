@@ -6,7 +6,6 @@ library SharedStructs {
   enum ServiceType {
     Solver,
     Mediator,
-    Directory,
     ResourceProvider,
     JobCreator
   }
@@ -55,14 +54,12 @@ library SharedStructs {
     uint256 metadataCID;
     string url;
     ServiceType[] roles;
-    address[] trustedMediators;
-    address[] trustedDirectories;
   }
 
   // the various addresses involved in runnig a deal
   struct DealMembers {
-    // the address of the directory service that the RP and JC have agreed to use
-    address directory;
+    // the address of the solver service that the RP and JC have agreed to use
+    address solver;
     // the addresses of the RP and JC that have agreed to this deal
     address jobCreator;
     address resourceProvider;

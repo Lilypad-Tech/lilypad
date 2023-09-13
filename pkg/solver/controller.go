@@ -158,7 +158,6 @@ func (controller *SolverController) registerAsSolver() error {
 			controller.options.Server.URL,
 			[]uint8{solverType},
 			[]common.Address{},
-			[]common.Address{},
 		)
 		if err != nil {
 			return err

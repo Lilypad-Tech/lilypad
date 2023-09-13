@@ -12,7 +12,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type ResourceProviderController struct {
@@ -178,10 +177,14 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	if len(negotiatingDeals) <= 0 {
 		return nil
 	}
-	system.Info(system.ResourceProviderService, "agreed to deals", len(negotiatingDeals))
-	fmt.Printf("len(negotiatingDeals) --------------------------------------\n")
-	spew.Dump(len(negotiatingDeals))
-	time.Sleep(time.Second * 5)
+
+	// map over the deals and agree to them
+	for _, deal := range negotiatingDeals {
+		system.Info(system.ResourceProviderService, "agree to deal", deal)
+
+		// tx, err := controller.web3SDK.Contracts.Controller.Agree()
+	}
+
 	return err
 }
 

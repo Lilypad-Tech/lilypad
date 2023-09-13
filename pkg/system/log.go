@@ -20,29 +20,31 @@ func SetupLogging() {
 	if err == nil {
 		logLevel = parsedLogLevel
 	}
+	zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
 }
 
+func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, title string, data interface{}) {
+	zerolog.CallerSkipFrameCount = skipFrameCount
+	defer func() { zerolog.CallerSkipFrameCount = 3 }() // Reset to the default value
+
+	e := log.WithLevel(level).
+		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data))
+	e.Caller().Msg("")
+}
+
 func Error(service Service, title string, err error) {
-	log.Error().
-		Err(err).
-		Msgf(GetServiceString(service, title))
+	logWithCaller(4, zerolog.ErrorLevel, service, title, err)
 }
 
 func Info(service Service, title string, data interface{}) {
-	log.Info().
-		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data)).
-		Msgf("")
+	logWithCaller(4, zerolog.InfoLevel, service, title, data)
 }
 
 func Debug(service Service, title string, data interface{}) {
-	log.Debug().
-		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data)).
-		Msgf("")
+	logWithCaller(4, zerolog.DebugLevel, service, title, data)
 }
 
 func Trace(service Service, title string, data interface{}) {
-	log.Trace().
-		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data)).
-		Msgf("")
+	logWithCaller(4, zerolog.TraceLevel, service, title, data)
 }

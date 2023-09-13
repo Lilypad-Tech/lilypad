@@ -22,7 +22,6 @@ func NewRootCmd() *cobra.Command {
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())
 	RootCmd.AddCommand(newRunCmd())
-	RootCmd.AddCommand(newDirectoryCmd())
 	RootCmd.AddCommand(newMediatorCmd())
 	return RootCmd
 }

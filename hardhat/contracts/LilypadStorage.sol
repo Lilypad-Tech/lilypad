@@ -67,17 +67,13 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function updateUser(
     uint256 metadataCID,
     string memory url,
-    SharedStructs.ServiceType[] memory roles,
-    address[] memory trustedMediators,
-    address[] memory trustedDirectories
+    SharedStructs.ServiceType[] memory roles
   ) public returns (SharedStructs.User memory) {
     SharedStructs.User memory newUser = SharedStructs.User(
       tx.origin,
       metadataCID,
       url,
-      roles,
-      trustedMediators,
-      trustedDirectories
+      roles
     );
     users[tx.origin] = newUser;
     return newUser;
@@ -164,7 +160,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) private pure {
     require(members.resourceProvider != address(0), "RP missing");
     require(members.jobCreator != address(0), "JC missing");
-    require(members.directory != address(0), "Dir missing");
+    require(members.solver != address(0), "Solver missing");
     require(members.mediators.length > 0, "Mediators <= 0");
     require(members.resourceProvider != members.jobCreator, "RP / JC same");
   }
@@ -185,7 +181,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) private pure {
     require(members1.resourceProvider == members2.resourceProvider, "RP");
     require(members1.jobCreator == members2.jobCreator, "JC");
-    require(members1.directory == members2.directory, "Dir");
+    require(members1.solver == members2.solver, "Solver");
     require(members1.mediators.length == members2.mediators.length, "Mediators");
     for (uint256 i = 0; i < members1.mediators.length; i++) {
       require(members1.mediators[i] == members2.mediators[i], "Mediator");

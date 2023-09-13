@@ -96,7 +96,7 @@ describe("Controller", () => {
   async function agree(controller: LilypadController, party: string) {
 
     const members: SharedStructs.DealMembersStruct = {
-      directory: getAddress('directory'), 
+      solver: getAddress('solver'), 
       jobCreator: getAddress('job_creator'),
       resourceProvider: getAddress('resource_provider'),
       mediators: [getAddress('mediator')],
@@ -475,10 +475,6 @@ describe("Controller", () => {
           ethers.getBigInt(1),
           "",
           [],
-          [
-            getAddress('mediator'),
-          ],
-          []
         )
 
       await agree(controller, 'job_creator')
@@ -532,10 +528,6 @@ describe("Controller", () => {
           ethers.getBigInt(1),
           "",
           [],
-          [
-            getAddress('mediator'),
-          ],
-          []
         )
 
       await agree(controller, 'job_creator')
