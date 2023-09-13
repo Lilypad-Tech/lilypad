@@ -4,36 +4,41 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
 
-func LogSolverEvent(ev SolverEvent) {
+func LogSolverEvent(badge string, ev SolverEvent) {
 	switch ev.EventType {
 	case JobOfferAdded:
 		log.Info().
-			Str("solver event: JobOfferAdded", fmt.Sprintf("%+v", *ev.JobOffer)).
+			Str(fmt.Sprintf("%s -> JobOfferAdded", badge), fmt.Sprintf("%+v", *ev.JobOffer)).
 			Msgf("")
 	case ResourceOfferAdded:
 		log.Info().
-			Str("solver event: ResourceOfferAdded", fmt.Sprintf("%+v", *ev.ResourceOffer)).
+			Str(fmt.Sprintf("%s -> ResourceOfferAdded", badge), fmt.Sprintf("%+v", *ev.ResourceOffer)).
 			Msgf("")
 	case DealAdded:
 		log.Info().
-			Str("solver event: DealAdded", fmt.Sprintf("%+v", ev)).
+			Str(fmt.Sprintf("%s -> DealAdded", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case JobOfferStateUpdated:
 		log.Info().
-			Str("solver event: JobOfferStateUpdated", fmt.Sprintf("%+v", ev)).
+			Str(fmt.Sprintf("%s -> JobOfferStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case ResourceOfferStateUpdated:
 		log.Info().
-			Str("solver event: ResourceOfferStateUpdated", fmt.Sprintf("%+v", ev)).
+			Str(fmt.Sprintf("%s -> ResourceOfferStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case DealStateUpdated:
 		log.Info().
-			Str("solver event: DealStateUpdated", fmt.Sprintf("%+v", ev)).
+			Str(fmt.Sprintf("%s -> DealStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	}
+}
+
+func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
+	LogSolverEvent(system.GetServiceBadge(service), ev)
 }
 
 func getMutualTrustedParties(a []string, b []string) []string {

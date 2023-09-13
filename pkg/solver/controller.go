@@ -198,7 +198,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	jobOffer.ID = id
 
 	log.Info().
-		Str("solver add job offer", fmt.Sprintf("%+v", jobOffer)).
+		Str(system.GetServiceString(system.SolverService, "add job offer"), fmt.Sprintf("%+v", jobOffer)).
 		Msgf("")
 
 	ret, err := controller.store.AddJobOffer(getJobOfferContainer(jobOffer))
@@ -220,7 +220,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	resourceOffer.ID = id
 
 	log.Info().
-		Str("solver add resource offer", fmt.Sprintf("%+v", resourceOffer)).
+		Str(system.GetServiceString(system.SolverService, "add resource offer"), fmt.Sprintf("%+v", resourceOffer)).
 		Msgf("")
 
 	ret, err := controller.store.AddResourceOffer(getResourceOfferContainer(resourceOffer))
@@ -242,7 +242,7 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 	deal.ID = id
 
 	log.Info().
-		Str("solver add deal", fmt.Sprintf("%+v", deal)).
+		Str(system.GetServiceString(system.SolverService, "add deal"), fmt.Sprintf("%+v", deal)).
 		Msgf("")
 
 	ret, err := controller.store.AddDeal(getDealContainer(deal))
@@ -266,7 +266,7 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 
 func (controller *SolverController) updateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
 	log.Info().
-		Str("solver update job offer", id).
+		Str(system.GetServiceString(system.SolverService, "update job offer"), id).
 		Str("state", data.GetAgreementStateString(state)).
 		Msgf("")
 
@@ -283,7 +283,7 @@ func (controller *SolverController) updateJobOfferState(id string, dealID string
 
 func (controller *SolverController) updateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
 	log.Info().
-		Str("solver update resource offer", id).
+		Str(system.GetServiceString(system.SolverService, "update resource offer"), id).
 		Str("state", data.GetAgreementStateString(state)).
 		Msgf("")
 
@@ -301,7 +301,7 @@ func (controller *SolverController) updateResourceOfferState(id string, dealID s
 // this will also update the job and resource offer states
 func (controller *SolverController) updateDealState(id string, state uint8) (*data.DealContainer, error) {
 	log.Info().
-		Str("solver update deal", id).
+		Str(system.GetServiceString(system.SolverService, "update resource deal"), id).
 		Str("state", data.GetAgreementStateString(state)).
 		Msgf("")
 

@@ -3,7 +3,6 @@ package solver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
@@ -40,7 +39,6 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 					log.Error().Msgf("Error unmarshalling event: %s", err.Error())
 					continue
 				}
-				fmt.Printf("got websocket event: %+v\n", ev)
 				// loop over each event channel and write the event to it
 				for _, handler := range client.solverEventSubs {
 					go handler(ev)

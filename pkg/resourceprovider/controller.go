@@ -107,7 +107,7 @@ Subscribe
 */
 func (controller *ResourceProviderController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.LogSolverEvent(ev)
+		solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
 	})
 	return nil
 }

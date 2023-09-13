@@ -1,6 +1,8 @@
 package jobcreator
 
 import (
+	"time"
+
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
@@ -41,6 +43,8 @@ func RunJob(ctx *system.CommandContext, options JobCreatorOptions) error {
 	if err != nil {
 		return err
 	}
+
+	time.Sleep(1000 * time.Millisecond)
 
 	_, err = jobCreatorService.AddJobOffer(offer)
 	if err != nil {

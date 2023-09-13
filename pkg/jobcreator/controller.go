@@ -95,7 +95,7 @@ func (controller *JobCreatorController) solve() error {
 
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.LogSolverEvent(ev)
+		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
 	})
 	return nil
 }
