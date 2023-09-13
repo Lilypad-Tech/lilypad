@@ -253,7 +253,7 @@ type DealContainer struct {
 	ResourceOffer                string                           `json:"resource_offer"`
 	State                        uint8                            `json:"state"`
 	Deal                         Deal                             `json:"deal"`
-	TransactionsJobCreator       DealTransactionsJobCreator       `json:"job_creator_transactions"`
 	TransactionsResourceProvider DealTransactionsResourceProvider `json:"resource_provider_transactions"`
+	TransactionsJobCreator       DealTransactionsJobCreator       `json:"job_creator_transactions"`
 	TransactionsMediator         DealTransactionsMediator         `json:"mediator_transactions"`
 }

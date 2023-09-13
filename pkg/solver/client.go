@@ -3,6 +3,7 @@ package solver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
@@ -105,4 +106,12 @@ func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOfferCo
 
 func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (data.ResourceOfferContainer, error) {
 	return http.PostRequest[data.ResourceOffer, data.ResourceOfferContainer](client.options, "/resource_offers", resourceOffer)
+}
+
+func (client *SolverClient) UpdateTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (data.DealContainer, error) {
+	return http.PostRequest[data.DealTransactionsResourceProvider, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/resource_provider", id), payload)
+}
+
+func (client *SolverClient) UpdateTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (data.DealContainer, error) {
+	return http.PostRequest[data.DealTransactionsJobCreator, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/job_creator", id), payload)
 }

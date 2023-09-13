@@ -48,6 +48,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -179,4 +181,44 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 		return nil, err
 	}
 	return solverServer.controller.addResourceOffer(resourceOffer)
+}
+
+func (solverServer *solverServer) updateTransactionsResourceProvider(payload data.DealTransactionsResourceProvider, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		log.Error().Err(err).Msgf("error loading deal")
+		return nil, err
+	}
+	signerAddress, err := http.GetAddressFromHeaders(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
+		return nil, err
+	}
+	// only the job creator can post a job offer
+	if signerAddress != deal.ResourceProvider {
+		return nil, fmt.Errorf("resource provider address does not match signer address")
+	}
+	return solverServer.store.UpdateDealTransactionsResourceProvider(id, payload)
+}
+
+func (solverServer *solverServer) updateTransactionsJobCreator(payload data.DealTransactionsJobCreator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		log.Error().Err(err).Msgf("error loading deal")
+		return nil, err
+	}
+	signerAddress, err := http.GetAddressFromHeaders(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
+		return nil, err
+	}
+	// only the job creator can post a job offer
+	if signerAddress != deal.JobCreator {
+		return nil, fmt.Errorf("job creator address does not match signer address")
+	}
+	return solverServer.store.UpdateDealTransactionsJobCreator(id, payload)
 }

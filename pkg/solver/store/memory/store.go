@@ -234,17 +234,6 @@ func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealC
 	return &deal, nil
 }
 
-func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	deal, ok := s.dealMap[id]
-	if !ok {
-		return nil, nil
-	}
-	deal.TransactionsJobCreator = data
-	return &deal, nil
-}
-
 func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -253,6 +242,16 @@ func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, da
 		return nil, nil
 	}
 	deal.TransactionsResourceProvider = data
+	return &deal, nil
+}
+func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, nil
+	}
+	deal.TransactionsJobCreator = data
 	return &deal, nil
 }
 
