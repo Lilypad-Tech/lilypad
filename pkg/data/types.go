@@ -195,6 +195,16 @@ type DealPricing struct {
 	MediationFee              uint64 `json:"mediation_fee"`
 }
 
+// represents a solver decision
+// the solver keeps track of "no" decisions to avoid trying to repeatedly match
+// things it's already decided it can't match
+type MatchDecision struct {
+	JobOffer      string `json:"job_offer"`
+	ResourceOffer string `json:"resource_offer"`
+	Deal          string `json:"deal"`
+	Result        bool   `json:"result"`
+}
+
 // this is the struct that will have it's ID taken and used
 // as the reference for what both parties agreed to
 // the solver will publish this deal to the directory
