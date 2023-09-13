@@ -50,7 +50,15 @@ func NewResourceProviderController(
 }
 
 /*
-Subscribe
+*
+*
+*
+
+	Setup
+
+*
+*
+*
 */
 func (controller *ResourceProviderController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
@@ -120,8 +128,17 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 }
 
 /*
-Solve
+ *
+ *
+ *
+
+ Solve
+
+ *
+ *
+ *
 */
+
 func (controller *ResourceProviderController) solve() error {
 	system.Debug(system.ResourceProviderService, "solving", "")
 	err := controller.agreeToDeals()
@@ -136,25 +153,16 @@ func (controller *ResourceProviderController) solve() error {
 }
 
 /*
-Ensure resource offers are posted to the solve
-*/
+ *
+ *
+ *
 
-func (controller *ResourceProviderController) getResourceOffer(index int, spec data.MachineSpec) data.ResourceOffer {
-	return data.ResourceOffer{
-		// assign CreatedAt to the current millisecond timestamp
-		CreatedAt:        int(time.Now().UnixNano() / int64(time.Millisecond)),
-		ResourceProvider: controller.web3SDK.GetAddress().String(),
-		Index:            index,
-		Spec:             spec,
-		Modules:          controller.options.Offers.Modules,
-		Mode:             controller.options.Offers.Mode,
-		DefaultPricing:   controller.options.Offers.DefaultPricing,
-		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
-		ModulePricing:    map[string]data.DealPricing{},
-		ModuleTimeouts:   map[string]data.DealTimeouts{},
-		TrustedParties:   controller.options.Offers.TrustedParties,
-	}
-}
+ Agree to deals
+
+ *
+ *
+ *
+*/
 
 // list the deals we have been assigned to that we have not yet posted to the contract
 func (controller *ResourceProviderController) agreeToDeals() error {
@@ -175,6 +183,39 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	spew.Dump(len(negotiatingDeals))
 	time.Sleep(time.Second * 5)
 	return err
+}
+
+/*
+ *
+ *
+ *
+
+ Ensure resource offers
+
+ *
+ *
+ *
+*/
+
+/*
+Ensure resource offers are posted to the solve
+*/
+
+func (controller *ResourceProviderController) getResourceOffer(index int, spec data.MachineSpec) data.ResourceOffer {
+	return data.ResourceOffer{
+		// assign CreatedAt to the current millisecond timestamp
+		CreatedAt:        int(time.Now().UnixNano() / int64(time.Millisecond)),
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+		Index:            index,
+		Spec:             spec,
+		Modules:          controller.options.Offers.Modules,
+		Mode:             controller.options.Offers.Mode,
+		DefaultPricing:   controller.options.Offers.DefaultPricing,
+		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
+		ModulePricing:    map[string]data.DealPricing{},
+		ModuleTimeouts:   map[string]data.DealTimeouts{},
+		TrustedParties:   controller.options.Offers.TrustedParties,
+	}
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {

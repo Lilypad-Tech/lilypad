@@ -48,6 +48,17 @@ func NewJobCreatorController(
 	return controller, nil
 }
 
+/*
+*
+*
+*
+
+	Setup
+
+*
+*
+*
+*/
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
 		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
@@ -115,10 +126,34 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	return errorChan
 }
 
+/*
+ *
+ *
+ *
+
+ Solve
+
+ *
+ *
+ *
+*/
+
 func (controller *JobCreatorController) solve() error {
 	system.Debug(system.JobCreatorService, "solving", "")
 	return nil
 }
+
+/*
+ *
+ *
+ *
+
+ Data
+
+ *
+ *
+ *
+*/
 
 func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return controller.solverClient.AddJobOffer(offer)
