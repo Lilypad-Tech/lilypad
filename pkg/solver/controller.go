@@ -10,7 +10,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
@@ -115,9 +115,16 @@ func (controller *SolverController) solve() error {
 	return nil
 }
 
+// * get the deal id
+// * see if we have the deal locally
+// * update the deal state locally
 func (controller *SolverController) subscribeToWeb3() error {
-	controller.web3Events.Token.SubscribeTransfer(func(event token.TokenTransfer) {
-		log.Info().Msgf("solver Transfer. From: %s, Value: %d", event.From.Hex(), event.Value)
+	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		log.Info().
+			Str(system.GetServiceString(system.SolverService, "deal state change"), fmt.Sprintf("%+v", ev)).
+			Str("deal id", ev.DealId.String()).
+			Str("state", data.GetAgreementStateString(ev.State)).
+			Msgf("deal state change")
 	})
 	return nil
 }

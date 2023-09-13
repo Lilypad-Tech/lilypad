@@ -74,3 +74,7 @@ func (s *StorageEventChannels) Start(
 		}
 	}
 }
+
+func (t *StorageEventChannels) SubscribeDealStateChange(handler func(storage.StorageDealStateChange)) {
+	t.dealStateChangeSubs = append(t.dealStateChangeSubs, handler)
+}
