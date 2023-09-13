@@ -119,3 +119,31 @@ func getDealContainer(
 		Deal:             deal,
 	}
 }
+
+func checkResourceOffer(resourceOffer data.ResourceOffer) error {
+	if resourceOffer.Mode == data.MarketPrice {
+		return fmt.Errorf("resource offer mode cannot be market price")
+	}
+
+	if len(resourceOffer.TrustedParties.Directory) <= 0 {
+		return fmt.Errorf("resource offer must have at least one trusted directory")
+	}
+
+	if len(resourceOffer.TrustedParties.Mediator) <= 0 {
+		return fmt.Errorf("resource offer must have at least one trusted mediator")
+	}
+
+	return nil
+}
+
+func checkJobOffer(jobOffer data.JobOffer) error {
+	if len(jobOffer.TrustedParties.Directory) <= 0 {
+		return fmt.Errorf("job offer must have at least one trusted directory")
+	}
+
+	if len(jobOffer.TrustedParties.Mediator) <= 0 {
+		return fmt.Errorf("job offer must have at least one trusted mediator")
+	}
+
+	return nil
+}
