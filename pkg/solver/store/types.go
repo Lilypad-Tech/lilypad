@@ -36,7 +36,9 @@ type GetResourceOffersQuery struct {
 type GetDealsQuery struct {
 	JobCreator       string `json:"job_creator"`
 	ResourceProvider string `json:"resource_provider"`
-	State            string `json:"state"`
+
+	// only deals that are in this state will be returned
+	State string `json:"state"`
 }
 
 type SolverStore interface {

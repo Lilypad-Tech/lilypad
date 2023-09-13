@@ -142,6 +142,19 @@ func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealCont
 		}
 		ret = filteredDeals
 	}
+	if query.State != "" {
+		state, err := data.GetAgreementState(query.State)
+		if err != nil {
+			return nil, err
+		}
+		filteredDeals := []data.DealContainer{}
+		for _, deal := range ret {
+			if deal.State == state {
+				filteredDeals = append(filteredDeals, deal)
+			}
+		}
+		ret = filteredDeals
+	}
 	return ret, nil
 }
 
