@@ -278,7 +278,8 @@ function integration-tests() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
+  export TRUSTED_MEDIATORS=$MEDIATOR_ADDRESS
+  export TRUSTED_DIRECTORIES=$DIRECTORY_ADDRESS
   (
     set -euo pipefail
     cd test

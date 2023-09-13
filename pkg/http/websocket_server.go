@@ -15,6 +15,11 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+type ConnectionWrapper struct {
+	conn *websocket.Conn
+	mu   sync.Mutex
+}
+
 // StartWebSocketServer starts a WebSocket server
 func StartWebSocketServer(
 	r *mux.Router,
@@ -24,12 +29,12 @@ func StartWebSocketServer(
 ) {
 	var mutex = &sync.Mutex{}
 
-	connections := map[*websocket.Conn]bool{}
+	connections := map[*websocket.Conn]*ConnectionWrapper{}
 
 	addConnection := func(conn *websocket.Conn) {
 		mutex.Lock()
 		defer mutex.Unlock()
-		connections[conn] = true
+		connections[conn] = &ConnectionWrapper{conn: conn}
 	}
 
 	removeConnection := func(conn *websocket.Conn) {
@@ -57,14 +62,14 @@ func StartWebSocketServer(
 						Str("action", "ws WRITE").
 						Str("payload", string(message)).
 						Msgf("")
-					for conn := range connections {
-						c := conn
-						go func() {
-							if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
-								log.Error().Msgf("Error writing to websocket: %s", err.Error())
-								return
-							}
-						}()
+					for _, connWrapper := range connections {
+						connWrapper.mu.Lock()
+						if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+							log.Error().Msgf("Error writing to websocket: %s", err.Error())
+							connWrapper.mu.Unlock()
+							return
+						}
+						connWrapper.mu.Unlock()
 					}
 				case <-wrappedCtx.Done():
 					removeConnection(conn)
