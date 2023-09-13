@@ -6,6 +6,7 @@ import (
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
 
@@ -200,7 +201,7 @@ func getDeals(
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
-		Msgf("Solver solving")
+		Msgf(system.GetServiceString(system.SolverService, "Solver solving"))
 
 	return deals, nil
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/rs/zerolog/log"
 )
 
 type ResourceProviderController struct {
@@ -59,7 +58,7 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealAdded {
 			if ev.Deal == nil {
-				log.Error().Msgf("RP received nil deal")
+				system.Error(system.ResourceProviderService, "solver event", fmt.Errorf("RP received nil deal"))
 				return
 			}
 
@@ -74,11 +73,7 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 
 func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		log.Info().
-			Str(system.GetServiceString(system.ResourceProviderService, "deal state change"), fmt.Sprintf("%+v", ev)).
-			Str("deal id", ev.DealId.String()).
-			Str("state", data.GetAgreementStateString(ev.State)).
-			Msgf("deal state change")
+		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
 	})
 	return nil
 }
@@ -110,7 +105,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		for {
 			err := controller.solve()
 			if err != nil {
-				log.Error().Msgf("error solving: %s", err.Error())
+				system.Error(system.ResourceProviderService, "error solving", err)
 				errorChan <- err
 				return
 			}
@@ -128,7 +123,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 Solve
 */
 func (controller *ResourceProviderController) solve() error {
-	log.Debug().Msgf("RP solving")
+	system.Debug(system.ResourceProviderService, "solving", "")
 	err := controller.agreeToDeals()
 	if err != nil {
 		return err
@@ -172,8 +167,13 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	if err != nil {
 		return err
 	}
+	if len(negotiatingDeals) <= 0 {
+		return nil
+	}
+	system.Info(system.ResourceProviderService, "agreed to deals", len(negotiatingDeals))
 	fmt.Printf("len(negotiatingDeals) --------------------------------------\n")
 	spew.Dump(len(negotiatingDeals))
+	time.Sleep(time.Second * 5)
 	return err
 }
 
@@ -212,9 +212,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 	// add the resource offers we need to add
 	for _, resourceOffer := range addResourceOffers {
-		log.Info().
-			Str("RP add resource offer", fmt.Sprintf("%+v", resourceOffer)).
-			Msgf("")
+		system.Info(system.ResourceProviderService, "add resource offer", resourceOffer)
 		_, err := controller.solverClient.AddResourceOffer(resourceOffer)
 		if err != nil {
 			return err

@@ -48,6 +48,32 @@ func NewJobCreatorController(
 	return controller, nil
 }
 
+func (controller *JobCreatorController) subscribeToSolver() error {
+	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
+		// we need to agree to the deal now we've heard about it
+		if ev.EventType == solver.DealAdded {
+			if ev.Deal == nil {
+				system.Error(system.JobCreatorService, "solver event", fmt.Errorf("RP received nil deal"))
+				return
+			}
+
+			// check if this deal is for us
+			if ev.Deal.JobCreator != controller.web3SDK.GetAddress().String() {
+				return
+			}
+		}
+	})
+	return nil
+}
+
+func (controller *JobCreatorController) subscribeToWeb3() error {
+	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		system.Info(system.JobCreatorService, "StorageDealStateChange", ev)
+	})
+	return nil
+}
+
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
@@ -90,37 +116,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 }
 
 func (controller *JobCreatorController) solve() error {
-	log.Debug().Msgf("JC solving")
-	return nil
-}
-
-func (controller *JobCreatorController) subscribeToSolver() error {
-	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
-		// we need to agree to the deal now we've heard about it
-		if ev.EventType == solver.DealAdded {
-			if ev.Deal == nil {
-				log.Error().Msgf("JC received nil deal")
-				return
-			}
-
-			// check if this deal is for us
-			if ev.Deal.JobCreator != controller.web3SDK.GetAddress().String() {
-				return
-			}
-		}
-	})
-	return nil
-}
-
-func (controller *JobCreatorController) subscribeToWeb3() error {
-	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		log.Info().
-			Str(system.GetServiceString(system.JobCreatorService, "deal state change"), fmt.Sprintf("%+v", ev)).
-			Str("deal id", ev.DealId.String()).
-			Str("state", data.GetAgreementStateString(ev.State)).
-			Msgf("deal state change")
-	})
+	system.Debug(system.JobCreatorService, "solving", "")
 	return nil
 }
 
