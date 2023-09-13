@@ -9,6 +9,7 @@ import (
 	"io"
 	stdlog "log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -256,11 +257,23 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 func GetRequest[ResultType any](
 	options ClientOptions,
 	path string,
+	queryParams map[string]string,
 ) (ResultType, error) {
 	var result ResultType
 	client := newRetryClient()
-	url := URL(options, path)
-	req, err := retryablehttp.NewRequest("GET", url, nil)
+
+	parsedURL, err := url.Parse(URL(options, path))
+	if err != nil {
+		return result, err
+	}
+
+	urlValues := url.Values{}
+	for key, value := range queryParams {
+		urlValues.Add(key, value)
+	}
+	parsedURL.RawQuery = urlValues.Encode()
+
+	req, err := retryablehttp.NewRequest("GET", parsedURL.String(), nil)
 	if err != nil {
 		return result, err
 	}

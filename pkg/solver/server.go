@@ -109,6 +109,9 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
 		query.JobCreator = jobCreator
 	}
+	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
+		query.NotMatched = true
+	}
 	return solverServer.store.GetJobOffers(query)
 }
 
@@ -118,17 +121,26 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
 		query.ResourceProvider = resourceProvider
 	}
+	if active := req.URL.Query().Get("active"); active == "true" {
+		query.Active = true
+	}
+	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
+		query.NotMatched = true
+	}
 	return solverServer.store.GetResourceOffers(query)
 }
 
 func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.DealContainer, error) {
 	query := store.GetDealsQuery{}
 	// if there is a job_creator query param then assign it
+	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
+		query.JobCreator = jobCreator
+	}
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
 		query.ResourceProvider = resourceProvider
 	}
-	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
-		query.JobCreator = jobCreator
+	if state := req.URL.Query().Get("state"); state != "" {
+		query.State = state
 	}
 	return solverServer.store.GetDeals(query)
 }

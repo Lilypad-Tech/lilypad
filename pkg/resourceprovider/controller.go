@@ -162,11 +162,18 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 
 // list the deals we have been assigned to that we have not yet posted to the contract
 func (controller *ResourceProviderController) agreeToDeals() error {
-	return nil
+	// load the deals that are in DealNegotiating
+	// and do not have a TransactionsResourceProvider.Agree tx
+	_, err := controller.solverClient.GetDeals(store.GetDealsQuery{
+		ResourceProvider: controller.web3SDK.GetAddress().String(),
+		State:            "DealNegotiating",
+	})
+	return err
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {
-	existingResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
+	// load the resource offers that are currently active and so should not be replaced
+	activeResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
 		Active:           true,
 	})
@@ -179,7 +186,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 	// or update an existing one - we use the "index" because
 	// the id's are changing because of the timestamps
 	existingResourceOffersMap := map[int]data.ResourceOfferContainer{}
-	for _, existingResourceOffer := range existingResourceOffers {
+	for _, existingResourceOffer := range activeResourceOffers {
 		existingResourceOffersMap[existingResourceOffer.ResourceOffer.Index] = existingResourceOffer
 	}
 

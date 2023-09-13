@@ -61,15 +61,46 @@ func (client *SolverClient) SubscribeEvents(handler func(SolverEvent)) {
 }
 
 func (client *SolverClient) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
-	return http.GetRequest[[]data.JobOfferContainer](client.options, "/job_offers")
+	queryParams := map[string]string{}
+	if query.JobCreator != "" {
+		queryParams["job_creator"] = query.JobCreator
+	}
+	if query.NotMatched {
+		queryParams["not_matched"] = "true"
+	}
+	return http.GetRequest[[]data.JobOfferContainer](client.options, "/job_offers", queryParams)
+}
+
+func (client *SolverClient) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
+	queryParams := map[string]string{}
+	if query.ResourceProvider != "" {
+		queryParams["resource_provider"] = query.ResourceProvider
+	}
+	if query.Active {
+		queryParams["active"] = "true"
+	}
+	if query.NotMatched {
+		queryParams["not_matched"] = "true"
+	}
+	return http.GetRequest[[]data.ResourceOfferContainer](client.options, "/resource_offers", queryParams)
+}
+
+func (client *SolverClient) GetDeals(query store.GetDealsQuery) ([]data.DealContainer, error) {
+	queryParams := map[string]string{}
+	if query.JobCreator != "" {
+		queryParams["job_creator"] = query.JobCreator
+	}
+	if query.ResourceProvider != "" {
+		queryParams["resource_provider"] = query.ResourceProvider
+	}
+	if query.State != "" {
+		queryParams["state"] = query.State
+	}
+	return http.GetRequest[[]data.DealContainer](client.options, "/deals", queryParams)
 }
 
 func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOfferContainer, error) {
 	return http.PostRequest[data.JobOffer, data.JobOfferContainer](client.options, "/job_offers", jobOffer)
-}
-
-func (client *SolverClient) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
-	return http.GetRequest[[]data.ResourceOfferContainer](client.options, "/resource_offers")
 }
 
 func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (data.ResourceOfferContainer, error) {
