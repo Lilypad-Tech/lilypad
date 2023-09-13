@@ -179,10 +179,17 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	}
 
 	// map over the deals and agree to them
-	for _, deal := range negotiatingDeals {
-		system.Info(system.ResourceProviderService, "agree to deal", deal)
+	for _, dealContainer := range negotiatingDeals {
+		system.Info(system.ResourceProviderService, "agree to deal", dealContainer)
+		_, err := controller.web3SDK.Agree(dealContainer.Deal)
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
+			continue
+		}
 
-		// tx, err := controller.web3SDK.Contracts.Controller.Agree()
 	}
 
 	return err

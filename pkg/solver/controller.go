@@ -16,15 +16,17 @@ import (
 )
 
 // add an enum for various types of event
-type SolverEventType int
+type SolverEventType string
 
 const (
-	JobOfferAdded SolverEventType = iota
-	ResourceOfferAdded
-	DealAdded
-	JobOfferStateUpdated
-	ResourceOfferStateUpdated
-	DealStateUpdated
+	JobOfferAdded                       SolverEventType = "JobOfferAdded"
+	ResourceOfferAdded                  SolverEventType = "ResourceOfferAdded"
+	DealAdded                           SolverEventType = "DealAdded"
+	JobOfferStateUpdated                SolverEventType = "JobOfferStateUpdated"
+	ResourceOfferStateUpdated           SolverEventType = "ResourceOfferStateUpdated"
+	DealStateUpdated                    SolverEventType = "DealStateUpdated"
+	ResourceProviderTransactionsUpdated SolverEventType = "ResourceProviderTransactionsUpdated"
+	JobCreatorTransactionsUpdated       SolverEventType = "JobCreatorTransactionsUpdated"
 )
 
 type SolverEvent struct {
@@ -308,6 +310,34 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 	if err != nil {
 		return nil, err
 	}
+	return ret, nil
+}
+
+func (controller *SolverController) updateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
+	system.Info(system.SolverService, "resource provider txs", data)
+	ret, err := controller.store.UpdateDealTransactionsResourceProvider(id, data)
+	if err != nil {
+		return nil, err
+	}
+	dealContainer := getDealContainer(ret.Deal)
+	controller.writeEvent(SolverEvent{
+		EventType: ResourceProviderTransactionsUpdated,
+		Deal:      &dealContainer,
+	})
+	return ret, nil
+}
+
+func (controller *SolverController) updateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
+	system.Info(system.SolverService, "job creator txs", data)
+	ret, err := controller.store.UpdateDealTransactionsJobCreator(id, data)
+	if err != nil {
+		return nil, err
+	}
+	dealContainer := getDealContainer(ret.Deal)
+	controller.writeEvent(SolverEvent{
+		EventType: JobCreatorTransactionsUpdated,
+		Deal:      &dealContainer,
+	})
 	return ret, nil
 }
 

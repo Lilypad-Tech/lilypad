@@ -208,6 +208,7 @@ func (s *SolverStoreMemory) UpdateJobOfferState(id string, dealID string, state 
 	}
 	jobOffer.DealID = dealID
 	jobOffer.State = state
+	s.jobOfferMap[id] = jobOffer
 	return &jobOffer, nil
 }
 
@@ -220,6 +221,7 @@ func (s *SolverStoreMemory) UpdateResourceOfferState(id string, dealID string, s
 	}
 	resourceOffer.DealID = dealID
 	resourceOffer.State = state
+	s.resourceOfferMap[id] = resourceOffer
 	return &resourceOffer, nil
 }
 
@@ -231,6 +233,7 @@ func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealC
 		return nil, nil
 	}
 	deal.State = state
+	s.dealMap[id] = deal
 	return &deal, nil
 }
 
@@ -241,7 +244,22 @@ func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, da
 	if !ok {
 		return nil, nil
 	}
-	deal.TransactionsResourceProvider = data
+	if data.Agree != "" {
+		deal.TransactionsResourceProvider.Agree = data.Agree
+	}
+	if data.AddResult != "" {
+		deal.TransactionsResourceProvider.AddResult = data.AddResult
+	}
+	if data.TimeoutAgree != "" {
+		deal.TransactionsResourceProvider.TimeoutAgree = data.TimeoutAgree
+	}
+	if data.TimeoutJudgeResult != "" {
+		deal.TransactionsResourceProvider.TimeoutJudgeResult = data.TimeoutJudgeResult
+	}
+	if data.TimeoutMediateResult != "" {
+		deal.TransactionsResourceProvider.TimeoutMediateResult = data.TimeoutMediateResult
+	}
+	s.dealMap[id] = deal
 	return &deal, nil
 }
 func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
@@ -251,7 +269,26 @@ func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data dat
 	if !ok {
 		return nil, nil
 	}
+	if data.Agree != "" {
+		deal.TransactionsJobCreator.Agree = data.Agree
+	}
+	if data.AcceptResult != "" {
+		deal.TransactionsJobCreator.AcceptResult = data.AcceptResult
+	}
+	if data.CheckResult != "" {
+		deal.TransactionsJobCreator.CheckResult = data.CheckResult
+	}
+	if data.TimeoutAgree != "" {
+		deal.TransactionsJobCreator.TimeoutAgree = data.TimeoutAgree
+	}
+	if data.TimeoutSubmitResult != "" {
+		deal.TransactionsJobCreator.TimeoutSubmitResult = data.TimeoutSubmitResult
+	}
+	if data.TimeoutMediateResult != "" {
+		deal.TransactionsJobCreator.TimeoutMediateResult = data.TimeoutMediateResult
+	}
 	deal.TransactionsJobCreator = data
+	s.dealMap[id] = deal
 	return &deal, nil
 }
 
@@ -263,6 +300,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsMediator(id string, data data.
 		return nil, nil
 	}
 	deal.TransactionsMediator = data
+	s.dealMap[id] = deal
 	return &deal, nil
 }
 

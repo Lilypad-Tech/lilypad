@@ -34,6 +34,14 @@ func LogSolverEvent(badge string, ev SolverEvent) {
 		log.Info().
 			Str(fmt.Sprintf("%s -> DealStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
+	case ResourceProviderTransactionsUpdated:
+		log.Info().
+			Str(fmt.Sprintf("%s -> ResourceProviderTransactionsUpdated", badge), fmt.Sprintf("%+v", ev)).
+			Msgf("")
+	case JobCreatorTransactionsUpdated:
+		log.Info().
+			Str(fmt.Sprintf("%s -> JobCreatorTransactionsUpdated", badge), fmt.Sprintf("%+v", ev)).
+			Msgf("")
 	}
 }
 

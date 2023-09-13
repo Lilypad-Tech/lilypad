@@ -200,7 +200,7 @@ func (solverServer *solverServer) updateTransactionsResourceProvider(payload dat
 	if signerAddress != deal.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
-	return solverServer.store.UpdateDealTransactionsResourceProvider(id, payload)
+	return solverServer.controller.updateDealTransactionsResourceProvider(id, payload)
 }
 
 func (solverServer *solverServer) updateTransactionsJobCreator(payload data.DealTransactionsJobCreator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
@@ -220,5 +220,5 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 	if signerAddress != deal.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
-	return solverServer.store.UpdateDealTransactionsJobCreator(id, payload)
+	return solverServer.controller.updateDealTransactionsJobCreator(id, payload)
 }
