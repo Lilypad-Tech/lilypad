@@ -1,10 +1,12 @@
 package solver
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,6 +25,10 @@ func doOffersMatch(
 	resourceOffer data.ResourceOffer,
 	jobOffer data.JobOffer,
 ) bool {
+	fmt.Printf("resourceOffer --------------------------------------\n")
+	spew.Dump(resourceOffer)
+	fmt.Printf("jobOffer --------------------------------------\n")
+	spew.Dump(jobOffer)
 	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
 		return false
 	}
@@ -70,6 +76,10 @@ func doOffersMatch(
 		return false
 	}
 
+	fmt.Printf("mutualMediators --------------------------------------\n")
+	spew.Dump(mutualMediators)
+	fmt.Printf("mutualDirectories --------------------------------------\n")
+	spew.Dump(mutualDirectories)
 	return true
 }
 
@@ -98,9 +108,12 @@ func getDeals(controller *SolverController) ([]data.Deal, error) {
 		for _, resourceOffer := range resourceOffers {
 			if doOffersMatch(resourceOffer.ResourceOffer, jobOffer.JobOffer) {
 				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
-				break
 			}
 		}
+
+		log.Info().
+			Int("resourceOffers", len(resourceOffers)).
+			Msgf("MATCHING")
 
 		// yay - we've got some matching resource offers
 		// let's choose the cheapest one
