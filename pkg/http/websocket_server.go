@@ -43,6 +43,31 @@ func StartWebSocketServer(
 		delete(connections, conn)
 	}
 
+	// spawn a reader from the incoming message channel
+	// each message we get we fan out to all the currently connected websocket clients
+	go func() {
+		for {
+			select {
+			case message := <-messageChan:
+				log.Debug().
+					Str("action", "ws WRITE").
+					Str("payload", string(message)).
+					Msgf("")
+				for _, connWrapper := range connections {
+					connWrapper.mu.Lock()
+					if err := connWrapper.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+						log.Error().Msgf("Error writing to websocket: %s", err.Error())
+						connWrapper.mu.Unlock()
+						return
+					}
+					connWrapper.mu.Unlock()
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	r.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -51,32 +76,6 @@ func StartWebSocketServer(
 		}
 		defer conn.Close()
 		addConnection(conn)
-
-		wrappedCtx, wrappedCancel := context.WithCancel(ctx)
-
-		go func() {
-			for {
-				select {
-				case message := <-messageChan:
-					log.Debug().
-						Str("action", "ws WRITE").
-						Str("payload", string(message)).
-						Msgf("")
-					for _, connWrapper := range connections {
-						connWrapper.mu.Lock()
-						if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-							log.Error().Msgf("Error writing to websocket: %s", err.Error())
-							connWrapper.mu.Unlock()
-							return
-						}
-						connWrapper.mu.Unlock()
-					}
-				case <-wrappedCtx.Done():
-					removeConnection(conn)
-					return
-				}
-			}
-		}()
 
 		for {
 			messageType, _, err := conn.ReadMessage()
@@ -90,7 +89,6 @@ func StartWebSocketServer(
 			}
 		}
 
-		wrappedCancel()
-
+		removeConnection(conn)
 	})
 }

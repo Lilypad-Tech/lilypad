@@ -55,7 +55,6 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	websocketEventChannel := make(chan []byte)
 
 	solverServer.controller.subscribeEvents(func(ev SolverEvent) {
-		ServiceLogSolverEvent(system.SolverService, ev)
 		evBytes, err := json.Marshal(ev)
 		if err != nil {
 			log.Error().Msgf("Error marshalling event: %s", err.Error())

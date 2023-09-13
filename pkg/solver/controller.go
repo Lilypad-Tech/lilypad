@@ -131,7 +131,7 @@ func (controller *SolverController) subscribeEvents(handler func(SolverEvent)) {
 // write the given event to all generated event channels
 func (controller *SolverController) writeEvent(ev SolverEvent) {
 	for _, handler := range controller.solverEventSubs {
-		go handler(ev)
+		handler(ev)
 	}
 }
 
