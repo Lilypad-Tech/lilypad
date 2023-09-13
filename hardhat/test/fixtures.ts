@@ -273,9 +273,10 @@ export async function setupControllerFixture({
   }
 }
 
+export const DEAL_ID = "10"
+export const RESULTS_ID = "11"
+
 export const DEFAULT_VALUES: Record<string, bigint> = {
-  dealID: ethers.getBigInt(10),
-  resultsID: ethers.getBigInt(11),
   instructionPrice: ethers.getBigInt(10),
   instructionCount: ethers.getBigInt(1),
   resultsCollateralMultiple: ethers.getBigInt(4),

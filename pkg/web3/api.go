@@ -35,17 +35,15 @@ func (sdk *Web3SDK) GetUser(
 }
 
 func (sdk *Web3SDK) UpdateUser(
-	metadataCID *big.Int,
+	metadataCID string,
 	url string,
 	roles []uint8,
-	trustedMediators []common.Address,
 ) error {
 	updateUserTx, err := sdk.Contracts.Storage.UpdateUser(
 		sdk.TransactOpts,
 		metadataCID,
 		url,
 		roles,
-		trustedMediators,
 	)
 	if err != nil {
 		return err
@@ -93,7 +91,7 @@ func (sdk *Web3SDK) Agree(
 	deal data.Deal,
 ) (string, error) {
 	if len(deal.ID) != 32 {
-		return "", fmt.Errorf("The deal ID must be exactly 32 bytes long.")
+		return "", fmt.Errorf("The deal ID must be exactly 32 bytes long: %s", deal.ID)
 	}
 	var dealID big.Int
 	dealID.SetBytes([]byte(deal.ID))

@@ -7,11 +7,11 @@ import "./SharedStructs.sol";
 // it will be called by the mediation handler once a decision has been reached
 interface ILilypadMediationRequester {
   function mediationAcceptResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function mediationRejectResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 }
 

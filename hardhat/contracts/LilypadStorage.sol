@@ -26,22 +26,22 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   mapping(SharedStructs.ServiceType => address[]) private usersByType;
 
   // a map of deal id -> deal
-  mapping(uint256 => SharedStructs.Deal) private deals;
+  mapping(string => SharedStructs.Deal) private deals;
 
   // a map of party -> dealid[]
-  mapping(address => uint256[]) private dealsForParty;
+  mapping(address => string[]) private dealsForParty;
 
   // a map of deal id -> agreement
-  mapping(uint256 => SharedStructs.Agreement) private agreements;
+  mapping(string => SharedStructs.Agreement) private agreements;
 
   // a map of deal id -> result
-  mapping(uint256 => SharedStructs.Result) private results;
+  mapping(string => SharedStructs.Result) private results;
 
   // a map of deal id -> result
-  mapping(uint256 => SharedStructs.Result) private mediations;
+  mapping(string => SharedStructs.Result) private mediations;
 
   event DealStateChange(
-    uint256 indexed dealId,
+    string indexed dealId,
     SharedStructs.AgreementState indexed state
   );
 
@@ -65,7 +65,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function updateUser(
-    uint256 metadataCID,
+    string memory metadataCID,
     string memory url,
     SharedStructs.ServiceType[] memory roles
   ) public returns (SharedStructs.User memory) {
@@ -144,14 +144,14 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function getDeal(
-    uint256 dealId
+    string memory dealId
   ) public view returns (SharedStructs.Deal memory) {
     return deals[dealId];
   }
 
   function getDealsForParty(
     address party
-  ) public view returns (uint256[] memory) {
+  ) public view returns (string[] memory) {
     return dealsForParty[party];
   }
 
@@ -217,7 +217,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
   
   function ensureDeal(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.DealMembers memory members,
     SharedStructs.DealTimeouts memory timeouts,
     SharedStructs.DealPricing memory pricing
@@ -249,13 +249,13 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
   
   function getAgreement(
-    uint256 dealId
+    string memory dealId
   ) public view returns (SharedStructs.Agreement memory) {
     return agreements[dealId];
   }
 
   function agreeResourceProvider(
-    uint256 dealId
+    string memory dealId
   ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].resourceProviderAgreedAt == 0, "RP has already agreed");
@@ -265,7 +265,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function agreeJobCreator(
-    uint256 dealId
+    string memory dealId
   ) public onlyController returns (SharedStructs.Agreement memory) {
     require(hasDeal(dealId), "Deal does not exist");
     require(agreements[dealId].jobCreatorAgreedAt == 0, "JC has already agreed");
@@ -279,14 +279,14 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function getResult(
-    uint256 dealId
+    string memory dealId
   ) public view returns (SharedStructs.Result memory) {
     return results[dealId];
   }
 
   function addResult(
-    uint256 dealId,
-    uint256 resultsId,
+    string memory dealId,
+    string memory resultsId,
     uint256 instructionCount
   ) public onlyController returns (SharedStructs.Result memory) {
     require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
@@ -305,7 +305,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function acceptResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].resultsAcceptedAt = block.timestamp;
@@ -313,7 +313,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function checkResult(
-    uint256 dealId,
+    string memory dealId,
     address mediator
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
@@ -328,7 +328,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function mediationAcceptResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].mediationAcceptedAt = block.timestamp;
@@ -336,7 +336,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function mediationRejectResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].mediationRejectedAt = block.timestamp;
@@ -350,7 +350,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   // called because one party submitted a deal and the other party
   // did not agree in time
   function timeoutAgree(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.DealNegotiating), "DealNegotiating");
     agreements[dealId].timeoutAgreeAt = block.timestamp;
@@ -360,7 +360,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   // called because the JC waited too long for a result to be submitted
   // and wants it's money back
   function timeoutSubmitResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
     agreements[dealId].timeoutSubmitResultsAt = block.timestamp;
@@ -370,7 +370,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   // called because the RP waited too long for a judgement of it's results
   // and wants it's money back
   function timeoutJudgeResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].timeoutJudgeResultsAt = block.timestamp;
@@ -379,7 +379,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   // called because the RP or JC waited too long for a mediation of it's results
   // and both want their money back
   function timeoutMediateResult(
-    uint256 dealId
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     agreements[dealId].timeoutMediateResultsAt = block.timestamp;
@@ -391,13 +391,13 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function getJobCost(
-    uint256 dealId
+    string memory dealId
   ) public view returns (uint256) {
     return deals[dealId].pricing.instructionPrice * results[dealId].instructionCount;
   }
 
   function getResultsCollateral(
-    uint256 dealId
+string memory dealId
   ) public view returns (uint256) {
     return deals[dealId].pricing.resultsCollateralMultiple * getJobCost(dealId);
   }
@@ -407,13 +407,13 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function hasDeal(
-    uint256 dealId
+    string memory dealId
   ) public view returns (bool) {
-    return getDeal(dealId).dealId != 0;
+    return  bytes(getDeal(dealId).dealId).length > 0;
   }
 
   function isState(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.AgreementState state
   ) public view returns (bool) {
     // if we don't have a deal, we should check against DealNegotiating
@@ -430,7 +430,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
    */
 
   function _maybeAgreeDeal(
-    uint256 dealId
+    string memory dealId
   ) private {
     if(agreements[dealId].resourceProviderAgreedAt != 0 && agreements[dealId].jobCreatorAgreedAt != 0) {
       agreements[dealId].dealAgreedAt = block.timestamp;
@@ -442,7 +442,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function _changeAgreementState(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.AgreementState state
   ) private {
     agreements[dealId].state = state;

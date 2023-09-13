@@ -2,7 +2,6 @@ package web3
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
@@ -41,7 +40,7 @@ func (s *StorageEventChannels) Start(
 		return sdk.Contracts.Storage.WatchDealStateChange(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.dealStateChangeChan,
-			[]*big.Int{},
+			[]string{},
 			[]uint8{},
 		)
 	}

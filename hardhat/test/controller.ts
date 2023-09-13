@@ -22,6 +22,8 @@ import {
   getDefaultTimeouts,
   getDefaultPricing,
   DEFAULT_VALUES,
+  DEAL_ID,
+  RESULTS_ID,
 } from './fixtures'
 import {
   LilypadToken,
@@ -39,8 +41,6 @@ const { expect } = chai
 
 describe("Controller", () => {
   const {
-    dealID,
-    resultsID,
     instructionPrice,
     instructionCount,
     resultsCollateralMultiple,
@@ -62,9 +62,9 @@ describe("Controller", () => {
   }
 
   async function checkDeal(storage: LilypadStorage, party: string) {
-    const deal = await storage.getDeal(dealID)
+    const deal = await storage.getDeal(DEAL_ID)
 
-    expect(deal.dealId).to.equal(dealID)
+    expect(deal.dealId).to.equal(DEAL_ID)
     expect(deal.members.resourceProvider).to.equal(getAddress('resource_provider'))
     expect(deal.members.jobCreator).to.equal(getAddress('job_creator'))
     expect(deal.pricing.instructionPrice).to.equal(instructionPrice)
@@ -81,15 +81,15 @@ describe("Controller", () => {
     expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(timeout))
     expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.getBigInt(0))
     
-    expect(await storage.hasDeal(dealID))
+    expect(await storage.hasDeal(DEAL_ID))
       .to.equal(true)
 
     expect(await storage.getDealsForParty(getAddress(party)))
-      .to.deep.equal([dealID])
+      .to.deep.equal([DEAL_ID])
   }
 
   async function checkAgreement(storage: LilypadStorage, desiredState: string) {
-    const agreement = await storage.getAgreement(dealID)
+    const agreement = await storage.getAgreement(DEAL_ID)
     expect(agreement.state).to.equal(getAgreementState(desiredState))
   }
 
@@ -107,7 +107,7 @@ describe("Controller", () => {
     return controller
       .connect(getWallet(party))
       .agree(
-        dealID,
+        DEAL_ID,
         members,
         timeouts,
         pricing,
@@ -147,8 +147,8 @@ describe("Controller", () => {
     await ret.controller
       .connect(getWallet('resource_provider'))
       .addResult(
-        dealID,
-        resultsID,
+        DEAL_ID,
+        RESULTS_ID,
         instructionCount
       )
     return ret
@@ -172,7 +172,7 @@ describe("Controller", () => {
       )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('resource_provider'),
           timeoutCollateral,
           getPaymentReason('TimeoutCollateral'),
@@ -210,7 +210,7 @@ describe("Controller", () => {
       )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('job_creator'),
           timeoutCollateral,
           getPaymentReason('TimeoutCollateral'),
@@ -218,7 +218,7 @@ describe("Controller", () => {
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('job_creator'),
           paymentCollateral,
           getPaymentReason('PaymentCollateral'),
@@ -261,7 +261,7 @@ describe("Controller", () => {
       )
         .to.emit(storage, 'DealStateChange')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAgreementState('DealAgreed')
         )
                 
@@ -284,19 +284,19 @@ describe("Controller", () => {
       await expect(controller
         .connect(getWallet('resource_provider'))
         .addResult(
-          dealID,
-          resultsID,
+          DEAL_ID,
+          RESULTS_ID,
           instructionCount
         )
       )
         .to.emit(storage, 'DealStateChange')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAgreementState('ResultsSubmitted')
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('resource_provider'),
           timeoutCollateral,
           getPaymentReason('TimeoutCollateral'),
@@ -304,7 +304,7 @@ describe("Controller", () => {
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('resource_provider'),
           resultsCollateral,
           getPaymentReason('ResultsCollateral'),
@@ -345,17 +345,17 @@ describe("Controller", () => {
       await expect(controller
         .connect(getWallet('job_creator'))
         .acceptResult(
-          dealID,
+          DEAL_ID,
         )
       )
         .to.emit(storage, 'DealStateChange')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAgreementState('ResultsAccepted')
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('resource_provider'),
           jobCost,
           getPaymentReason('JobPayment'),
@@ -363,7 +363,7 @@ describe("Controller", () => {
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('resource_provider'),
           resultsCollateral,
           getPaymentReason('ResultsCollateral'),
@@ -371,7 +371,7 @@ describe("Controller", () => {
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('job_creator'),
           paymentCollateral - jobCost,
           getPaymentReason('PaymentCollateral'),
@@ -379,7 +379,7 @@ describe("Controller", () => {
         )
         .to.emit(payments, 'Payment')
         .withArgs(
-          dealID,
+          DEAL_ID,
           getAddress('job_creator'),
           timeoutCollateral,
           getPaymentReason('TimeoutCollateral'),
@@ -438,14 +438,14 @@ describe("Controller", () => {
       await controller
         .connect(getWallet('resource_provider'))
         .addResult(
-          dealID,
-          resultsID,
+          DEAL_ID,
+          RESULTS_ID,
           instructionCount
         )
       await controller
         .connect(getWallet('job_creator'))
         .acceptResult(
-          dealID,
+          DEAL_ID,
         )
 
       const balancesAfterJC = await getBalances(token, 'job_creator')
@@ -472,7 +472,7 @@ describe("Controller", () => {
       await storage
         .connect(getWallet('resource_provider'))
         .updateUser(
-          ethers.getBigInt(1),
+          "1",
           "",
           [],
         )
@@ -482,20 +482,20 @@ describe("Controller", () => {
       await controller
         .connect(getWallet('resource_provider'))
         .addResult(
-          dealID,
-          resultsID,
+          DEAL_ID,
+          RESULTS_ID,
           instructionCount
         )
       await controller
         .connect(getWallet('job_creator'))
         .checkResult(
-          dealID,
+          DEAL_ID,
           getAddress('mediator'),
         )
       await mediation
         .connect(getWallet('mediator'))
         .mediationAcceptResult(
-          dealID,
+          DEAL_ID,
         )
 
       const balancesAfterJC = await getBalances(token, 'job_creator')
@@ -525,7 +525,7 @@ describe("Controller", () => {
       await storage
         .connect(getWallet('resource_provider'))
         .updateUser(
-          ethers.getBigInt(1),
+          "1",
           "",
           [],
         )
@@ -535,20 +535,20 @@ describe("Controller", () => {
       await controller
         .connect(getWallet('resource_provider'))
         .addResult(
-          dealID,
-          resultsID,
+          DEAL_ID,
+          RESULTS_ID,
           instructionCount
         )
       await controller
         .connect(getWallet('job_creator'))
         .checkResult(
-          dealID,
+          DEAL_ID,
           getAddress('mediator'),
         )
       await mediation
         .connect(getWallet('mediator'))
         .mediationRejectResult(
-          dealID,
+          DEAL_ID,
         )
 
       const balancesAfterJC = await getBalances(token, 'job_creator')

@@ -51,7 +51,7 @@ library SharedStructs {
   struct User {
     address userAddress;
     // the CID of information for this user
-    uint256 metadataCID;
+    string metadataCID;
     string url;
     ServiceType[] roles;
   }
@@ -107,7 +107,7 @@ library SharedStructs {
   struct Deal {
     // the CID of the Deal document on IPFS (and directory service)
     // this contains the job spec, the job offer and the resource offer
-    uint256 dealId;
+    string dealId;
 
     // who is participating in this deal
     DealMembers members;
@@ -123,10 +123,10 @@ library SharedStructs {
   // this is also immutable
   struct Result {
     // the id of the deal that this result is for
-    uint256 dealId;
+    string dealId;
 
     // the CID of the results on IPFS (and directory service)
-    uint256 resultsId;
+    string resultsId;
 
     // how many instructions were executed by the RP
     uint256 instructionCount;

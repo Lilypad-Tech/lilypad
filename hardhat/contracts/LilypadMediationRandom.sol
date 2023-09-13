@@ -9,7 +9,7 @@ import "./ILilypadMediation.sol";
 contract LilypadMediationRandom is ControllerOwnable, Initializable {
 
   // keep track of which mediators were choosen for which deals
-  mapping(uint256 => address) private mediators;
+  mapping(string => address) private mediators;
 
   event MediationRequested(
     address indexed mediator,
@@ -38,7 +38,7 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
 
   // call the controller contract as a ILilypadMediationRequester
   function mediationAcceptResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     // check the tx.origin is the same mediator that was picked
     require(mediators[dealId] != address(0), "mediator cannot be 0x0");
@@ -49,7 +49,7 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
 
   // call the controller contract as a ILilypadMediationRequester
   function mediationRejectResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     // check the tx.origin is the same mediator that was picked
     require(mediators[dealId] != address(0), "mediator cannot be 0x0");

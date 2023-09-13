@@ -3,7 +3,6 @@ package solver
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -11,7 +10,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
 
@@ -156,10 +154,9 @@ func (controller *SolverController) registerAsSolver() error {
 	if selfUser.Url != controller.options.Server.URL {
 		system.Info(system.SolverService, "url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
 		err = controller.web3SDK.UpdateUser(
-			big.NewInt(0),
+			"",
 			controller.options.Server.URL,
 			[]uint8{solverType},
-			[]common.Address{},
 		)
 		if err != nil {
 			return err

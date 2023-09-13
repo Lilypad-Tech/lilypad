@@ -29,14 +29,14 @@ const { expect } = chai
 
 describe("Storage", () => {
 
-  const rpCID = ethers.getBigInt(123)
+  const rpCID = "123"
   const rpURL = "abc"
 
-  const jcCID = ethers.getBigInt(456)
+  const jcCID = "123"
   const jcURL = "def"
 
-  const dealID = ethers.getBigInt(10)
-  const resultsID = ethers.getBigInt(11)
+  const dealID = "10"
+  const resultsID = "11"
   const instructionCount = ethers.getBigInt(25)
 
   function setupStorage() {
@@ -168,7 +168,7 @@ describe("Storage", () => {
 
     it("Should have deployed with empty state", async function () {
       const storage = await loadFixture(setupStorage)
-      expect(await storage.hasDeal(ethers.getBigInt(0))).to.equal(false)
+      expect(await storage.hasDeal("0")).to.equal(false)
     })
 
   })
@@ -193,7 +193,7 @@ describe("Storage", () => {
     it("Should be able to update an existing user", async function () {
       const storage = await loadFixture(setupStorageWithUsers)
       
-      const newCID = ethers.getBigInt(456)
+      const newCID = "456"
       const newURL = "def"
 
       expect(await storage
@@ -394,7 +394,7 @@ describe("Storage", () => {
         .connect(getWallet('resource_provider'))
         .addResult(
           dealID,
-          ethers.getBigInt(1),
+          "1",
           ethers.getBigInt(1),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
@@ -407,7 +407,7 @@ describe("Storage", () => {
         .connect(getWallet('resource_provider'))
         .addResult(
           dealID,
-          ethers.getBigInt(1),
+          "1",
           ethers.getBigInt(1),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
