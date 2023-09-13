@@ -90,6 +90,6 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 }
 
 // adds the job offer to the solver
-func (jobCreator *JobCreator) AddJobOffer(offer data.JobOffer) (data.JobOffer, error) {
+func (jobCreator *JobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return jobCreator.controller.AddJobOffer(offer)
 }

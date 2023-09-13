@@ -153,10 +153,11 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 	// create a map of the ids of resource offers we have
 	// this will allow us to check if we need to create a new one
-	// or update an existing one
-	existingResourceOffersMap := map[string]data.ResourceOffer{}
+	// or update an existing one - we use the "index" because
+	// the id's are changing because of the timestamps
+	existingResourceOffersMap := map[int]data.ResourceOfferContainer{}
 	for _, existingResourceOffer := range existingResourceOffers {
-		existingResourceOffersMap[existingResourceOffer.ID] = existingResourceOffer
+		existingResourceOffersMap[existingResourceOffer.ResourceOffer.Index] = existingResourceOffer
 	}
 
 	addResourceOffers := []data.ResourceOffer{}
@@ -164,18 +165,12 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 	// map over the specs we have in the config
 	for index, spec := range controller.options.Offers.Specs {
 
-		resourceOffer := controller.getResourceOffer(index, spec)
-		resourceOfferID, err := data.GetResourceOfferID(resourceOffer)
-		if err != nil {
-			return err
-		}
-
 		// check if the resource offer already exists
 		// if it does then we need to update it
 		// if it doesn't then we need to add it
-		_, ok := existingResourceOffersMap[resourceOfferID]
+		_, ok := existingResourceOffersMap[index]
 		if !ok {
-			addResourceOffers = append(addResourceOffers, resourceOffer)
+			addResourceOffers = append(addResourceOffers, controller.getResourceOffer(index, spec))
 		}
 	}
 

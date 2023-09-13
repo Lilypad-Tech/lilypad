@@ -97,10 +97,10 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 
 func (controller *SolverController) solve() error {
 	log.Debug().Msgf("Solver solving")
-	_, err := getMatches(controller)
-	if err != nil {
-		return err
-	}
+	// _, err := getMatches(controller)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

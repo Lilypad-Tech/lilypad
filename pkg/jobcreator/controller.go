@@ -109,6 +109,6 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 	return nil
 }
 
-func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOffer, error) {
+func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return controller.solverClient.AddJobOffer(offer)
 }
