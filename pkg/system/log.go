@@ -10,6 +10,32 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ServiceLogger struct {
+	service Service
+}
+
+func NewServiceLogger(service Service) *ServiceLogger {
+	return &ServiceLogger{
+		service: service,
+	}
+}
+
+func (s *ServiceLogger) Error(title string, err error) {
+	Error(s.service, title, err)
+}
+
+func (s *ServiceLogger) Info(title string, data interface{}) {
+	Info(s.service, title, data)
+}
+
+func (s *ServiceLogger) Debug(title string, data interface{}) {
+	Debug(s.service, title, data)
+}
+
+func (s *ServiceLogger) Trace(title string, data interface{}) {
+	Trace(s.service, title, data)
+}
+
 func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	logLevelString := os.Getenv("LOG_LEVEL")

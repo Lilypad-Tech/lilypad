@@ -40,6 +40,7 @@ type SolverController struct {
 	loop            *system.ControlLoop
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
+	log             *system.ServiceLogger
 }
 
 // the background "even if we have not heard of an event" loop
@@ -58,6 +59,7 @@ func NewSolverController(
 		web3Events: web3.NewEventChannels(),
 		store:      store,
 		options:    options,
+		log:        system.NewServiceLogger(system.SolverService),
 	}
 	return controller, nil
 }
@@ -129,11 +131,11 @@ func (controller *SolverController) solve() error {
 // * update the deal state locally
 func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		system.Info(system.SolverService, "StorageDealStateChange", ev)
+		controller.log.Info("StorageDealStateChange", ev)
 
 		_, err := controller.updateDealState(ev.DealId.String(), ev.State)
 		if err != nil {
-			system.Error(system.SolverService, "error updating deal state", err)
+			controller.log.Error("error updating deal state", err)
 			return
 		}
 
@@ -178,7 +180,7 @@ func (controller *SolverController) registerAsSolver() error {
 
 	// TODO: check the other props and call update if they have changed
 	if selfUser.Url != controller.options.Server.URL {
-		system.Info(system.SolverService, "url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
+		controller.log.Info("url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
 		err = controller.web3SDK.UpdateUser(
 			"",
 			controller.options.Server.URL,
@@ -188,7 +190,7 @@ func (controller *SolverController) registerAsSolver() error {
 			return err
 		}
 	} else {
-		system.Info(system.SolverService, "url same", fmt.Sprintf("solver url already correct: %s %s", selfAddress.String(), controller.options.Server.URL))
+		controller.log.Info("url same", fmt.Sprintf("solver url already correct: %s %s", selfAddress.String(), controller.options.Server.URL))
 	}
 
 	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
@@ -198,13 +200,13 @@ func (controller *SolverController) registerAsSolver() error {
 	foundSolver := false
 	for _, existingSolver := range existingSolvers {
 		if existingSolver.String() == selfAddress.String() {
-			system.Info(system.SolverService, "solver exists", selfAddress.String())
+			controller.log.Info("solver exists", selfAddress.String())
 			foundSolver = true
 			break
 		}
 	}
 	if !foundSolver {
-		system.Info(system.SolverService, "solver registering", "")
+		controller.log.Info("solver registering", "")
 		// add the solver to the storage contract
 		err = controller.web3SDK.AddUserToList(
 			solverType,
@@ -212,7 +214,7 @@ func (controller *SolverController) registerAsSolver() error {
 		if err != nil {
 			return err
 		}
-		system.Info(system.SolverService, "solver registered", selfAddress.String())
+		controller.log.Info("solver registered", selfAddress.String())
 	}
 	return nil
 }
@@ -224,7 +226,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	}
 	jobOffer.ID = id
 
-	system.Info(system.SolverService, "add job offer", jobOffer)
+	controller.log.Info("add job offer", jobOffer)
 
 	ret, err := controller.store.AddJobOffer(data.GetJobOfferContainer(jobOffer))
 	if err != nil {
@@ -244,7 +246,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	}
 	resourceOffer.ID = id
 
-	system.Info(system.SolverService, "add resource offer", resourceOffer)
+	controller.log.Info("add resource offer", resourceOffer)
 
 	ret, err := controller.store.AddResourceOffer(data.GetResourceOfferContainer(resourceOffer))
 	if err != nil {
@@ -264,7 +266,7 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 	}
 	deal.ID = id
 
-	system.Info(system.SolverService, "add deal", deal)
+	controller.log.Info("add deal", deal)
 
 	ret, err := controller.store.AddDeal(data.GetDealContainer(deal))
 	if err != nil {
@@ -286,7 +288,7 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 }
 
 func (controller *SolverController) updateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
-	system.Info(system.SolverService, "update job offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info("update job offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
 
 	ret, err := controller.store.UpdateJobOfferState(id, dealID, state)
 	if err != nil {
@@ -300,7 +302,7 @@ func (controller *SolverController) updateJobOfferState(id string, dealID string
 }
 
 func (controller *SolverController) updateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
-	system.Info(system.SolverService, "update resource offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info("update resource offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
 
 	ret, err := controller.store.UpdateResourceOfferState(id, dealID, state)
 	if err != nil {
@@ -315,7 +317,7 @@ func (controller *SolverController) updateResourceOfferState(id string, dealID s
 
 // this will also update the job and resource offer states
 func (controller *SolverController) updateDealState(id string, state uint8) (*data.DealContainer, error) {
-	system.Info(system.SolverService, "update deal", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info("update deal", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
 
 	ret, err := controller.store.UpdateDealState(id, state)
 	if err != nil {
@@ -337,7 +339,7 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 }
 
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
-	system.Info(system.SolverService, "resource provider txs", payload)
+	controller.log.Info("resource provider txs", payload)
 	dealContainer, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
 	if err != nil {
 		return nil, err
@@ -350,7 +352,7 @@ func (controller *SolverController) updateDealTransactionsResourceProvider(id st
 }
 
 func (controller *SolverController) updateDealTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (*data.DealContainer, error) {
-	system.Info(system.SolverService, "job creator txs", payload)
+	controller.log.Info("job creator txs", payload)
 	dealContainer, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err
@@ -361,19 +363,3 @@ func (controller *SolverController) updateDealTransactionsJobCreator(id string, 
 	})
 	return dealContainer, nil
 }
-
-//log.Info().Msgf("solver solving")
-
-// // THIS IS JUST FOR TESTING
-// log.Info().Msgf("sending tx")
-// tx, err := controller.web3SDK.Contracts.Token.Transfer(
-// 	controller.web3SDK.TransactOpts,
-// 	common.HexToAddress("0x2546BcD3c84621e976D8185a91A922aE77ECEc30"),
-// 	big.NewInt(1),
-// )
-// if err != nil {
-// 	log.Info().Msgf("error sending tx: %s\n", err.Error())
-
-// } else {
-// 	log.Info().Msgf("tx sent: %s\n", tx.Hash())
-// }

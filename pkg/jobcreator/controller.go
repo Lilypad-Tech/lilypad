@@ -8,6 +8,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
+	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
@@ -19,6 +20,7 @@ type JobCreatorController struct {
 	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
 	loop         *system.ControlLoop
+	log          *system.ServiceLogger
 }
 
 // the background "even if we have not heard of an event" loop
@@ -50,8 +52,26 @@ func NewJobCreatorController(
 		options:      options,
 		web3SDK:      web3SDK,
 		web3Events:   web3.NewEventChannels(),
+		log:          system.NewServiceLogger(system.JobCreatorService),
 	}
 	return controller, nil
+}
+
+/*
+ *
+ *
+ *
+
+ Public API
+
+ *
+ *
+ *
+*/
+
+func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
+	controller.log.Info("add job offer", offer)
+	return controller.solverClient.AddJobOffer(offer)
 }
 
 /*
@@ -70,7 +90,7 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealAdded {
 			if ev.Deal == nil {
-				system.Error(system.JobCreatorService, "solver event", fmt.Errorf("RP received nil deal"))
+				controller.log.Error("solver event", fmt.Errorf("RP received nil deal"))
 				return
 			}
 
@@ -92,13 +112,13 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId.String())
 		if err != nil {
-			system.Error(system.ResourceProviderService, "error getting deal", err)
+			controller.log.Error("error getting deal", err)
 			return
 		}
 		if deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
 			return
 		}
-		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
+		controller.log.Info("StorageDealStateChange", ev)
 		controller.loop.Trigger()
 	})
 	return nil
@@ -162,7 +182,11 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 */
 
 func (controller *JobCreatorController) solve() error {
-	system.Debug(system.JobCreatorService, "solving", "")
+	controller.log.Debug("solving", "")
+	err := controller.agreeToDeals()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -171,14 +195,60 @@ func (controller *JobCreatorController) solve() error {
  *
  *
 
- Data
+ Agree to deals
 
  *
  *
  *
 */
 
-func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
-	system.Info(system.JobCreatorService, "add job offer", offer)
-	return controller.solverClient.AddJobOffer(offer)
+// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
+func (controller *JobCreatorController) agreeToDeals() error {
+	// load the deals that are in DealNegotiating
+	// and do not have a TransactionsResourceProvider.Agree tx
+	matchedDeals, err := controller.solverClient.GetDealsWithFilter(
+		store.GetDealsQuery{
+			JobCreator: controller.web3SDK.GetAddress().String(),
+			State:      "DealNegotiating",
+		},
+		// this is where the solver has found us a match and we need to agree to it
+		func(dealContainer data.DealContainer) bool {
+			return dealContainer.Transactions.JobCreator.Agree == ""
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if len(matchedDeals) <= 0 {
+		return nil
+	}
+
+	// map over the deals and agree to them
+	for _, dealContainer := range matchedDeals {
+		controller.log.Info("agree", dealContainer)
+		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			controller.log.Error("error calling agree tx for deal", err)
+			continue
+		}
+		controller.log.Info("agree tx", tx)
+
+		// we have agreed to the deal so we need to update the tx in the solver
+		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
+			Agree: tx,
+		})
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			controller.log.Error("error calling agree tx for deal", err)
+			continue
+		}
+		controller.log.Info("updated deal with agree tx", tx)
+	}
+
+	return err
 }

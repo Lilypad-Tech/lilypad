@@ -20,6 +20,7 @@ type ResourceProviderController struct {
 	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
 	loop         *system.ControlLoop
+	log          *system.ServiceLogger
 }
 
 // the background "even if we have not heard of an event" loop
@@ -51,6 +52,7 @@ func NewResourceProviderController(
 		options:      options,
 		web3SDK:      web3SDK,
 		web3Events:   web3.NewEventChannels(),
+		log:          system.NewServiceLogger(system.ResourceProviderService),
 	}
 	return controller, nil
 }
@@ -71,7 +73,7 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealAdded {
 			if ev.Deal == nil {
-				system.Error(system.ResourceProviderService, "solver event", fmt.Errorf("RP received nil deal"))
+				controller.log.Error("solver event", fmt.Errorf("RP received nil deal"))
 				return
 			}
 
@@ -93,13 +95,13 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId.String())
 		if err != nil {
-			system.Error(system.ResourceProviderService, "error getting deal", err)
+			controller.log.Error("error getting deal", err)
 			return
 		}
 		if deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
 			return
 		}
-		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
+		controller.log.Info("StorageDealStateChange", ev)
 		controller.loop.Trigger()
 	})
 	return nil
@@ -163,7 +165,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 */
 
 func (controller *ResourceProviderController) solve() error {
-	system.Debug(system.ResourceProviderService, "solving", "")
+	controller.log.Debug("solving", "")
 	err := controller.agreeToDeals()
 	if err != nil {
 		return err
@@ -210,16 +212,16 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 
 	// map over the deals and agree to them
 	for _, dealContainer := range matchedDeals {
-		system.Info(system.ResourceProviderService, "agree", dealContainer)
+		controller.log.Info("agree", dealContainer)
 		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
 			// TODO: we need a way of deciding based on certain classes of error what happens
 			// some will be retryable - otherwise will be fatal
 			// we need a way to exit a job loop as a baseline
-			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
+			controller.log.Error("error calling agree tx for deal", err)
 			continue
 		}
-		system.Info(system.ResourceProviderService, "agree tx", tx)
+		controller.log.Info("agree tx", tx)
 
 		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
@@ -229,10 +231,10 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 			// TODO: we need a way of deciding based on certain classes of error what happens
 			// some will be retryable - otherwise will be fatal
 			// we need a way to exit a job loop as a baseline
-			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
+			controller.log.Error("error calling agree tx for deal", err)
 			continue
 		}
-		system.Info(system.ResourceProviderService, "updated deal with agree tx", tx)
+		controller.log.Info("updated deal with agree tx", tx)
 	}
 
 	return err
@@ -306,7 +308,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 	// add the resource offers we need to add
 	for _, resourceOffer := range addResourceOffers {
-		system.Info(system.ResourceProviderService, "add resource offer", resourceOffer)
+		controller.log.Info("add resource offer", resourceOffer)
 		_, err := controller.solverClient.AddResourceOffer(resourceOffer)
 		if err != nil {
 			return err
