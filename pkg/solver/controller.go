@@ -220,7 +220,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 
 	system.Info(system.SolverService, "add job offer", jobOffer)
 
-	ret, err := controller.store.AddJobOffer(getJobOfferContainer(jobOffer))
+	ret, err := controller.store.AddJobOffer(data.GetJobOfferContainer(jobOffer))
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	system.Info(system.SolverService, "add resource offer", resourceOffer)
 
-	ret, err := controller.store.AddResourceOffer(getResourceOfferContainer(resourceOffer))
+	ret, err := controller.store.AddResourceOffer(data.GetResourceOfferContainer(resourceOffer))
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 
 	system.Info(system.SolverService, "add deal", deal)
 
-	ret, err := controller.store.AddDeal(getDealContainer(deal))
+	ret, err := controller.store.AddDeal(data.GetDealContainer(deal))
 	if err != nil {
 		return nil, err
 	}
@@ -330,13 +330,13 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 	return ret, nil
 }
 
-func (controller *SolverController) updateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
-	system.Info(system.SolverService, "resource provider txs", data)
-	ret, err := controller.store.UpdateDealTransactionsResourceProvider(id, data)
+func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
+	system.Info(system.SolverService, "resource provider txs", payload)
+	ret, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
 	if err != nil {
 		return nil, err
 	}
-	dealContainer := getDealContainer(ret.Deal)
+	dealContainer := data.GetDealContainer(ret.Deal)
 	controller.writeEvent(SolverEvent{
 		EventType: ResourceProviderTransactionsUpdated,
 		Deal:      &dealContainer,
@@ -344,13 +344,13 @@ func (controller *SolverController) updateDealTransactionsResourceProvider(id st
 	return ret, nil
 }
 
-func (controller *SolverController) updateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
-	system.Info(system.SolverService, "job creator txs", data)
-	ret, err := controller.store.UpdateDealTransactionsJobCreator(id, data)
+func (controller *SolverController) updateDealTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (*data.DealContainer, error) {
+	system.Info(system.SolverService, "job creator txs", payload)
+	ret, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err
 	}
-	dealContainer := getDealContainer(ret.Deal)
+	dealContainer := data.GetDealContainer(ret.Deal)
 	controller.writeEvent(SolverEvent{
 		EventType: JobCreatorTransactionsUpdated,
 		Deal:      &dealContainer,

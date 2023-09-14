@@ -101,7 +101,7 @@ func doOffersMatch(
 		}
 	}
 
-	mutualMediators := getMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
+	mutualMediators := data.GetMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
 	if len(mutualMediators) == 0 {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
@@ -173,7 +173,7 @@ func getMatchingDeals(
 			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
 
 			cheapestResourceOffer := matchingResourceOffers[0]
-			deal, err := getDeal(jobOffer.JobOffer, cheapestResourceOffer)
+			deal, err := data.GetDeal(jobOffer.JobOffer, cheapestResourceOffer)
 			if err != nil {
 				return nil, err
 			}

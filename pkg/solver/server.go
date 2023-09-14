@@ -171,7 +171,7 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 	if signerAddress != jobOffer.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
-	err = checkJobOffer(jobOffer)
+	err = data.CheckJobOffer(jobOffer)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking job offer")
 		return nil, err
@@ -189,7 +189,7 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	if signerAddress != resourceOffer.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
-	err = checkResourceOffer(resourceOffer)
+	err = data.CheckResourceOffer(resourceOffer)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking resource offer")
 		return nil, err

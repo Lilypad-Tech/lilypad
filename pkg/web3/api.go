@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
@@ -90,14 +89,16 @@ func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
 func (sdk *Web3SDK) Agree(
 	deal data.Deal,
 ) (string, error) {
-	fmt.Printf("calling agree --------------------------------------\n")
-	spew.Dump(deal)
+	mediators := []common.Address{}
+	for _, mediator := range deal.Members.Mediators {
+		mediators = append(mediators, common.HexToAddress(mediator))
+	}
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
 		deal.ID,
-		controller.SharedStructsDealMembers{},
-		controller.SharedStructsDealTimeouts{},
-		controller.SharedStructsDealPricing{},
+		data.ConvertDealMembers(deal.Members),
+		data.ConvertDealTimeouts(deal.Timeouts),
+		data.ConvertDealPricing(deal.Pricing),
 	)
 	fmt.Printf("tx --------------------------------------\n")
 	spew.Dump(tx)
