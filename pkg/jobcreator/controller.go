@@ -237,7 +237,7 @@ func (controller *JobCreatorController) agreeToDeals() error {
 		controller.log.Info("agree tx", tx)
 
 		// we have agreed to the deal so we need to update the tx in the solver
-		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
+		_, err = controller.solverClient.UpdateTransactionsJobCreator(dealContainer.ID, data.DealTransactionsJobCreator{
 			Agree: tx,
 		})
 		if err != nil {
