@@ -100,6 +100,20 @@ func (client *SolverClient) GetDeals(query store.GetDealsQuery) ([]data.DealCont
 	return http.GetRequest[[]data.DealContainer](client.options, "/deals", queryParams)
 }
 
+func (client *SolverClient) GetDealsWithFilter(query store.GetDealsQuery, filter func(data.DealContainer) bool) ([]data.DealContainer, error) {
+	deals, err := client.GetDeals(query)
+	if err != nil {
+		return nil, err
+	}
+	ret := []data.DealContainer{}
+	for _, deal := range deals {
+		if filter(deal) {
+			ret = append(ret, deal)
+		}
+	}
+	return ret, nil
+}
+
 func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOfferContainer, error) {
 	return http.PostRequest[data.JobOffer, data.JobOfferContainer](client.options, "/job_offers", jobOffer)
 }

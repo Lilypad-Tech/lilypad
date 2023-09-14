@@ -73,6 +73,8 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 			if ev.Deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
 				return
 			}
+
+			// trigger the solver
 		}
 	})
 	return nil
@@ -80,7 +82,11 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 
 func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		// check if this deal is for us
+		// trigger the solver
+
 		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
+
 	})
 	return nil
 }
@@ -163,23 +169,29 @@ func (controller *ResourceProviderController) solve() error {
  *
 */
 
-// list the deals we have been assigned to that we have not yet posted to the contract
+// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *ResourceProviderController) agreeToDeals() error {
 	// load the deals that are in DealNegotiating
 	// and do not have a TransactionsResourceProvider.Agree tx
-	negotiatingDeals, err := controller.solverClient.GetDeals(store.GetDealsQuery{
-		ResourceProvider: controller.web3SDK.GetAddress().String(),
-		State:            "DealNegotiating",
-	})
+	matchedDeals, err := controller.solverClient.GetDealsWithFilter(
+		store.GetDealsQuery{
+			ResourceProvider: controller.web3SDK.GetAddress().String(),
+			State:            "DealNegotiating",
+		},
+		// this is where the solver has found us a match and we need to agree to it
+		func(dealContainer data.DealContainer) bool {
+			return dealContainer.TransactionsResourceProvider.Agree == ""
+		},
+	)
 	if err != nil {
 		return err
 	}
-	if len(negotiatingDeals) <= 0 {
+	if len(matchedDeals) <= 0 {
 		return nil
 	}
 
 	// map over the deals and agree to them
-	for _, dealContainer := range negotiatingDeals {
+	for _, dealContainer := range matchedDeals {
 		system.Info(system.ResourceProviderService, "agree", dealContainer)
 		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
@@ -189,9 +201,9 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 			system.Error(system.ResourceProviderService, "error calling agree tx for deal", err)
 			continue
 		}
-		system.Info(system.ResourceProviderService, "tx", tx)
+		system.Info(system.ResourceProviderService, "agree tx", tx)
 
-		// we have agreed to the deal so we need to update the deal in the solver
+		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
 			Agree: tx,
 		})
@@ -203,7 +215,6 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 			continue
 		}
 		system.Info(system.ResourceProviderService, "updated deal with agree tx", tx)
-
 	}
 
 	return err
