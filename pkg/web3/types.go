@@ -20,9 +20,6 @@ type Web3Options struct {
 	UsersAddress      string `json:"users_address"`
 	MediationAddress  string `json:"mediation_address"`
 	TokenAddress      string `json:"token_address"`
-
-	// service addresses
-	SolverAddress string `json:"solver_address"`
 }
 
 type EventChannelCollection interface {

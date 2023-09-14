@@ -2,7 +2,6 @@ package resourceprovider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -39,7 +38,7 @@ type ResourceProviderOfferOptions struct {
 	ModuleTimeouts map[string]data.DealTimeouts
 
 	// which mediators and directories this RP will trust
-	TrustedParties data.TrustedParties
+	Services data.ServiceConfig
 }
 
 type ResourceProviderOptions struct {
@@ -57,9 +56,6 @@ func NewResourceProvider(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 ) (*ResourceProvider, error) {
-	if options.Web3.SolverAddress == "" {
-		return nil, fmt.Errorf("--web3-solver-address or WEB3_SOLVER_ADDRESS is empty")
-	}
 	controller, err := NewResourceProviderController(options, web3SDK)
 	if err != nil {
 		return nil, err

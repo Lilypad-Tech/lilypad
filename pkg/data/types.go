@@ -82,9 +82,9 @@ const (
 // the mediator and directory services that are trusted
 // by the RP and JC - the solver will find an intersection
 // of these and attach them to the deal
-type TrustedParties struct {
-	Mediator  []string `json:"mediator"`
-	Directory []string `json:"directory"`
+type ServiceConfig struct {
+	Solver   string   `json:"solver"`
+	Mediator []string `json:"mediator"`
 }
 
 // posted to the solver by a job creator
@@ -112,7 +112,7 @@ type JobOffer struct {
 	Timeouts DealTimeouts `json:"timeouts"`
 
 	// which parties are trusted by the job creator
-	TrustedParties TrustedParties `json:"trusted_parties"`
+	Services ServiceConfig `json:"trusted_parties"`
 }
 
 // this is what the solver keeps track of so we can know
@@ -156,7 +156,7 @@ type ResourceOffer struct {
 	ModuleTimeouts map[string]DealTimeouts `json:"module_timeouts"`
 
 	// which parties are trusted by the resource provider
-	TrustedParties TrustedParties `json:"trusted_parties"`
+	Services ServiceConfig `json:"trusted_parties"`
 }
 
 // this is what the solver keeps track of so we can know
@@ -170,9 +170,9 @@ type ResourceOfferContainer struct {
 }
 
 type DealMembers struct {
+	Solver           string   `json:"solver"`
 	JobCreator       string   `json:"job_creator"`
 	ResourceProvider string   `json:"resource_provider"`
-	Directory        string   `json:"directory"`
 	Mediators        []string `json:"mediators"`
 }
 

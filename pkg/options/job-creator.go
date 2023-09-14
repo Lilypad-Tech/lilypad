@@ -17,11 +17,11 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
 		Module: GetDefaultModuleOptions(),
 		// this is the default pricing mode for an JC
-		Mode:           GetDefaultPricingMode(data.MarketPrice),
-		Pricing:        GetDefaultPricingOptions(),
-		Timeouts:       GetDefaultTimeoutOptions(),
-		Inputs:         map[string]string{},
-		TrustedParties: GetDefaultTrustedPartyOptions(),
+		Mode:     GetDefaultPricingMode(data.MarketPrice),
+		Pricing:  GetDefaultPricingOptions(),
+		Timeouts: GetDefaultTimeoutOptions(),
+		Inputs:   map[string]string{},
+		Services: GetDefaultServicesOptions(),
 	}
 }
 
@@ -33,7 +33,7 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 	AddPricingCliFlags(cmd, &offerOptions.Pricing)
 	AddTimeoutCliFlags(cmd, &offerOptions.Timeouts)
 	AddModuleCliFlags(cmd, &offerOptions.Module)
-	AddTrustedPartyCliFlags(cmd, &offerOptions.TrustedParties)
+	AddServicesCliFlags(cmd, &offerOptions.Services)
 }
 
 func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOptions) {
@@ -42,11 +42,15 @@ func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOpt
 }
 
 func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
-	err := CheckWeb3Options(options.Web3, true)
+	err := CheckWeb3Options(options.Web3)
 	if err != nil {
 		return err
 	}
 	err = CheckModuleOptions(options.Offer.Module)
+	if err != nil {
+		return err
+	}
+	err = CheckServicesOptions(options.Offer.Services)
 	if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
 	LogSolverEvent(system.GetServiceBadge(service), ev)
 }
 
-func getMutualTrustedParties(a []string, b []string) []string {
+func getMutualServices(a []string, b []string) []string {
 	mutual := []string{}
 	for _, aParty := range a {
 		for _, bParty := range b {
@@ -65,14 +65,20 @@ func getDeal(
 	jobOffer data.JobOffer,
 	resourceOffer data.ResourceOffer,
 ) (data.Deal, error) {
-	mutualMediators := getMutualTrustedParties(resourceOffer.TrustedParties.Mediator, jobOffer.TrustedParties.Mediator)
-	mutualDirectories := getMutualTrustedParties(resourceOffer.TrustedParties.Directory, jobOffer.TrustedParties.Directory)
+	mutualMediators := getMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
+	if len(mutualMediators) <= 0 {
+		return data.Deal{}, fmt.Errorf("no mutual mediators")
+	}
+
+	if jobOffer.Services.Solver != resourceOffer.Services.Solver {
+		return data.Deal{}, fmt.Errorf("no mutual solver")
+	}
 
 	dealData := data.Deal{
 		Members: data.DealMembers{
+			Solver:           jobOffer.Services.Solver,
 			JobCreator:       jobOffer.JobCreator,
 			ResourceProvider: resourceOffer.ResourceProvider,
-			Directory:        mutualDirectories[0],
 			Mediators:        mutualMediators,
 		},
 		// TODO: this assumes marketing pricing for the client
@@ -138,11 +144,11 @@ func checkResourceOffer(resourceOffer data.ResourceOffer) error {
 		return fmt.Errorf("resource offer mode cannot be market price")
 	}
 
-	if len(resourceOffer.TrustedParties.Directory) <= 0 {
-		return fmt.Errorf("resource offer must have at least one trusted directory")
+	if resourceOffer.Services.Solver == "" {
+		return fmt.Errorf("resource offer must name it's solver")
 	}
 
-	if len(resourceOffer.TrustedParties.Mediator) <= 0 {
+	if len(resourceOffer.Services.Mediator) <= 0 {
 		return fmt.Errorf("resource offer must have at least one trusted mediator")
 	}
 
@@ -150,11 +156,11 @@ func checkResourceOffer(resourceOffer data.ResourceOffer) error {
 }
 
 func checkJobOffer(jobOffer data.JobOffer) error {
-	if len(jobOffer.TrustedParties.Directory) <= 0 {
-		return fmt.Errorf("job offer must have at least one trusted directory")
+	if jobOffer.Services.Solver == "" {
+		return fmt.Errorf("job offer must name it's solver")
 	}
 
-	if len(jobOffer.TrustedParties.Mediator) <= 0 {
+	if len(jobOffer.Services.Mediator) <= 0 {
 		return fmt.Errorf("job offer must have at least one trusted mediator")
 	}
 

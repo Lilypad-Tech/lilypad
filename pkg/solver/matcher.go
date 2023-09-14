@@ -101,7 +101,7 @@ func doOffersMatch(
 		}
 	}
 
-	mutualMediators := getMutualTrustedParties(resourceOffer.TrustedParties.Mediator, jobOffer.TrustedParties.Mediator)
+	mutualMediators := getMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
 	if len(mutualMediators) == 0 {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
@@ -110,12 +110,11 @@ func doOffersMatch(
 		return false
 	}
 
-	mutualDirectories := getMutualTrustedParties(resourceOffer.TrustedParties.Directory, jobOffer.TrustedParties.Directory)
-	if len(mutualDirectories) == 0 {
+	if resourceOffer.Services.Solver != jobOffer.Services.Solver {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
 			Str("job offer", jobOffer.ID).
-			Msgf("no matching mutual directories")
+			Msgf("no matching solver")
 		return false
 	}
 

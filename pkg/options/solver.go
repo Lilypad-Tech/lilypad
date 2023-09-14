@@ -18,7 +18,7 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 }
 
 func CheckSolverOptions(options solver.SolverOptions) error {
-	err := CheckWeb3Options(options.Web3, false)
+	err := CheckWeb3Options(options.Web3)
 	if err != nil {
 		return err
 	}

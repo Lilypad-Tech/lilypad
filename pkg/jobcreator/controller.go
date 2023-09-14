@@ -26,7 +26,7 @@ func NewJobCreatorController(
 	web3SDK *web3.Web3SDK,
 ) (*JobCreatorController, error) {
 	// we know the address of the solver but what is it's url?
-	solverUrl, err := web3SDK.GetSolverUrl(options.Web3.SolverAddress)
+	solverUrl, err := web3SDK.GetSolverUrl(options.Offer.Services.Solver)
 	if err != nil {
 		return nil, err
 	}

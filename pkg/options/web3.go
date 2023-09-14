@@ -22,9 +22,6 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
-
-		// service addresses
-		SolverAddress: GetDefaultServeOptionString("WEB3_SOLVER_ADDRESS", ""),
 	}
 }
 
@@ -64,14 +61,9 @@ func AddWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
 		&web3Options.TokenAddress, "web3-token-address", web3Options.TokenAddress,
 		`The address of the token contract (WEB3_TOKEN_ADDRESS).`,
 	)
-
-	cmd.PersistentFlags().StringVar(
-		&web3Options.TokenAddress, "web3-solver-address", web3Options.SolverAddress,
-		`The address of the solver service (WEB3_SOLVER_ADDRESS).`,
-	)
 }
 
-func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
+func CheckWeb3Options(options web3.Web3Options) error {
 
 	// core settings
 	if options.RpcURL == "" {
@@ -85,14 +77,6 @@ func CheckWeb3Options(options web3.Web3Options, checkForServices bool) error {
 	// we can load the rest of the addresses from the controller address if needed
 	if options.ControllerAddress == "" {
 		return fmt.Errorf("WEB3_CONTROLLER_ADDRESS is required")
-	}
-
-	//
-	if checkForServices {
-		// service addresses
-		if options.SolverAddress == "" {
-			return fmt.Errorf("WEB3_SOLVER_ADDRESS is required")
-		}
 	}
 
 	return nil

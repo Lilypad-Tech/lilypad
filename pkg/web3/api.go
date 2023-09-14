@@ -6,6 +6,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -89,9 +90,8 @@ func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
 func (sdk *Web3SDK) Agree(
 	deal data.Deal,
 ) (string, error) {
-	if len(deal.ID) != 32 {
-		return "", fmt.Errorf("The deal ID must be exactly 32 bytes long: %s", deal.ID)
-	}
+	fmt.Printf("calling agree --------------------------------------\n")
+	spew.Dump(deal)
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
 		deal.ID,
@@ -99,6 +99,8 @@ func (sdk *Web3SDK) Agree(
 		controller.SharedStructsDealTimeouts{},
 		controller.SharedStructsDealPricing{},
 	)
+	fmt.Printf("tx --------------------------------------\n")
+	spew.Dump(tx)
 	if err != nil {
 		return "", err
 	}

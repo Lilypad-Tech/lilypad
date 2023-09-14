@@ -218,9 +218,8 @@ function run() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export TRUSTED_MEDIATORS=$MEDIATOR_ADDRESS
-  export TRUSTED_DIRECTORIES=$DIRECTORY_ADDRESS
+  export SOLVER=$SOLVER_ADDRESS
+  export MEDIATORS=$MEDIATOR_ADDRESS
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
   go run . run "$@"
@@ -239,9 +238,8 @@ function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
-  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export TRUSTED_MEDIATORS=$MEDIATOR_ADDRESS
-  export TRUSTED_DIRECTORIES=$DIRECTORY_ADDRESS
+  export SOLVER=$SOLVER_ADDRESS
+  export MEDIATORS=$MEDIATOR_ADDRESS
   go run . resource-provider "$@"
 }
 
@@ -251,15 +249,6 @@ function mediator() {
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   go run . mediator "$@"
-}
-
-function directory() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$DIRECTORY_PRIVATE_KEY
-  export SERVER_PORT=8081
-  export SERVER_URL=http://localhost:8081
-  go run . directory "$@"
 }
 
 ############################################################################

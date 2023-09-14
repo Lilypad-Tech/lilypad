@@ -16,7 +16,7 @@ func AddMediatorCliFlags(cmd *cobra.Command, options *mediator.MediatorOptions) 
 }
 
 func CheckMediatorOptions(options mediator.MediatorOptions) error {
-	err := CheckWeb3Options(options.Web3, true)
+	err := CheckWeb3Options(options.Web3)
 	if err != nil {
 		return err
 	}

@@ -7,9 +7,9 @@ import (
 )
 
 func TestDoOffersMatch(t *testing.T) {
-	trustedParties := data.TrustedParties{
-		Mediator:  []string{"apples"},
-		Directory: []string{"oranges"},
+	services := data.ServiceConfig{
+		Solver:   "oranges",
+		Mediator: []string{"apples"},
 	}
 
 	basicResourceOffer := data.ResourceOffer{
@@ -21,8 +21,8 @@ func TestDoOffersMatch(t *testing.T) {
 		DefaultPricing: data.DealPricing{
 			InstructionPrice: 10,
 		},
-		Mode:           data.FixedPrice,
-		TrustedParties: trustedParties,
+		Mode:     data.FixedPrice,
+		Services: services,
 	}
 
 	basicJobOffer := data.JobOffer{
@@ -31,8 +31,8 @@ func TestDoOffersMatch(t *testing.T) {
 			GPU: 1000,
 			RAM: 1024,
 		},
-		Mode:           data.MarketPrice,
-		TrustedParties: trustedParties,
+		Mode:     data.MarketPrice,
+		Services: services,
 	}
 
 	testCases := []struct {
@@ -65,11 +65,11 @@ func TestDoOffersMatch(t *testing.T) {
 		{
 			name: "Empty mediators",
 			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.TrustedParties.Mediator = []string{}
+				offer.Services.Mediator = []string{}
 				return offer
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.TrustedParties.Mediator = []string{}
+				offer.Services.Mediator = []string{}
 				return offer
 			},
 			shouldMatch: false,
@@ -77,7 +77,7 @@ func TestDoOffersMatch(t *testing.T) {
 		{
 			name: "Mis-matched mediators",
 			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.TrustedParties.Mediator = []string{"apples2"}
+				offer.Services.Mediator = []string{"apples2"}
 				return offer
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
@@ -88,7 +88,7 @@ func TestDoOffersMatch(t *testing.T) {
 		{
 			name: "Different but matching mediators",
 			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.TrustedParties.Mediator = []string{"apples2", "apples"}
+				offer.Services.Mediator = []string{"apples2", "apples"}
 				return offer
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
@@ -97,15 +97,15 @@ func TestDoOffersMatch(t *testing.T) {
 			shouldMatch: true,
 		},
 		{
-			name: "Different but matching directories",
+			name: "Different solver",
 			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.TrustedParties.Directory = []string{"oranges2", "oranges"}
+				offer.Services.Solver = "pears"
 				return offer
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				return offer
 			},
-			shouldMatch: true,
+			shouldMatch: false,
 		},
 		{
 			name: "Fixed price - too expensive",

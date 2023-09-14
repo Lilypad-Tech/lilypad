@@ -28,7 +28,7 @@ type JobCreatorOfferOptions struct {
 	// the inputs to the module
 	Inputs map[string]string
 	// which mediators and directories this RP will trust
-	TrustedParties data.TrustedParties
+	Services data.ServiceConfig
 }
 
 type JobCreatorOptions struct {
@@ -46,9 +46,6 @@ func NewJobCreator(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
 ) (*JobCreator, error) {
-	if options.Web3.SolverAddress == "" {
-		return nil, fmt.Errorf("--web3-solver-address or WEB3_SOLVER_ADDRESS is empty")
-	}
 	controller, err := NewJobCreatorController(options, web3SDK)
 	if err != nil {
 		return nil, err
@@ -77,15 +74,15 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 
 	return data.JobOffer{
 		// assign CreatedAt to the current millisecond timestamp
-		CreatedAt:      int(time.Now().UnixNano() / int64(time.Millisecond)),
-		JobCreator:     jobCreator.web3SDK.GetAddress().String(),
-		Module:         options.Module,
-		Spec:           loadedModule.Machine,
-		Inputs:         options.Inputs,
-		Mode:           options.Mode,
-		Pricing:        options.Pricing,
-		Timeouts:       options.Timeouts,
-		TrustedParties: options.TrustedParties,
+		CreatedAt:  int(time.Now().UnixNano() / int64(time.Millisecond)),
+		JobCreator: jobCreator.web3SDK.GetAddress().String(),
+		Module:     options.Module,
+		Spec:       loadedModule.Machine,
+		Inputs:     options.Inputs,
+		Mode:       options.Mode,
+		Pricing:    options.Pricing,
+		Timeouts:   options.Timeouts,
+		Services:   options.Services,
 	}, nil
 }
 

@@ -27,7 +27,7 @@ func NewResourceProviderController(
 	web3SDK *web3.Web3SDK,
 ) (*ResourceProviderController, error) {
 	// we know the address of the solver but what is it's url?
-	solverUrl, err := web3SDK.GetSolverUrl(options.Web3.SolverAddress)
+	solverUrl, err := web3SDK.GetSolverUrl(options.Offers.Services.Solver)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
 		ModulePricing:    map[string]data.DealPricing{},
 		ModuleTimeouts:   map[string]data.DealTimeouts{},
-		TrustedParties:   controller.options.Offers.TrustedParties,
+		Services:         controller.options.Offers.Services,
 	}
 }
 
