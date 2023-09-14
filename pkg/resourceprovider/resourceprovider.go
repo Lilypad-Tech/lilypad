@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/executor"
 	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
@@ -61,8 +62,9 @@ type ResourceProvider struct {
 func NewResourceProvider(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
+	executor executor.Executor,
 ) (*ResourceProvider, error) {
-	controller, err := NewResourceProviderController(options, web3SDK)
+	controller, err := NewResourceProviderController(options, web3SDK, executor)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/executor"
 	"github.com/bacalhau-project/lilypad/pkg/http"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
@@ -22,6 +23,7 @@ type ResourceProviderController struct {
 	web3Events   *web3.EventChannels
 	loop         *system.ControlLoop
 	log          *system.ServiceLogger
+	executor     executor.Executor
 }
 
 // the background "even if we have not heard of an event" loop
@@ -33,6 +35,7 @@ const CONTROL_LOOP_INTERVAL = 10 * time.Second
 func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
+	executor executor.Executor,
 ) (*ResourceProviderController, error) {
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Offers.Services.Solver)
@@ -54,6 +57,7 @@ func NewResourceProviderController(
 		web3SDK:      web3SDK,
 		web3Events:   web3.NewEventChannels(),
 		log:          system.NewServiceLogger(system.ResourceProviderService),
+		executor:     executor,
 	}
 	return controller, nil
 }

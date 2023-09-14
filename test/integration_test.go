@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/executor/noop"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
@@ -55,7 +56,12 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 		return nil, err
 	}
 
-	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK)
+	executor, err := noop.NewNoopExecutor()
+	if err != nil {
+		return nil, err
+	}
+
+	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK, executor)
 }
 
 func getJobCreatorOptions() (jobcreator.JobCreatorOptions, error) {

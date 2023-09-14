@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -39,7 +40,12 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK)
+	executor, err := bacalhau.NewBacalhauExecutor(options.Executor.Bacalhau)
+	if err != nil {
+		return err
+	}
+
+	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor)
 	if err != nil {
 		return err
 	}
