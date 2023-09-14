@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -47,4 +48,8 @@ func Debug(service Service, title string, data interface{}) {
 
 func Trace(service Service, title string, data interface{}) {
 	logWithCaller(4, zerolog.TraceLevel, service, title, data)
+}
+
+func DumpObject(d interface{}) {
+	spew.Dump(d)
 }

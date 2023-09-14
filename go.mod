@@ -3,6 +3,7 @@ module github.com/bacalhau-project/lilypad
 go 1.20
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/gorilla/mux v1.8.0
@@ -23,7 +24,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect

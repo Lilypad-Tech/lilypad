@@ -15,7 +15,7 @@ const (
 func GetServiceBadge(service Service) string {
 	switch service {
 	case SolverService:
-		return "🔴 SOL"
+		return "🟡 SOL"
 	case ResourceProviderService:
 		return "🔵 RP"
 	case JobCreatorService:
