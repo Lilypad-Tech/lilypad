@@ -12,6 +12,7 @@ type SolverStoreMemory struct {
 	jobOfferMap      map[string]*data.JobOfferContainer
 	resourceOfferMap map[string]*data.ResourceOfferContainer
 	dealMap          map[string]*data.DealContainer
+	resultMap        map[string]*data.Result
 	matchDecisionMap map[string]*data.MatchDecision
 	mutex            sync.RWMutex
 }
@@ -25,6 +26,7 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 		jobOfferMap:      map[string]*data.JobOfferContainer{},
 		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
 		dealMap:          map[string]*data.DealContainer{},
+		resultMap:        map[string]*data.Result{},
 		matchDecisionMap: map[string]*data.MatchDecision{},
 	}, nil
 }
@@ -44,8 +46,17 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOfferCon
 }
 
 func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.dealMap[deal.ID] = &deal
 	return &deal, nil
+}
+
+func (s *SolverStoreMemory) AddResult(result data.Result) (*data.Result, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.resultMap[result.ID] = &result
+	return &result, nil
 }
 
 func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer string, deal string, result bool) (*data.MatchDecision, error) {
@@ -169,6 +180,16 @@ func (s *SolverStoreMemory) GetDeal(id string) (*data.DealContainer, error) {
 		return nil, nil
 	}
 	return deal, nil
+}
+
+func (s *SolverStoreMemory) GetResult(id string) (*data.Result, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	result, ok := s.resultMap[id]
+	if !ok {
+		return nil, nil
+	}
+	return result, nil
 }
 
 func (s *SolverStoreMemory) GetMatchDecision(resourceOffer string, jobOffer string) (*data.MatchDecision, error) {

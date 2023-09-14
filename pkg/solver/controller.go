@@ -110,22 +110,17 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	return errorChan
 }
 
-func (controller *SolverController) solve() error {
-	// find out which deals we can make from matching the offers
-	deals, err := getMatchingDeals(controller.store)
-	if err != nil {
-		return err
-	}
+/*
+ *
+ *
+ *
 
-	// loop over each of the deals add add them to the store and emit events
-	for _, deal := range deals {
-		_, err := controller.addDeal(deal)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+ Events
+
+ *
+ *
+ *
+*/
 
 // * get the deal id
 // * see if we have the deal locally
@@ -166,6 +161,18 @@ func (controller *SolverController) writeEvent(ev SolverEvent) {
 		handler(ev)
 	}
 }
+
+/*
+ *
+ *
+ *
+
+ Register
+
+ *
+ *
+ *
+*/
 
 func (controller *SolverController) registerAsSolver() error {
 	selfAddress := controller.web3SDK.GetAddress()
@@ -220,6 +227,46 @@ func (controller *SolverController) registerAsSolver() error {
 	return nil
 }
 
+/*
+ *
+ *
+ *
+
+ Solve
+
+ *
+ *
+ *
+*/
+
+func (controller *SolverController) solve() error {
+	// find out which deals we can make from matching the offers
+	deals, err := getMatchingDeals(controller.store)
+	if err != nil {
+		return err
+	}
+
+	// loop over each of the deals add add them to the store and emit events
+	for _, deal := range deals {
+		_, err := controller.addDeal(deal)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/*
+*
+*
+*
+
+# Add Handlers
+
+*
+*
+*
+*/
 func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.JobOfferContainer, error) {
 	id, err := data.GetJobOfferID(jobOffer)
 	if err != nil {
@@ -288,6 +335,17 @@ func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer
 	return ret, nil
 }
 
+/*
+*
+*
+*
+
+# Update Handlers
+
+*
+*
+*
+*/
 func (controller *SolverController) updateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
 	controller.log.Info("update job offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
 
@@ -340,6 +398,17 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 	return dealContainer, nil
 }
 
+/*
+*
+*
+*
+
+# Update TX Handlers
+
+*
+*
+*
+*/
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
 	controller.log.Info("update resource provider txs", payload)
 	dealContainer, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)

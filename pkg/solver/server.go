@@ -1,10 +1,14 @@
 package solver
 
 import (
+	"archive/tar"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	corehttp "net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -14,6 +18,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
+
+const FILES_DIR = "job-files"
 
 type solverServer struct {
 	options    http.ServerOptions
@@ -34,6 +40,18 @@ func NewSolverServer(
 	return server, nil
 }
 
+/*
+ *
+ *
+ *
+
+ Routes
+
+ *
+ *
+ *
+*/
+
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
 	router := mux.NewRouter()
 
@@ -49,6 +67,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(solverServer.addResult)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 
@@ -106,6 +126,17 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	return nil
 }
 
+/*
+*
+*
+*
+
+# Lists
+
+*
+*
+*
+*/
 func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOfferContainer, error) {
 	query := store.GetJobOffersQuery{}
 	// if there is a job_creator query param then assign it
@@ -148,6 +179,17 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 	return solverServer.store.GetDeals(query)
 }
 
+/*
+*
+*
+*
+
+	Getters
+
+*
+*
+*
+*/
 func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
@@ -161,6 +203,17 @@ func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *core
 	return *deal, nil
 }
 
+/*
+*
+*
+*
+
+	Adders
+
+*
+*
+*
+*/
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
@@ -197,6 +250,109 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	return solverServer.controller.addResourceOffer(resourceOffer)
 }
 
+func (solverServer *solverServer) addResult(results data.Result, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Result, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		log.Error().Err(err).Msgf("error loading deal")
+		return nil, err
+	}
+	signerAddress, err := http.GetAddressFromHeaders(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
+		return nil, err
+	}
+	// only the resource provider can add a result
+	if signerAddress != deal.ResourceProvider {
+		return nil, fmt.Errorf("resource provider address does not match signer address")
+	}
+	err = data.CheckResult(results)
+	if err != nil {
+		log.Error().Err(err).Msgf("Error checking resource offer")
+		return nil, err
+	}
+	results.DealID = id
+	return solverServer.store.AddResult(results)
+}
+
+func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := func() error {
+		deal, err := solverServer.store.GetDeal(id)
+		if err != nil {
+			log.Error().Err(err).Msgf("error loading deal")
+			return err
+		}
+		signerAddress, err := http.GetAddressFromHeaders(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("have error parsing user address")
+			return err
+		}
+		// only the resource provider can add a result
+		if signerAddress != deal.ResourceProvider {
+			return fmt.Errorf("resource provider address does not match signer address")
+		}
+		tr := tar.NewReader(req.Body)
+		uploadPath, err := system.DataDir(filepath.Join(FILES_DIR, id))
+		for {
+			header, err := tr.Next()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+			target := filepath.Join(uploadPath, header.Name)
+			switch header.Typeflag {
+			case tar.TypeDir:
+				if err := os.MkdirAll(target, 0755); err != nil {
+					return err
+				}
+			case tar.TypeReg:
+				f, err := os.Create(target)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				if _, err := io.Copy(f, tr); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}()
+
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(res).Encode(data.Result{
+		// TODO: we need to be putting this in IPFS and calculating the CID
+		DataID: id,
+	})
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
+		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		return
+	}
+}
+
+/*
+*
+*
+*
+
+	Updaters
+
+*
+*
+*
+*/
 func (solverServer *solverServer) updateTransactionsResourceProvider(payload data.DealTransactionsResourceProvider, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]

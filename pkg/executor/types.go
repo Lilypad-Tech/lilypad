@@ -10,5 +10,5 @@ type Executor interface {
 	RunJob(
 		deal data.DealContainer,
 		module data.Module,
-	) (string, error)
+	) (string, int, error)
 }

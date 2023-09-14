@@ -165,6 +165,16 @@ func CheckJobOffer(jobOffer JobOffer) error {
 	return nil
 }
 
+func CheckResult(result Result) error {
+	if result.DataID == "" {
+		return fmt.Errorf("result must have a data id")
+	}
+	if result.InstructionCount <= 0 {
+		return fmt.Errorf("result must have a positive instruction count")
+	}
+	return nil
+}
+
 func ConvertDealMembers(
 	members DealMembers,
 ) controller.SharedStructsDealMembers {

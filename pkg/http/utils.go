@@ -304,16 +304,29 @@ func PostRequest[RequestType any, ResultType any](
 	data RequestType,
 ) (ResultType, error) {
 	var result ResultType
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return result, err
+	}
+	return PostRequestBuffer[ResultType](
+		options,
+		path,
+		bytes.NewBuffer(dataBytes),
+	)
+}
+
+func PostRequestBuffer[ResultType any](
+	options ClientOptions,
+	path string,
+	data *bytes.Buffer,
+) (ResultType, error) {
+	var result ResultType
 	client := newRetryClient()
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return result, err
 	}
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		return result, err
-	}
-	req, err := retryablehttp.NewRequest("POST", URL(options, path), bytes.NewBuffer(dataBytes))
+	req, err := retryablehttp.NewRequest("POST", URL(options, path), data)
 	if err != nil {
 		return result, err
 	}

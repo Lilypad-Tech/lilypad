@@ -1,9 +1,14 @@
 package solver
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
@@ -126,10 +131,50 @@ func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (
 	return http.PostRequest[data.ResourceOffer, data.ResourceOfferContainer](client.options, "/resource_offers", resourceOffer)
 }
 
+func (client *SolverClient) AddResult(result data.Result) (data.Result, error) {
+	return http.PostRequest[data.Result, data.Result](client.options, fmt.Sprintf("/deals/%s/results", result.DealID), result)
+}
+
 func (client *SolverClient) UpdateTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (data.DealContainer, error) {
 	return http.PostRequest[data.DealTransactionsResourceProvider, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/resource_provider", id), payload)
 }
 
 func (client *SolverClient) UpdateTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (data.DealContainer, error) {
 	return http.PostRequest[data.DealTransactionsJobCreator, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/job_creator", id), payload)
+}
+
+func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+
+	filepath.Walk(localPath, func(file string, fi os.FileInfo, err error) error {
+		// Create tar header
+		header, err := tar.FileInfoHeader(fi, file)
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(file)
+
+		// Write header
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// Write file content
+		data, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		defer data.Close()
+		if _, err := io.Copy(tw, data); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err := tw.Close(); err != nil {
+		return data.Result{}, err
+	}
+
+	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), &buf)
 }
