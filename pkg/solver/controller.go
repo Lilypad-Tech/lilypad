@@ -338,30 +338,28 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
 	system.Info(system.SolverService, "resource provider txs", payload)
-	ret, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
+	dealContainer, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
 	if err != nil {
 		return nil, err
 	}
-	dealContainer := data.GetDealContainer(ret.Deal)
 	controller.writeEvent(SolverEvent{
 		EventType: ResourceProviderTransactionsUpdated,
-		Deal:      &dealContainer,
+		Deal:      dealContainer,
 	})
-	return ret, nil
+	return dealContainer, nil
 }
 
 func (controller *SolverController) updateDealTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (*data.DealContainer, error) {
 	system.Info(system.SolverService, "job creator txs", payload)
-	ret, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
+	dealContainer, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err
 	}
-	dealContainer := data.GetDealContainer(ret.Deal)
 	controller.writeEvent(SolverEvent{
 		EventType: JobCreatorTransactionsUpdated,
-		Deal:      &dealContainer,
+		Deal:      dealContainer,
 	})
-	return ret, nil
+	return dealContainer, nil
 }
 
 //log.Info().Msgf("solver solving")
