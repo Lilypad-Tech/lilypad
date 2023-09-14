@@ -98,9 +98,8 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 }
 
 func (controller *SolverController) solve() error {
-
 	// find out which deals we can make from matching the offers
-	deals, err := getDeals(controller.store)
+	deals, err := getMatchingDeals(controller.store)
 	if err != nil {
 		return err
 	}
@@ -121,6 +120,14 @@ func (controller *SolverController) solve() error {
 func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		system.Info(system.SolverService, "StorageDealStateChange", ev)
+
+		_, err := controller.updateDealState(ev.DealId.String(), ev.State)
+		if err != nil {
+			system.Error(system.SolverService, "error updating deal state", err)
+			return
+		}
+
+		// update the store with the state change
 		controller.loop.Trigger()
 	})
 	return nil

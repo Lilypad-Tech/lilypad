@@ -122,7 +122,7 @@ func doOffersMatch(
 	return true
 }
 
-func getDeals(
+func getMatchingDeals(
 	db store.SolverStore,
 ) ([]data.Deal, error) {
 	deals := []data.Deal{}
