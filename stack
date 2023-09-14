@@ -218,10 +218,8 @@ function run() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export SOLVER=$SOLVER_ADDRESS
-  export MEDIATORS=$MEDIATOR_ADDRESS
-  export SERVER_PORT=8080
-  export SERVER_URL=http://localhost:8080
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   go run . run "$@"
 }
 
@@ -238,8 +236,8 @@ function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
-  export SOLVER=$SOLVER_ADDRESS
-  export MEDIATORS=$MEDIATOR_ADDRESS
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   go run . resource-provider "$@"
 }
 
