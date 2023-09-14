@@ -19,6 +19,7 @@ type ResourceProviderController struct {
 	options      ResourceProviderOptions
 	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
+	loop         *system.ControlLoop
 }
 
 func NewResourceProviderController(
@@ -61,7 +62,6 @@ func NewResourceProviderController(
 */
 func (controller *ResourceProviderController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealAdded {
 			if ev.Deal == nil {
@@ -74,7 +74,10 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 				return
 			}
 
+			solver.ServiceLogSolverEvent(system.ResourceProviderService, ev)
+
 			// trigger the solver
+			controller.loop.Trigger()
 		}
 	})
 	return nil
@@ -82,11 +85,16 @@ func (controller *ResourceProviderController) subscribeToSolver() error {
 
 func (controller *ResourceProviderController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		// check if this deal is for us
-		// trigger the solver
-
+		deal, err := controller.solverClient.GetDeal(ev.DealId.String())
+		if err != nil {
+			system.Error(system.ResourceProviderService, "error getting deal", err)
+			return
+		}
+		if deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
+			return
+		}
 		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
-
+		controller.loop.Trigger()
 	})
 	return nil
 }
@@ -114,21 +122,21 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		return errorChan
 	}
 
-	go func() {
-		for {
+	controller.loop = system.NewControlLoop(
+		system.ResourceProviderService,
+		ctx,
+		time.Second*10,
+		func() error {
 			err := controller.solve()
 			if err != nil {
-				system.Error(system.ResourceProviderService, "error solving", err)
 				errorChan <- err
-				return
 			}
-			select {
-			case <-time.After(1 * time.Second):
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+			return err
+		},
+	)
+
+	controller.loop.Start()
+
 	return errorChan
 }
 

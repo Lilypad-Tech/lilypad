@@ -100,6 +100,10 @@ func (client *SolverClient) GetDeals(query store.GetDealsQuery) ([]data.DealCont
 	return http.GetRequest[[]data.DealContainer](client.options, "/deals", queryParams)
 }
 
+func (client *SolverClient) GetDeal(id string) (data.DealContainer, error) {
+	return http.GetRequest[data.DealContainer](client.options, fmt.Sprintf("/deals/%s", id), map[string]string{})
+}
+
 func (client *SolverClient) GetDealsWithFilter(query store.GetDealsQuery, filter func(data.DealContainer) bool) ([]data.DealContainer, error) {
 	deals, err := client.GetDeals(query)
 	if err != nil {

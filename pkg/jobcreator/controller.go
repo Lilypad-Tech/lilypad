@@ -11,7 +11,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/rs/zerolog/log"
 )
 
 type JobCreatorController struct {
@@ -19,6 +18,7 @@ type JobCreatorController struct {
 	options      JobCreatorOptions
 	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
+	loop         *system.ControlLoop
 }
 
 func NewJobCreatorController(
@@ -61,7 +61,6 @@ func NewJobCreatorController(
 */
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealAdded {
 			if ev.Deal == nil {
@@ -73,6 +72,11 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 			if ev.Deal.JobCreator != controller.web3SDK.GetAddress().String() {
 				return
 			}
+
+			solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
+
+			// trigger the solver
+			controller.loop.Trigger()
 		}
 	})
 	return nil
@@ -80,7 +84,16 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 
 func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		system.Info(system.JobCreatorService, "StorageDealStateChange", ev)
+		deal, err := controller.solverClient.GetDeal(ev.DealId.String())
+		if err != nil {
+			system.Error(system.ResourceProviderService, "error getting deal", err)
+			return
+		}
+		if deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
+			return
+		}
+		system.Info(system.ResourceProviderService, "StorageDealStateChange", ev)
+		controller.loop.Trigger()
 	})
 	return nil
 }
@@ -108,21 +121,21 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		return errorChan
 	}
 
-	go func() {
-		for {
+	controller.loop = system.NewControlLoop(
+		system.JobCreatorService,
+		ctx,
+		time.Second*10,
+		func() error {
 			err := controller.solve()
 			if err != nil {
-				log.Error().Err(err).Msgf("error solving")
 				errorChan <- err
-				return
 			}
-			select {
-			case <-time.After(1 * time.Second):
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+			return err
+		},
+	)
+
+	controller.loop.Start()
+
 	return errorChan
 }
 

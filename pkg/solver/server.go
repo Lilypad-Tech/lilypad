@@ -48,6 +48,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 
@@ -145,6 +146,19 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 		query.State = state
 	}
 	return solverServer.store.GetDeals(query)
+}
+
+func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		return data.DealContainer{}, err
+	}
+	if deal == nil {
+		return data.DealContainer{}, fmt.Errorf("deal not found")
+	}
+	return *deal, nil
 }
 
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {

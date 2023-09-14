@@ -10,7 +10,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/rs/zerolog/log"
 )
 
 // add an enum for various types of event
@@ -38,6 +37,7 @@ type SolverController struct {
 	web3SDK         *web3.Web3SDK
 	web3Events      *web3.EventChannels
 	store           store.SolverStore
+	loop            *system.ControlLoop
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
 }
@@ -79,21 +79,21 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		return errorChan
 	}
 
-	go func() {
-		for {
+	controller.loop = system.NewControlLoop(
+		system.SolverService,
+		ctx,
+		time.Second*10,
+		func() error {
 			err := controller.solve()
 			if err != nil {
-				log.Error().Err(err).Msgf("error solving")
 				errorChan <- err
-				return
 			}
-			select {
-			case <-time.After(1 * time.Second):
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+			return err
+		},
+	)
+
+	controller.loop.Start()
+
 	return errorChan
 }
 
@@ -121,6 +121,7 @@ func (controller *SolverController) solve() error {
 func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		system.Info(system.SolverService, "StorageDealStateChange", ev)
+		controller.loop.Trigger()
 	})
 	return nil
 }
