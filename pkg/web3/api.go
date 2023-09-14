@@ -6,6 +6,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -45,10 +46,11 @@ func (sdk *Web3SDK) UpdateUser(
 		roles,
 	)
 	if err != nil {
-		system.Error(sdk.Service, "error submitting Users.UpdateUser", err)
+		system.Error(sdk.Options.Service, "error submitting Users.UpdateUser", err)
 		return err
 	} else {
-		system.Info(sdk.Service, "submitted users.UpdateUser", tx)
+		system.Info(sdk.Options.Service, "submitted users.UpdateUser", tx.Hash().String())
+		spew.Dump(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -65,10 +67,11 @@ func (sdk *Web3SDK) AddUserToList(
 		serviceType,
 	)
 	if err != nil {
-		system.Error(sdk.Service, "error submitting Users.AddUserToList", err)
+		system.Error(sdk.Options.Service, "error submitting Users.AddUserToList", err)
 		return err
 	} else {
-		system.Info(sdk.Service, "submitted users.AddUserToList", tx)
+		system.Info(sdk.Options.Service, "submitted users.AddUserToList", tx.Hash().String())
+		spew.Dump(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -107,10 +110,11 @@ func (sdk *Web3SDK) Agree(
 		data.ConvertDealPricing(deal.Pricing),
 	)
 	if err != nil {
-		system.Error(sdk.Service, "error submitting agree tx", err)
+		system.Error(sdk.Options.Service, "error submitting controller.Agree() tx", err)
 		return "", err
 	} else {
-		system.Info(sdk.Service, "submitted agree tx", tx)
+		system.Info(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
+		spew.Dump(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
@@ -33,7 +32,6 @@ type Contracts struct {
 }
 
 type Web3SDK struct {
-	Service      system.Service
 	Options      Web3Options
 	PrivateKey   *ecdsa.PrivateKey
 	Client       *ethclient.Client
