@@ -17,6 +17,23 @@ Get the node modules installed and generate a local .env file with private keys 
 
 ## boot stack
 
+### bacalhau
+
+We need a bacalhau node running on the same machine as the resource provider.
+
+Here is how we got bacalhau up and running:
+
+```bash
+# install the latest bacalhau
+curl -sL https://get.bacalhau.org/install.sh | bash
+# configure this to where you want the ipfs data to be stored
+export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+# run bacalhau as both compute node and requester node
+bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+```
+
+### lilypad
+
 ```bash
 ./stack boot
 ```
