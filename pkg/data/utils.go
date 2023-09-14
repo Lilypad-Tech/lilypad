@@ -182,10 +182,15 @@ func ConvertDealMembers(
 
 func ConvertDealTimeout(
 	timeout DealTimeout,
+	withCollateral bool,
 ) controller.SharedStructsDealTimeout {
+	collateral := big.NewInt(0)
+	if withCollateral {
+		collateral = big.NewInt(int64(timeout.Collateral))
+	}
 	return controller.SharedStructsDealTimeout{
 		Timeout:    big.NewInt(int64(timeout.Timeout)),
-		Collateral: big.NewInt(int64(timeout.Collateral)),
+		Collateral: collateral,
 	}
 }
 
@@ -193,10 +198,10 @@ func ConvertDealTimeouts(
 	timeouts DealTimeouts,
 ) controller.SharedStructsDealTimeouts {
 	return controller.SharedStructsDealTimeouts{
-		Agree:          ConvertDealTimeout(timeouts.Agree),
-		SubmitResults:  ConvertDealTimeout(timeouts.SubmitResults),
-		JudgeResults:   ConvertDealTimeout(timeouts.JudgeResults),
-		MediateResults: ConvertDealTimeout(timeouts.MediateResults),
+		Agree:          ConvertDealTimeout(timeouts.Agree, false),
+		SubmitResults:  ConvertDealTimeout(timeouts.SubmitResults, true),
+		JudgeResults:   ConvertDealTimeout(timeouts.JudgeResults, true),
+		MediateResults: ConvertDealTimeout(timeouts.MediateResults, false),
 	}
 }
 

@@ -73,9 +73,9 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   ) private pure {
     // the cost of the agree timeout cannot be > 0 because the whole point is
     // one party has not paid anything into the contract is what has timed out
-    require(timeouts.agree.collateral == 0, "Agree deposit 0");
+    require(timeouts.agree.collateral == 0, "Agree deposit must be 0");
     // the same is true of the mediation timeout - it's cost cannot be zero
-    require(timeouts.mediateResults.collateral == 0, "Mediate deposit 0");
+    require(timeouts.mediateResults.collateral == 0, "Mediate deposit must be 0");
   }
 
   function compareDealMembers(

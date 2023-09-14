@@ -93,6 +93,8 @@ func (sdk *Web3SDK) Agree(
 	for _, mediator := range deal.Members.Mediators {
 		mediators = append(mediators, common.HexToAddress(mediator))
 	}
+	fmt.Printf("agree --------------------------------------\n")
+	spew.Dump(data.ConvertDealPricing(deal.Pricing))
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
 		deal.ID,
