@@ -41,14 +41,13 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 
 func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*resourceprovider.ResourceProvider, error) {
 	resourceProviderOptions := optionsfactory.NewResourceProviderOptions()
-	newOffersConfig, err := optionsfactory.ProcessResourceProviderOfferOptions(resourceProviderOptions.Offers)
-	if err != nil {
-		return nil, err
-	}
-	resourceProviderOptions.Offers = newOffersConfig
 	resourceProviderOptions.Web3.PrivateKey = os.Getenv("RESOURCE_PROVIDER_PRIVATE_KEY")
 	if resourceProviderOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
+	}
+	resourceProviderOptions, err := optionsfactory.ProcessResourceProviderOptions(resourceProviderOptions)
+	if err != nil {
+		return nil, err
 	}
 
 	web3SDK, err := web3.NewContractSDK(resourceProviderOptions.Web3)
