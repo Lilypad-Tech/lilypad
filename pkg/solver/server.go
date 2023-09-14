@@ -19,8 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const FILES_DIR = "job-files"
-
 type solverServer struct {
 	options    http.ServerOptions
 	controller *SolverController
@@ -65,9 +63,12 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
+	subrouter.HandleFunc("/deals/{id}/files", solverServer.downloadFiles).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
+
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
+
 	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(solverServer.addResult)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
@@ -276,72 +277,6 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	return solverServer.store.AddResult(results)
 }
 
-func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
-	vars := mux.Vars(req)
-	id := vars["id"]
-
-	err := func() error {
-		deal, err := solverServer.store.GetDeal(id)
-		if err != nil {
-			log.Error().Err(err).Msgf("error loading deal")
-			return err
-		}
-		signerAddress, err := http.GetAddressFromHeaders(req)
-		if err != nil {
-			log.Error().Err(err).Msgf("have error parsing user address")
-			return err
-		}
-		// only the resource provider can add a result
-		if signerAddress != deal.ResourceProvider {
-			return fmt.Errorf("resource provider address does not match signer address")
-		}
-		tr := tar.NewReader(req.Body)
-		uploadPath, err := system.DataDir(filepath.Join(FILES_DIR, id))
-		for {
-			header, err := tr.Next()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return err
-			}
-			target := filepath.Join(uploadPath, header.Name)
-			switch header.Typeflag {
-			case tar.TypeDir:
-				if err := os.MkdirAll(target, 0755); err != nil {
-					return err
-				}
-			case tar.TypeReg:
-				f, err := os.Create(target)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if _, err := io.Copy(f, tr); err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	}()
-
-	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
-		return
-	}
-
-	err = json.NewEncoder(res).Encode(data.Result{
-		// TODO: we need to be putting this in IPFS and calculating the CID
-		DataID: id,
-	})
-	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
-		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
-		return
-	}
-}
-
 /*
 *
 *
@@ -391,4 +326,111 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 	return solverServer.controller.updateDealTransactionsJobCreator(id, payload)
+}
+
+/*
+*
+*
+*
+
+	Files
+
+*
+*
+*
+*/
+
+func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := func() error {
+		filesPath, err := GetDealsFilePath(id)
+		if err != nil {
+			return err
+		}
+		buf, err := system.GetTarBuffer(filesPath)
+		if err != nil {
+			return err
+		}
+		res.Header().Set("Content-Disposition", "attachment; filename=archive.tar")
+		res.Header().Set("Content-Type", "application/x-tar")
+		io.Copy(res, buf)
+		return nil
+	}()
+
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		return
+	}
+}
+
+func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := func() error {
+		deal, err := solverServer.store.GetDeal(id)
+		if err != nil {
+			log.Error().Err(err).Msgf("error loading deal")
+			return err
+		}
+		signerAddress, err := http.GetAddressFromHeaders(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("have error parsing user address")
+			return err
+		}
+		// only the resource provider can add a result
+		if signerAddress != deal.ResourceProvider {
+			return fmt.Errorf("resource provider address does not match signer address")
+		}
+		tr := tar.NewReader(req.Body)
+		uploadPath, err := GetDealsFilePath(id)
+		if err != nil {
+			return err
+		}
+		for {
+			header, err := tr.Next()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+			target := filepath.Join(uploadPath, header.Name)
+			switch header.Typeflag {
+			case tar.TypeDir:
+				if err := os.MkdirAll(target, 0755); err != nil {
+					return err
+				}
+			case tar.TypeReg:
+				f, err := os.Create(target)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				if _, err := io.Copy(f, tr); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}()
+
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(res).Encode(data.Result{
+		// TODO: we need to be putting this in IPFS and calculating the CID
+		DataID: id,
+	})
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
+		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		return
+	}
 }

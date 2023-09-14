@@ -260,11 +260,33 @@ func GetRequest[ResultType any](
 	queryParams map[string]string,
 ) (ResultType, error) {
 	var result ResultType
+	buf, err := GetRequestBuffer(
+		options,
+		path,
+		queryParams,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	err = json.Unmarshal(buf.Bytes(), &result)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func GetRequestBuffer(
+	options ClientOptions,
+	path string,
+	queryParams map[string]string,
+) (*bytes.Buffer, error) {
 	client := newRetryClient()
 
 	parsedURL, err := url.Parse(URL(options, path))
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
 	urlValues := url.Values{}
@@ -275,27 +297,22 @@ func GetRequest[ResultType any](
 
 	req, err := retryablehttp.NewRequest("GET", parsedURL.String(), nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, resp.Body)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	// parse body as json into result
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return result, err
-	}
-
-	return result, nil
+	return &buf, nil
 }
 
 func PostRequest[RequestType any, ResultType any](

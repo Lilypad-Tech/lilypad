@@ -2,10 +2,13 @@ package solver
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
+
+const FILES_DIR = "job-files"
 
 func LogSolverEvent(badge string, ev SolverEvent) {
 	switch ev.EventType {
@@ -46,4 +49,8 @@ func LogSolverEvent(badge string, ev SolverEvent) {
 
 func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
 	LogSolverEvent(system.GetServiceBadge(service), ev)
+}
+
+func GetDealsFilePath(id string) (string, error) {
+	return system.DataDir(filepath.Join(FILES_DIR, id))
 }

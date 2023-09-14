@@ -1,14 +1,9 @@
 package solver
 
 import (
-	"archive/tar"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/http"
@@ -144,37 +139,17 @@ func (client *SolverClient) UpdateTransactionsJobCreator(id string, payload data
 }
 
 func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
-	var buf bytes.Buffer
-	tw := tar.NewWriter(&buf)
-
-	filepath.Walk(localPath, func(file string, fi os.FileInfo, err error) error {
-		// Create tar header
-		header, err := tar.FileInfoHeader(fi, file)
-		if err != nil {
-			return err
-		}
-		header.Name = filepath.ToSlash(file)
-
-		// Write header
-		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
-
-		// Write file content
-		data, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-		defer data.Close()
-		if _, err := io.Copy(tw, data); err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err := tw.Close(); err != nil {
+	buf, err := system.GetTarBuffer(localPath)
+	if err != nil {
 		return data.Result{}, err
 	}
+	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), buf)
+}
 
-	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), &buf)
+func (client *SolverClient) DownloadResultFiles(id string, localPath string) error {
+	buf, err := http.GetRequestBuffer(client.options, fmt.Sprintf("/deals/%s/files", id), map[string]string{})
+	if err != nil {
+		return err
+	}
+	return system.ExpandTarBuffer(buf, localPath)
 }
