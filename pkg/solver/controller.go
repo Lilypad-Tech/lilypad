@@ -10,6 +10,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // add an enum for various types of event
@@ -131,10 +132,8 @@ func (controller *SolverController) solve() error {
 // * update the deal state locally
 func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		controller.log.Info("StorageDealStateChange", ev)
-
-		fmt.Printf("ev.Deal %s --------------------------------------\n", ev.DealId)
-
+		controller.log.Info("StorageDealStateChange", "")
+		spew.Dump(ev)
 		_, err := controller.updateDealState(ev.DealId, ev.State)
 		if err != nil {
 			controller.log.Error("error updating deal state", err)
@@ -342,7 +341,7 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 }
 
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
-	controller.log.Info("resource provider txs", payload)
+	controller.log.Info("update resource provider txs", payload)
 	dealContainer, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
 	if err != nil {
 		return nil, err
@@ -355,7 +354,7 @@ func (controller *SolverController) updateDealTransactionsResourceProvider(id st
 }
 
 func (controller *SolverController) updateDealTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (*data.DealContainer, error) {
-	controller.log.Info("job creator txs", payload)
+	controller.log.Info("update job creator txs", payload)
 	dealContainer, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err

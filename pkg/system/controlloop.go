@@ -61,7 +61,6 @@ func (loop *ControlLoop) run() {
 	// this means that only 1 version this of function can be running at a time
 	loop.runMutex.Lock()
 	defer loop.runMutex.Unlock()
-	Info(loop.service, "control loop", "")
 	loop.running = true
 	err := loop.handler()
 	loop.running = false

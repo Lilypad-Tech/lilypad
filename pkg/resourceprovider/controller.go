@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type ResourceProviderController struct {
@@ -101,7 +102,8 @@ func (controller *ResourceProviderController) subscribeToWeb3() error {
 		if deal.ResourceProvider != controller.web3SDK.GetAddress().String() {
 			return
 		}
-		controller.log.Info("StorageDealStateChange", ev)
+		controller.log.Info("StorageDealStateChange", "")
+		spew.Dump(ev)
 		controller.loop.Trigger()
 	})
 	return nil
