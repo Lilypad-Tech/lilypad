@@ -245,15 +245,19 @@ type DealTransactionsMediator struct {
 	MediationRejectResult string `json:"mediation_reject_result"`
 }
 
+type DealTransactions struct {
+	ResourceProvider DealTransactionsResourceProvider `json:"resource_provider"`
+	JobCreator       DealTransactionsJobCreator       `json:"job_creator"`
+	Mediator         DealTransactionsMediator         `json:"mediator"`
+}
+
 type DealContainer struct {
-	ID                           string                           `json:"id"`
-	JobCreator                   string                           `json:"job_creator"`
-	ResourceProvider             string                           `json:"resource_provider"`
-	JobOffer                     string                           `json:"job_offer"`
-	ResourceOffer                string                           `json:"resource_offer"`
-	State                        uint8                            `json:"state"`
-	Deal                         Deal                             `json:"deal"`
-	TransactionsResourceProvider DealTransactionsResourceProvider `json:"resource_provider_transactions"`
-	TransactionsJobCreator       DealTransactionsJobCreator       `json:"job_creator_transactions"`
-	TransactionsMediator         DealTransactionsMediator         `json:"mediator_transactions"`
+	ID               string           `json:"id"`
+	JobCreator       string           `json:"job_creator"`
+	ResourceProvider string           `json:"resource_provider"`
+	JobOffer         string           `json:"job_offer"`
+	ResourceOffer    string           `json:"resource_offer"`
+	State            uint8            `json:"state"`
+	Deal             Deal             `json:"deal"`
+	Transactions     DealTransactions `json:"transactions"`
 }

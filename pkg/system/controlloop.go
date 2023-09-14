@@ -87,6 +87,7 @@ func (loop *ControlLoop) Start(runInitially bool) error {
 				return
 			case <-ticker.C:
 			}
+			loop.Trigger()
 		}
 	}()
 

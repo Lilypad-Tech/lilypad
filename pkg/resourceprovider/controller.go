@@ -125,7 +125,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 	controller.loop = system.NewControlLoop(
 		system.ResourceProviderService,
 		ctx,
-		time.Second*10,
+		time.Second*1,
 		func() error {
 			err := controller.solve()
 			if err != nil {
@@ -192,7 +192,7 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 		},
 		// this is where the solver has found us a match and we need to agree to it
 		func(dealContainer data.DealContainer) bool {
-			return dealContainer.TransactionsResourceProvider.Agree == ""
+			return dealContainer.Transactions.ResourceProvider.Agree == ""
 		},
 	)
 	if err != nil {
