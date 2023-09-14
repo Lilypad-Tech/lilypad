@@ -70,8 +70,16 @@ func (loop *ControlLoop) run() {
 	}
 }
 
-func (loop *ControlLoop) Start() {
+func (loop *ControlLoop) Start(runInitially bool) error {
 	ticker := time.NewTicker(loop.interval)
+
+	if runInitially {
+		err := loop.handler()
+		if err != nil {
+			return err
+		}
+	}
+
 	go func() {
 		for {
 			select {
@@ -79,7 +87,8 @@ func (loop *ControlLoop) Start() {
 				return
 			case <-ticker.C:
 			}
-			loop.Trigger()
 		}
 	}()
+
+	return nil
 }

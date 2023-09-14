@@ -134,7 +134,11 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		},
 	)
 
-	controller.loop.Start()
+	err = controller.loop.Start(true)
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
 
 	return errorChan
 }
@@ -169,5 +173,6 @@ func (controller *JobCreatorController) solve() error {
 */
 
 func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
+	system.Info(system.JobCreatorService, "add job offer", offer)
 	return controller.solverClient.AddJobOffer(offer)
 }

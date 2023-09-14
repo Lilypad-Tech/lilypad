@@ -92,7 +92,11 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		},
 	)
 
-	controller.loop.Start()
+	err = controller.loop.Start(true)
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
 
 	return errorChan
 }
@@ -139,8 +143,16 @@ func (controller *SolverController) subscribeEvents(handler func(SolverEvent)) {
 	controller.solverEventSubs = append(controller.solverEventSubs, handler)
 }
 
+func (controller *SolverController) reactToevent(ev SolverEvent) {
+	// both of these should trigger a solve
+	if ev.EventType == ResourceOfferAdded || ev.EventType == JobOfferAdded {
+		controller.loop.Trigger()
+	}
+}
+
 // write the given event to all generated event channels
 func (controller *SolverController) writeEvent(ev SolverEvent) {
+	controller.reactToevent(ev)
 	for _, handler := range controller.solverEventSubs {
 		handler(ev)
 	}

@@ -135,7 +135,11 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		},
 	)
 
-	controller.loop.Start()
+	err = controller.loop.Start(true)
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
 
 	return errorChan
 }
