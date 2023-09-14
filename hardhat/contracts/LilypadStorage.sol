@@ -29,8 +29,8 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   mapping(string => SharedStructs.Result) private mediations;
 
   event DealStateChange(
-    string indexed dealId,
-    SharedStructs.AgreementState indexed state
+    string dealId,
+    SharedStructs.AgreementState state
   );
 
   /**

@@ -66,7 +66,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
    * Events
    */
   event Payment(
-    string indexed dealId,
+    string dealId,
     address payee,
     uint256 amount,
     PaymentReason reason,

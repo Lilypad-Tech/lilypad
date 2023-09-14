@@ -12,8 +12,8 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
   mapping(string => address) private mediators;
 
   event MediationRequested(
-    address indexed mediator,
-    SharedStructs.Deal indexed deal
+    address mediator,
+    SharedStructs.Deal deal
   );
 
   /**

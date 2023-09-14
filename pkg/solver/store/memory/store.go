@@ -187,7 +187,7 @@ func (s *SolverStoreMemory) UpdateJobOfferState(id string, dealID string, state 
 	defer s.mutex.Unlock()
 	jobOffer, ok := s.jobOfferMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("job offer not found: %s", id)
 	}
 	jobOffer.DealID = dealID
 	jobOffer.State = state
@@ -200,7 +200,7 @@ func (s *SolverStoreMemory) UpdateResourceOfferState(id string, dealID string, s
 	defer s.mutex.Unlock()
 	resourceOffer, ok := s.resourceOfferMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("resource offer not found: %s", id)
 	}
 	resourceOffer.DealID = dealID
 	resourceOffer.State = state
@@ -213,7 +213,7 @@ func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealC
 	defer s.mutex.Unlock()
 	deal, ok := s.dealMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("deal not found: %s", id)
 	}
 	deal.State = state
 	s.dealMap[id] = deal
@@ -225,7 +225,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, da
 	defer s.mutex.Unlock()
 	deal, ok := s.dealMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("deal not found: %s", id)
 	}
 	txs := &deal.Transactions.ResourceProvider
 	if data.Agree != "" {
@@ -250,7 +250,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data dat
 	defer s.mutex.Unlock()
 	deal, ok := s.dealMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("deal not found: %s", id)
 	}
 	txs := &deal.Transactions.JobCreator
 	if data.Agree != "" {
@@ -280,7 +280,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsMediator(id string, data data.
 	defer s.mutex.Unlock()
 	deal, ok := s.dealMap[id]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("deal not found: %s", id)
 	}
 	txs := &deal.Transactions.Mediator
 	if data.MediationAcceptResult != "" {

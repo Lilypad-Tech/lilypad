@@ -133,6 +133,8 @@ func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		controller.log.Info("StorageDealStateChange", ev)
 
+		fmt.Printf("ev.Deal %s --------------------------------------\n", ev.DealId.String())
+
 		_, err := controller.updateDealState(ev.DealId.String(), ev.State)
 		if err != nil {
 			controller.log.Error("error updating deal state", err)
@@ -319,23 +321,24 @@ func (controller *SolverController) updateResourceOfferState(id string, dealID s
 func (controller *SolverController) updateDealState(id string, state uint8) (*data.DealContainer, error) {
 	controller.log.Info("update deal", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
 
-	ret, err := controller.store.UpdateDealState(id, state)
+	dealContainer, err := controller.store.UpdateDealState(id, state)
 	if err != nil {
 		return nil, err
 	}
+
 	controller.writeEvent(SolverEvent{
 		EventType: DealStateUpdated,
-		Deal:      ret,
+		Deal:      dealContainer,
 	})
-	_, err = controller.updateJobOfferState(ret.JobOffer, ret.ID, ret.State)
+	_, err = controller.updateJobOfferState(dealContainer.JobOffer, dealContainer.ID, dealContainer.State)
 	if err != nil {
 		return nil, err
 	}
-	_, err = controller.updateResourceOfferState(ret.ResourceOffer, ret.ID, ret.State)
+	_, err = controller.updateResourceOfferState(dealContainer.ResourceOffer, dealContainer.ID, dealContainer.State)
 	if err != nil {
 		return nil, err
 	}
-	return ret, nil
+	return dealContainer, nil
 }
 
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {

@@ -61,19 +61,19 @@ func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, tit
 }
 
 func Error(service Service, title string, err error) {
-	logWithCaller(4, zerolog.ErrorLevel, service, title, err)
+	logWithCaller(5, zerolog.ErrorLevel, service, title, err)
 }
 
 func Info(service Service, title string, data interface{}) {
-	logWithCaller(4, zerolog.InfoLevel, service, title, data)
+	logWithCaller(5, zerolog.InfoLevel, service, title, data)
 }
 
 func Debug(service Service, title string, data interface{}) {
-	logWithCaller(4, zerolog.DebugLevel, service, title, data)
+	logWithCaller(5, zerolog.DebugLevel, service, title, data)
 }
 
 func Trace(service Service, title string, data interface{}) {
-	logWithCaller(4, zerolog.TraceLevel, service, title, data)
+	logWithCaller(5, zerolog.TraceLevel, service, title, data)
 }
 
 func DumpObject(d interface{}) {
