@@ -58,35 +58,8 @@ describe("Storage", () => {
     })
   }
 
-  async function setupStorageWithUsers() {
+  async function setupStorageAndDeal() {
     const storage = await setupStorage()
-
-    expect(await storage
-      .connect(getWallet('resource_provider'))
-      .updateUser(
-        rpCID,
-        rpURL,
-        [
-          getServiceType('ResourceProvider'),
-        ],
-      )
-    ).to.not.be.reverted
-
-    expect(await storage
-      .connect(getWallet('job_creator'))
-      .updateUser(
-        jcCID,
-        jcURL,
-        [
-          getServiceType('JobCreator'),
-        ],
-      )
-    ).to.not.be.reverted
-    return storage
-  }
-
-  async function setupStorageWithUsersAndDeal() {
-    const storage = await setupStorageWithUsers()
 
     const members: SharedStructs.DealMembersStruct = {
       solver: getAddress('solver'), 
@@ -109,8 +82,8 @@ describe("Storage", () => {
     return storage
   }
 
-  async function setupStorageWithUsersAndDealAndAgreement() {
-    const storage = await setupStorageWithUsersAndDeal()
+  async function setupStorageAndDealAndAgreement() {
+    const storage = await setupStorageAndDeal()
 
     expect(await storage
       .connect(getWallet('admin'))
@@ -131,8 +104,8 @@ describe("Storage", () => {
     return storage
   }
 
-  async function setupStorageWithUsersAndDealAndAgreementAndResult() {
-    const storage = await setupStorageWithUsersAndDealAndAgreement()
+  async function setupStorageAndDealAndAgreementAndResult() {
+    const storage = await setupStorageAndDealAndAgreement()
 
     await expect(storage
       .connect(getWallet('admin'))
@@ -148,8 +121,8 @@ describe("Storage", () => {
     return storage
   }
 
-  async function setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge() {
-    const storage = await setupStorageWithUsersAndDealAndAgreementAndResult()
+  async function setupStorageAndDealAndAgreementAndResultAndChallenge() {
+    const storage = await setupStorageAndDealAndAgreementAndResult()
 
     await expect(storage
       .connect(getWallet('admin'))
@@ -169,128 +142,6 @@ describe("Storage", () => {
     it("Should have deployed with empty state", async function () {
       const storage = await loadFixture(setupStorage)
       expect(await storage.hasDeal("0")).to.equal(false)
-    })
-
-  })
-
-  describe("Users", () => {
-
-    it("Should be able to add and get users", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-      
-      const rp = await storage.getUser(getAddress('resource_provider'))
-      const jc = await storage.getUser(getAddress('job_creator'))
-
-      expect(rp.metadataCID).to.equal(rpCID)
-      expect(rp.url).to.equal(rpURL)
-      expect(rp.roles).to.deep.equal([getServiceType('ResourceProvider')])
-
-      expect(jc.metadataCID).to.equal(jcCID)
-      expect(jc.url).to.equal(jcURL)
-      expect(jc.roles).to.deep.equal([getServiceType('JobCreator')])
-    })
-
-    it("Should be able to update an existing user", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-      
-      const newCID = "456"
-      const newURL = "def"
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .updateUser(
-          newCID,
-          newURL,
-          [
-            getServiceType('JobCreator'),
-          ],
-        )
-      ).to.not.be.reverted
-      
-      const jc = await storage.getUser(getAddress('job_creator'))
-
-      expect(jc.metadataCID).to.equal(newCID)
-      expect(jc.url).to.equal(newURL)
-    })
-
-    it("Should be able to list users of a certain role", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-
-      expect(await storage.showUsersInList(getServiceType('JobCreator')))
-        .to.deep.equal([])
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('JobCreator')
-        )
-      ).to.not.be.reverted
-
-      expect(await storage.showUsersInList(getServiceType('JobCreator')))
-        .to.deep.equal([
-          getAddress('job_creator'),
-        ])
-    })
-
-    it("Should deny adding a user to a list without the role", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-
-      await expect(storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('ResourceProvider')
-        )
-      ).to.be.revertedWith('User must have that role')
-    })
-
-    it("Should deny adding a user to a list twice", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('JobCreator')
-        )
-      ).to.not.be.reverted
-
-      await expect(storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('JobCreator')
-        )
-      ).to.be.revertedWith('User is already part of that list')
-    })
-
-    it("Should allow a user to remove themselves from a list", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .addUserToList(
-          getServiceType('JobCreator')
-        )
-      ).to.not.be.reverted
-
-      expect(await storage
-        .connect(getWallet('job_creator'))
-        .removeUserFromList(
-          getServiceType('JobCreator')
-        )
-      ).to.not.be.reverted
-
-      expect(await storage.showUsersInList(getServiceType('JobCreator')))
-        .to.deep.equal([])
-    })
-
-    it("Should deny removing a user from a list if they have not added themselves", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
-
-      await expect(storage
-        .connect(getWallet('job_creator'))
-        .removeUserFromList(
-          getServiceType('JobCreator')
-        )
-      ).to.be.revertedWith('User is not part of that list')
     })
 
   })
@@ -573,7 +424,7 @@ describe("Storage", () => {
   describe("Deals", () => {
 
     it("Should be able to add a deal and then read it", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      const storage = await loadFixture(setupStorageAndDeal)
 
       const deal = await storage.getDeal(dealID)
       
@@ -601,7 +452,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to see deals for specific parties", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      const storage = await loadFixture(setupStorageAndDeal)
       expect(await storage.getDealsForParty(getAddress('resource_provider')))
         .to.deep.equal([dealID])
       expect(await storage.getDealsForParty(getAddress('job_creator')))
@@ -611,7 +462,7 @@ describe("Storage", () => {
     })
 
     it("Should error when the RP and JC are the same", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
+      const storage = await loadFixture(setupStorage)
       const members: SharedStructs.DealMembersStruct = {
         solver: getAddress('solver'), 
         jobCreator: getAddress('resource_provider'),
@@ -633,7 +484,7 @@ describe("Storage", () => {
     })
 
     it("Should error when the RP is empty", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
+      const storage = await loadFixture(setupStorage)
       const members: SharedStructs.DealMembersStruct = {
         solver: getAddress('solver'), 
         jobCreator: getAddress('job_creator'),
@@ -655,7 +506,7 @@ describe("Storage", () => {
     })
 
     it("Should error when the JC is empty", async function () {
-      const storage = await loadFixture(setupStorageWithUsers)
+      const storage = await loadFixture(setupStorage)
       const members: SharedStructs.DealMembersStruct = {
         solver: getAddress('solver'), 
         jobCreator: ethers.ZeroAddress,
@@ -722,13 +573,13 @@ describe("Storage", () => {
   describe("Agreements", () => {
 
     it("Should be negotiating before agreements are made", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      const storage = await loadFixture(setupStorageAndDeal)
       expect(await storage.isState(dealID, getAgreementState('DealNegotiating')))
         .to.equal(true)
     })
 
     it("Should be able to agree both parties", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.state).to.equal(getAgreementState('DealAgreed'))
@@ -741,7 +592,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we agree the second time", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
       await expect(storage
         .connect(getWallet('admin'))
         .agreeResourceProvider(
@@ -759,7 +610,7 @@ describe("Storage", () => {
 
   describe("Results", () => {
     it("Should be able to add and get a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResult)
 
       const result = await storage.getResult(dealID)
       expect(result.dealId).to.equal(dealID)
@@ -772,7 +623,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we try to add results and not in agreed state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDeal)
+      const storage = await loadFixture(setupStorageAndDeal)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -785,7 +636,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to accept a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResult)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -802,7 +653,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to challenge a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResult)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -820,7 +671,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we try to accept results and not in submitted state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -831,7 +682,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we try to challenge results and not in submitted state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -849,7 +700,7 @@ describe("Storage", () => {
   describe("Mediation", () => {
     
     it("Should be able to mediator -> accept a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResultAndChallenge)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -866,7 +717,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to mediator -> reject a result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResultAndChallenge)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -883,7 +734,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we try to accept mediation results and not in submitted state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -894,7 +745,7 @@ describe("Storage", () => {
     })
 
     it("Should throw if we try to challenge results and not in submitted state", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -908,7 +759,7 @@ describe("Storage", () => {
 
   describe("Timeouts", () => {
     it("Should be able to timeout a submit result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreement)
+      const storage = await loadFixture(setupStorageAndDealAndAgreement)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -925,7 +776,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to timeout a judge result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResult)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResult)
 
       await expect(storage
         .connect(getWallet('admin'))
@@ -942,7 +793,7 @@ describe("Storage", () => {
     })
 
     it("Should be able to timeout a mediation result", async function () {
-      const storage = await loadFixture(setupStorageWithUsersAndDealAndAgreementAndResultAndChallenge)
+      const storage = await loadFixture(setupStorageAndDealAndAgreementAndResultAndChallenge)
 
       await expect(storage
         .connect(getWallet('admin'))

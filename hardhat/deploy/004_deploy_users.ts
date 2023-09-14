@@ -7,14 +7,10 @@ const deployUsers: DeployFunction = async function (hre: HardhatRuntimeEnvironme
   const {
     admin,
   } = await getNamedAccounts()
-  const sharedStructs = await deployments.get('SharedStructs')
   await deploy("LilypadUsers", {
     from: admin,
     args: [],
     log: true,
-    libraries: {
-      SharedStructs: sharedStructs.address,
-    },
   })
   await execute(
     'LilypadUsers',

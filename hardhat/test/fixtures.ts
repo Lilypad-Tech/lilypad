@@ -14,6 +14,7 @@ import {
   LilypadToken,
   LilypadPayments,
   LilypadStorage,
+  LilypadUsers,
   LilypadController,
   LilypadMediationRandom,
 } from '../typechain-types'
@@ -70,6 +71,12 @@ export async function deployStorage(
   return deployContract<LilypadStorage>(testMode ? 'LilypadStorageTestable' : 'LilypadStorage', signer)
 }
 
+export async function deployUsers(
+  signer: Signer
+) {
+  return deployContract<LilypadUsers>('LilypadUsers', signer)
+}
+
 export async function deployMediation(
   signer: Signer
 ) {
@@ -79,13 +86,14 @@ export async function deployMediation(
 export async function deployController(
   signer: Signer,
   storageAddress: AddressLike,
+  usersAddress: AddressLike,
   paymentsAddress: AddressLike,
   mediationAddress: AddressLike,
 ) {
   const controller = await deployContract<LilypadController>('LilypadController', signer)
   await controller
     .connect(signer)
-    .initialize(storageAddress, paymentsAddress, mediationAddress)
+    .initialize(storageAddress, usersAddress, paymentsAddress, mediationAddress)
   return controller
 }
 
@@ -201,6 +209,22 @@ export async function setupStorageFixture({
 
 /*
 
+  USERS
+
+*/
+
+// setup the token in test mode so we can call functions on it directly
+// without the ControllerOwnable module kicking in
+export async function setupUsersFixture() {
+  const admin = getWallet('admin')
+  const users = await deployUsers(
+    admin,
+  )
+  return users
+}
+
+/*
+
   MEDIATION
 
 */
@@ -243,14 +267,17 @@ export async function setupControllerFixture({
     withFunds,
   })
   const storage = await setupStorageFixture({})
+  const users = await setupUsersFixture()
   const mediation = await setupMediationFixture({})
   const paymentsAddress = await payments.getAddress()
   const storageAddress = await storage.getAddress()
+  const usersAddress = await users.getAddress()
   const mediationAddress = await mediation.getAddress()
   
   const controller = await deployController(
     admin,
     storageAddress,
+    usersAddress,
     paymentsAddress,
     mediationAddress,
   )
@@ -268,6 +295,7 @@ export async function setupControllerFixture({
     token,
     payments,
     storage,
+    users,
     mediation,
     controller,
   }

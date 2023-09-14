@@ -7,14 +7,10 @@ const deployMediation: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const {
     admin,
   } = await getNamedAccounts()
-  const sharedStructs = await deployments.get('SharedStructs')
   await deploy("LilypadMediationRandom", {
     from: admin,
     args: [],
     log: true,
-    libraries: {
-      SharedStructs: sharedStructs.address,
-    },
   })
   await execute(
     'LilypadMediationRandom',

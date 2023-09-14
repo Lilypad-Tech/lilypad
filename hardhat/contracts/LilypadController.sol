@@ -50,6 +50,15 @@ contract LilypadController is Ownable, Initializable {
     return storageAddress;
   }
 
+  function setUsersAddress(address _usersAddress) public onlyOwner {
+    require(_usersAddress != address(0), "Users address");
+    userAddress = _usersAddress;
+  }
+
+  function getUsersAddress() public view returns(address) {
+    return userAddress;
+  }
+
   function setPaymentsAddress(address _paymentsAddress) public onlyOwner {
     require(_paymentsAddress != address(0), "Payments address");
     paymentsAddress = _paymentsAddress;
@@ -68,15 +77,6 @@ contract LilypadController is Ownable, Initializable {
 
   function getMediationAddress() public view returns(address) {
     return mediationAddress;
-  }
-
-  function setUsersAddress(address _usersAddress) public onlyOwner {
-    require(_usersAddress != address(0), "Users address");
-    userAddress = _usersAddress;
-  }
-
-  function getUsersAddress() public view returns(address) {
-    return userAddress;
   }
 
   /**
