@@ -361,9 +361,9 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
 
-		fmt.Printf("uploadedResult --------------------------------------\n")
-		spew.Dump(uploadedResult)
 		result.DataID = uploadedResult.DataID
+		fmt.Printf("uploadedResult --------------------------------------\n")
+		spew.Dump(result)
 		return nil
 	}()
 

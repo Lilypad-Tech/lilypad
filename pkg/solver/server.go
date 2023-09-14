@@ -345,6 +345,15 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 	id := vars["id"]
 
 	err := func() error {
+		deal, err := solverServer.store.GetDeal(id)
+		if err != nil {
+			log.Error().Err(err).Msgf("error loading deal")
+			return err
+		}
+		if deal == nil {
+			log.Error().Msgf("deal not found")
+			return err
+		}
 		filesPath, err := GetDealsFilePath(id)
 		if err != nil {
 			return err
@@ -374,6 +383,10 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 		deal, err := solverServer.store.GetDeal(id)
 		if err != nil {
 			log.Error().Err(err).Msgf("error loading deal")
+			return err
+		}
+		if deal == nil {
+			log.Error().Msgf("deal not found")
 			return err
 		}
 		signerAddress, err := http.GetAddressFromHeaders(req)
