@@ -20,6 +20,7 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", ""),
 		PaymentsAddress:   GetDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
+		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
 
 		// service addresses
@@ -54,6 +55,10 @@ func AddWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.StorageAddress, "web3-storage-address", web3Options.StorageAddress,
 		`The address of the storage contract (WEB3_STORAGE_ADDRESS).`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&web3Options.UsersAddress, "web3-users-address", web3Options.UsersAddress,
+		`The address of the users contract (WEB3_USERS_ADDRESS).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&web3Options.TokenAddress, "web3-token-address", web3Options.TokenAddress,

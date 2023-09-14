@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/token"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -25,6 +26,7 @@ type Contracts struct {
 	Token      *token.Token
 	Payments   *payments.Payments
 	Storage    *storage.Storage
+	Users      *users.Users
 	Mediation  *mediation.Mediation
 	Controller *controller.Controller
 }
@@ -102,6 +104,24 @@ func NewContracts(
 		return nil, err
 	}
 
+	usersAddress := options.UsersAddress
+
+	if usersAddress == "" {
+		loadedUsersAddress, err := controller.GetUsersAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		usersAddress = loadedUsersAddress.String()
+		log.Debug().
+			Str("load users address", usersAddress).
+			Msgf("")
+	}
+
+	users, err := users.NewUsers(common.HexToAddress(usersAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
 	mediationAddress := options.MediationAddress
 
 	if mediationAddress == "" {
@@ -124,6 +144,7 @@ func NewContracts(
 		Token:      token,
 		Payments:   payments,
 		Storage:    storage,
+		Users:      users,
 		Mediation:  mediation,
 		Controller: controller,
 	}, nil

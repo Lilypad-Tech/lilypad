@@ -30,10 +30,12 @@ contract LilypadController is Ownable, Initializable {
   // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
   function initialize(
     address _storageAddress,
+    address _usersAddress,
     address _paymentsAddress,
     address _mediationAddress
   ) public initializer {
     setStorageAddress(_storageAddress);
+    setUsersAddress(_usersAddress);
     setPaymentsAddress(_paymentsAddress);
     setMediationAddress(_mediationAddress);
   }

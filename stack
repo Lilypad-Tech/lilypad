@@ -150,6 +150,7 @@ function go-bindings() {
   go-binding LilypadToken token
   go-binding LilypadPayments payments
   go-binding LilypadStorage storage
+  go-binding LilypadUsers users
   go-binding LilypadMediationRandom mediation
   go-binding LilypadController controller
   

@@ -19,6 +19,7 @@ const deployController: DeployFunction = async function (hre: HardhatRuntimeEnvi
   
   const controllerContract = await deployments.get('LilypadController')
   const storageContract = await deployments.get('LilypadStorage')
+  const usersContract = await deployments.get('LilypadUsers')
   const mediationContract = await deployments.get('LilypadMediationRandom')
   const paymentsContract = await deployments.get('LilypadPayments')
   
@@ -30,6 +31,7 @@ const deployController: DeployFunction = async function (hre: HardhatRuntimeEnvi
     },
     'initialize',
     storageContract.address,
+    usersContract.address,
     paymentsContract.address,
     mediationContract.address,
   )
