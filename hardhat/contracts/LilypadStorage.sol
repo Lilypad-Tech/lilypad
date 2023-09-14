@@ -118,7 +118,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     require(pricing1.resultsCollateralMultiple == pricing2.resultsCollateralMultiple, "Results");
     require(pricing1.mediationFee == pricing2.mediationFee, "Mediation");
   }
-  
+
   function ensureDeal(
     string memory dealId,
     SharedStructs.DealMembers memory members,

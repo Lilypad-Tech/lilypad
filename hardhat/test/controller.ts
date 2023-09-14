@@ -39,7 +39,7 @@ const { expect } = chai
 
 // https://ethereum.stackexchange.com/questions/86633/time-dependent-tests-with-hardhat
 
-describe.only("Controller", () => {
+describe("Controller", () => {
   const {
     instructionPrice,
     instructionCount,
@@ -156,9 +156,9 @@ describe.only("Controller", () => {
     return ret
   }
 
-  describe.only("Deals", () => {
+  describe("Deals", () => {
 
-    it.only("Should agreeResourceProvider", async function () {
+    it("Should agreeResourceProvider", async function () {
       const {
         token,
         payments,
@@ -188,13 +188,13 @@ describe.only("Controller", () => {
           timeoutCollateral,
         )
 
-      // const balancesAfterAgreeRP = await getBalances(token, 'resource_provider')
+      const balancesAfterAgreeRP = await getBalances(token, 'resource_provider')
 
-      // expect(balancesAfterAgreeRP.tokens).to.equal(balancesBeforeAgreeRP.tokens - timeoutCollateral)
-      // expect(balancesAfterAgreeRP.escrow).to.equal(balancesBeforeAgreeRP.escrow + timeoutCollateral)
+      expect(balancesAfterAgreeRP.tokens).to.equal(balancesBeforeAgreeRP.tokens - timeoutCollateral)
+      expect(balancesAfterAgreeRP.escrow).to.equal(balancesBeforeAgreeRP.escrow + timeoutCollateral)
 
-      // await checkDeal(storage, 'resource_provider')      
-      // await checkAgreement(storage, 'DealNegotiating')
+      await checkDeal(storage, 'resource_provider')      
+      await checkAgreement(storage, 'DealNegotiating')
     })
 
     it("Should agreeJobCreator", async function () {

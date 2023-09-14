@@ -95,7 +95,7 @@ contract LilypadController is Ownable, Initializable {
   // * if both sides have agreed then mark the deal as agreed
   // * emit the event
   function agree(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.DealMembers memory members,
     SharedStructs.DealTimeouts memory timeouts,
     SharedStructs.DealPricing memory pricing
@@ -143,8 +143,8 @@ contract LilypadController is Ownable, Initializable {
   // * pay the difference into / out of the contract to the RP
   // * emit the event
   function addResult(
-    uint256 dealId,
-    uint256 resultsId,
+    string memory dealId,
+    string memory resultsId,
     uint256 instructionCount
   ) public {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
@@ -181,7 +181,7 @@ contract LilypadController is Ownable, Initializable {
   // * refund the JC the job collateral minus the cost
   // * refund the JC the timeout collateral
   function acceptResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
@@ -211,7 +211,7 @@ contract LilypadController is Ownable, Initializable {
   // * refund the JC the timeout collateral
   // * emit the Mediation event so the mediator kicks in
   function checkResult(
-    uint256 dealId,
+    string memory dealId,
     address mediator
   ) public {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
@@ -245,7 +245,7 @@ contract LilypadController is Ownable, Initializable {
   // * refund the RP the results collateral
   // * pay the mediator for mediating
   function mediationAcceptResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     require(mediationAddress == _msgSender(), "Only mediation");
     require(_canMediateResult(dealId), "Cannot mediate");
@@ -276,7 +276,7 @@ contract LilypadController is Ownable, Initializable {
   // * slash the RP's results collateral
   // * pay the mediator for mediating
   function mediationRejectResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     // only the current mediation contract can call this
     require(mediationAddress == _msgSender(), "Only mediation");
@@ -300,7 +300,7 @@ contract LilypadController is Ownable, Initializable {
   }
 
   function _canMediateResult(
-    uint256 dealId 
+    string memory dealId 
   ) private returns (bool) {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
@@ -314,7 +314,7 @@ contract LilypadController is Ownable, Initializable {
    */
 
   function timeoutAgree(
-    uint256 dealId
+    string memory dealId
   ) public {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
@@ -347,7 +347,7 @@ contract LilypadController is Ownable, Initializable {
   // * slash the RP's results collateral
   // * emit the event
   function timeoutSubmitResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
@@ -374,7 +374,7 @@ contract LilypadController is Ownable, Initializable {
   // * slash the JC's job collateral
   // * emit the event
   function timeoutJudgeResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
@@ -400,7 +400,7 @@ contract LilypadController is Ownable, Initializable {
   // * pay back the JC's paymnet collateral
   // * emit the event
   function timeoutMediateResult(
-    uint256 dealId
+    string memory dealId
   ) public {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);

@@ -10,7 +10,7 @@ interface ILilypadStorage {
    */
 
   function getDeal(
-    uint256 dealId
+    string memory dealId
   ) external returns (SharedStructs.Deal memory);
 
   function getDealsForParty(
@@ -18,7 +18,7 @@ interface ILilypadStorage {
   ) external returns (uint256[] memory);
 
   function ensureDeal(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.DealMembers memory members,
     SharedStructs.DealTimeouts memory timeouts,
     SharedStructs.DealPricing memory pricing
@@ -29,15 +29,15 @@ interface ILilypadStorage {
    */
 
   function getAgreement(
-    uint256 dealId
+    string memory dealId
   ) external returns (SharedStructs.Agreement memory);
   
   function agreeResourceProvider(
-    uint256 dealId
+    string memory dealId
   ) external returns (SharedStructs.Agreement memory);
 
   function agreeJobCreator(
-    uint256 dealId
+    string memory dealId
   ) external returns (SharedStructs.Agreement memory);
   
   /**
@@ -45,12 +45,12 @@ interface ILilypadStorage {
    */
 
   function getResult(
-    uint256 dealId
+    string memory dealId
   ) external returns (SharedStructs.Result memory);
 
   function addResult(
-    uint256 dealId,
-    uint256 resultsId,
+    string memory dealId,
+    string memory resultsId,
     uint256 instructionCount
   ) external returns (SharedStructs.Result memory);
 
@@ -59,11 +59,11 @@ interface ILilypadStorage {
    */
 
   function acceptResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function checkResult(
-    uint256 dealId,
+    string memory dealId,
     address mediator
   ) external;
 
@@ -72,30 +72,30 @@ interface ILilypadStorage {
    */
   
   function mediationAcceptResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function mediationRejectResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   /**
    * Timeouts
    */
   function timeoutAgree(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function timeoutSubmitResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function timeoutJudgeResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   function timeoutMediateResult(
-    uint256 dealId
+    string memory dealId
   ) external;
 
   /**
@@ -103,11 +103,11 @@ interface ILilypadStorage {
    */
 
   function getJobCost(
-    uint256 dealId
+    string memory dealId
   ) external returns (uint256);
 
   function getResultsCollateral(
-    uint256 dealId
+    string memory dealId
   ) external returns (uint256);
   
   /**
@@ -115,11 +115,11 @@ interface ILilypadStorage {
    */
 
   function hasDeal(
-    uint256 dealId
+    string memory dealId
   ) external returns (bool);
 
   function isState(
-    uint256 dealId,
+    string memory dealId,
     SharedStructs.AgreementState state
   ) external returns (bool);
   

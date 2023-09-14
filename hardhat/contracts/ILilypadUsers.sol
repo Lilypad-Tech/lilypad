@@ -14,11 +14,9 @@ interface ILilypadUsers {
   ) external returns (SharedStructs.User memory);
 
   function updateUser(
-    uint256 metadataCID,
+    string memory metadataCID,
     string memory url,
-    SharedStructs.ServiceType[] memory roles,
-    address[] memory trustedMediators,
-    address[] memory trustedDirectories
+    SharedStructs.ServiceType[] memory roles
   ) external returns (SharedStructs.User memory);
 
   // add the given user to a list of service types

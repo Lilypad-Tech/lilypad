@@ -66,7 +66,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
    * Events
    */
   event Payment(
-    uint256 indexed dealId,
+    string indexed dealId,
     address payee,
     uint256 amount,
     PaymentReason reason,
@@ -126,7 +126,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
 
   // * pay in the timeout collateral
   function agreeResourceProvider(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 timeoutCollateral
   ) public onlyController {
@@ -142,7 +142,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
 
   // * pay in the payment collateral and timeout collateral
   function agreeJobCreator(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
@@ -167,7 +167,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * pay back the timeout collateral
   // * pay in the results collateral
   function addResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
@@ -191,7 +191,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * refund the JC the job collateral minus the job cost
   // * refund the JC the timeout collateral
   function acceptResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 jobCost,
@@ -254,7 +254,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * charge the JC the mediation fee
   // * refund the JC the timeout collateral
   function checkResult(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 timeoutCollateral,
     uint256 mediationFee
@@ -286,7 +286,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * refund the JC the job collateral minus the job cost
   // * pay the mediator for mediating
   function mediationAcceptResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     address mediator,
@@ -350,7 +350,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * slash the RP's results collateral
   // * pay the mediator for mediating
   function mediationRejectResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     address mediator,
@@ -389,7 +389,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
    * Timeouts
    */
   function timeoutAgreeRefundResourceProvider(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 timeoutCollateral
   ) public onlyController {
@@ -404,7 +404,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   }
 
   function timeoutAgreeRefundJobCreator(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
@@ -431,7 +431,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * pay back the JC's timeout collateral
   // * slash the RP's results collateral
   function timeoutSubmitResults(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 paymentCollateral,
@@ -468,7 +468,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * slash the JC's timeout collateral
   // * slash the JC's job collateral
   function timeoutJudgeResults(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 resultsCollateral,
@@ -496,7 +496,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   // * pay back the JC's payment collateral
   // * pay back the JC's mediation fee
   function timeoutMediateResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 paymentCollateral,
@@ -535,7 +535,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
 
 
   function _payEscrow(
-    uint256 dealId,
+    string memory dealId,
     uint256 amount,
     PaymentReason reason
   ) private {
@@ -559,7 +559,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   }
 
   function _refundEscrow(
-    uint256 dealId,
+    string memory dealId,
     address toAddress,
     uint256 amount,
     PaymentReason reason
@@ -581,7 +581,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   }
 
   function _payOut(
-    uint256 dealId,
+    string memory dealId,
     address fromAddress,
     address toAddress,
     uint256 amount,
@@ -605,7 +605,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
   }
 
   function _slashEscrow(
-    uint256 dealId,
+    string memory dealId,
     address slashedAddress,
     uint256 amount,
     PaymentReason reason

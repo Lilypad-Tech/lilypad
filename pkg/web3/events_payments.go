@@ -2,7 +2,6 @@ package web3
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
@@ -41,7 +40,7 @@ func (p *PaymentEventChannels) Start(
 		return sdk.Contracts.Payments.WatchPayment(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			p.paymentChan,
-			[]*big.Int{},
+			[]string{},
 		)
 	}
 

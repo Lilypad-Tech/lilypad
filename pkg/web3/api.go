@@ -2,7 +2,6 @@ package web3
 
 import (
 	"fmt"
-	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
@@ -93,11 +92,9 @@ func (sdk *Web3SDK) Agree(
 	if len(deal.ID) != 32 {
 		return "", fmt.Errorf("The deal ID must be exactly 32 bytes long: %s", deal.ID)
 	}
-	var dealID big.Int
-	dealID.SetBytes([]byte(deal.ID))
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
-		&dealID,
+		deal.ID,
 		controller.SharedStructsDealMembers{},
 		controller.SharedStructsDealTimeouts{},
 		controller.SharedStructsDealPricing{},

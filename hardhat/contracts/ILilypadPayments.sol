@@ -23,13 +23,13 @@ interface ILilypadPayments {
    * Agreements
    */
   function agreeResourceProvider(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 timeoutCollateral
   ) external;
 
   function agreeJobCreator(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
@@ -40,14 +40,14 @@ interface ILilypadPayments {
    */
 
   function addResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 resultsCollateral,
     uint256 timeoutCollateral
   ) external;
 
   function acceptResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 jobCost,
@@ -57,7 +57,7 @@ interface ILilypadPayments {
   ) external;
 
   function checkResult(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 timeoutCollateral,
     uint256 mediationFee
@@ -68,7 +68,7 @@ interface ILilypadPayments {
    */
 
   function mediationAcceptResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     address mediator,
@@ -79,7 +79,7 @@ interface ILilypadPayments {
   ) external;
 
   function mediationRejectResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     address mediator,
@@ -93,20 +93,20 @@ interface ILilypadPayments {
    */
 
   function timeoutAgreeRefundResourceProvider(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     uint256 timeoutCollateral
   ) external;
 
   function timeoutAgreeRefundJobCreator(
-    uint256 dealId,
+    string memory dealId,
     address jobCreator,
     uint256 paymentCollateral,
     uint256 timeoutCollateral
   ) external;
 
   function timeoutSubmitResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 paymentCollateral,
@@ -114,7 +114,7 @@ interface ILilypadPayments {
   ) external;
 
   function timeoutJudgeResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 resultsCollateral,
@@ -122,7 +122,7 @@ interface ILilypadPayments {
   ) external;
 
   function timeoutMediateResult(
-    uint256 dealId,
+    string memory dealId,
     address resourceProvider,
     address jobCreator,
     uint256 paymentCollateral,
