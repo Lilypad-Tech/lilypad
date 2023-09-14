@@ -19,7 +19,6 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 	}, nil
 }
 
-// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	uploadResults func(string) (string, error),

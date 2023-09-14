@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
@@ -41,9 +42,14 @@ type ResourceProviderOfferOptions struct {
 	Services data.ServiceConfig
 }
 
+type ResourceProviderExecutorOptions struct {
+	Bacalhau bacalhau.BacalhauExecutorOptions
+}
+
 type ResourceProviderOptions struct {
-	Offers ResourceProviderOfferOptions
-	Web3   web3.Web3Options
+	Executor ResourceProviderExecutorOptions
+	Offers   ResourceProviderOfferOptions
+	Web3     web3.Web3Options
 }
 
 type ResourceProvider struct {
