@@ -2,13 +2,16 @@ package options
 
 import (
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 
 func NewMediatorOptions() mediator.MediatorOptions {
-	return mediator.MediatorOptions{
+	options := mediator.MediatorOptions{
 		Web3: GetDefaultWeb3Options(),
 	}
+	options.Web3.Service = system.MediatorService
+	return options
 }
 
 func AddMediatorCliFlags(cmd *cobra.Command, options *mediator.MediatorOptions) {

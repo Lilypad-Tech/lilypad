@@ -20,6 +20,10 @@ type Web3Options struct {
 	UsersAddress      string `json:"users_address"`
 	MediationAddress  string `json:"mediation_address"`
 	TokenAddress      string `json:"token_address"`
+
+	// this is injected by whatever service we are running
+	// it's used for logging tx's
+	Service system.Service `json:"-"`
 }
 
 type EventChannelCollection interface {

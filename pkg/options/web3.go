@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
@@ -22,6 +23,9 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
+
+		// misc
+		Service: system.DefaultService,
 	}
 }
 
@@ -64,7 +68,6 @@ func AddWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
 }
 
 func CheckWeb3Options(options web3.Web3Options) error {
-
 	// core settings
 	if options.RpcURL == "" {
 		return fmt.Errorf("WEB3_RPC_URL is required")

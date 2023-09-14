@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -38,16 +38,19 @@ func (sdk *Web3SDK) UpdateUser(
 	url string,
 	roles []uint8,
 ) error {
-	updateUserTx, err := sdk.Contracts.Users.UpdateUser(
+	tx, err := sdk.Contracts.Users.UpdateUser(
 		sdk.TransactOpts,
 		metadataCID,
 		url,
 		roles,
 	)
 	if err != nil {
+		system.Error(sdk.Service, "error submitting Users.UpdateUser", err)
 		return err
+	} else {
+		system.Info(sdk.Service, "submitted users.UpdateUser", tx)
 	}
-	_, err = sdk.waitTx(updateUserTx)
+	_, err = sdk.waitTx(tx)
 	if err != nil {
 		return err
 	}
@@ -57,14 +60,17 @@ func (sdk *Web3SDK) UpdateUser(
 func (sdk *Web3SDK) AddUserToList(
 	serviceType uint8,
 ) error {
-	addToListTx, err := sdk.Contracts.Users.AddUserToList(
+	tx, err := sdk.Contracts.Users.AddUserToList(
 		sdk.TransactOpts,
 		serviceType,
 	)
 	if err != nil {
+		system.Error(sdk.Service, "error submitting Users.AddUserToList", err)
 		return err
+	} else {
+		system.Info(sdk.Service, "submitted users.AddUserToList", tx)
 	}
-	_, err = sdk.waitTx(addToListTx)
+	_, err = sdk.waitTx(tx)
 	if err != nil {
 		return err
 	}
@@ -93,8 +99,6 @@ func (sdk *Web3SDK) Agree(
 	for _, mediator := range deal.Members.Mediators {
 		mediators = append(mediators, common.HexToAddress(mediator))
 	}
-	fmt.Printf("agree --------------------------------------\n")
-	spew.Dump(data.ConvertDealPricing(deal.Pricing))
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
 		deal.ID,
@@ -102,10 +106,11 @@ func (sdk *Web3SDK) Agree(
 		data.ConvertDealTimeouts(deal.Timeouts),
 		data.ConvertDealPricing(deal.Pricing),
 	)
-	fmt.Printf("tx --------------------------------------\n")
-	spew.Dump(tx)
 	if err != nil {
+		system.Error(sdk.Service, "error submitting agree tx", err)
 		return "", err
+	} else {
+		system.Info(sdk.Service, "submitted agree tx", tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {

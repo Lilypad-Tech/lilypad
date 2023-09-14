@@ -5,14 +5,17 @@ import (
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
-	return resourceprovider.ResourceProviderOptions{
+	options := resourceprovider.ResourceProviderOptions{
 		Offers: GetDefaultResourceProviderOfferOptions(),
 		Web3:   GetDefaultWeb3Options(),
 	}
+	options.Web3.Service = system.ResourceProviderService
+	return options
 }
 
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {

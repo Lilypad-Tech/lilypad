@@ -2,14 +2,17 @@ package options
 
 import (
 	"github.com/bacalhau-project/lilypad/pkg/solver"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 
 func NewSolverOptions() solver.SolverOptions {
-	return solver.SolverOptions{
+	options := solver.SolverOptions{
 		Server: GetDefaultServerOptions(),
 		Web3:   GetDefaultWeb3Options(),
 	}
+	options.Web3.Service = system.SolverService
+	return options
 }
 
 func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {

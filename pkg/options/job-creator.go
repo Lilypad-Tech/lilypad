@@ -3,14 +3,17 @@ package options
 import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
+	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 
 func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
-	return jobcreator.JobCreatorOptions{
+	options := jobcreator.JobCreatorOptions{
 		Offer: GetDefaultJobCreatorOfferOptions(),
 		Web3:  GetDefaultWeb3Options(),
 	}
+	options.Web3.Service = system.JobCreatorService
+	return options
 }
 
 func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {

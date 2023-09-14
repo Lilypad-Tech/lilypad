@@ -8,8 +8,8 @@ const (
 	SolverService           Service = "solver"
 	ResourceProviderService Service = "resource-provider"
 	JobCreatorService       Service = "job-creator"
-	DirectoryService        Service = "directory"
 	MediatorService         Service = "mediator"
+	DefaultService          Service = "default"
 )
 
 func GetServiceBadge(service Service) string {
@@ -20,8 +20,6 @@ func GetServiceBadge(service Service) string {
 		return "🔵 RP"
 	case JobCreatorService:
 		return "🟢 JC"
-	case DirectoryService:
-		return "🟡 DIR"
 	case MediatorService:
 		return "🟠 MED"
 	default:
