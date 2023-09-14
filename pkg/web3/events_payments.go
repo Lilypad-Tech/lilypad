@@ -40,7 +40,6 @@ func (p *PaymentEventChannels) Start(
 		return sdk.Contracts.Payments.WatchPayment(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			p.paymentChan,
-			[]string{},
 		)
 	}
 

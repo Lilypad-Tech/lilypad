@@ -28,7 +28,7 @@ const { expect } = chai
 
 describe("Payments", () => {
 
-  const dealID = ethers.getBigInt(10)
+  const dealID = "10"
   const timeoutCollateral = ethers.getBigInt(10)
   const resultsCollateral = ethers.getBigInt(40)
   const paymentCollateral = ethers.getBigInt(30)
@@ -465,7 +465,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           jobCost,
           paymentCollateral,
           resultsCollateral,
@@ -558,7 +557,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           paymentCollateral,
           resultsCollateral,
           mediationFee,
@@ -980,7 +978,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
@@ -997,7 +994,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
@@ -1014,7 +1010,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
@@ -1030,7 +1025,6 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          getAddress('mediator'),
           ethers.getBigInt(1),
           ethers.getBigInt(1),
           ethers.getBigInt(1),

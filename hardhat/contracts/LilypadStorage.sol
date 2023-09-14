@@ -216,14 +216,11 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   }
 
   function checkResult(
-    string memory dealId,
-    address mediator
+    string memory dealId
   ) public onlyController {
     require(isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     agreements[dealId].resultsCheckedAt = block.timestamp;
-    agreements[dealId].mediator = mediator;
     _changeAgreementState(dealId, SharedStructs.AgreementState.ResultsChecked);
-
   }
 
   /**

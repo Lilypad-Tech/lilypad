@@ -128,7 +128,6 @@ describe("Storage", () => {
       .connect(getWallet('admin'))
       .checkResult(
         dealID,
-        getAddress('mediator')
       )
     )
       .to.emit(storage, "DealStateChange")
@@ -293,7 +292,6 @@ describe("Storage", () => {
         .connect(getWallet('resource_provider'))
         .checkResult(
           dealID,
-          getAddress('mediator')
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -305,7 +303,6 @@ describe("Storage", () => {
         .connect(getWallet('resource_provider'))
         .checkResult(
           dealID,
-          getAddress('mediator')
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -659,7 +656,6 @@ describe("Storage", () => {
         .connect(getWallet('admin'))
         .checkResult(
           dealID,
-          getAddress('mediator')
         )
       )
         .to.emit(storage, "DealStateChange")
@@ -688,7 +684,6 @@ describe("Storage", () => {
         .connect(getWallet('admin'))
         .checkResult(
           dealID,
-          getAddress('mediator')
         )
       ).to.be.revertedWith('ResultsSubmitted')
     })

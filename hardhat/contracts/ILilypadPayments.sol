@@ -71,7 +71,6 @@ interface ILilypadPayments {
     string memory dealId,
     address resourceProvider,
     address jobCreator,
-    address mediator,
     uint256 jobCost,
     uint256 paymentCollateral,
     uint256 resultsCollateral,
@@ -82,7 +81,6 @@ interface ILilypadPayments {
     string memory dealId,
     address resourceProvider,
     address jobCreator,
-    address mediator,
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee

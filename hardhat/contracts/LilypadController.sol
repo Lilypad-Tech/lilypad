@@ -211,15 +211,14 @@ contract LilypadController is Ownable, Initializable {
   // * refund the JC the timeout collateral
   // * emit the Mediation event so the mediator kicks in
   function checkResult(
-    string memory dealId,
-    address mediator
+    string memory dealId
   ) public {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.members.jobCreator == tx.origin, "Only JC");
 
     // this function will require that the mediator is in the RP's list of trusted mediators
-    storageContract.checkResult(dealId, mediator);
+    storageContract.checkResult(dealId);
     paymentsContract.checkResult(
       dealId,
       deal.members.jobCreator,
@@ -249,9 +248,8 @@ contract LilypadController is Ownable, Initializable {
   ) public {
     require(mediationAddress == _msgSender(), "Only mediation");
     require(_canMediateResult(dealId), "Cannot mediate");
+    
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-
     uint256 jobCost = storageContract.getJobCost(dealId);
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
@@ -260,7 +258,6 @@ contract LilypadController is Ownable, Initializable {
       dealId,
       deal.members.resourceProvider,
       deal.members.jobCreator,
-      agreement.mediator,
       jobCost,
       deal.pricing.paymentCollateral,
       resultsCollateral,
@@ -283,8 +280,6 @@ contract LilypadController is Ownable, Initializable {
     require(_canMediateResult(dealId), "Cannot mediate");
 
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-
     uint256 resultsCollateral = storageContract.getResultsCollateral(dealId);
 
     storageContract.mediationRejectResult(dealId);
@@ -292,7 +287,6 @@ contract LilypadController is Ownable, Initializable {
       dealId,
       deal.members.resourceProvider,
       deal.members.jobCreator,
-      agreement.mediator,
       deal.pricing.paymentCollateral,
       resultsCollateral,
       deal.pricing.mediationFee
@@ -303,9 +297,6 @@ contract LilypadController is Ownable, Initializable {
     string memory dealId 
   ) private returns (bool) {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsChecked), "ResultsChecked");
-    SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
-    require(agreement.mediator != address(0), "No mediator");
-    require(agreement.mediator == tx.origin, "Only mediator");
     return true;
   }
 

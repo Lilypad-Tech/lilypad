@@ -40,8 +40,6 @@ func (s *StorageEventChannels) Start(
 		return sdk.Contracts.Storage.WatchDealStateChange(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.dealStateChangeChan,
-			[]string{},
-			[]uint8{},
 		)
 	}
 

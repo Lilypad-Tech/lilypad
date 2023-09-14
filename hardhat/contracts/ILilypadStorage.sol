@@ -63,8 +63,7 @@ interface ILilypadStorage {
   ) external;
 
   function checkResult(
-    string memory dealId,
-    address mediator
+    string memory dealId
   ) external;
 
   /**

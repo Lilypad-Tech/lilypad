@@ -6,7 +6,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/rs/zerolog/log"
 )
@@ -41,8 +40,6 @@ func (m *MediationEventChannels) Start(
 		return sdk.Contracts.Mediation.WatchMediationRequested(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			m.mediationRequestedChan,
-			[]common.Address{},
-			[]mediation.SharedStructsDeal{},
 		)
 	}
 

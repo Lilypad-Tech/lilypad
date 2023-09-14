@@ -110,7 +110,7 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 
 func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		deal, err := controller.solverClient.GetDeal(ev.DealId.String())
+		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
 			controller.log.Error("error getting deal", err)
 			return

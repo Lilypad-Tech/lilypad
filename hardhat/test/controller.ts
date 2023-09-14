@@ -494,7 +494,6 @@ describe("Controller", () => {
         .connect(getWallet('job_creator'))
         .checkResult(
           DEAL_ID,
-          getAddress('mediator'),
         )
       await mediation
         .connect(getWallet('mediator'))
@@ -548,7 +547,6 @@ describe("Controller", () => {
         .connect(getWallet('job_creator'))
         .checkResult(
           DEAL_ID,
-          getAddress('mediator'),
         )
       await mediation
         .connect(getWallet('mediator'))

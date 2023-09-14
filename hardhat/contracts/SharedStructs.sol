@@ -137,11 +137,6 @@ library SharedStructs {
     // the current state of the agreement
     AgreementState state;
 
-    // if the JC has checked the result
-    // what mediator did they choose?
-    // (this must be in the list of the RP and JC's trusted mediators)
-    address mediator;
-
     uint256 resourceProviderAgreedAt;
     uint256 jobCreatorAgreedAt;
     uint256 dealCreatedAt;

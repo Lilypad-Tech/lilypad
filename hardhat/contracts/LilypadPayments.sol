@@ -289,13 +289,11 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     string memory dealId,
     address resourceProvider,
     address jobCreator,
-    address mediator,
     uint256 jobCost,
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
   ) public onlyController {
-    require(tx.origin == mediator, "LilypadPayments: Can only be called by the mediator");
     uint256 actualPayment = jobCost;
     uint256 jcRefund = 0;
     if(jobCost > paymentCollateral) {
@@ -317,7 +315,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     _payOut(
       dealId,
       jobCreator,
-      mediator,
+      tx.origin,
       mediationFee,
       PaymentReason.MediationFee
     );
@@ -353,12 +351,10 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     string memory dealId,
     address resourceProvider,
     address jobCreator,
-    address mediator,
     uint256 paymentCollateral,
     uint256 resultsCollateral,
     uint256 mediationFee
   ) public onlyController {
-    require(tx.origin == mediator, "LilypadPayments: Can only be called by the mediator");
     // refund the JC their payment collateral
     _refundEscrow(
       dealId,
@@ -371,7 +367,7 @@ contract LilypadPayments is ControllerOwnable, Initializable {
     _payOut(
       dealId,
       jobCreator,
-      mediator,
+      tx.origin,
       mediationFee,
       PaymentReason.MediationFee
     );

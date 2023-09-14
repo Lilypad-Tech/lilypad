@@ -133,9 +133,9 @@ func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		controller.log.Info("StorageDealStateChange", ev)
 
-		fmt.Printf("ev.Deal %s --------------------------------------\n", ev.DealId.String())
+		fmt.Printf("ev.Deal %s --------------------------------------\n", ev.DealId)
 
-		_, err := controller.updateDealState(ev.DealId.String(), ev.State)
+		_, err := controller.updateDealState(ev.DealId, ev.State)
 		if err != nil {
 			controller.log.Error("error updating deal state", err)
 			return
