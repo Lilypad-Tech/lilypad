@@ -61,12 +61,16 @@ function geth-stop() {
   docker rm -f geth 2> /dev/null || true
 }
 
-function clean() {
-  docker rm -f $(docker ps -aq) || true
-  sudo rm -rf ${DATA_DIRECTORY}
+function clean-deploy() {
   rm -rf ${DIR}/hardhat/artifacts
   rm -rf ${DIR}/hardhat/cache
   rm -rf ${DIR}/hardhat/deployments/geth
+}
+
+function clean() {
+  docker rm -f $(docker ps -aq) || true
+  sudo rm -rf ${DATA_DIRECTORY}
+  clean-deploy
 }
 
 function boot-message() {
@@ -75,6 +79,18 @@ function boot-message() {
   echo "# $@"
   echo "############################################################################"
   echo ""
+}
+
+function deploy() {
+  clean-deploy
+  boot-message "Compiling contracts"
+  compile-contracts
+  boot-message "Deploying contracts"
+  deploy-contracts
+  boot-message "Funding services with tokens"
+  fund-services-tokens
+  boot-message "Printing balances"
+  balances
 }
 
 function boot() {
@@ -86,14 +102,7 @@ function boot() {
   fund-admin
   boot-message "Funding services with ether"
   fund-services-ether
-  boot-message "Compiling contracts"
-  compile-contracts
-  boot-message "Deploying contracts"
-  deploy-contracts
-  boot-message "Funding services with tokens"
-  fund-services-tokens
-  boot-message "Printing balances"
-  balances
+  deploy
 }
 
 ############################################################################
