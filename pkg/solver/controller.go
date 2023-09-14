@@ -42,6 +42,12 @@ type SolverController struct {
 	options         SolverOptions
 }
 
+// the background "even if we have not heard of an event" loop
+// i.e. things will not wait 10 seconds - the control loop
+// reacts to events in the system - this 10 second background
+// loop is just for in case we miss any events
+const CONTROL_LOOP_INTERVAL = 10 * time.Second
+
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
@@ -82,7 +88,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	controller.loop = system.NewControlLoop(
 		system.SolverService,
 		ctx,
-		time.Second*10,
+		CONTROL_LOOP_INTERVAL,
 		func() error {
 			err := controller.solve()
 			if err != nil {

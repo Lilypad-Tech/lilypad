@@ -22,6 +22,12 @@ type ResourceProviderController struct {
 	loop         *system.ControlLoop
 }
 
+// the background "even if we have not heard of an event" loop
+// i.e. things will not wait 10 seconds - the control loop
+// reacts to events in the system - this 10 second background
+// loop is just for in case we miss any events
+const CONTROL_LOOP_INTERVAL = 10 * time.Second
+
 func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
@@ -125,7 +131,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 	controller.loop = system.NewControlLoop(
 		system.ResourceProviderService,
 		ctx,
-		time.Second*1,
+		CONTROL_LOOP_INTERVAL,
 		func() error {
 			err := controller.solve()
 			if err != nil {
