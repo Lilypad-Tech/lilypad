@@ -354,10 +354,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 			log.Error().Msgf("deal not found")
 			return err
 		}
-		filesPath, err := GetDealsFilePath(id)
-		if err != nil {
-			return err
-		}
+		filesPath := GetDealsFilePath(id)
 		// check if the filesPath directory exists
 		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
 			return fmt.Errorf("files not found: %s", id)
@@ -403,7 +400,7 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 			return fmt.Errorf("resource provider address does not match signer address")
 		}
 		tr := tar.NewReader(req.Body)
-		uploadPath, err := GetDealsFilePath(id)
+		uploadPath, err := EnsureDealsFilePath(id)
 		if err != nil {
 			return err
 		}

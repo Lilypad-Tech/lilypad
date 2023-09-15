@@ -16,7 +16,11 @@ func dataDirPath(path string) string {
 	return filepath.Join(basePath, path)
 }
 
-func DataDir(path string) (string, error) {
+func GetDataDir(path string) string {
+	return dataDirPath(path)
+}
+
+func EnsureDataDir(path string) (string, error) {
 	dirPath := dataDirPath(path)
 	err := os.MkdirAll(dirPath, 0755) // 0755 is the file permission
 	if err != nil {

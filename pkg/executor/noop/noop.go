@@ -22,7 +22,7 @@ func (executor *NoopExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, int, error) {
-	resultsDir, err := system.DataDir(filepath.Join(RESULTS_DIR, deal.ID))
+	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 	if err != nil {
 		return "", 0, fmt.Errorf("error creating a local folder of results %s -> %s", deal.ID, err.Error())
 	}

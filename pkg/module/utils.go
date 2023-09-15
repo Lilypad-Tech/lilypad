@@ -75,7 +75,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	repoDir, err := system.DataDir(repoPath)
+	repoDir, err := system.EnsureDataDir(repoPath)
 	if err != nil {
 		return nil, err
 	}

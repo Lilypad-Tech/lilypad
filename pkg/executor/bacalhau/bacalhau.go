@@ -75,7 +75,7 @@ func (executor *BacalhauExecutor) RunJob(
 
 	id := strings.TrimSpace(string(jobIDOutput))
 
-	resultsDir, err := system.DataDir(filepath.Join(RESULTS_DIR, id))
+	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, id))
 	if err != nil {
 		return "", 1, fmt.Errorf("error creating a local folder of results %s -> %s", deal.ID, err.Error())
 	}

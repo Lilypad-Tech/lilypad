@@ -51,6 +51,10 @@ func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
 	LogSolverEvent(system.GetServiceBadge(service), ev)
 }
 
-func GetDealsFilePath(id string) (string, error) {
-	return system.DataDir(filepath.Join(FILES_DIR, id))
+func GetDealsFilePath(id string) string {
+	return system.GetDataDir(filepath.Join(FILES_DIR, id))
+}
+
+func EnsureDealsFilePath(id string) (string, error) {
+	return system.EnsureDataDir(filepath.Join(FILES_DIR, id))
 }
