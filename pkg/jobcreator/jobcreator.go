@@ -11,6 +11,11 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
+type JobCreatorMediationOptions struct {
+	// out of 100 chance we will check results
+	CheckResultsPercentage int
+}
+
 type JobCreatorOfferOptions struct {
 	// the module that is wanting to be run
 	// this contains the spec that is required to run the module
@@ -32,8 +37,9 @@ type JobCreatorOfferOptions struct {
 }
 
 type JobCreatorOptions struct {
-	Offer JobCreatorOfferOptions
-	Web3  web3.Web3Options
+	Mediation JobCreatorMediationOptions
+	Offer     JobCreatorOfferOptions
+	Web3      web3.Web3Options
 }
 
 type JobCreator struct {

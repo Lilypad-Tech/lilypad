@@ -16,6 +16,12 @@ func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 	return options
 }
 
+func GetDefaultJobCreatorMediationOptions() jobcreator.JobCreatorMediationOptions {
+	return jobcreator.JobCreatorMediationOptions{
+		CheckResultsPercentage: GetDefaultServeOptionInt("MEDIATION_CHANCE", 10),
+	}
+}
+
 func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
 		Module: GetDefaultModuleOptions(),
@@ -26,6 +32,15 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 		Inputs:   map[string]string{},
 		Services: GetDefaultServicesOptions(),
 	}
+}
+
+func AddJobCreatorMediationCliFlags(cmd *cobra.Command, mediationOptions *jobcreator.JobCreatorMediationOptions) {
+	cmd.PersistentFlags().IntVar(
+		&mediationOptions.CheckResultsPercentage,
+		"mediation-chance",
+		mediationOptions.CheckResultsPercentage,
+		"The percentage chance we will check results",
+	)
 }
 
 func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.JobCreatorOfferOptions) {
@@ -40,6 +55,7 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 }
 
 func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOptions) {
+	AddJobCreatorMediationCliFlags(cmd, &options.Mediation)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddJobCreatorOfferCliFlags(cmd, &options.Offer)
 }
