@@ -63,13 +63,15 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.downloadFiles).Methods("GET")
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
-
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
 
+	subrouter.HandleFunc("/deals/{id}/files", solverServer.downloadFiles).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
+
+	subrouter.HandleFunc("/deals/{id}/result", http.GetHandler(solverServer.getResult)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(solverServer.addResult)).Methods("POST")
+
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
@@ -203,6 +205,19 @@ func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *core
 		return data.DealContainer{}, fmt.Errorf("deal not found")
 	}
 	return *deal, nil
+}
+
+func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp.Request) (data.Result, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	result, err := solverServer.store.GetResult(id)
+	if err != nil {
+		return data.Result{}, err
+	}
+	if result == nil {
+		return data.Result{}, fmt.Errorf("result not found")
+	}
+	return *result, nil
 }
 
 /*

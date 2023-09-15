@@ -357,11 +357,7 @@ func (controller *ResourceProviderController) agreeToDeals() error {
  *
 */
 
-// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *ResourceProviderController) runJobs() error {
-
-	// load the deals that are in DealNegotiating
-	// and do not have a TransactionsResourceProvider.Agree tx
 	agreedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -427,12 +423,10 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 
 		// upload the tarball to the solver service
 		// TODO: we need some kind of on-chain attestation that the solver has the results
-		uploadedResult, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
+		_, err = controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
 		if err != nil {
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
-
-		result.DataID = uploadedResult.DataID
 
 		return nil
 	}()

@@ -14,6 +14,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type MediatorController struct {
@@ -189,17 +190,12 @@ func (controller *MediatorController) solve() error {
  *
 */
 
-// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *MediatorController) runJobs() error {
-
-	// load the deals that are in DealNegotiating
-	// and do not have a TransactionsResourceProvider.Agree tx
-	agreedDeals, err := controller.solverClient.GetDealsWithFilter(
+	checkedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
-			ResourceProvider: controller.web3SDK.GetAddress().String(),
-			State:            "DealAgreed",
+			Mediator: controller.web3SDK.GetAddress().String(),
+			State:    "ResultsChecked",
 		},
-		// this is where the solver has found us a match and we need to agree to it
 		func(dealContainer data.DealContainer) bool {
 			controller.runningJobsMutex.RLock()
 			defer controller.runningJobsMutex.RUnlock()
@@ -210,18 +206,14 @@ func (controller *MediatorController) runJobs() error {
 	if err != nil {
 		return err
 	}
-	if len(agreedDeals) <= 0 {
+	if len(checkedDeals) <= 0 {
 		return nil
 	}
-
-	// TODO - we are relying on the rate at which we post resource offers
-	// as our capacity manager right now
-	// this will work because we only post resource offers as fast we handle jobs
-	// but it would be worth putting some kind of queue here that is also aware
-	// of the underlying capacity of the machine
-
-	// map over the deals and run them
-	for _, dealContainer := range agreedDeals {
+	// TODO - we need some kind of queue here
+	// the reource provider is capacity managing by the rate
+	// at which it's posting offers to the solver
+	// but here we have no such rate limiting
+	for _, dealContainer := range checkedDeals {
 		func() {
 			controller.runningJobsMutex.Lock()
 			defer controller.runningJobsMutex.Unlock()
@@ -234,12 +226,9 @@ func (controller *MediatorController) runJobs() error {
 	return err
 }
 
-// this is run in it's own go-routine
-// we've already updated controller.runningJobs so we know this will only
-// run once
 func (controller *MediatorController) runJob(deal data.DealContainer) {
-	controller.log.Info("run job", deal)
-	result := data.Result{
+	controller.log.Info("mediator run job", deal)
+	mediatorResult := data.Result{
 		DealID: deal.ID,
 		Error:  nil,
 	}
@@ -252,60 +241,34 @@ func (controller *MediatorController) runJob(deal data.DealContainer) {
 		if err != nil {
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
-		result.InstructionCount = uint64(executorResult.InstructionCount)
-		result.DataID = executorResult.ResultsCID
-
-		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
-
-		// upload the tarball to the solver service
-		// TODO: we need some kind of on-chain attestation that the solver has the results
-		uploadedResult, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
-		if err != nil {
-			return fmt.Errorf("error uploading results: %s", err.Error())
-		}
-
-		result.DataID = uploadedResult.DataID
+		mediatorResult.InstructionCount = uint64(executorResult.InstructionCount)
+		mediatorResult.DataID = executorResult.ResultsCID
 
 		return nil
 	}()
 
-	// if this error is defined then it is probably the fault of the job not us
-	// and we expect a mediator to get the same error
 	if err != nil {
-		result.Error = err
+		mediatorResult.Error = err
 	}
 
-	// the tarball of the results has been uploaded
-	// now let's post the result data itself to the solver
-	// then we will post the results on-chain
-	createdResult, err := controller.solverClient.AddResult(result)
+	// we should have the same result as the resource provider posted to the solver
+	// so before we make a decision - let's load the result that the RP posted
+	rpResult, err := controller.solverClient.GetResult(deal.ID)
 	if err != nil {
-		// TODO: what should we do here?
-		// the current path would be the post results times out
-		// and the JC can claim a refund
-		// but it's not really the fault of the RP that the solver refused to upload the results
-		controller.log.Error("error posting result", err)
+		controller.log.Error("error loading existing result for deal", err)
 		return
 	}
 
-	txHash, err := controller.web3SDK.AddResult(
-		deal.Deal.ID,
-		createdResult.ID,
-		result.InstructionCount,
-	)
-	if err != nil {
-		controller.log.Error("error calling add result tx for job", err)
-		return
-	}
+	fmt.Printf("rpResult --------------------------------------\n")
+	spew.Dump(rpResult)
+	fmt.Printf("mediatorResult --------------------------------------\n")
+	spew.Dump(mediatorResult)
 
-	_, err = controller.solverClient.UpdateTransactionsResourceProvider(deal.ID, data.DealTransactionsResourceProvider{
-		AddResult: txHash,
-	})
-	if err != nil {
-		// TODO: we need a way of deciding based on certain classes of error what happens
-		// some will be retryable - otherwise will be fatal
-		// we need a way to exit a job loop as a baseline
-		controller.log.Error("error adding add result tx hash for deal", err)
-		return
+	isResultCorrect := true
+
+	if isResultCorrect {
+
+	} else {
+
 	}
 }

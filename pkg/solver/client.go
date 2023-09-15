@@ -104,6 +104,10 @@ func (client *SolverClient) GetDeal(id string) (data.DealContainer, error) {
 	return http.GetRequest[data.DealContainer](client.options, fmt.Sprintf("/deals/%s", id), map[string]string{})
 }
 
+func (client *SolverClient) GetResult(id string) (data.Result, error) {
+	return http.GetRequest[data.Result](client.options, fmt.Sprintf("/deals/%s/result", id), map[string]string{})
+}
+
 func (client *SolverClient) GetDealsWithFilter(query store.GetDealsQuery, filter func(data.DealContainer) bool) ([]data.DealContainer, error) {
 	deals, err := client.GetDeals(query)
 	if err != nil {
