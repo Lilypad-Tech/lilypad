@@ -55,7 +55,7 @@ func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContaine
 func (s *SolverStoreMemory) AddResult(result data.Result) (*data.Result, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.resultMap[result.ID] = &result
+	s.resultMap[result.DealID] = &result
 	return &result, nil
 }
 
