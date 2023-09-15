@@ -142,6 +142,10 @@ func (client *SolverClient) UpdateTransactionsJobCreator(id string, payload data
 	return http.PostRequest[data.DealTransactionsJobCreator, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/job_creator", id), payload)
 }
 
+func (client *SolverClient) UpdateTransactionsMediator(id string, payload data.DealTransactionsMediator) (data.DealContainer, error) {
+	return http.PostRequest[data.DealTransactionsMediator, data.DealContainer](client.options, fmt.Sprintf("/deals/%s/txs/mediator", id), payload)
+}
+
 func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
 	buf, err := system.GetTarBuffer(localPath)
 	if err != nil {

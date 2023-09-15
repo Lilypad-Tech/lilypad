@@ -190,3 +190,45 @@ func (sdk *Web3SDK) CheckResult(
 	}
 	return tx.Hash().String(), nil
 }
+
+func (sdk *Web3SDK) MediationAcceptResult(
+	dealId string,
+) (string, error) {
+	tx, err := sdk.Contracts.Controller.MediationAcceptResult(
+		sdk.TransactOpts,
+		dealId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting controller.MediationAcceptResult", err)
+		return "", err
+	} else {
+		system.Info(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
+		spew.Dump(tx)
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
+}
+
+func (sdk *Web3SDK) MediationRejectResult(
+	dealId string,
+) (string, error) {
+	tx, err := sdk.Contracts.Controller.MediationRejectResult(
+		sdk.TransactOpts,
+		dealId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting controller.MediationRejectResult", err)
+		return "", err
+	} else {
+		system.Info(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
+		spew.Dump(tx)
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
+}

@@ -266,9 +266,47 @@ func (controller *MediatorController) runJob(deal data.DealContainer) {
 
 	isResultCorrect := true
 
+	if rpResult.DataID != mediatorResult.DataID {
+		controller.log.Info("mediation data results different", fmt.Sprintf("deal %s, mediator: %s, rp: %s", deal.ID, mediatorResult.DataID, rpResult.DataID))
+		isResultCorrect = false
+	}
+
+	if rpResult.InstructionCount != mediatorResult.InstructionCount {
+		controller.log.Info("mediation instruction count different", fmt.Sprintf("deal %s, mediator: %d, rp: %d", deal.ID, mediatorResult.InstructionCount, rpResult.InstructionCount))
+		isResultCorrect = false
+	}
+
 	if isResultCorrect {
+		txHash, err := controller.web3SDK.MediationAcceptResult(
+			deal.Deal.ID,
+		)
+		if err != nil {
+			controller.log.Error("error calling mediation accept result tx for job", err)
+			return
+		}
 
+		_, err = controller.solverClient.UpdateTransactionsMediator(deal.ID, data.DealTransactionsMediator{
+			MediationAcceptResult: txHash,
+		})
+		if err != nil {
+			controller.log.Error("error adding mediation accept result tx hash for deal", err)
+			return
+		}
 	} else {
+		txHash, err := controller.web3SDK.MediationRejectResult(
+			deal.Deal.ID,
+		)
+		if err != nil {
+			controller.log.Error("error calling mediation reject result tx for job", err)
+			return
+		}
 
+		_, err = controller.solverClient.UpdateTransactionsMediator(deal.ID, data.DealTransactionsMediator{
+			MediationRejectResult: txHash,
+		})
+		if err != nil {
+			controller.log.Error("error adding mediation reject result tx hash for deal", err)
+			return
+		}
 	}
 }
