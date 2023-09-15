@@ -2,6 +2,7 @@ package web3
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -114,6 +115,31 @@ func (sdk *Web3SDK) Agree(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
+		spew.Dump(tx)
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
+}
+
+func (sdk *Web3SDK) AddResult(
+	dealId string,
+	resultsId string,
+	instructionCount uint64,
+) (string, error) {
+	tx, err := sdk.Contracts.Controller.AddResult(
+		sdk.TransactOpts,
+		dealId,
+		resultsId,
+		big.NewInt(int64(instructionCount)),
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting controller.AddResult", err)
+		return "", err
+	} else {
+		system.Info(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
 		spew.Dump(tx)
 	}
 	_, err = sdk.waitTx(tx)

@@ -228,7 +228,7 @@ func (controller *JobCreatorController) agreeToDeals() error {
 	// map over the deals and agree to them
 	for _, dealContainer := range matchedDeals {
 		controller.log.Info("agree", dealContainer)
-		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
+		txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
 			// TODO: we need a way of deciding based on certain classes of error what happens
 			// some will be retryable - otherwise will be fatal
@@ -236,20 +236,20 @@ func (controller *JobCreatorController) agreeToDeals() error {
 			controller.log.Error("error calling agree tx for deal", err)
 			continue
 		}
-		controller.log.Info("agree tx", tx)
+		controller.log.Info("agree tx", txHash)
 
 		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsJobCreator(dealContainer.ID, data.DealTransactionsJobCreator{
-			Agree: tx,
+			Agree: txHash,
 		})
 		if err != nil {
 			// TODO: we need a way of deciding based on certain classes of error what happens
 			// some will be retryable - otherwise will be fatal
 			// we need a way to exit a job loop as a baseline
-			controller.log.Error("error calling agree tx for deal", err)
+			controller.log.Error("error adding agree tx hash for deal", err)
 			continue
 		}
-		controller.log.Info("updated deal with agree tx", tx)
+		controller.log.Info("updated deal with agree tx", txHash)
 	}
 
 	return err

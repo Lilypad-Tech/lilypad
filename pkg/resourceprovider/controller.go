@@ -296,12 +296,76 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 // list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *ResourceProviderController) agreeToDeals() error {
+	// load all deals that are in DealAgreed state and are for us
+	matchedDeals, err := controller.solverClient.GetDealsWithFilter(
+		store.GetDealsQuery{
+			ResourceProvider: controller.web3SDK.GetAddress().String(),
+			State:            "DealNegotiating",
+		},
+		// if we have already submitted an agree tx then don't do it again
+		func(dealContainer data.DealContainer) bool {
+			return dealContainer.Transactions.ResourceProvider.Agree == ""
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if len(matchedDeals) <= 0 {
+		return nil
+	}
+
+	// map over the deals and agree to them
+	for _, dealContainer := range matchedDeals {
+		controller.log.Info("agree", dealContainer)
+		txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			controller.log.Error("error calling agree tx for deal", err)
+			continue
+		}
+		controller.log.Info("agree tx", txHash)
+
+		// we have agreed to the deal so we need to update the tx in the solver
+		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
+			Agree: txHash,
+		})
+		if err != nil {
+			// TODO: we need a way of deciding based on certain classes of error what happens
+			// some will be retryable - otherwise will be fatal
+			// we need a way to exit a job loop as a baseline
+			controller.log.Error("error adding agree tx hash for deal", err)
+			continue
+		}
+		controller.log.Info("updated deal with agree tx", txHash)
+	}
+
+	return err
+
+}
+
+/*
+ *
+ *
+ *
+
+ Run jobs
+
+ *
+ *
+ *
+*/
+
+// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
+func (controller *ResourceProviderController) runJobs() error {
+
 	// load the deals that are in DealNegotiating
 	// and do not have a TransactionsResourceProvider.Agree tx
 	agreedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			ResourceProvider: controller.web3SDK.GetAddress().String(),
-			State:            "DealNegotiating",
+			State:            "DealAgreed",
 		},
 		// this is where the solver has found us a match and we need to agree to it
 		func(dealContainer data.DealContainer) bool {
@@ -318,7 +382,13 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 		return nil
 	}
 
-	// map over the deals and agree to them
+	// TODO - we are relying on the rate at which we post resource offers
+	// as our capacity manager right now
+	// this will work because we only post resource offers as fast we handle jobs
+	// but it would be worth putting some kind of queue here that is also aware
+	// of the underlying capacity of the machine
+
+	// map over the deals and run them
 	for _, dealContainer := range agreedDeals {
 		func() {
 			controller.runningJobsMutex.Lock()
@@ -362,14 +432,16 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		}
 
 		result.DataID = uploadedResult.DataID
-		fmt.Printf("uploadedResult --------------------------------------\n")
-		spew.Dump(result)
+
 		return nil
 	}()
 
+	// if this error is defined then it is probably the fault of the job not us
+	// and we expect a mediator to get the same error
 	if err != nil {
 		result.Error = err
 	}
+
 	// the tarball of the results has been uploaded
 	// now let's post the result data itself to the solver
 	// then we will post the results on-chain
@@ -383,69 +455,24 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		return
 	}
 
-	fmt.Printf("createdResult --------------------------------------\n")
-	spew.Dump(createdResult)
-
-}
-
-/*
- *
- *
- *
-
- Run jobs
-
- *
- *
- *
-*/
-
-// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
-func (controller *ResourceProviderController) runJobs() error {
-	// load all deals that are in DealAgreed state and are for us
-	matchedDeals, err := controller.solverClient.GetDealsWithFilter(
-		store.GetDealsQuery{
-			ResourceProvider: controller.web3SDK.GetAddress().String(),
-			State:            "DealAgreed",
-		},
-		// if we are already running this job then don't run it again
-		func(dealContainer data.DealContainer) bool {
-			return dealContainer.Transactions.ResourceProvider.Agree == ""
-		},
+	txHash, err := controller.web3SDK.AddResult(
+		deal.Deal.ID,
+		createdResult.ID,
+		result.InstructionCount,
 	)
 	if err != nil {
-		return err
-	}
-	if len(matchedDeals) <= 0 {
-		return nil
+		controller.log.Error("error calling add result tx for job", err)
+		return
 	}
 
-	// map over the deals and agree to them
-	for _, dealContainer := range matchedDeals {
-		controller.log.Info("agree", dealContainer)
-		tx, err := controller.web3SDK.Agree(dealContainer.Deal)
-		if err != nil {
-			// TODO: we need a way of deciding based on certain classes of error what happens
-			// some will be retryable - otherwise will be fatal
-			// we need a way to exit a job loop as a baseline
-			controller.log.Error("error calling agree tx for deal", err)
-			continue
-		}
-		controller.log.Info("agree tx", tx)
-
-		// we have agreed to the deal so we need to update the tx in the solver
-		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
-			Agree: tx,
-		})
-		if err != nil {
-			// TODO: we need a way of deciding based on certain classes of error what happens
-			// some will be retryable - otherwise will be fatal
-			// we need a way to exit a job loop as a baseline
-			controller.log.Error("error calling agree tx for deal", err)
-			continue
-		}
-		controller.log.Info("updated deal with agree tx", tx)
+	_, err = controller.solverClient.UpdateTransactionsResourceProvider(deal.ID, data.DealTransactionsResourceProvider{
+		AddResult: txHash,
+	})
+	if err != nil {
+		// TODO: we need a way of deciding based on certain classes of error what happens
+		// some will be retryable - otherwise will be fatal
+		// we need a way to exit a job loop as a baseline
+		controller.log.Error("error adding add result tx hash for deal", err)
+		return
 	}
-
-	return err
 }
