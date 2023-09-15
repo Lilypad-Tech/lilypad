@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -35,6 +36,11 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
+	if err != nil {
+		return err
+	}
+
+	executor, err := bacalhau.NewBacalhauExecutor(options.Executor.Bacalhau)
 	if err != nil {
 		return err
 	}

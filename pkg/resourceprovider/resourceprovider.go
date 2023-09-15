@@ -43,12 +43,8 @@ type ResourceProviderOfferOptions struct {
 	Services data.ServiceConfig
 }
 
-type ResourceProviderExecutorOptions struct {
-	Bacalhau bacalhau.BacalhauExecutorOptions
-}
-
 type ResourceProviderOptions struct {
-	Executor ResourceProviderExecutorOptions
+	Bacalhau bacalhau.BacalhauExecutorOptions
 	Offers   ResourceProviderOfferOptions
 	Web3     web3.Web3Options
 }

@@ -3,12 +3,17 @@ package mediator
 import (
 	"context"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/executor"
+	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
 type MediatorOptions struct {
-	Web3 web3.Web3Options
+	Bacalhau bacalhau.BacalhauExecutorOptions
+	Services data.ServiceConfig
+	Web3     web3.Web3Options
 }
 
 type Mediator struct {
@@ -19,8 +24,9 @@ type Mediator struct {
 func NewMediator(
 	options MediatorOptions,
 	web3SDK *web3.Web3SDK,
+	executor executor.Executor,
 ) (*Mediator, error) {
-	controller, err := NewMediatorController(web3SDK)
+	controller, err := NewMediatorController(options, web3SDK, executor)
 	if err != nil {
 		return nil, err
 	}

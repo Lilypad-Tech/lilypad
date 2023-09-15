@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/spf13/cobra"
@@ -12,20 +11,12 @@ import (
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	options := resourceprovider.ResourceProviderOptions{
-		Executor: GetDefaultResourceProviderExecutorOptions(),
+		Bacalhau: GetDefaultBacalhauOptions(),
 		Offers:   GetDefaultResourceProviderOfferOptions(),
 		Web3:     GetDefaultWeb3Options(),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
-}
-
-func GetDefaultResourceProviderExecutorOptions() resourceprovider.ResourceProviderExecutorOptions {
-	return resourceprovider.ResourceProviderExecutorOptions{
-		Bacalhau: bacalhau.BacalhauExecutorOptions{
-			ApiHost: GetDefaultServeOptionString("BACALHAU_API_HOST", "localhost"),
-		},
-	}
 }
 
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
@@ -80,15 +71,8 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	AddServicesCliFlags(cmd, &offerOptions.Services)
 }
 
-func AddResourceProviderExecutorCliFlags(cmd *cobra.Command, executorOptions *resourceprovider.ResourceProviderExecutorOptions) {
-	cmd.PersistentFlags().StringVar(
-		&executorOptions.Bacalhau.ApiHost, "bacalhau-api-host", executorOptions.Bacalhau.ApiHost,
-		`The api hostname for the bacalhau cluster to run jobs`,
-	)
-}
-
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
-	AddResourceProviderExecutorCliFlags(cmd, &options.Executor)
+	AddBacalhauCliFlags(cmd, &options.Bacalhau)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
 }
@@ -127,6 +111,10 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 		return err
 	}
 	err = CheckServicesOptions(options.Offers.Services)
+	if err != nil {
+		return err
+	}
+	err = CheckBacalhauOptions(options.Bacalhau)
 	if err != nil {
 		return err
 	}
