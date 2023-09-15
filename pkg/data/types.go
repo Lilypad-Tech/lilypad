@@ -261,4 +261,5 @@ type DealContainer struct {
 	State            uint8            `json:"state"`
 	Deal             Deal             `json:"deal"`
 	Transactions     DealTransactions `json:"transactions"`
+	Mediator         string           `json:"mediator"`
 }

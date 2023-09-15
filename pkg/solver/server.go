@@ -72,6 +72,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(solverServer.addResult)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -326,6 +327,26 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 	return solverServer.controller.updateDealTransactionsJobCreator(id, payload)
+}
+
+func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTransactionsMediator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		log.Error().Err(err).Msgf("error loading deal")
+		return nil, err
+	}
+	signerAddress, err := http.GetAddressFromHeaders(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("have error parsing user address")
+		return nil, err
+	}
+	// only the job creator can post a job offer
+	if signerAddress != deal.Mediator {
+		return nil, fmt.Errorf("job creator address does not match mediator address")
+	}
+	return solverServer.controller.updateDealTransactionsMediator(id, payload)
 }
 
 /*

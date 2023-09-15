@@ -9,6 +9,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -23,8 +24,10 @@ const (
 	JobOfferStateUpdated                SolverEventType = "JobOfferStateUpdated"
 	ResourceOfferStateUpdated           SolverEventType = "ResourceOfferStateUpdated"
 	DealStateUpdated                    SolverEventType = "DealStateUpdated"
+	DealMediatorUpdated                 SolverEventType = "DealMediatorUpdated"
 	ResourceProviderTransactionsUpdated SolverEventType = "ResourceProviderTransactionsUpdated"
 	JobCreatorTransactionsUpdated       SolverEventType = "JobCreatorTransactionsUpdated"
+	MediatorTransactionsUpdated         SolverEventType = "MediatorTransactionsUpdated"
 )
 
 type SolverEvent struct {
@@ -126,6 +129,8 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 // * see if we have the deal locally
 // * update the deal state locally
 func (controller *SolverController) subscribeToWeb3() error {
+
+	// change the deal state
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		controller.log.Info("StorageDealStateChange", "")
 		spew.Dump(ev)
@@ -138,6 +143,21 @@ func (controller *SolverController) subscribeToWeb3() error {
 		// update the store with the state change
 		controller.loop.Trigger()
 	})
+
+	// update the mediator
+	controller.web3Events.Mediation.SubscribeMediationRequested(func(ev mediation.MediationMediationRequested) {
+		controller.log.Info("MediationMediationRequested", "")
+		spew.Dump(ev)
+		_, err := controller.updateDealMediator(ev.DealId, ev.Mediator.String())
+		if err != nil {
+			controller.log.Error("error updating deal state", err)
+			return
+		}
+
+		// update the store with the state change
+		controller.loop.Trigger()
+	})
+
 	return nil
 }
 
@@ -147,7 +167,7 @@ func (controller *SolverController) subscribeEvents(handler func(SolverEvent)) {
 	controller.solverEventSubs = append(controller.solverEventSubs, handler)
 }
 
-func (controller *SolverController) reactToevent(ev SolverEvent) {
+func (controller *SolverController) reactToEvent(ev SolverEvent) {
 	// both of these should trigger a solve
 	if ev.EventType == ResourceOfferAdded || ev.EventType == JobOfferAdded {
 		controller.loop.Trigger()
@@ -156,7 +176,7 @@ func (controller *SolverController) reactToevent(ev SolverEvent) {
 
 // write the given event to all generated event channels
 func (controller *SolverController) writeEvent(ev SolverEvent) {
-	controller.reactToevent(ev)
+	controller.reactToEvent(ev)
 	for _, handler := range controller.solverEventSubs {
 		handler(ev)
 	}
@@ -398,6 +418,20 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 	return dealContainer, nil
 }
 
+// this will also update the job and resource offer states
+func (controller *SolverController) updateDealMediator(id string, mediator string) (*data.DealContainer, error) {
+	controller.log.Info("update mediator", fmt.Sprintf("%s %s", id, mediator))
+	dealContainer, err := controller.store.UpdateDealMediator(id, mediator)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: DealMediatorUpdated,
+		Deal:      dealContainer,
+	})
+	return dealContainer, nil
+}
+
 /*
 *
 *
@@ -430,6 +464,19 @@ func (controller *SolverController) updateDealTransactionsJobCreator(id string, 
 	}
 	controller.writeEvent(SolverEvent{
 		EventType: JobCreatorTransactionsUpdated,
+		Deal:      dealContainer,
+	})
+	return dealContainer, nil
+}
+
+func (controller *SolverController) updateDealTransactionsMediator(id string, payload data.DealTransactionsMediator) (*data.DealContainer, error) {
+	controller.log.Info("update mediator txs", payload)
+	dealContainer, err := controller.store.UpdateDealTransactionsMediator(id, payload)
+	if err != nil {
+		return nil, err
+	}
+	controller.writeEvent(SolverEvent{
+		EventType: MediatorTransactionsUpdated,
 		Deal:      dealContainer,
 	})
 	return dealContainer, nil
