@@ -7,8 +7,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/rs/zerolog/log"
 )
 
 func RunJob(
@@ -27,21 +25,6 @@ func RunJob(
 	}
 
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
-
-	// start the error channels in a goroutine
-	// because we want to block on the actual job we are running
-	go func() {
-		for {
-			select {
-			case err = <-jobCreatorErrors:
-				log.Error().Err(err).Msg("error in job creator")
-				ctx.Cleanup()
-				return
-			case <-ctx.Ctx.Done():
-				return
-			}
-		}
-	}()
 
 	// let's process our options into an actual job offer
 	// this will also validate the module we are asking for
@@ -74,6 +57,8 @@ waitloop:
 	for {
 		select {
 		// this means the job was cancelled
+		case err := <-jobCreatorErrors:
+			return nil, err
 		case <-ctx.Ctx.Done():
 			return nil, fmt.Errorf("job cancelled")
 		case finalJobOffer = <-updateChan:
@@ -87,11 +72,6 @@ waitloop:
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("finalJobOffer --------------------------------------\n")
-	spew.Dump(finalJobOffer)
-	fmt.Printf("result --------------------------------------\n")
-	spew.Dump(result)
 
 	return &result, nil
 }

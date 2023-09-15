@@ -14,6 +14,7 @@ import (
 	solvermemorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solver, error) {
@@ -88,7 +89,7 @@ func TestStack(t *testing.T) {
 		return
 	}
 
-	solverErrors := solver.Start(commandCtx.Ctx, commandCtx.Cm)
+	solver.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	// give the solver server a chance to boot before we get all the websockets
 	// up and trying to connect to it
@@ -106,44 +107,10 @@ func TestStack(t *testing.T) {
 		return
 	}
 
-	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
+	resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
-	var errorChan chan error
-	var completeChan chan bool
+	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
 
-	// watch a job happen and check it's status
-	go func() {
-		_, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
-		if err != nil {
-			errorChan <- err
-		} else {
-			completeChan <- true
-		}
-	}()
-
-	for {
-		select {
-		case err := <-errorChan:
-			commandCtx.Cleanup()
-			t.Error(err)
-			return
-		case err := <-solverErrors:
-			commandCtx.Cleanup()
-			t.Error(err)
-			return
-		case err := <-resourceProviderErrors:
-			commandCtx.Cleanup()
-			t.Error(err)
-			return
-		case <-commandCtx.Ctx.Done():
-			t.Error("error: context cancelled")
-			return
-		case <-time.After(60 * time.Second):
-			commandCtx.Cleanup()
-			t.Error("error: timeout")
-			return
-		case <-completeChan:
-			commandCtx.Cleanup()
-		}
-	}
+	fmt.Printf("result --------------------------------------\n")
+	spew.Dump(result)
 }
