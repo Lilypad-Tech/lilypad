@@ -13,7 +13,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type JobCreatorController struct {
@@ -120,8 +119,8 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
 			return
 		}
-		controller.log.Info("StorageDealStateChange", "")
-		spew.Dump(ev)
+		controller.log.Info("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		system.DumpObjectDebug(ev)
 		controller.loop.Trigger()
 	})
 	return nil
@@ -293,14 +292,25 @@ func (controller *JobCreatorController) checkResults() error {
 		// work out if we should check or accept the results
 		if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
 			err = controller.checkResult(dealContainer)
-			// TODO: error handling - is it terminal or retryable?
-			controller.log.Error("error checking deal results", err)
-			continue
+
+			if err != nil {
+				// TODO: error handling - is it terminal or retryable?
+				controller.log.Error("error checking deal results", err)
+				continue
+			}
+
+			controller.log.Info("Checked results for job", dealContainer.ID)
+
 		} else {
 			err = controller.acceptResult(dealContainer)
-			// TODO: error handling - is it terminal or retryable?
-			controller.log.Error("error accepting deal results", err)
-			continue
+
+			if err != nil {
+				// TODO: error handling - is it terminal or retryable?
+				controller.log.Error("error accepting deal results", err)
+				continue
+			}
+
+			controller.log.Info("Accepted results for job", dealContainer.ID)
 		}
 	}
 

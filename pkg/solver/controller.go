@@ -11,7 +11,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // add an enum for various types of event
@@ -132,14 +131,13 @@ func (controller *SolverController) subscribeToWeb3() error {
 
 	// change the deal state
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
-		controller.log.Info("StorageDealStateChange", "")
-		spew.Dump(ev)
 		_, err := controller.updateDealState(ev.DealId, ev.State)
 		if err != nil {
 			controller.log.Error("error updating deal state", err)
 			return
 		}
-
+		controller.log.Info("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		system.DumpObjectDebug(ev)
 		// update the store with the state change
 		controller.loop.Trigger()
 	})
@@ -147,7 +145,7 @@ func (controller *SolverController) subscribeToWeb3() error {
 	// update the mediator
 	controller.web3Events.Mediation.SubscribeMediationRequested(func(ev mediation.MediationMediationRequested) {
 		controller.log.Info("MediationMediationRequested", "")
-		spew.Dump(ev)
+		system.DumpObjectDebug(ev)
 		_, err := controller.updateDealMediator(ev.DealId, ev.Mediator.String())
 		if err != nil {
 			controller.log.Error("error updating deal state", err)

@@ -79,3 +79,17 @@ func Trace(service Service, title string, data interface{}) {
 func DumpObject(d interface{}) {
 	spew.Dump(d)
 }
+
+func DumpObjectDebug(d interface{}) {
+	currentLogLevel := log.Logger.GetLevel()
+	if currentLogLevel <= zerolog.DebugLevel {
+		spew.Dump(d)
+	}
+}
+
+func DumpObjectInfo(d interface{}) {
+	currentLogLevel := log.Logger.GetLevel()
+	if currentLogLevel <= zerolog.InfoLevel {
+		spew.Dump(d)
+	}
+}

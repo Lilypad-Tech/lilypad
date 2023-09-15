@@ -7,7 +7,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -51,7 +50,7 @@ func (sdk *Web3SDK) UpdateUser(
 		return err
 	} else {
 		system.Info(sdk.Options.Service, "submitted users.UpdateUser", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -72,7 +71,7 @@ func (sdk *Web3SDK) AddUserToList(
 		return err
 	} else {
 		system.Info(sdk.Options.Service, "submitted users.AddUserToList", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -115,7 +114,7 @@ func (sdk *Web3SDK) Agree(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -140,7 +139,7 @@ func (sdk *Web3SDK) AddResult(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -161,7 +160,7 @@ func (sdk *Web3SDK) AcceptResult(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -182,7 +181,7 @@ func (sdk *Web3SDK) CheckResult(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -203,7 +202,7 @@ func (sdk *Web3SDK) MediationAcceptResult(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
@@ -224,7 +223,7 @@ func (sdk *Web3SDK) MediationRejectResult(
 		return "", err
 	} else {
 		system.Info(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
-		spew.Dump(tx)
+		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
 	if err != nil {
