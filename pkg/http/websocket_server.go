@@ -45,6 +45,9 @@ func StartWebSocketServer(
 
 	// spawn a reader from the incoming message channel
 	// each message we get we fan out to all the currently connected websocket clients
+
+	// TODO: we should add some subscription channels here because right now we are
+	// splatting a lot of bytes down the write because everyone is hearing everything
 	go func() {
 		for {
 			select {
