@@ -148,3 +148,45 @@ func (sdk *Web3SDK) AddResult(
 	}
 	return tx.Hash().String(), nil
 }
+
+func (sdk *Web3SDK) AcceptResult(
+	dealId string,
+) (string, error) {
+	tx, err := sdk.Contracts.Controller.AcceptResult(
+		sdk.TransactOpts,
+		dealId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting controller.AcceptResult", err)
+		return "", err
+	} else {
+		system.Info(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
+		spew.Dump(tx)
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
+}
+
+func (sdk *Web3SDK) CheckResult(
+	dealId string,
+) (string, error) {
+	tx, err := sdk.Contracts.Controller.CheckResult(
+		sdk.TransactOpts,
+		dealId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting controller.CheckResult", err)
+		return "", err
+	} else {
+		system.Info(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
+		spew.Dump(tx)
+	}
+	_, err = sdk.waitTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return tx.Hash().String(), nil
+}

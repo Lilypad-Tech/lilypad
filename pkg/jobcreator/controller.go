@@ -3,6 +3,7 @@ package jobcreator
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -191,6 +192,10 @@ func (controller *JobCreatorController) solve() error {
 	if err != nil {
 		return err
 	}
+	err = controller.checkResults()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -232,9 +237,7 @@ func (controller *JobCreatorController) agreeToDeals() error {
 		controller.log.Info("agree", dealContainer)
 		txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
-			// TODO: we need a way of deciding based on certain classes of error what happens
-			// some will be retryable - otherwise will be fatal
-			// we need a way to exit a job loop as a baseline
+			// TODO: error handling - is it terminal or retryable?
 			controller.log.Error("error calling agree tx for deal", err)
 			continue
 		}
@@ -245,14 +248,97 @@ func (controller *JobCreatorController) agreeToDeals() error {
 			Agree: txHash,
 		})
 		if err != nil {
-			// TODO: we need a way of deciding based on certain classes of error what happens
-			// some will be retryable - otherwise will be fatal
-			// we need a way to exit a job loop as a baseline
+			// TODO: error handling - is it terminal or retryable?
 			controller.log.Error("error adding agree tx hash for deal", err)
 			continue
 		}
 		controller.log.Info("updated deal with agree tx", txHash)
 	}
 
+	return nil
+}
+
+// list the deals that have results posted but we have not yet checked
+// we do this synchronously to prevent us racing with large result sets
+// also we are the client so have a lower chance of there being a chunky backlog
+func (controller *JobCreatorController) checkResults() error {
+	// load all deals in ResultsSubmitted state and don't have either results checked or accepted txs
+	completedDeals, err := controller.solverClient.GetDealsWithFilter(
+		store.GetDealsQuery{
+			JobCreator: controller.web3SDK.GetAddress().String(),
+			State:      "ResultsSubmitted",
+		},
+		// this is where the solver has found us a match and we need to agree to it
+		func(dealContainer data.DealContainer) bool {
+			return dealContainer.Transactions.JobCreator.AcceptResult == "" && dealContainer.Transactions.JobCreator.CheckResult == ""
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if len(completedDeals) <= 0 {
+		return nil
+	}
+
+	for _, dealContainer := range completedDeals {
+		err = controller.solverClient.DownloadResultFiles(dealContainer.ID, solver.GetDealsFilePath(dealContainer.ID))
+		if err != nil {
+			// TODO: error handling - is it terminal or retryable?
+			controller.log.Error("error downloading deal results", err)
+			continue
+		}
+
+		controller.log.Info("Downloaded results for job", solver.GetDealsFilePath(dealContainer.ID))
+
+		// work out if we should check or accept the results
+		if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
+			err = controller.checkResult(dealContainer)
+			// TODO: error handling - is it terminal or retryable?
+			controller.log.Error("error checking deal results", err)
+			continue
+		} else {
+			err = controller.acceptResult(dealContainer)
+			// TODO: error handling - is it terminal or retryable?
+			controller.log.Error("error accepting deal results", err)
+			continue
+		}
+	}
+
 	return err
+}
+
+func (controller *JobCreatorController) acceptResult(deal data.DealContainer) error {
+	controller.log.Info("Accepting results for job", deal.ID)
+	txHash, err := controller.web3SDK.AcceptResult(deal.ID)
+	if err != nil {
+		return fmt.Errorf("error calling accept result tx for deal: %s", err.Error())
+	}
+	controller.log.Info("accept result tx", txHash)
+
+	// we have agreed to the deal so we need to update the tx in the solver
+	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
+		AcceptResult: txHash,
+	})
+	if err != nil {
+		return fmt.Errorf("error adding AcceptResult tx hash for deal: %s", err.Error())
+	}
+	return nil
+}
+
+func (controller *JobCreatorController) checkResult(deal data.DealContainer) error {
+	controller.log.Info("Checking results for job", deal.ID)
+	txHash, err := controller.web3SDK.CheckResult(deal.ID)
+	if err != nil {
+		return fmt.Errorf("error calling check result tx for deal: %s", err.Error())
+	}
+	controller.log.Info("check result tx", txHash)
+
+	// we have agreed to the deal so we need to update the tx in the solver
+	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
+		CheckResult: txHash,
+	})
+	if err != nil {
+		return fmt.Errorf("error adding CheckResult tx hash for deal: %s", err.Error())
+	}
+	return nil
 }

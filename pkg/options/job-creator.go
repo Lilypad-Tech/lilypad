@@ -1,6 +1,8 @@
 package options
 
 import (
+	"fmt"
+
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -73,11 +75,15 @@ func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
 	if err != nil {
 		return err
 	}
+
+	if options.Mediation.CheckResultsPercentage < 0 || options.Mediation.CheckResultsPercentage > 100 {
+		return fmt.Errorf("mediation-chance must be between 0 and 100")
+	}
+
 	return nil
 }
 
 func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
-
 	name := ""
 	version := ""
 	if len(args) >= 2 {
