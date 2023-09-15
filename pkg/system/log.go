@@ -43,6 +43,9 @@ func SetupLogging() {
 		logLevelString = "info"
 	}
 	logLevel := zerolog.InfoLevel
+	if logLevelString == "none" {
+		logLevel = zerolog.NoLevel
+	}
 	parsedLogLevel, err := zerolog.ParseLevel(logLevelString)
 	if err == nil {
 		logLevel = parsedLogLevel

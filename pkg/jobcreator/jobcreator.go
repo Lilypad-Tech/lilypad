@@ -96,3 +96,7 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 func (jobCreator *JobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return jobCreator.controller.AddJobOffer(offer)
 }
+
+func (jobCreator *JobCreator) SubscribeToJobOffers(sub JobOfferSubscriber) {
+	jobCreator.controller.SubscribeToJobOffers(sub)
+}

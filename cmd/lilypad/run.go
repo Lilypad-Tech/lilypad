@@ -32,6 +32,6 @@ func newRunCmd() *cobra.Command {
 func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
-
-	return jobcreator.RunJob(commandCtx, options)
+	_, err := jobcreator.RunJob(commandCtx, options)
+	return err
 }

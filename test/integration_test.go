@@ -109,12 +109,15 @@ func TestStack(t *testing.T) {
 	resourceProviderErrors := resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	var errorChan chan error
+	var completeChan chan bool
 
 	// watch a job happen and check it's status
 	go func() {
-		err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
+		_, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
 		if err != nil {
 			errorChan <- err
+		} else {
+			completeChan <- true
 		}
 	}()
 
@@ -139,6 +142,8 @@ func TestStack(t *testing.T) {
 			commandCtx.Cleanup()
 			t.Error("error: timeout")
 			return
+		case <-completeChan:
+			commandCtx.Cleanup()
 		}
 	}
 }

@@ -15,13 +15,16 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
 )
 
+type JobOfferSubscriber func(offer data.JobOfferContainer)
+
 type JobCreatorController struct {
-	solverClient *solver.SolverClient
-	options      JobCreatorOptions
-	web3SDK      *web3.Web3SDK
-	web3Events   *web3.EventChannels
-	loop         *system.ControlLoop
-	log          *system.ServiceLogger
+	solverClient          *solver.SolverClient
+	options               JobCreatorOptions
+	web3SDK               *web3.Web3SDK
+	web3Events            *web3.EventChannels
+	loop                  *system.ControlLoop
+	log                   *system.ServiceLogger
+	jobOfferSubscriptions []JobOfferSubscriber
 }
 
 // the background "even if we have not heard of an event" loop
@@ -49,11 +52,12 @@ func NewJobCreatorController(
 	}
 
 	controller := &JobCreatorController{
-		solverClient: solverClient,
-		options:      options,
-		web3SDK:      web3SDK,
-		web3Events:   web3.NewEventChannels(),
-		log:          system.NewServiceLogger(system.JobCreatorService),
+		solverClient:          solverClient,
+		options:               options,
+		web3SDK:               web3SDK,
+		web3Events:            web3.NewEventChannels(),
+		log:                   system.NewServiceLogger(system.JobCreatorService),
+		jobOfferSubscriptions: []JobOfferSubscriber{},
 	}
 	return controller, nil
 }
@@ -75,6 +79,10 @@ func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.J
 	return controller.solverClient.AddJobOffer(offer)
 }
 
+func (controller *JobCreatorController) SubscribeToJobOffers(sub JobOfferSubscriber) {
+	controller.jobOfferSubscriptions = append(controller.jobOfferSubscriptions, sub)
+}
+
 /*
 *
 *
@@ -88,10 +96,11 @@ func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.J
 */
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-		// we need to agree to the deal now we've heard about it
-		if ev.EventType == solver.DealAdded {
+
+		switch ev.EventType {
+		case solver.DealAdded:
 			if ev.Deal == nil {
-				controller.log.Error("solver event", fmt.Errorf("RP received nil deal"))
+				controller.log.Error("solver event", fmt.Errorf("JC received nil deal"))
 				return
 			}
 
@@ -104,6 +113,14 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 
 			// trigger the solver
 			controller.loop.Trigger()
+		case solver.JobOfferStateUpdated:
+			if ev.JobOffer == nil {
+				controller.log.Error("solver event", fmt.Errorf("RP received nil job offer"))
+				return
+			}
+			for _, sub := range controller.jobOfferSubscriptions {
+				go sub(*ev.JobOffer)
+			}
 		}
 	})
 	return nil
