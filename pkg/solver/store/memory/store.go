@@ -142,6 +142,9 @@ func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealCont
 		if query.ResourceProvider != "" && deal.ResourceProvider != query.ResourceProvider {
 			matching = false
 		}
+		if query.Mediator != "" && deal.Mediator != query.Mediator {
+			matching = false
+		}
 		if query.State != "" && deal.State != queryState {
 			matching = false
 		}
