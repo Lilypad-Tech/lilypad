@@ -328,3 +328,11 @@ type Job struct {
 	// The specification of this job.
 	Spec Spec `json:"Spec,omitempty"`
 }
+
+// JobWithInfo is the job request + the result of attempting to run it on the network
+type JobWithInfo struct {
+	// Job info
+	Job Job `json:"Job"`
+	// The current state of the job
+	State JobState `json:"State"`
+}

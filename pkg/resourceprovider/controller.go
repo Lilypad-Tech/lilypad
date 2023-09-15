@@ -416,17 +416,18 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		if err != nil {
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
-		resultsDir, instructionCount, err := controller.executor.RunJob(deal, *module)
+		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
-		result.InstructionCount = uint64(instructionCount)
+		result.InstructionCount = uint64(executorResult.InstructionCount)
+		result.DataID = executorResult.ResultsCID
 
-		controller.log.Info(fmt.Sprintf("uploading results: %s", deal.ID), resultsDir)
+		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
 
 		// upload the tarball to the solver service
 		// TODO: we need some kind of on-chain attestation that the solver has the results
-		uploadedResult, err := controller.solverClient.UploadResultFiles(deal.ID, resultsDir)
+		uploadedResult, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
 		if err != nil {
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}

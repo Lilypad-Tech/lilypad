@@ -56,7 +56,9 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 		return nil, err
 	}
 
-	executor, err := noop.NewNoopExecutor()
+	executor, err := noop.NewNoopExecutor(noop.NoopExecutorOptions{
+		BadActor: false,
+	})
 	if err != nil {
 		return nil, err
 	}
