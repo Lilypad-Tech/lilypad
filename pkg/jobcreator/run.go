@@ -11,7 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func RunJob(ctx *system.CommandContext, options JobCreatorOptions) (*data.Result, error) {
+func RunJob(
+	ctx *system.CommandContext,
+	options JobCreatorOptions,
+) (*data.Result, error) {
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
 		return nil, err
@@ -55,37 +58,40 @@ func RunJob(ctx *system.CommandContext, options JobCreatorOptions) (*data.Result
 		return nil, err
 	}
 
-	jobCreatorService.SubscribeToJobOffers(func(evOffer data.JobOfferContainer) {
+	updateChan := make(chan data.JobOfferContainer)
+
+	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
 		if evOffer.JobOffer.ID != jobOfferContainer.ID {
 			return
 		}
-
-		updatedState := data.GetAgreementStateString(evOffer.State)
-
-		fmt.Printf("evOffer --------------------------------------\n")
-		spew.Dump(updatedState)
-
+		updateChan <- evOffer
 	})
 
-	checkJob := func() (bool, error) {
-		return false, nil
-	}
+	var finalJobOffer data.JobOfferContainer
 
 	// now we wait on the state of the job
+waitloop:
 	for {
 		select {
 		// this means the job was cancelled
 		case <-ctx.Ctx.Done():
-			return nil, nil
-		// keep looping on the job state
-		case <-time.After(1 * time.Second):
-			complete, err := checkJob()
-			if err != nil {
-				return nil, err
-			}
-			if complete {
-				return nil, nil
+			return nil, fmt.Errorf("job cancelled")
+		case finalJobOffer = <-updateChan:
+			if data.IsTerminalAgreementState(finalJobOffer.State) {
+				break waitloop
 			}
 		}
 	}
+
+	result, err := jobCreatorService.GetResult(finalJobOffer.DealID)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("finalJobOffer --------------------------------------\n")
+	spew.Dump(finalJobOffer)
+	fmt.Printf("result --------------------------------------\n")
+	spew.Dump(result)
+
+	return &result, nil
 }

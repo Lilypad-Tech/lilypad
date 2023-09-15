@@ -194,7 +194,10 @@ func GetHandler[T any](handler httpGetWrapper[T]) func(res http.ResponseWriter, 
 	ret := func(res http.ResponseWriter, req *http.Request) {
 		data, err := handler(res, req)
 		if err != nil {
-			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+			log.Error().
+				Str("method GET", req.URL.String()).
+				Err(err).
+				Msgf("")
 			httpError, ok := err.(HTTPError)
 			if ok {
 				http.Error(res, httpError.Error(), httpError.StatusCode)
@@ -228,7 +231,10 @@ func PostHandler[RequestType any, ResultType any](handler httpPostWrapper[Reques
 		}
 		data, err := handler(requestBody, res, req)
 		if err != nil {
-			log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+			log.Error().
+				Str("method POST", req.URL.String()).
+				Err(err).
+				Msgf("")
 			httpError, ok := err.(HTTPError)
 			if ok {
 				http.Error(res, httpError.Error(), httpError.StatusCode)

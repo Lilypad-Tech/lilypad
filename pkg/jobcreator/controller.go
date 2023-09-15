@@ -79,7 +79,7 @@ func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.J
 	return controller.solverClient.AddJobOffer(offer)
 }
 
-func (controller *JobCreatorController) SubscribeToJobOffers(sub JobOfferSubscriber) {
+func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) {
 	controller.jobOfferSubscriptions = append(controller.jobOfferSubscriptions, sub)
 }
 

@@ -97,6 +97,10 @@ func (jobCreator *JobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferCon
 	return jobCreator.controller.AddJobOffer(offer)
 }
 
-func (jobCreator *JobCreator) SubscribeToJobOffers(sub JobOfferSubscriber) {
-	jobCreator.controller.SubscribeToJobOffers(sub)
+func (jobCreator *JobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) {
+	jobCreator.controller.SubscribeToJobOfferUpdates(sub)
+}
+
+func (jobCreator *JobCreator) GetResult(dealId string) (data.Result, error) {
+	return jobCreator.controller.solverClient.GetResult(dealId)
 }
