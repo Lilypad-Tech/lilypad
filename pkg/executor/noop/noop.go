@@ -12,11 +12,27 @@ import (
 const RESULTS_DIR = "noop-results"
 
 type NoopExecutorOptions struct {
-	BadActor bool
+	BadActor         bool
+	ResultsCID       string
+	Stdout           string
+	Stderr           string
+	ExitCode         string
+	InstructionCount int
 }
 
 type NoopExecutor struct {
 	Options NoopExecutorOptions
+}
+
+func NewNoopExecutorOptions() NoopExecutorOptions {
+	return NoopExecutorOptions{
+		BadActor:         false,
+		ResultsCID:       "123",
+		Stdout:           "Hello World!",
+		Stderr:           "",
+		ExitCode:         "0",
+		InstructionCount: 1,
+	}
 }
 
 func NewNoopExecutor(options NoopExecutorOptions) (*NoopExecutor, error) {
@@ -33,22 +49,22 @@ func (executor *NoopExecutor) RunJob(
 	if err != nil {
 		return nil, fmt.Errorf("error creating a local folder of results %s -> %s", deal.ID, err.Error())
 	}
-	err = system.WriteFile(filepath.Join(resultsDir, "stdout"), []byte("Hello World!"))
+	err = system.WriteFile(filepath.Join(resultsDir, "stdout"), []byte(executor.Options.Stdout))
 	if err != nil {
 		return nil, fmt.Errorf("error creating stdout file %s -> %s", deal.ID, err.Error())
 	}
-	err = system.WriteFile(filepath.Join(resultsDir, "stderr"), []byte(""))
+	err = system.WriteFile(filepath.Join(resultsDir, "stderr"), []byte(executor.Options.Stdout))
 	if err != nil {
 		return nil, fmt.Errorf("error creating stderr file %s -> %s", deal.ID, err.Error())
 	}
-	err = system.WriteFile(filepath.Join(resultsDir, "exitCode"), []byte("0"))
+	err = system.WriteFile(filepath.Join(resultsDir, "exitCode"), []byte(executor.Options.ExitCode))
 	if err != nil {
 		return nil, fmt.Errorf("error creating exitCode file %s -> %s", deal.ID, err.Error())
 	}
 	results := &executorlib.ExecutorResults{
 		ResultsDir:       resultsDir,
-		ResultsCID:       "123",
-		InstructionCount: 1,
+		ResultsCID:       executor.Options.ResultsCID,
+		InstructionCount: executor.Options.InstructionCount,
 	}
 	return results, nil
 }

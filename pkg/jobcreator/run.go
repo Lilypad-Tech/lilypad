@@ -9,10 +9,15 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 )
 
+type RunJobResults struct {
+	JobOffer data.JobOfferContainer
+	Result   data.Result
+}
+
 func RunJob(
 	ctx *system.CommandContext,
 	options JobCreatorOptions,
-) (*data.Result, error) {
+) (*RunJobResults, error) {
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
 		return nil, err
@@ -73,5 +78,8 @@ waitloop:
 		return nil, err
 	}
 
-	return &result, nil
+	return &RunJobResults{
+		JobOffer: finalJobOffer,
+		Result:   result,
+	}, nil
 }

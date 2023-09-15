@@ -15,6 +15,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
 )
 
 func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solver, error) {
@@ -79,7 +80,7 @@ func getJobCreatorOptions() (jobcreator.JobCreatorOptions, error) {
 	})
 }
 
-func TestStack(t *testing.T) {
+func TestNoModeration(t *testing.T) {
 	commandCtx := system.NewTestingContext()
 	defer commandCtx.Cleanup()
 
@@ -110,6 +111,9 @@ func TestStack(t *testing.T) {
 	resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
+
+	assert.NoError(t, err, "there was an error running the job")
+	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
 
 	fmt.Printf("result --------------------------------------\n")
 	spew.Dump(result)
