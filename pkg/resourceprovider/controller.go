@@ -420,8 +420,6 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
 
-		// upload the tarball to the solver service
-		// TODO: we need some kind of on-chain attestation that the solver has the results
 		_, err = controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
 		if err != nil {
 			return fmt.Errorf("error uploading results: %s", err.Error())

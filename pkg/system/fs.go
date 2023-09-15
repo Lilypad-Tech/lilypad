@@ -46,17 +46,33 @@ func GetTarBuffer(localPath string) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 
-	filepath.Walk(localPath, func(file string, fi os.FileInfo, err error) error {
+	err := filepath.Walk(localPath, func(file string, fi os.FileInfo, err error) error {
+		// Handle errors
+		if err != nil {
+			return err
+		}
+
 		// Create tar header
 		header, err := tar.FileInfoHeader(fi, file)
 		if err != nil {
 			return err
 		}
-		header.Name = filepath.ToSlash(file)
+
+		// Set header.Name to relative path
+		relPath, err := filepath.Rel(localPath, file)
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(relPath)
 
 		// Write header
 		if err := tw.WriteHeader(header); err != nil {
 			return err
+		}
+
+		// If it's a directory, there's no content to write, return.
+		if fi.Mode().IsDir() {
+			return nil
 		}
 
 		// Write file content
@@ -70,6 +86,10 @@ func GetTarBuffer(localPath string) (*bytes.Buffer, error) {
 		}
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	if err := tw.Close(); err != nil {
 		return nil, err

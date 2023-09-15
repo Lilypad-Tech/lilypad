@@ -297,14 +297,14 @@ func (controller *JobCreatorController) checkResults() error {
 	}
 
 	for _, dealContainer := range completedDeals {
-		err = controller.solverClient.DownloadResultFiles(dealContainer.ID, solver.GetDealsFilePath(dealContainer.ID))
+		err = controller.solverClient.DownloadResultFiles(dealContainer.ID, solver.GetDownloadsFilePath(dealContainer.ID))
 		if err != nil {
 			// TODO: error handling - is it terminal or retryable?
 			controller.log.Error("error downloading deal results", err)
 			continue
 		}
 
-		controller.log.Info("Downloaded results for job", solver.GetDealsFilePath(dealContainer.ID))
+		controller.log.Info("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
 
 		// work out if we should check or accept the results
 		if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {

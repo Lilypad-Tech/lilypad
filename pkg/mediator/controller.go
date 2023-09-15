@@ -14,7 +14,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type MediatorController struct {
@@ -258,11 +257,6 @@ func (controller *MediatorController) runJob(deal data.DealContainer) {
 		controller.log.Error("error loading existing result for deal", err)
 		return
 	}
-
-	fmt.Printf("rpResult --------------------------------------\n")
-	spew.Dump(rpResult)
-	fmt.Printf("mediatorResult --------------------------------------\n")
-	spew.Dump(mediatorResult)
 
 	isResultCorrect := true
 

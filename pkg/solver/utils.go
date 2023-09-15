@@ -9,6 +9,7 @@ import (
 )
 
 const FILES_DIR = "job-files"
+const DOWNLOADS_DIR = "downloaded-files"
 
 func LogSolverEvent(badge string, ev SolverEvent) {
 	switch ev.EventType {
@@ -57,4 +58,12 @@ func GetDealsFilePath(id string) string {
 
 func EnsureDealsFilePath(id string) (string, error) {
 	return system.EnsureDataDir(filepath.Join(FILES_DIR, id))
+}
+
+func GetDownloadsFilePath(id string) string {
+	return system.GetDataDir(filepath.Join(DOWNLOADS_DIR, id))
+}
+
+func EnsureDownloadsFilePath(id string) (string, error) {
+	return system.EnsureDataDir(filepath.Join(DOWNLOADS_DIR, id))
 }

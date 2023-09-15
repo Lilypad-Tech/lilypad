@@ -173,7 +173,10 @@ func TestNoModeration(t *testing.T) {
 	commandCtx := system.NewTestingContext()
 	defer commandCtx.Cleanup()
 
+	message := "hello apples this is a message"
+
 	executorOptions := noop.NewNoopExecutorOptions()
+	executorOptions.Stdout = message
 
 	result, err := testStackWithOptions(t, commandCtx, testOptions{
 		moderationChance: 0,
@@ -183,6 +186,8 @@ func TestNoModeration(t *testing.T) {
 	assert.NoError(t, err, "there was an error running the job")
 	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
 
+	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
+
 	fmt.Printf("result --------------------------------------\n")
-	spew.Dump(result)
+	spew.Dump(localPath)
 }
