@@ -8,6 +8,7 @@ import (
 
 	"github.com/bacalhau-project/lilypad/pkg/executor/noop"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
+	"github.com/bacalhau-project/lilypad/pkg/mediator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
 	"github.com/bacalhau-project/lilypad/pkg/solver"
@@ -18,7 +19,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solver, error) {
+type testOptions struct {
+	moderationChance int
+	badActor         bool
+	executor         noop.NoopExecutorOptions
+}
+
+func getSolver(t *testing.T, options testOptions) (*solver.Solver, error) {
 	solverOptions := optionsfactory.NewSolverOptions()
 	solverOptions.Web3.PrivateKey = os.Getenv("SOLVER_PRIVATE_KEY")
 	solverOptions.Server.Port = 8080
@@ -42,7 +49,11 @@ func getSolver(t *testing.T, systemContext *system.CommandContext) (*solver.Solv
 	return solver.NewSolver(solverOptions, solverStore, web3SDK)
 }
 
-func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*resourceprovider.ResourceProvider, error) {
+func getResourceProvider(
+	t *testing.T,
+	systemContext *system.CommandContext,
+	options testOptions,
+) (*resourceprovider.ResourceProvider, error) {
 	resourceProviderOptions := optionsfactory.NewResourceProviderOptions()
 	resourceProviderOptions.Web3.PrivateKey = os.Getenv("RESOURCE_PROVIDER_PRIVATE_KEY")
 	if resourceProviderOptions.Web3.PrivateKey == "" {
@@ -58,9 +69,7 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 		return nil, err
 	}
 
-	executor, err := noop.NewNoopExecutor(noop.NoopExecutorOptions{
-		BadActor: false,
-	})
+	executor, err := noop.NewNoopExecutor(options.executor)
 	if err != nil {
 		return nil, err
 	}
@@ -68,26 +77,66 @@ func getResourceProvider(t *testing.T, systemContext *system.CommandContext) (*r
 	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK, executor)
 }
 
-func getJobCreatorOptions() (jobcreator.JobCreatorOptions, error) {
+func getMediator(
+	t *testing.T,
+	systemContext *system.CommandContext,
+	options testOptions,
+) (*mediator.Mediator, error) {
+	mediatorOptions := optionsfactory.NewMediatorOptions()
+	mediatorOptions.Web3.PrivateKey = os.Getenv("MEDIATOR_PRIVATE_KEY")
+	if mediatorOptions.Web3.PrivateKey == "" {
+		return nil, fmt.Errorf("MEDIATOR_PRIVATE_KEY is not defined")
+	}
+	mediatorOptions, err := optionsfactory.ProcessMediatorOptions(mediatorOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	web3SDK, err := web3.NewContractSDK(mediatorOptions.Web3)
+	if err != nil {
+		return nil, err
+	}
+
+	options.executor.BadActor = false
+
+	executor, err := noop.NewNoopExecutor(options.executor)
+	if err != nil {
+		return nil, err
+	}
+
+	return mediator.NewMediator(mediatorOptions, web3SDK, executor)
+}
+
+func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, error) {
 	jobCreatorOptions := optionsfactory.NewJobCreatorOptions()
 	jobCreatorOptions.Web3.PrivateKey = os.Getenv("JOB_CREATOR_PRIVATE_KEY")
 	if jobCreatorOptions.Web3.PrivateKey == "" {
 		return jobCreatorOptions, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
 	}
-	return optionsfactory.ProcessJobCreatorOptions(jobCreatorOptions, []string{
+	ret, err := optionsfactory.ProcessJobCreatorOptions(jobCreatorOptions, []string{
 		// this should point to the shortcut
 		"cowsay",
 	})
+
+	if err != nil {
+		return ret, err
+	}
+
+	jobCreatorOptions.Mediation.CheckResultsPercentage = options.moderationChance
+	return ret, nil
 }
 
-func TestNoModeration(t *testing.T) {
-	commandCtx := system.NewTestingContext()
-	defer commandCtx.Cleanup()
+func testStackWithOptions(
+	t *testing.T,
+	commandCtx *system.CommandContext,
+	options testOptions,
+) (*jobcreator.RunJobResults, error) {
+	options.executor = noop.NewNoopExecutorOptions()
+	options.executor.BadActor = options.badActor
 
-	solver, err := getSolver(t, commandCtx)
+	solver, err := getSolver(t, options)
 	if err != nil {
-		t.Error(err)
-		return
+		return nil, err
 	}
 
 	solver.Start(commandCtx.Ctx, commandCtx.Cm)
@@ -96,21 +145,41 @@ func TestNoModeration(t *testing.T) {
 	// up and trying to connect to it
 	time.Sleep(100 * time.Millisecond)
 
-	resourceProvider, err := getResourceProvider(t, commandCtx)
+	resourceProvider, err := getResourceProvider(t, commandCtx, options)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	jobCreatorOptions, err := getJobCreatorOptions()
-	if err != nil {
-		t.Error(err)
-		return
+		return nil, err
 	}
 
 	resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
+	// mediator, err := getMediator(t, commandCtx)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// mediator.Start(commandCtx.Ctx, commandCtx.Cm)
+
+	jobCreatorOptions, err := getJobCreatorOptions(options)
+	if err != nil {
+		return nil, err
+	}
+
 	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func TestNoModeration(t *testing.T) {
+	commandCtx := system.NewTestingContext()
+	defer commandCtx.Cleanup()
+
+	result, err := testStackWithOptions(t, commandCtx, testOptions{
+		moderationChance: 0,
+		badActor:         false,
+	})
 
 	assert.NoError(t, err, "there was an error running the job")
 	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
