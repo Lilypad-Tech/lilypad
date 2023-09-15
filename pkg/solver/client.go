@@ -127,7 +127,7 @@ func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (
 }
 
 func (client *SolverClient) AddResult(result data.Result) (data.Result, error) {
-	return http.PostRequest[data.Result, data.Result](client.options, fmt.Sprintf("/deals/%s/results", result.DealID), result)
+	return http.PostRequest[data.Result, data.Result](client.options, fmt.Sprintf("/deals/%s/result", result.DealID), result)
 }
 
 func (client *SolverClient) UpdateTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (data.DealContainer, error) {

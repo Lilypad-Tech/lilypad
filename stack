@@ -47,6 +47,20 @@ function geth-command() {
   docker exec -i geth geth --exec "$@" attach /data/geth/geth.ipc
 }
 
+############################################################################
+############################################################################
+# bacalhau
+############################################################################
+############################################################################
+
+function bacalhau-serve() {
+  bacalhau serve \
+    --node-type compute,requester \
+    --peer none \
+    --private-internal-ipfs=false \
+    --job-selection-accept-networked
+}
+
 # move ALL the money apart from 1 eth to the given admin account
 # this expects the .env file to already have been created
 function fund-admin() {
