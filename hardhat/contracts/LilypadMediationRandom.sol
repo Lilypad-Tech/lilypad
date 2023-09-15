@@ -12,8 +12,8 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
   mapping(string => address) private mediators;
 
   event MediationRequested(
-    address mediator,
-    SharedStructs.Deal deal
+    string dealId,
+    address mediator
   );
 
   /**
@@ -33,7 +33,13 @@ contract LilypadMediationRandom is ControllerOwnable, Initializable {
     address mediator = deal.members.mediators[randomIndex];
     require(mediator != address(0), "mediator cannot be 0x0");
     mediators[deal.dealId] = mediator;
-    emit MediationRequested(mediator, deal);
+    emit MediationRequested(deal.dealId, mediator);
+  }
+
+  function getMediator(
+    string memory dealId
+  ) public view returns(address) {
+    return mediators[dealId];
   }
 
   // call the controller contract as a ILilypadMediationRequester
