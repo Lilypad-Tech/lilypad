@@ -358,6 +358,10 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		if err != nil {
 			return err
 		}
+		// check if the filesPath directory exists
+		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
+			return fmt.Errorf("files not found: %s", id)
+		}
 		buf, err := system.GetTarBuffer(filesPath)
 		if err != nil {
 			return err
