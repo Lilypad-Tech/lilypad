@@ -10,6 +10,7 @@ import (
 
 func NewMediatorOptions() mediator.MediatorOptions {
 	options := mediator.MediatorOptions{
+		Bacalhau: GetDefaultBacalhauOptions(),
 		Web3:     GetDefaultWeb3Options(),
 		Services: GetDefaultServicesOptions(),
 	}

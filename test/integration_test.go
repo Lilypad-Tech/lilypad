@@ -21,7 +21,6 @@ import (
 
 type testOptions struct {
 	moderationChance int
-	badActor         bool
 	executor         noop.NoopExecutorOptions
 }
 
@@ -131,8 +130,6 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-	options.executor = noop.NewNoopExecutorOptions()
-	options.executor.BadActor = options.badActor
 
 	solver, err := getSolver(t, options)
 	if err != nil {
@@ -152,12 +149,12 @@ func testStackWithOptions(
 
 	resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
-	// mediator, err := getMediator(t, commandCtx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	mediator, err := getMediator(t, commandCtx, options)
+	if err != nil {
+		return nil, err
+	}
 
-	// mediator.Start(commandCtx.Ctx, commandCtx.Cm)
+	mediator.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	jobCreatorOptions, err := getJobCreatorOptions(options)
 	if err != nil {
@@ -176,9 +173,11 @@ func TestNoModeration(t *testing.T) {
 	commandCtx := system.NewTestingContext()
 	defer commandCtx.Cleanup()
 
+	executorOptions := noop.NewNoopExecutorOptions()
+
 	result, err := testStackWithOptions(t, commandCtx, testOptions{
 		moderationChance: 0,
-		badActor:         false,
+		executor:         executorOptions,
 	})
 
 	assert.NoError(t, err, "there was an error running the job")
