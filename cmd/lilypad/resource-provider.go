@@ -40,7 +40,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	executor, err := bacalhau.NewBacalhauExecutor(options.Executor.Bacalhau)
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
 	if err != nil {
 		return err
 	}

@@ -40,12 +40,12 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 		return err
 	}
 
-	executor, err := bacalhau.NewBacalhauExecutor(options.Executor.Bacalhau)
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
 	if err != nil {
 		return err
 	}
 
-	mediatorService, err := mediator.NewMediator(options, web3SDK)
+	mediatorService, err := mediator.NewMediator(options, web3SDK, executor)
 	if err != nil {
 		return err
 	}
