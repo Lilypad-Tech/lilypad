@@ -138,6 +138,8 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		errorChan <- err
 		return errorChan
 	}
+
+	// this connects the websocket client
 	err = controller.solverClient.Start(ctx, cm)
 	if err != nil {
 		errorChan <- err
