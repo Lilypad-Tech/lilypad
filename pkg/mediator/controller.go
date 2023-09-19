@@ -229,7 +229,7 @@ func (controller *MediatorController) runJob(deal data.DealContainer) {
 	controller.log.Info("mediator run job", deal)
 	mediatorResult := data.Result{
 		DealID: deal.ID,
-		Error:  nil,
+		Error:  "",
 	}
 	err := func() error {
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
@@ -247,7 +247,7 @@ func (controller *MediatorController) runJob(deal data.DealContainer) {
 	}()
 
 	if err != nil {
-		mediatorResult.Error = err
+		mediatorResult.Error = err.Error()
 	}
 
 	// we should have the same result as the resource provider posted to the solver

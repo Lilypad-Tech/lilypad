@@ -329,7 +329,7 @@ func PostRequest[RequestType any, ResultType any](
 	var result ResultType
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("THIS IS A JOSN ERROR: %s", err.Error())
 	}
 	return PostRequestBuffer[ResultType](
 		options,

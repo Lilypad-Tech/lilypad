@@ -166,11 +166,8 @@ func CheckJobOffer(jobOffer JobOffer) error {
 }
 
 func CheckResult(result Result) error {
-	if result.DataID == "" {
+	if result.DataID == "" && result.Error == "" {
 		return fmt.Errorf("result must have a data id")
-	}
-	if result.InstructionCount <= 0 {
-		return fmt.Errorf("result must have a positive instruction count")
 	}
 	return nil
 }

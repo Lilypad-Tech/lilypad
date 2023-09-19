@@ -72,8 +72,8 @@ contract LilypadToken is ControllerOwnable, ERC20 {
   ) public onlyController returns (bool) {
     require(toAddress != address(0), "LilypadToken: toAddress cannot be zero address");
     require(escrowBalances[toAddress] >= amount, "LilypadToken: not enough funds in escrow");
-    _transfer(address(this), toAddress, amount);
     escrowBalances[toAddress] -= amount;
+    _transfer(address(this), toAddress, amount);
     return true;
   }
 
@@ -84,8 +84,8 @@ contract LilypadToken is ControllerOwnable, ERC20 {
     uint256 amount
   ) public onlyController returns (bool) {
     require(escrowBalances[fromAddress] >= amount, "LilypadToken: not enough funds in escrow");
-    _transfer(address(this), toAddress, amount);
     escrowBalances[fromAddress] -= amount;
+    _transfer(address(this), toAddress, amount);
     return true;
   }
 

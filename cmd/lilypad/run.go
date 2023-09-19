@@ -1,9 +1,12 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +35,8 @@ func newRunCmd() *cobra.Command {
 func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
-	_, err := jobcreator.RunJob(commandCtx, options)
+	result, err := jobcreator.RunJob(commandCtx, options)
+	fmt.Printf("result --------------------------------------\n")
+	spew.Dump(result)
 	return err
 }

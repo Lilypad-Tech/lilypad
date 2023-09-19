@@ -65,7 +65,7 @@ type Result struct {
 	DealID string `json:"deal_id"`
 	// the CID of the actual results
 	DataID           string `json:"results_id"`
-	Error            error  `json:"error"`
+	Error            string `json:"error"`
 	InstructionCount uint64 `json:"instruction_count"`
 }
 

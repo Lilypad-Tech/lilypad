@@ -404,7 +404,7 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 	controller.log.Info("run job", deal)
 	result := data.Result{
 		DealID: deal.ID,
-		Error:  nil,
+		Error:  "",
 	}
 	err := func() error {
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
@@ -431,7 +431,7 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 	// if this error is defined then it is probably the fault of the job not us
 	// and we expect a mediator to get the same error
 	if err != nil {
-		result.Error = err
+		result.Error = err.Error()
 	}
 
 	// the tarball of the results has been uploaded

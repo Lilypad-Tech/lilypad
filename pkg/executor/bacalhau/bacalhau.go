@@ -3,7 +3,6 @@ package bacalhau
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/bacalhau-project/lilypad/pkg/executor"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/davecgh/go-spew/spew"
 )
 
 const RESULTS_DIR = "bacalhau-results"
@@ -38,11 +38,14 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
+	fmt.Printf("getJobID --------------------------------------\n")
+
 	id, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Printf("copyJobResults --------------------------------------\n")
 	resultsDir, err := executor.copyJobResults(deal.ID, id)
 	if err != nil {
 		return nil, err
@@ -52,6 +55,9 @@ func (executor *BacalhauExecutor) RunJob(
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("jobState --------------------------------------\n")
+	spew.Dump(jobState)
 
 	if len(jobState.State.Executions) <= 0 {
 		return nil, fmt.Errorf("no executions found for job %s", id)
@@ -76,45 +82,36 @@ func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
+	// get a JSON string of the job
+	jsonBytes, err := json.Marshal(module.Job)
+	if err != nil {
+		return "", fmt.Errorf("error getting job JSON for deal %s -> %s", deal.ID, err.Error())
+	}
+	bacalhauJobSpecDir, err := system.EnsureDataDir(filepath.Join("bacalhau-job-specs", deal.ID))
+	if err != nil {
+		return "", fmt.Errorf("error creating a local folder for job specs %s -> %s", deal.ID, err.Error())
+	}
+	jobPath := filepath.Join(bacalhauJobSpecDir, "job.json")
+	err = system.WriteFile(jobPath, jsonBytes)
+	if err != nil {
+		return "", fmt.Errorf("error writing job JSON %s -> %s", deal.ID, err.Error())
+	}
+
 	runCmd := exec.Command(
 		"bacalhau",
 		"create",
 		"--id-only",
 		"--wait",
-		"-",
+		jobPath,
 	)
 	runCmd.Env = executor.bacalhauEnv
-	stdin, err := runCmd.StdinPipe()
+
+	runOutput, err := runCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error getting stdin pipe for deal %s -> %s", deal.ID, err.Error())
-	}
-	stdout, err := runCmd.StdoutPipe()
-	if err != nil {
-		return "", fmt.Errorf("error getting stdout pipe for deal %s -> %s", deal.ID, err.Error())
+		return "", fmt.Errorf("error running command %s -> %s", deal.ID, err.Error())
 	}
 
-	input, err := json.Marshal(module.Job)
-	if err != nil {
-		return "", fmt.Errorf("error getting job JSON for deal %s -> %s", deal.ID, err.Error())
-	}
-
-	_, err = stdin.Write(input)
-	if err != nil {
-		return "", fmt.Errorf("error writing job JSON %s -> %s", deal.ID, err.Error())
-	}
-	stdin.Close()
-
-	jobIDOutput, err := io.ReadAll(stdout)
-	if err != nil {
-		return "", fmt.Errorf("error reading stdout bytes from create job %s -> %s", deal.ID, err.Error())
-	}
-
-	err = runCmd.Wait()
-	if err != nil {
-		return "", fmt.Errorf("error waiting for job to complete %s -> %s", deal.ID, err.Error())
-	}
-
-	id := strings.TrimSpace(string(jobIDOutput))
+	id := strings.TrimSpace(string(runOutput))
 
 	return id, nil
 }
@@ -145,6 +142,7 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 	describeCmd := exec.Command(
 		"bacalhau",
 		"describe",
+		// "--json",
 		jobID,
 	)
 	describeCmd.Env = executor.bacalhauEnv

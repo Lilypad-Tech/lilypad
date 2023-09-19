@@ -269,6 +269,7 @@ function mediator() {
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
   go run . mediator "$@"
 }
 
