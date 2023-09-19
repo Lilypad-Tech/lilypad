@@ -78,25 +78,23 @@ Contracts are now deployed - no services have any tokens though
 
 ### run services
 
-First we need to export the env that will configure the web3 client with the contract addresses:
+Run the following commands in separate terminals:
 
 ```bash
-source .env
-eval $(./stack print-local-dev-env)
+./stack solver
 ```
-
-Then we export the private key for the service we want to run:
 
 ```bash
-export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+./stack mediator
 ```
-
-Then we run the service:
 
 ```bash
-go run . solver
+./stack resource-provider
 ```
 
+```bash
+./stack run cowsay
+```
 
 ## stop stack
 
