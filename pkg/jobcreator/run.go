@@ -7,7 +7,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type RunJobResults struct {
@@ -50,13 +49,6 @@ func RunJob(
 	updateChan := make(chan data.JobOfferContainer)
 
 	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
-		fmt.Printf("evOffer --------------------------------------\n")
-		fmt.Printf("evOffer --------------------------------------\n")
-		fmt.Printf("evOffer --------------------------------------\n")
-		fmt.Printf("evOffer --------------------------------------\n")
-		fmt.Printf("evOffer --------------------------------------\n")
-		fmt.Printf("data.GetAgreementStateString --------------------------------------\n")
-		spew.Dump(data.GetAgreementStateString(evOffer.State))
 		// spew.Dump(evOffer)
 		if evOffer.JobOffer.ID != jobOfferContainer.ID {
 			return

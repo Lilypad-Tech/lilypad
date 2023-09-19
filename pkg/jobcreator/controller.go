@@ -3,7 +3,6 @@ package jobcreator
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -296,13 +295,14 @@ func (controller *JobCreatorController) checkResults() error {
 	}
 
 	for _, dealContainer := range completedDeals {
-		err := controller.downloadResult(dealContainer)
-		if err != nil {
-			err = controller.checkResult(dealContainer)
-			if err != nil {
-				controller.log.Error("error checking deal results", err)
-				continue
-			}
+		result, err := controller.solverClient.GetResult(dealContainer.ID)
+		if err != nil || result.Error != "" {
+			// there is an error with the job
+			// accept anyway
+			// TODO: trigger mediation here
+			controller.acceptResult(dealContainer)
+		} else {
+			controller.downloadResult(dealContainer)
 		}
 	}
 
@@ -317,28 +317,31 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 
 	controller.log.Info("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
 
+	// TODO: activate the mediation check here
+	controller.acceptResult(dealContainer)
+
 	// work out if we should check or accept the results
-	if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
-		err = controller.checkResult(dealContainer)
+	// if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
+	// 	err = controller.checkResult(dealContainer)
 
-		if err != nil {
-			// TODO: error handling - is it terminal or retryable?
-			controller.log.Error("error checking deal results", err)
-			return nil
-		}
+	// 	if err != nil {
+	// 		// TODO: error handling - is it terminal or retryable?
+	// 		controller.log.Error("error checking deal results", err)
+	// 		return nil
+	// 	}
 
-		controller.log.Info("Checked results for job", dealContainer.ID)
-	} else {
-		err = controller.acceptResult(dealContainer)
+	// 	controller.log.Info("Checked results for job", dealContainer.ID)
+	// } else {
+	// 	err = controller.acceptResult(dealContainer)
 
-		if err != nil {
-			// TODO: error handling - is it terminal or retryable?
-			controller.log.Error("error accepting deal results", err)
-			return nil
-		}
+	// 	if err != nil {
+	// 		// TODO: error handling - is it terminal or retryable?
+	// 		controller.log.Error("error accepting deal results", err)
+	// 		return nil
+	// 	}
 
-		controller.log.Info("Accepted results for job", dealContainer.ID)
-	}
+	// 	controller.log.Info("Accepted results for job", dealContainer.ID)
+	// }
 	return nil
 }
 
