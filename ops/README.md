@@ -20,3 +20,5 @@ cd lilypad
 ```
 
 then run through [https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md](https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md)
+
+in separate tmux panes, for now
