@@ -19,6 +19,6 @@ git clone https://github.com/bacalhau-project/lilypad
 cd lilypad
 ```
 
-then run through [https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md](https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md)
+then run through [https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md](https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md) - after `./stack boot`, skip everything until "run services"
 
 in separate tmux panes, for now
