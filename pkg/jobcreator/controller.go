@@ -297,41 +297,50 @@ func (controller *JobCreatorController) checkResults() error {
 	}
 
 	for _, dealContainer := range completedDeals {
-		err = controller.solverClient.DownloadResultFiles(dealContainer.ID, solver.GetDownloadsFilePath(dealContainer.ID))
+		err := controller.downloadResult(dealContainer)
 		if err != nil {
-			// TODO: error handling - is it terminal or retryable?
-			controller.log.Error("error downloading deal results", err)
-			continue
-		}
-
-		controller.log.Info("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
-
-		// work out if we should check or accept the results
-		if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
 			err = controller.checkResult(dealContainer)
-
 			if err != nil {
-				// TODO: error handling - is it terminal or retryable?
 				controller.log.Error("error checking deal results", err)
 				continue
 			}
-
-			controller.log.Info("Checked results for job", dealContainer.ID)
-
-		} else {
-			err = controller.acceptResult(dealContainer)
-
-			if err != nil {
-				// TODO: error handling - is it terminal or retryable?
-				controller.log.Error("error accepting deal results", err)
-				continue
-			}
-
-			controller.log.Info("Accepted results for job", dealContainer.ID)
 		}
 	}
 
 	return err
+}
+
+func (controller *JobCreatorController) downloadResult(dealContainer data.DealContainer) error {
+	err := controller.solverClient.DownloadResultFiles(dealContainer.ID, solver.GetDownloadsFilePath(dealContainer.ID))
+	if err != nil {
+		return fmt.Errorf("error downloading results for deal: %s", err.Error())
+	}
+
+	controller.log.Info("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
+
+	// work out if we should check or accept the results
+	if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
+		err = controller.checkResult(dealContainer)
+
+		if err != nil {
+			// TODO: error handling - is it terminal or retryable?
+			controller.log.Error("error checking deal results", err)
+			return nil
+		}
+
+		controller.log.Info("Checked results for job", dealContainer.ID)
+	} else {
+		err = controller.acceptResult(dealContainer)
+
+		if err != nil {
+			// TODO: error handling - is it terminal or retryable?
+			controller.log.Error("error accepting deal results", err)
+			return nil
+		}
+
+		controller.log.Info("Accepted results for job", dealContainer.ID)
+	}
+	return nil
 }
 
 func (controller *JobCreatorController) acceptResult(deal data.DealContainer) error {

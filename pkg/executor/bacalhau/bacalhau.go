@@ -12,7 +12,6 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/bacalhau-project/lilypad/pkg/executor"
 	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/davecgh/go-spew/spew"
 )
 
 const RESULTS_DIR = "bacalhau-results"
@@ -38,14 +37,11 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
-	fmt.Printf("getJobID --------------------------------------\n")
-
 	id, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("copyJobResults --------------------------------------\n")
 	resultsDir, err := executor.copyJobResults(deal.ID, id)
 	if err != nil {
 		return nil, err
@@ -55,9 +51,6 @@ func (executor *BacalhauExecutor) RunJob(
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("jobState --------------------------------------\n")
-	spew.Dump(jobState)
 
 	if len(jobState.State.Executions) <= 0 {
 		return nil, fmt.Errorf("no executions found for job %s", id)
@@ -142,7 +135,7 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 	describeCmd := exec.Command(
 		"bacalhau",
 		"describe",
-		// "--json",
+		"--json",
 		jobID,
 	)
 	describeCmd.Env = executor.bacalhauEnv
