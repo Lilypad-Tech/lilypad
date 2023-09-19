@@ -21,4 +21,13 @@ cd lilypad
 
 then run through [https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md](https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md)
 
-in separate tmux panes, for now
+In the running bacalhau part, do this:
+```
+sudo mkdir -p /app/data/ipfs
+sudo chown -R $USER /app/data
+export BACALHAU_SERVE_IPFS_PATH=/app/data/ipfs
+```
+
+after `./stack boot`, skip everything until "run services"
+
+run things in separate tmux panes, for now

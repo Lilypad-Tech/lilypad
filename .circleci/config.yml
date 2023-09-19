@@ -1,0 +1,20 @@
+version: '2.1'
+orbs:
+  gh: circleci/github-cli@2.0
+workflows:
+  test-and-deploy:
+    jobs:
+      #- build
+      #- test
+      - gh/release:
+          context:
+            - GITHUB_CREDS
+          filters:
+            branches:
+              # TODO: switch to only releasing on tags
+              only:
+                - main
+          # requires:
+          #   - node/test
+          tag: 0.0.1-<<pipeline.git.revision>>
+          title: Release <<pipeline.git.revision>>
