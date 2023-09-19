@@ -17,6 +17,7 @@ type RunJobResults struct {
 func RunJob(
 	ctx *system.CommandContext,
 	options JobCreatorOptions,
+	eventSub JobOfferSubscriber,
 ) (*RunJobResults, error) {
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
