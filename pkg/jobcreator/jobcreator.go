@@ -56,12 +56,12 @@ func NewJobCreator(
 	if err != nil {
 		return nil, err
 	}
-	solver := &JobCreator{
+	jc := &JobCreator{
 		controller: controller,
 		options:    options,
 		web3SDK:    web3SDK,
 	}
-	return solver, nil
+	return jc, nil
 }
 
 func (jobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {

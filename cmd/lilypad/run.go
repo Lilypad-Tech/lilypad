@@ -12,7 +12,6 @@ import (
 
 func newRunCmd() *cobra.Command {
 	options := optionsfactory.NewJobCreatorOptions()
-
 	runCmd := &cobra.Command{
 		Use:     "run",
 		Short:   "Run a job on the Lilypad network.",

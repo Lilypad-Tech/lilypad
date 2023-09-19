@@ -96,7 +96,6 @@ func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferS
 */
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
-
 		switch ev.EventType {
 		case solver.DealAdded:
 			if ev.Deal == nil {

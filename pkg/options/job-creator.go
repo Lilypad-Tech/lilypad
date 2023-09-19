@@ -11,8 +11,9 @@ import (
 
 func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 	options := jobcreator.JobCreatorOptions{
-		Offer: GetDefaultJobCreatorOfferOptions(),
-		Web3:  GetDefaultWeb3Options(),
+		Offer:     GetDefaultJobCreatorOfferOptions(),
+		Web3:      GetDefaultWeb3Options(),
+		Mediation: GetDefaultJobCreatorMediationOptions(),
 	}
 	options.Web3.Service = system.JobCreatorService
 	return options
