@@ -17,5 +17,6 @@ sudo chown $USER app
 cd /app/
 git clone https://github.com/bacalhau-project/lilypad
 cd lilypad
-./stack boot
 ```
+
+then run through [https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md](https://github.com/bacalhau-project/lilypad/blob/main/CONTRIBUTING.md)
