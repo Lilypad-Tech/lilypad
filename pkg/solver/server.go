@@ -380,24 +380,35 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 	vars := mux.Vars(req)
 	id := vars["id"]
 
-	err := func() error {
+	err := func() *http.HTTPError {
 		deal, err := solverServer.store.GetDeal(id)
 		if err != nil {
 			log.Error().Err(err).Msgf("error loading deal")
-			return err
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
 		}
 		if deal == nil {
-			log.Error().Msgf("deal not found")
-			return err
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusNotFound,
+			}
 		}
 		filesPath := GetDealsFilePath(id)
 		// check if the filesPath directory exists
 		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
-			return fmt.Errorf("files not found: %s", id)
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusNotFound,
+			}
 		}
 		buf, err := system.GetTarBuffer(filesPath)
 		if err != nil {
-			return err
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
 		}
 		res.Header().Set("Content-Disposition", "attachment; filename=archive.tar")
 		res.Header().Set("Content-Type", "application/x-tar")
@@ -407,7 +418,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 
 	if err != nil {
 		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
+		corehttp.Error(res, err.Error(), err.StatusCode)
 		return
 	}
 }

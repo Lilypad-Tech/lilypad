@@ -125,6 +125,12 @@ func (controller *MediatorController) Start(ctx context.Context, cm *system.Clea
 		errorChan <- err
 		return errorChan
 	}
+
+	err = controller.solverClient.Start(ctx, cm)
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
 	// activate the web3 event listeners
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {

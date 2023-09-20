@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/executor/noop"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/mediator"
@@ -161,7 +162,9 @@ func testStackWithOptions(
 		return nil, err
 	}
 
-	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions)
+	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions, func(evOffer data.JobOfferContainer) {
+
+	})
 	if err != nil {
 		return nil, err
 	}

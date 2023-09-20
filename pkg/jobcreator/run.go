@@ -17,6 +17,7 @@ type RunJobResults struct {
 func RunJob(
 	ctx *system.CommandContext,
 	options JobCreatorOptions,
+	eventSub JobOfferSubscriber,
 ) (*RunJobResults, error) {
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
@@ -49,6 +50,7 @@ func RunJob(
 	updateChan := make(chan data.JobOfferContainer)
 
 	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
+		// spew.Dump(evOffer)
 		if evOffer.JobOffer.ID != jobOfferContainer.ID {
 			return
 		}

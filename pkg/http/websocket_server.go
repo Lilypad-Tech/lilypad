@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -53,7 +54,7 @@ func StartWebSocketServer(
 			select {
 			case message := <-messageChan:
 				log.Debug().
-					Str("action", "ws WRITE").
+					Str("action", fmt.Sprintf("ws WRITE: %d", len(connections))).
 					Str("payload", string(message)).
 					Msgf("")
 				for _, connWrapper := range connections {
@@ -80,6 +81,9 @@ func StartWebSocketServer(
 		defer conn.Close()
 		addConnection(conn)
 
+		log.Debug().
+			Str("action", "⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪ ws CONNECT").
+			Msgf("")
 		for {
 			messageType, _, err := conn.ReadMessage()
 			if err != nil {

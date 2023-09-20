@@ -373,6 +373,7 @@ func (controller *ResourceProviderController) runJobs() error {
 	if err != nil {
 		return err
 	}
+
 	if len(agreedDeals) <= 0 {
 		return nil
 	}
@@ -407,16 +408,20 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		Error:  "",
 	}
 	err := func() error {
+		controller.log.Info("loading module", "")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
+		controller.log.Info("module loaded", module)
 		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
+			controller.log.Error("error running job", err)
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
 		result.InstructionCount = uint64(executorResult.InstructionCount)
 		result.DataID = executorResult.ResultsCID
+		controller.log.Info("got result", result)
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
 
