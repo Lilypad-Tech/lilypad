@@ -9,6 +9,8 @@ workflows:
       - gh/release:
           context:
             - GITHUB_CREDS
+          prerelease: true
+          files: ./lilypad
           filters:
             branches:
               # TODO: switch to only releasing on tags
