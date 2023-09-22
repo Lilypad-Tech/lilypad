@@ -113,7 +113,7 @@ func (sdk *Web3SDK) Agree(
 		system.Error(sdk.Options.Service, "error submitting controller.Agree() tx", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
@@ -138,7 +138,7 @@ func (sdk *Web3SDK) AddResult(
 		system.Error(sdk.Options.Service, "error submitting controller.AddResult", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
@@ -159,7 +159,7 @@ func (sdk *Web3SDK) AcceptResult(
 		system.Error(sdk.Options.Service, "error submitting controller.AcceptResult", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
@@ -180,7 +180,7 @@ func (sdk *Web3SDK) CheckResult(
 		system.Error(sdk.Options.Service, "error submitting controller.CheckResult", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
@@ -201,7 +201,7 @@ func (sdk *Web3SDK) MediationAcceptResult(
 		system.Error(sdk.Options.Service, "error submitting controller.MediationAcceptResult", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)
@@ -222,7 +222,7 @@ func (sdk *Web3SDK) MediationRejectResult(
 		system.Error(sdk.Options.Service, "error submitting controller.MediationRejectResult", err)
 		return "", err
 	} else {
-		system.Info(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
+		system.Debug(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.waitTx(tx)

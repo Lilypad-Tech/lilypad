@@ -30,6 +30,8 @@ func RunJob(
 		return nil, err
 	}
 
+	jobCreatorService.SubscribeToJobOfferUpdates(eventSub)
+
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
 
 	// let's process our options into an actual job offer

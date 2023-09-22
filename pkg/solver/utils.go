@@ -14,35 +14,35 @@ const DOWNLOADS_DIR = "downloaded-files"
 func LogSolverEvent(badge string, ev SolverEvent) {
 	switch ev.EventType {
 	case JobOfferAdded:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> JobOfferAdded", badge), fmt.Sprintf("%+v", *ev.JobOffer)).
 			Msgf("")
 	case ResourceOfferAdded:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> ResourceOfferAdded", badge), fmt.Sprintf("%+v", *ev.ResourceOffer)).
 			Msgf("")
 	case DealAdded:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> DealAdded", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case JobOfferStateUpdated:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> JobOfferStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case ResourceOfferStateUpdated:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> ResourceOfferStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case DealStateUpdated:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> DealStateUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case ResourceProviderTransactionsUpdated:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> ResourceProviderTransactionsUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	case JobCreatorTransactionsUpdated:
-		log.Info().
+		log.Debug().
 			Str(fmt.Sprintf("%s -> JobCreatorTransactionsUpdated", badge), fmt.Sprintf("%+v", ev)).
 			Msgf("")
 	}

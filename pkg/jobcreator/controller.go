@@ -74,7 +74,7 @@ func NewJobCreatorController(
 */
 
 func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
-	controller.log.Info("add job offer", offer)
+	controller.log.Debug("add job offer", offer)
 	return controller.solverClient.AddJobOffer(offer)
 }
 
@@ -134,7 +134,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
 			return
 		}
-		controller.log.Info("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		controller.log.Debug("StorageDealStateChange", data.GetAgreementStateString(ev.State))
 		system.DumpObjectDebug(ev)
 		controller.loop.Trigger()
 	})
@@ -248,14 +248,14 @@ func (controller *JobCreatorController) agreeToDeals() error {
 
 	// map over the deals and agree to them
 	for _, dealContainer := range matchedDeals {
-		controller.log.Info("agree", dealContainer)
+		controller.log.Debug("agree", dealContainer)
 		txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
 		if err != nil {
 			// TODO: error handling - is it terminal or retryable?
 			controller.log.Error("error calling agree tx for deal", err)
 			continue
 		}
-		controller.log.Info("agree tx", txHash)
+		controller.log.Debug("agree tx", txHash)
 
 		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsJobCreator(dealContainer.ID, data.DealTransactionsJobCreator{
@@ -266,7 +266,7 @@ func (controller *JobCreatorController) agreeToDeals() error {
 			controller.log.Error("error adding agree tx hash for deal", err)
 			continue
 		}
-		controller.log.Info("updated deal with agree tx", txHash)
+		controller.log.Debug("updated deal with agree tx", txHash)
 	}
 
 	return nil
@@ -315,7 +315,7 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 		return fmt.Errorf("error downloading results for deal: %s", err.Error())
 	}
 
-	controller.log.Info("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
+	controller.log.Debug("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
 
 	// TODO: activate the mediation check here
 	controller.acceptResult(dealContainer)
@@ -330,7 +330,7 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 	// 		return nil
 	// 	}
 
-	// 	controller.log.Info("Checked results for job", dealContainer.ID)
+	// 	controller.log.Debug("Checked results for job", dealContainer.ID)
 	// } else {
 	// 	err = controller.acceptResult(dealContainer)
 
@@ -340,18 +340,18 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 	// 		return nil
 	// 	}
 
-	// 	controller.log.Info("Accepted results for job", dealContainer.ID)
+	// 	controller.log.Debug("Accepted results for job", dealContainer.ID)
 	// }
 	return nil
 }
 
 func (controller *JobCreatorController) acceptResult(deal data.DealContainer) error {
-	controller.log.Info("Accepting results for job", deal.ID)
+	controller.log.Debug("Accepting results for job", deal.ID)
 	txHash, err := controller.web3SDK.AcceptResult(deal.ID)
 	if err != nil {
 		return fmt.Errorf("error calling accept result tx for deal: %s", err.Error())
 	}
-	controller.log.Info("accept result tx", txHash)
+	controller.log.Debug("accept result tx", txHash)
 
 	// we have agreed to the deal so we need to update the tx in the solver
 	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
@@ -364,12 +364,12 @@ func (controller *JobCreatorController) acceptResult(deal data.DealContainer) er
 }
 
 func (controller *JobCreatorController) checkResult(deal data.DealContainer) error {
-	controller.log.Info("Checking results for job", deal.ID)
+	controller.log.Debug("Checking results for job", deal.ID)
 	txHash, err := controller.web3SDK.CheckResult(deal.ID)
 	if err != nil {
 		return fmt.Errorf("error calling check result tx for deal: %s", err.Error())
 	}
-	controller.log.Info("check result tx", txHash)
+	controller.log.Debug("check result tx", txHash)
 
 	// we have agreed to the deal so we need to update the tx in the solver
 	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
