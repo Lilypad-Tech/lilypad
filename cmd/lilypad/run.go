@@ -48,9 +48,9 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 ⠀⢰⣿⣿⣿⣿⣦⡙⣿⢸⠁⢀⣠⣴⣾⣿⡆    ██║     ██║██║   ╚████╔╝ ██████╔╝███████║██║  ██║
 ⠀⣛⣛⣛⣛⣛⣛⣛⠈⠀⣚⣛⣛⣛⣛⣛⣛    ██║     ██║██║    ╚██╔╝  ██╔═══╝ ██╔══██║██║  ██║
 ⠀⢹⣿⣿⣿⣿⠟⣡⣿⢸⣮⡻⣿⣿⣿⣿⡏    ███████╗██║███████╗██║   ██║     ██║  ██║██████╔╝
-⠀⠀⢻⣿⡟⣩⣾⣿⣿⢸⣿⣿⣌⠻⣿⡟⠀    ╚══════╝╚═╝╚══════╝╚═╝   ╚═╝     ╚═╝  ╚═╝╚═════╝ 
-⠀⠀⠀⠉⢾⣿⣿⣿⣿⢸⣿⣿⣿⡷⠈⠀⠀                                                  v2
-⠀⠀⠀⠀⠀⠈⠙⠛⠛⠘⠛⠋⠁⠀ ⠀⠀⠀   Decentralized Compute Network
+⠀⠀⢻⣿⡟⣩⣾⣿⣿⢸⣿⣿⣌⠻⣿⡟⠀    ╚══════╝╚═╝╚══════╝╚═╝   ╚═╝     ╚═╝  ╚═╝╚═════╝ v2
+⠀⠀⠀⠉⢾⣿⣿⣿⣿⢸⣿⣿⣿⡷⠈⠀⠀                                                  
+⠀⠀⠀⠀⠀⠈⠙⠛⠛⠘⠛⠋⠁⠀ ⠀⠀⠀   Decentralized Compute Network  https://lilypad.tech
 
 `)
 	spinner, err := createSpinner("Lilypad submitting job", "🌟")
@@ -95,7 +95,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		switch st {
 		case "DealNegotiating":
 			desc = "Job submitted. Negotiating deal..."
-			emoji = "💼"
+			emoji = "🤝"
 		case "DealAgreed":
 			desc = "Deal agreed. Running job..."
 			emoji = "💌"
@@ -131,7 +131,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 
 	})
 	spinner.Stop()
-	fmt.Printf("\n🍂 Lilypad job completed 👉\n    open %s\n", solver.GetDownloadsFilePath(result.JobOffer.DealID))
+	fmt.Printf("\n🍂 Lilypad job completed, run 👇\n    open %s\n", solver.GetDownloadsFilePath(result.JobOffer.DealID))
 	return err
 }
 
