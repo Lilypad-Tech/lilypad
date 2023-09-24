@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
@@ -131,6 +131,8 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// TODO: also support checking out tag (and matching it against hash
+	// specified in server side allowlist)
 	repoDir := worktree.Filesystem.Root()
 	log.Debug().
 		Str("checkout hash", module.Hash).

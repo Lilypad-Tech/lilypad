@@ -128,6 +128,10 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		// spew.Dump(evOffer)
 
 	})
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return err
+	}
 	spinner.Stop()
 	fmt.Printf("\n🍂 Lilypad job completed, run 👇\n    open %s\n", solver.GetDownloadsFilePath(result.JobOffer.DealID))
 	return err

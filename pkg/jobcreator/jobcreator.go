@@ -75,7 +75,7 @@ func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOpti
 	// this will also validate the module the user is asking for
 	loadedModule, err := module.LoadModule(options.Module, options.Inputs)
 	if err != nil {
-		return data.JobOffer{}, fmt.Errorf("error loading module: %s", err.Error())
+		return data.JobOffer{}, fmt.Errorf("error loading module: %s opts=%+v", err.Error(), options)
 	}
 
 	return data.JobOffer{

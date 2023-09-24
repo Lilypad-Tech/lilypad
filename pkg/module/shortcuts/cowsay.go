@@ -9,7 +9,7 @@ func getCowsayVersions() (string, map[string]data.ModuleConfig, error) {
 	versions := map[string]data.ModuleConfig{
 		"v0.0.1": {
 			Repo: "https://github.com/bacalhau-project/lilypad.git",
-			Hash: "0817bd741283761aa898eaa3c50775a31f279e2b",
+			Hash: "7ffcdefbf30b27edfcc1375bf2b302a820d3f6c0",
 			Path: "module_templates/cowsay.json",
 		},
 	}
