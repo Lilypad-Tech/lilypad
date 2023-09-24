@@ -24,7 +24,7 @@ func newRunCmd() *cobra.Command {
 		Use:     "run",
 		Short:   "Run a job on the Lilypad network.",
 		Long:    "Run a job on the Lilypad network.",
-		Example: "run cowsay -i Message=moo",
+		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args)
 			if err != nil {

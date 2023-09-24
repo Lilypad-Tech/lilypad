@@ -20,10 +20,16 @@ func getModuleVersions(name string) (string, map[string]data.ModuleConfig, error
 }
 
 func GetModule(name string, version string) (data.ModuleConfig, error) {
-
 	if name == "" {
 		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
 	}
+
+	// // If there are no slashes in the module name, default to
+	// // github.com/bacalhau-project/lilypad-module-<name>
+	// if !strings.Contains(name, "/") {
+	// 	name = fmt.Sprintf("github.com/bacalhau-project/lilypad-module-%s", name)
+	// }
+
 	latestVersion, versions, err := getModuleVersions(name)
 	if err != nil {
 		return data.ModuleConfig{}, err
