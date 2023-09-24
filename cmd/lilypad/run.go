@@ -59,7 +59,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		os.Exit(1)
 	}
 
-	stopOnSignal(spinner)
 	// start the spinner animation
 	if err := spinner.Start(); err != nil {
 		return fmt.Errorf("failed to start spinner: %w", err)
@@ -118,7 +117,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 			os.Exit(1)
 		}
 
-		stopOnSignal(spinner)
 		// start the spinner animation
 		if err := spinner.Start(); err != nil {
 			fmt.Printf("failed to start spinner: %s", err)
@@ -158,6 +156,7 @@ func createSpinner(message string, emoji string) (*yacspin.Spinner, error) {
 		return nil, fmt.Errorf("failed to make spinner from struct: %w", err)
 	}
 
+	stopOnSignal(s)
 	return s, nil
 }
 
