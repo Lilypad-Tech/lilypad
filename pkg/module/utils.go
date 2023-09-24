@@ -175,17 +175,18 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 		return nil, err
 	}
 
+	newInputs := make(map[string]string)
 	// For now, for each input, json encode it so that it's safe to put into the template
 	for k, v := range inputs {
 		bs, err := json.Marshal(v)
 		if err != nil {
 			return nil, fmt.Errorf("unable to marshal string %q", v)
 		}
-		inputs[k] = string(bs)
+		newInputs[k] = string(bs)
 	}
 
 	var template bytes.Buffer
-	if err := tmpl.Execute(&template, inputs); err != nil {
+	if err := tmpl.Execute(&template, newInputs); err != nil {
 		return nil, err
 	}
 
