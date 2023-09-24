@@ -135,6 +135,7 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	log.Debug().
 		Str("checkout hash", module.Hash).
 		Msgf(module.Repo)
+
 	err = worktree.Checkout(&git.CheckoutOptions{
 		Hash: plumbing.NewHash(module.Hash),
 	})
@@ -171,13 +172,23 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	if err != nil {
 		return nil, err
 	}
+
+	// For now, for each input, json encode it so that it's safe to put into the template
+	for k, v := range inputs {
+		bs, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("unable to marshal string %q", v)
+		}
+		inputs[k] = string(bs)
+	}
+
 	var template bytes.Buffer
 	if err := tmpl.Execute(&template, inputs); err != nil {
 		return nil, err
 	}
 
 	var moduleData data.Module
-	if err := json.Unmarshal([]byte(template.String()), &moduleData); err != nil {
+	if err := json.Unmarshal(template.Bytes(), &moduleData); err != nil {
 		return nil, err
 	}
 

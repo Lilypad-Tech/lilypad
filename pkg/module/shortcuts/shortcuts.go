@@ -6,6 +6,11 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 )
 
+// TODO: allow shortcode github.com/lukemarsden/lilypad-sdxl:v0.0.1 (tag), enforce sha1 for tags on the server side (like a pin file)
+// github.com/lp-mods/lilypad-sdxl:v0.0.1
+
+// parse something with no slashes in it as github.com/bacalhau-project/lilypad-default-module-<shortcode>
+
 func getModuleVersions(name string) (string, map[string]data.ModuleConfig, error) {
 	switch name {
 	case "cowsay":
@@ -15,6 +20,7 @@ func getModuleVersions(name string) (string, map[string]data.ModuleConfig, error
 }
 
 func GetModule(name string, version string) (data.ModuleConfig, error) {
+
 	if name == "" {
 		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
 	}
