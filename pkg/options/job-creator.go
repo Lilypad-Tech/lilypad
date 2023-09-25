@@ -21,7 +21,7 @@ func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 
 func GetDefaultJobCreatorMediationOptions() jobcreator.JobCreatorMediationOptions {
 	return jobcreator.JobCreatorMediationOptions{
-		CheckResultsPercentage: GetDefaultServeOptionInt("MEDIATION_CHANCE", 10),
+		CheckResultsPercentage: GetDefaultServeOptionInt("MEDIATION_CHANCE", 0),
 	}
 }
 
