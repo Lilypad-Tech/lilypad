@@ -10,9 +10,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: foo
+          name: Build
           command: |
-            go build
+            mkdir -p build/Linux-x86_64
+            go build -o build/Linux-x86_64/lilypad
+      - store_artifacts:
+          path: build/
 
 workflows:
   test-and-deploy:
