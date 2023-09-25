@@ -19,26 +19,31 @@ jobs:
           paths:
            - Linux-x86_64
 
-workflows:
-  test-and-deploy:
-    jobs:
-      - build
-      #- test
-      - gh/release:
-          pre-steps:
-          - attach_workspace:
-              at: /tmp/build
-          - run: find /tmp/build
+  release:
+    docker:
+      - image: cimg/go:1.21.1
+    steps:
+      - attach_workspace:
+          at: /tmp/build
+      - checkout
+      - run:
           context:
             - GITHUB_CREDS
-          prerelease: true
-          files: /tmp/build/Linux-x86_64/lilypad
           filters:
             branches:
               # TODO: switch to only releasing on tags
               only:
                 - main
-          requires:
-            - build
-          tag: 0.0.1-<<pipeline.git.revision>>
-          title: Release <<pipeline.git.revision>>
+          command:
+            wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
+            dpkg -i gh_2.35.0_linux_amd64.deb
+            git tag v0.0.1-<<pipeline.git.revision>>
+            git push --tags
+            gh release create v0.0.1-<<pipeline.git.revision>> --notes "auto release" --prerelease /tmp/build
+
+workflows:
+  test-and-deploy:
+    jobs:
+      - build
+      #- test
+      - release
