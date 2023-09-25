@@ -28,7 +28,7 @@ workflows:
               # TODO: switch to only releasing on tags
               only:
                 - main
-          # requires:
-          #   - node/test
+          requires:
+            - build
           tag: 0.0.1-<<pipeline.git.revision>>
           title: Release <<pipeline.git.revision>>
