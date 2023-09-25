@@ -43,6 +43,7 @@ sudo mv lilypad /usr/local/bin
 ```
 export WEB3_PRIVATE_KEY=<your private key>
 ```
+(or arrange for the key to be in your environment in a more secure way that doesn't get written to your shell history)
 
 
 ### Cows
