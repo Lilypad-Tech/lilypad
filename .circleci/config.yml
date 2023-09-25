@@ -27,11 +27,6 @@ jobs:
           at: /tmp/build
       - checkout
       - run:
-          filters:
-            tags:
-              only: /v.*/
-            branches:
-              ignore: /.*/
           name: GitHub release
           command: |
             if [ ! -z "<<pipeline.git.tag>>" ]; then
@@ -45,6 +40,11 @@ jobs:
 
 workflows:
   test-and-deploy:
+    filters:
+      tags:
+        only: /v.*/
+      branches:
+        ignore: /.*/
     jobs:
       - build
       #- test
