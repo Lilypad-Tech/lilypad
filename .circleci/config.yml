@@ -28,16 +28,15 @@ jobs:
       - checkout
       - run:
           filters:
+            tags:
+              only: /^test.*/
             branches:
-              # TODO: switch to only releasing on tags
-              only:
-                - main
+              ignore: /.*/
           name: GitHub release
           command: |
-            set -x
             wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
-            gh release create v0.0.1-<<pipeline.git.revision>> --notes "auto release" --prerelease /tmp/build/Linux-x86_64/lilypad
+            gh release create <<pipeline.git.tag>> --notes "Release <<pipeline.git.tag>> for Linux x86_64" /tmp/build/Linux-x86_64/lilypad
 
 
 workflows:
