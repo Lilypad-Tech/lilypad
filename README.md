@@ -33,7 +33,7 @@ The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for 
 Currently only supports x86_64 Linux
 
 ```
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-9019875/lilypad
+curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-b7e9e04/lilypad
 chmod +x lilypad
 sudo mv lilypad /usr/local/bin
 ```
