@@ -40,14 +40,14 @@ jobs:
 
 workflows:
   test-and-deploy:
-    filters:
-      tags:
-        only: /v.*/
-      branches:
-        ignore: /.*/
     jobs:
       - build
       #- test
       - release:
+          filters:
+            tags:
+              only: /v.*/
+            branches:
+              ignore: /.*/
           requires:
             - build
