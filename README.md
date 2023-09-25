@@ -12,6 +12,8 @@ Welcome to the prerelease series of Lilypad v2.
 
 The testnet has a base curency of ETH and you will also get LP to pay for jobs (and nodes to stake).
 
+Metamask:
+
 ```
 Network name: Lilypad v2 testnet
 New RPC URL: http://testnetv2.arewehotshityet.com:8545
