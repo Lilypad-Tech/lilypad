@@ -24,8 +24,10 @@ We need a bacalhau node running on the same machine as the resource provider.
 Here is how we got bacalhau up and running:
 
 ```bash
-# install the latest bacalhau
-curl -sL https://get.bacalhau.org/install.sh | bash
+# install the latest bacalhau which works with GPUs (https://github.com/bacalhau-project/bacalhau/issues/2858)
+wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz
+tar xfv bacalhau_v1.0.3_linux_amd64.tar.gz
+mv bacalhau /usr/local/bin
 # configure this to where you want the ipfs data to be stored
 export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
 # run bacalhau as both compute node and requester node
