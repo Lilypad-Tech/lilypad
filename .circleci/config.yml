@@ -34,7 +34,9 @@ jobs:
               # TODO: switch to only releasing on tags
               only:
                 - main
+          name: GitHub release
           command: |
+            set -x
             export GH_TOKEN="${GITHUB_TOKEN}"
             wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
