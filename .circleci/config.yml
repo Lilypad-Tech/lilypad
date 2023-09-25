@@ -43,5 +43,8 @@ workflows:
       - build
       #- test
       - release:
+          filters:
+            tags:
+              only: /v.*/
           requires:
             - build
