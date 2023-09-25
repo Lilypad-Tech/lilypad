@@ -28,7 +28,7 @@ func getRepoLocalPath(repoURL string) (string, error) {
 
 	pathParts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
 	if len(pathParts) < 2 {
-		return "", fmt.Errorf("Invalid git URL")
+		return "", fmt.Errorf("invalid git URL")
 	}
 
 	return filepath.Join(REPO_DIR, pathParts[0], pathParts[1]), nil
@@ -86,8 +86,15 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Check if hash exists
-		_, err = repo.Storer.EncodedObject(plumbing.AnyObject, plumbing.NewHash(module.Hash))
+		// Check if hash or tag specified exists
+		h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
+		if err != nil {
+			return nil, err
+		}
+		// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
+		// explicitly to ensure determinism (and that we're running the code we
+		// explicitly approved)
+		_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
 		if err != nil {
 			// this means there is no hash in the repo
 			// so let's clean it up and clone it again
@@ -131,15 +138,21 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// TODO: also support checking out tag (and matching it against hash
-	// specified in server side allowlist)
+	// TODO: match tags against hash specified in server side allowlist
 	repoDir := worktree.Filesystem.Root()
 	log.Debug().
 		Str("checkout hash", module.Hash).
 		Msgf(module.Repo)
 
+	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
+	if err != nil {
+		return "", err
+	}
+	// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
+	// explicitly to ensure determinism (and that we're running the code we
+	// explicitly approved)
 	err = worktree.Checkout(&git.CheckoutOptions{
-		Hash: plumbing.NewHash(module.Hash),
+		Hash: *h,
 	})
 	if err != nil {
 		return "", err

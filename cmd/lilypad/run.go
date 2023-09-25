@@ -133,7 +133,11 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 	spinner.Stop()
-	fmt.Printf("\n🍂 Lilypad job completed, run 👇\n    open %s\n", solver.GetDownloadsFilePath(result.JobOffer.DealID))
+	fmt.Printf("\n🍂 Lilypad job completed, try 👇\n    open %s\n    cat %s/stdout\n    cat %s/stderr\n",
+		solver.GetDownloadsFilePath(result.JobOffer.DealID),
+		solver.GetDownloadsFilePath(result.JobOffer.DealID),
+		solver.GetDownloadsFilePath(result.JobOffer.DealID),
+	)
 	return err
 }
 
