@@ -115,7 +115,7 @@ func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, er
 	}
 	ret, err := optionsfactory.ProcessJobCreatorOptions(jobCreatorOptions, []string{
 		// this should point to the shortcut
-		"cowsay",
+		"cowsay:HEAD",
 	})
 
 	if err != nil {
