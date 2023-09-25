@@ -41,9 +41,12 @@ jobs:
             git push --tags
             gh release create v0.0.1-<<pipeline.git.revision>> --notes "auto release" --prerelease /tmp/build
 
+
 workflows:
   test-and-deploy:
     jobs:
       - build
       #- test
-      - release
+      - release:
+          requires:
+            - build
