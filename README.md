@@ -79,7 +79,7 @@ In your repo, create a file called `lilypad_module.json.tmpl`
 
 See [cowsay](https://github.com/bacalhau-project/lilypad-module-cowsay) for example
 
-This is a json template with Go text/template style `{{.Message}}` sections which will be replaced by Lilypad with valid JSON strings which are passed as input to modules.
+This is a json template with Go text/template style `{{.Message}}` sections which will be replaced by Lilypad with valid JSON strings which are passed as input to modules. You can also do fancy things with go templates like setting defaults, see cowsay for example.
 
 Pass inputs as:
 
