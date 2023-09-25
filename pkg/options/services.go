@@ -20,7 +20,7 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 		`The solver to connect to (SERVICE_SOLVER)`,
 	)
 	cmd.PersistentFlags().StringSliceVar(
-		&servicesConfig.Mediator, "serviec-mediators", servicesConfig.Mediator,
+		&servicesConfig.Mediator, "service-mediators", servicesConfig.Mediator,
 		`The mediators we trust (SERVICE_MEDIATORS)`,
 	)
 }
