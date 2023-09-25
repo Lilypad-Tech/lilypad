@@ -10,7 +10,7 @@ import (
 
 func TestPrepareModule(t *testing.T) {
 	text, err := PrepareModule(data.ModuleConfig{
-		Name: "cowsay:HEAD",
+		Name: "cowsay:v0.0.2",
 	})
 
 	assert.NoError(t, err, "Should not return an error")
@@ -20,7 +20,7 @@ func TestPrepareModule(t *testing.T) {
 
 func TestLoadModule(t *testing.T) {
 	module, err := LoadModule(data.ModuleConfig{
-		Name: "cowsay:acab8252eb1348264761d67ca223d98669ac6923",
+		Name: "cowsay:v0.0.2",
 	}, map[string]string{
 		"Message": "Hello, world!",
 	})
