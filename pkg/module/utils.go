@@ -200,12 +200,22 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 
 	var template bytes.Buffer
 	if err := tmpl.Execute(&template, newInputs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"error executing template: %s (tmpl=%s, inputs=%+v)",
+			err,
+			moduleText,
+			newInputs,
+		)
 	}
 
 	var moduleData data.Module
-	if err := json.Unmarshal(template.Bytes(), &moduleData); err != nil {
-		return nil, err
+	bs := template.Bytes()
+	if err := json.Unmarshal(bs, &moduleData); err != nil {
+		return nil, fmt.Errorf(
+			"error unmarshalling resulting json: %s, %s",
+			err,
+			bs,
+		)
 	}
 
 	return &moduleData, nil
