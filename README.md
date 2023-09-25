@@ -45,19 +45,18 @@ export WEB3_PRIVATE_KEY=<your private key>
 ```
 
 
-### Cows!
+### Cows
 
 ```
 lilypad run cowsay:v0.0.1 -i Message="hey beautiful"
 ```
 
 
-### SDXL!
+### SDXL
 
 ```
-lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=fluffy cat in tokyo"
+lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=record player in reykjavik"
 ```
-
 
 ![image-42](https://github.com/bacalhau-project/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)
 
