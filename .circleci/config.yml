@@ -28,6 +28,7 @@ workflows:
           pre-steps:
           - attach_workspace:
               at: /tmp/build
+          - run: find /tmp/build
           context:
             - GITHUB_CREDS
           prerelease: true
