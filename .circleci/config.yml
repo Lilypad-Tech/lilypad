@@ -37,7 +37,6 @@ jobs:
               echo "Skipping missing tag"
             fi
 
-
 workflows:
   test-and-deploy:
     jobs:
