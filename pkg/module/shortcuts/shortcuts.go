@@ -30,7 +30,7 @@ func GetModule(name string) (data.ModuleConfig, error) {
 	if strings.Contains(name, "/") {
 		repo = parts[0]
 	} else {
-		repo = fmt.Sprintf("https://github.com/bacalhau-project/lilypad-module-%s", name)
+		repo = fmt.Sprintf("https://github.com/bacalhau-project/lilypad-module-%s", parts[0])
 	}
 
 	// TODO: docs for authoring a module
