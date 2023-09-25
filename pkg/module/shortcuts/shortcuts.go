@@ -7,19 +7,14 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data"
 )
 
-// allow shortcode github.com/lukemarsden/lilypad-sdxl:v0.0.1 (tag), enforce
-// sha1 for tags on the server side (like a pin file)
-// github.com/lp-mods/lilypad-sdxl:v0.0.1
+// allow shortcode github.com/lukemarsden/lilypad-sdxl:v0.0.1 (tag),
+// TODO: enforce sha1 for tags on the server side (like a pin file)
 
 // parse something with no slashes in it as
 // github.com/bacalhau-project/lilypad-module-<shortcode>
 
 func GetModule(name string, version string) (data.ModuleConfig, error) {
 	// XXX version is ignored
-	if name == "" {
-		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
-	}
-
 	// parse name per following valid formats
 	// github.com/user/repo:tag --> Repo: https://github.com/user/repo; Hash = tag
 	// bar:tag --> Repo = https://github.com/bacalhau-project/lilypad-module-<bar>, Hash = tag
