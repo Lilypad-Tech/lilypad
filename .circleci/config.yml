@@ -41,5 +41,8 @@ workflows:
       - build
       #- test
       - release:
-          requires:
-            - build
+         filters:
+           branches:
+             only: main
+         requires:
+           - build
