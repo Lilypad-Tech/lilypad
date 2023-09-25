@@ -1,21 +1,22 @@
 package module
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestPrepareModule(t *testing.T) {
-// 	text, err := PrepareModule(data.ModuleConfig{
-// 		Name: "cowsay:acab8252eb1348264761d67ca223d98669ac6923",
-// 	})
+func TestPrepareModule(t *testing.T) {
+	text, err := PrepareModule(data.ModuleConfig{
+		Name: "cowsay:HEAD",
+	})
 
-// 	assert.NoError(t, err, "Should not return an error")
-// 	assert.Contains(t, text, "cowsay", "Should contain the message")
-// 	fmt.Printf("%s\n", text)
-// }
+	assert.NoError(t, err, "Should not return an error")
+	assert.Contains(t, text, "cowsay", "Should contain the message")
+	fmt.Printf("%s\n", text)
+}
 
 func TestLoadModule(t *testing.T) {
 	module, err := LoadModule(data.ModuleConfig{
