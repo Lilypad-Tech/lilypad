@@ -3,6 +3,7 @@ package bacalhau
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,10 @@ type BacalhauExecutor struct {
 }
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
-	bacalhauEnv := []string{fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)}
+	bacalhauEnv := []string{
+		fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost),
+		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
+	}
 	return &BacalhauExecutor{
 		Options:     options,
 		bacalhauEnv: bacalhauEnv,
@@ -100,10 +104,11 @@ func (executor *BacalhauExecutor) getJobID(
 
 	runOutput, err := runCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error running command %s -> %s", deal.ID, err.Error())
+		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, err.Error(), runOutput)
 	}
 
 	id := strings.TrimSpace(string(runOutput))
+	fmt.Printf("Got bacalhau job ID: %s\n", id)
 
 	return id, nil
 }
