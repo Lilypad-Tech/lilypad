@@ -1,0 +1,16 @@
+[Unit]
+Description=Lilypad V2 Bacalhau
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Environment="LOG_TYPE=json"
+Environment="LOG_LEVEL=debug"
+Environment="HOME=/app/lilypad"
+Environment="BACALHAU_SERVE_IPFS_PATH=/app/data/ipfs"
+Restart=always
+RestartSec=5s
+ExecStart=/usr/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+
+[Install]
+WantedBy=multi-user.target
