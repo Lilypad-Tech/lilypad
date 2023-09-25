@@ -3,7 +3,6 @@ package bacalhau
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -26,7 +25,7 @@ type BacalhauExecutor struct {
 }
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
-	bacalhauEnv := append(os.Environ(), fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost))
+	bacalhauEnv := []string{fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)}
 	return &BacalhauExecutor{
 		Options:     options,
 		bacalhauEnv: bacalhauEnv,
