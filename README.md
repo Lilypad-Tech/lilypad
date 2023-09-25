@@ -69,7 +69,7 @@ lilypad serve
 
 systemd units & more details [here](https://github.com/bacalhau-project/lilypad/tree/main/ops)
 
-## Available modules:
+## Available modules
 
 Check the github releases page for each module or just use the git hash as the tag.
 
@@ -86,7 +86,8 @@ Check the github releases page for each module or just use the git hash as the t
 
 ## Write a module
 
-A module is just a git repo!
+A module is just a git repo.
+
 Module versions are just git tags.
 
 In your repo, create a file called `lilypad_module.json.tmpl`
