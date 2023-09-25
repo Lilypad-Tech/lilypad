@@ -39,7 +39,7 @@ func GetModule(name string, version string) (data.ModuleConfig, error) {
 		Version: "",
 		Repo:    repo,
 		Hash:    hash,
-		Path:    "/lilypad_module.json",
+		Path:    "/lilypad_module.json.tmpl",
 	}
 
 	return module, nil
