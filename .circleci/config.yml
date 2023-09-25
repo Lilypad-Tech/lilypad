@@ -4,7 +4,12 @@ orbs:
 workflows:
   test-and-deploy:
     jobs:
-      #- build
+      - build:
+          steps:
+            run:
+              name: foo
+              command: |
+                go build
       #- test
       - gh/release:
           context:
