@@ -37,7 +37,7 @@ jobs:
           name: GitHub release
           command: |
             set -x
-            export GH_TOKEN="${GITHUB_TOKEN}"
+            export GH_TOKEN=${GITHUB_TOKEN}
             wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
             gh release create v0.0.1-<<pipeline.git.revision>> --notes "auto release" --prerelease /tmp/build
