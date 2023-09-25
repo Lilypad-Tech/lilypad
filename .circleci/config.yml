@@ -1,15 +1,20 @@
 version: '2.1'
 orbs:
   gh: circleci/github-cli@2.2.0
+
+
+jobs:
+  build:
+    steps:
+      - run:
+          name: foo
+          command: |
+            go build
+
 workflows:
   test-and-deploy:
     jobs:
-      - build:
-          steps:
-            run:
-              name: foo
-              command: |
-                go build
+      - build
       #- test
       - gh/release:
           context:
