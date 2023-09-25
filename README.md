@@ -1,10 +1,10 @@
-# Lilypad 🍃
+# Lilypad v2 🍃
 
 This cloud is just someone else's computer.
 
 ![image](https://github.com/bacalhau-project/lilypad/assets/264658/d91dad9a-ca46-43d4-a94b-d33454efc7ae)
 
-# Lilypad v2
+# Getting started
 
 Welcome to the prerelease series of Lilypad v2.
 
