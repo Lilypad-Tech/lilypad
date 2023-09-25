@@ -33,7 +33,7 @@ jobs:
             SHORTSHA="${SHA:0:7}"
             wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
-            gh release create v2.0.0-pre${SHORTSHA} --notes "Release v2.0.0-pre${SHORTSHA} for Linux x86_64" v2.0.0-pre${SHORTSHA} /tmp/build/Linux-x86_64/lilypad
+            gh release create v2.0.0-${SHORTSHA} --notes "Release v2.0.0-${SHORTSHA} for Linux x86_64" /tmp/build/Linux-x86_64/lilypad
 
 workflows:
   test-and-deploy:
