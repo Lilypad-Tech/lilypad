@@ -22,9 +22,10 @@ workflows:
     jobs:
       - build
       #- test
-      - attach_workspace:
-          at: /tmp/build
       - gh/release:
+          pre-steps:
+          - attach_workspace:
+              at: /tmp/build
           context:
             - GITHUB_CREDS
           prerelease: true
