@@ -34,9 +34,13 @@ jobs:
               ignore: /.*/
           name: GitHub release
           command: |
-            wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
-            sudo dpkg -i gh_2.35.0_linux_amd64.deb
-            gh release create <<pipeline.git.tag>> --notes "Release <<pipeline.git.tag>> for Linux x86_64" <<pipeline.git.tag>> /tmp/build/Linux-x86_64/lilypad
+            if [ ! -z "<<pipeline.git.tag>>" ]; then
+              wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
+              sudo dpkg -i gh_2.35.0_linux_amd64.deb
+              gh release create <<pipeline.git.tag>> --notes "Release <<pipeline.git.tag>> for Linux x86_64" <<pipeline.git.tag>> /tmp/build/Linux-x86_64/lilypad
+            else
+              echo "Skipping missing tag"
+            fi
 
 workflows:
   test-and-deploy:
