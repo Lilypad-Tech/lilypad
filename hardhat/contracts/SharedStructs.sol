@@ -126,7 +126,12 @@ library SharedStructs {
     string dealId;
 
     // the CID of the results on IPFS (and directory service)
+    // NOTE - this is not the CID of actual results data rather
+    // of the JSON object reporting that data
     string resultsId;
+
+    // this is the actual lower level data CID
+    string dataId;
 
     // how many instructions were executed by the RP
     uint256 instructionCount;
@@ -153,5 +158,10 @@ library SharedStructs {
     uint256 timeoutSubmitResultsAt;
     uint256 timeoutJudgeResultsAt;
     uint256 timeoutMediateResultsAt;
+  }
+
+  struct JobOfferInput {
+    string name;
+    string value;
   }
 }

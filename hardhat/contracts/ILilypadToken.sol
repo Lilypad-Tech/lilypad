@@ -12,6 +12,11 @@ interface ILilypadToken is IERC20 {
     uint256 amount
   ) external returns (bool);
 
+  function payOnChainManager(
+    address managerAddress,
+    uint256 amount
+  ) external returns (bool);
+
   function refundEscrow(
     address toAddress,
     uint256 amount

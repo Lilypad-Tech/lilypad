@@ -190,6 +190,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   function addResult(
     string memory dealId,
     string memory resultsId,
+    string memory dataId,
     uint256 instructionCount
   ) public onlyController returns (SharedStructs.Result memory) {
     require(isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
@@ -198,6 +199,7 @@ contract LilypadStorage is ControllerOwnable, Initializable {
     results[dealId] = SharedStructs.Result(
       dealId,
       resultsId,
+      dataId,
       instructionCount
     );
     return results[dealId];

@@ -126,12 +126,14 @@ func (sdk *Web3SDK) Agree(
 func (sdk *Web3SDK) AddResult(
 	dealId string,
 	resultsId string,
+	dataId string,
 	instructionCount uint64,
 ) (string, error) {
 	tx, err := sdk.Contracts.Controller.AddResult(
 		sdk.TransactOpts,
 		dealId,
 		resultsId,
+		dataId,
 		big.NewInt(int64(instructionCount)),
 	)
 	if err != nil {

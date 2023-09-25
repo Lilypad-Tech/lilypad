@@ -65,6 +65,17 @@ contract LilypadToken is ControllerOwnable, ERC20 {
     return true;
   }
 
+  // for on chain triggered jobs - we need to pay X tokens into the solver
+  // account so it can manage a job on our behalf
+  // this is always paid via tx.origin so is safge
+  function payOnChainManager(
+    address managerAddress,
+    uint256 amount
+  ) public returns (bool) {
+    _transfer(tx.origin, managerAddress, amount);
+    return true;
+  }
+
   // money being paid back from the escrow account
   function refundEscrow(
     address toAddress,
