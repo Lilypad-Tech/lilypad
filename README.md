@@ -69,6 +69,20 @@ lilypad serve
 
 systemd units & more details [here](https://github.com/bacalhau-project/lilypad/tree/main/ops)
 
+## Available modules:
+
+Check the github releases page for each module or just use the git hash as the tag.
+
+* [sdxl](https://github.com/bacalhau-project/lilypad-module-sdxl)
+* [stable-diffusion](https://github.com/bacalhau-project/lilypad-module-stable-diffusion)
+* [duckdb](https://github.com/bacalhau-project/lilypad-module-duckdb)
+* [fastchat](https://github.com/bacalhau-project/lilypad-module-fastchat)
+* [lora-inference](https://github.com/bacalhau-project/lilypad-module-lora-inference)
+* [lora-training](https://github.com/bacalhau-project/lilypad-module-lora-training)
+* [filecoin-data-prep](https://github.com/bacalhau-project/lilypad-module-filecoin-data-prep)
+* [wasm](https://github.com/bacalhau-project/lilypad-module-wasm)
+* [cowsay](https://github.com/bacalhau-project/lilypad-module-cowsay)
+
 
 ## Write a module
 
@@ -79,7 +93,7 @@ In your repo, create a file called `lilypad_module.json.tmpl`
 
 See [cowsay](https://github.com/bacalhau-project/lilypad-module-cowsay) for example
 
-This is a json template with Go text/template style `{{.Message}}` sections which will be replaced by Lilypad with valid JSON strings which are passed as input to modules. You can also do fancy things with go templates like setting defaults, see cowsay for example.
+This is a json template with Go text/template style `{{.Message}}` sections which will be replaced by Lilypad with valid JSON strings which are passed as input to modules. You can also do fancy things with go templates like setting defaults, see cowsay for example. While developing a module, you can use the git hash to test it.
 
 Pass inputs as:
 
