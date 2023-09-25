@@ -12,11 +12,13 @@ Welcome to the prerelease series of Lilypad v2.
 
 The testnet has a base curency of ETH and you will also get LP to pay for jobs (and nodes to stake).
 
+```
 Network name: Lilypad v2 testnet
 New RPC URL: http://testnetv2.arewehotshityet.com:8545
 Chain ID: 1337
 Currency symbol: ETH
 Block explorer URL: (leave blank)
+```
 
 ### Fund your wallet with ETH and LP
 
