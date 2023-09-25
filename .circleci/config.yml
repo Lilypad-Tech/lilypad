@@ -15,7 +15,9 @@ jobs:
             mkdir -p build/Linux-x86_64
             go build -o build/Linux-x86_64/lilypad
       - persist_to_workspace:
-          path: build/
+          root: build/
+          paths:
+           - Linux-x86_64
 
 workflows:
   test-and-deploy:
