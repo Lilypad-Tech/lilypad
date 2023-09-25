@@ -1,10 +1,26 @@
 version: '2.1'
 orbs:
-  gh: circleci/github-cli@2.0
+  gh: circleci/github-cli@2.2.0
+
+
+jobs:
+  build:
+    docker:
+      - image: cimg/go:1.21.1
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            mkdir -p build/Linux-x86_64
+            go build -o build/Linux-x86_64/lilypad
+      - store_artifacts:
+          path: build/
+
 workflows:
   test-and-deploy:
     jobs:
-      #- build
+      - build
       #- test
       - gh/release:
           context:
@@ -16,7 +32,7 @@ workflows:
               # TODO: switch to only releasing on tags
               only:
                 - main
-          # requires:
-          #   - node/test
+          requires:
+            - build
           tag: 0.0.1-<<pipeline.git.revision>>
           title: Release <<pipeline.git.revision>>
