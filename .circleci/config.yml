@@ -29,13 +29,11 @@ jobs:
       - run:
           name: GitHub release
           command: |
-            if [ ! -z "<<pipeline.git.tag>>" ]; then
-              wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
-              sudo dpkg -i gh_2.35.0_linux_amd64.deb
-              gh release create <<pipeline.git.tag>> --notes "Release <<pipeline.git.tag>> for Linux x86_64" <<pipeline.git.tag>> /tmp/build/Linux-x86_64/lilypad
-            else
-              echo "Skipping missing tag"
-            fi
+            SHA=$(git rev-parse HEAD)
+            SHORTSHA="${SHA:0:7}"
+            wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
+            sudo dpkg -i gh_2.35.0_linux_amd64.deb
+            gh release create v2.0.0-pre${SHORTSHA} --notes "Release v2.0.0-pre${SHORTSHA} for Linux x86_64" v2.0.0-pre${SHORTSHA} /tmp/build/Linux-x86_64/lilypad
 
 workflows:
   test-and-deploy:
@@ -43,8 +41,5 @@ workflows:
       - build
       #- test
       - release:
-          filters:
-            tags:
-              only: /v.*/
           requires:
             - build
