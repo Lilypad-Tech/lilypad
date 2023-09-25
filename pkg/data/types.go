@@ -44,8 +44,7 @@ type ModuleConfig struct {
 	// where we keep a map of named modules
 	// and their versions onto the
 	// repo, hash and path below
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	Name string `json:"name"`
 
 	// needs to be a http url for a git repo
 	// we must be able to clone it without credentials

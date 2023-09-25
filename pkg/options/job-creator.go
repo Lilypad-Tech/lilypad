@@ -86,19 +86,12 @@ func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
 
 func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
 	name := ""
-	version := ""
-	if len(args) >= 2 {
-		version = args[1]
-	} else if len(args) == 1 {
+	if len(args) == 1 {
 		name = args[0]
 	}
 
 	if name != "" {
 		options.Offer.Module.Name = name
-	}
-
-	if version != "" {
-		options.Offer.Module.Version = version
 	}
 
 	moduleOptions, err := ProcessModuleOptions(options.Offer.Module)

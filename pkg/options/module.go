@@ -10,8 +10,6 @@ func GetDefaultModuleOptions() data.ModuleConfig {
 	return data.ModuleConfig{
 		// the shortcut name
 		Name: GetDefaultServeOptionString("MODULE_NAME", ""),
-		// the shortcut version
-		Version: GetDefaultServeOptionString("MODULE_VERSION", ""),
 		// the repo we can clone from
 		Repo: GetDefaultServeOptionString("MODULE_REPO", ""),
 		// the hash to checkout the repo
@@ -25,10 +23,6 @@ func AddModuleCliFlags(cmd *cobra.Command, moduleConfig *data.ModuleConfig) {
 	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Name, "module-name", moduleConfig.Name,
 		`The name of the shortcut module (MODULE_NAME)`,
-	)
-	cmd.PersistentFlags().StringVar(
-		&moduleConfig.Version, "module-version", moduleConfig.Version,
-		`The version of the shortcut module (MODULE_VERSION)`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&moduleConfig.Repo, "module-repo", moduleConfig.Repo,

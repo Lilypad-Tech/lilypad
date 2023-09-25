@@ -14,7 +14,7 @@ import (
 // parse something with no slashes in it as
 // github.com/bacalhau-project/lilypad-module-<shortcode>
 
-func GetModule(name string, version string) (data.ModuleConfig, error) {
+func GetModule(name string) (data.ModuleConfig, error) {
 	// parse name per following valid formats
 	// github.com/user/repo:tag --> Repo: https://github.com/user/repo; Hash = tag
 	// bar:tag --> Repo = https://github.com/bacalhau-project/lilypad-module-<bar>, Hash = tag
@@ -35,11 +35,10 @@ func GetModule(name string, version string) (data.ModuleConfig, error) {
 
 	// TODO: docs for authoring a module
 	module := data.ModuleConfig{
-		Name:    "",
-		Version: "",
-		Repo:    repo,
-		Hash:    hash,
-		Path:    "/lilypad_module.json",
+		Name: "",
+		Repo: repo,
+		Hash: hash,
+		Path: "/lilypad_module.json",
 	}
 
 	return module, nil

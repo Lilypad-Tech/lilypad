@@ -10,8 +10,7 @@ import (
 
 func TestPrepareModule(t *testing.T) {
 	text, err := PrepareModule(data.ModuleConfig{
-		Name:    "cowsay",
-		Version: "v0.0.1",
+		Name: "cowsay:head",
 	})
 
 	assert.NoError(t, err, "Should not return an error")
@@ -21,8 +20,7 @@ func TestPrepareModule(t *testing.T) {
 
 func TestLoadModule(t *testing.T) {
 	module, err := LoadModule(data.ModuleConfig{
-		Name:    "cowsay",
-		Version: "v0.0.1",
+		Name: "cowsay:head",
 	}, map[string]string{
 		"Message": "Hello, world!",
 	})
