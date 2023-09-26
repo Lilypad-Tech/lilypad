@@ -14,25 +14,35 @@ jobs:
           command: |
             mkdir -p build/Linux-x86_64
             go build -o build/Linux-x86_64/lilypad
-      - store_artifacts:
-          path: build/
+      - persist_to_workspace:
+          root: build/
+          paths:
+           - Linux-x86_64
+
+  release:
+    docker:
+      - image: cimg/go:1.21.1
+    steps:
+      - attach_workspace:
+          at: /tmp/build
+      - checkout
+      - run:
+          name: GitHub release
+          command: |
+            SHA=$(git rev-parse HEAD)
+            SHORTSHA="${SHA:0:7}"
+            wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
+            sudo dpkg -i gh_2.35.0_linux_amd64.deb
+            gh release create v2.0.0-${SHORTSHA} --notes "Release v2.0.0-${SHORTSHA} for Linux x86_64" /tmp/build/Linux-x86_64/lilypad
 
 workflows:
   test-and-deploy:
     jobs:
       - build
       #- test
-      - gh/release:
-          context:
-            - GITHUB_CREDS
-          prerelease: true
-          files: ./lilypad
-          filters:
-            branches:
-              # TODO: switch to only releasing on tags
-              only:
-                - main
-          requires:
-            - build
-          tag: 0.0.1-<<pipeline.git.revision>>
-          title: Release <<pipeline.git.revision>>
+      - release:
+         filters:
+           branches:
+             only: main
+         requires:
+           - build
