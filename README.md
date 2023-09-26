@@ -22,8 +22,6 @@ Currency symbol: ETH
 Block explorer URL: (leave blank)
 ```
 
-Import your tokens in Metamask, token contract address is 0x0165878A594ca255338adfa4d48449f69242Eb8F
-
 ### Fund your wallet with ETH and LP
 
 To obtain funds, go to [http://testnetv2.arewehotshityet.com:8080](http://testnetv2.arewehotshityet.com:8080)
