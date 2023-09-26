@@ -8,7 +8,7 @@ This cloud is just someone else's computer.
 
 Welcome to the prerelease series of Lilypad v2.
 
-## Testnet
+## Aurora Testnet
 
 The testnet has a base curency of ETH and you will also get LP to pay for jobs (and nodes to stake).
 
