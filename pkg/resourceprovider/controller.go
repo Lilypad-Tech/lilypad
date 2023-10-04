@@ -3,6 +3,7 @@ package resourceprovider
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
@@ -324,7 +325,21 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	for _, dealContainer := range matchedDeals {
 		controller.log.Info("agree", dealContainer)
 
-		txHash, err := controller.agreeOnChain(dealContainer)
+		var txHash string
+		var err error
+
+		// attempt off chain escrow first
+		txHash, err = controller.agreeOffChain(dealContainer)
+
+		if err != nil {
+			// fall back to on chain escrow
+			txHash, err = controller.agreeOnChain(dealContainer)
+		}
+
+		if err != nil {
+			controller.log.Error("error agreeing to deal", err)
+			continue
+		}
 
 		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
@@ -342,6 +357,90 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 
 	return err
 
+}
+
+func (controller *ResourceProviderController) agreeOffChain(dealContainer data.DealContainer) (string, error) {
+	nc := controller.nitroClient
+	if nc == nil {
+		return "", fmt.Errorf("nitro client not initialized")
+	}
+
+	var mediatorAddress, jobCreatorAddress, resourceProviderAddress types.Address
+
+	copy(mediatorAddress[:], []byte(dealContainer.Mediator))
+	copy(jobCreatorAddress[:], []byte(dealContainer.JobCreator))
+	copy(resourceProviderAddress[:], []byte(dealContainer.ResourceProvider))
+
+	///////////////////
+	// plumbing - would live elsewhere in a real implementation
+	///////////////////
+
+	ledgers, err := nc.GetAllLedgerChannels() // these are the L1 channels that we have
+	if err != nil {
+		return "", fmt.Errorf("error getting ledger channels: %w", err)
+	}
+
+	// locate our channel with the mediator, which we'll use to open a channel with the JobCreator
+	mediatorLedgerID := types.Destination{}
+	for _, l := range ledgers {
+		if l.Balance.Them == mediatorAddress {
+			// todo: ask the mediator if they have a channel (or path)
+			//       to the JobCreator
+			mediatorLedgerID = l.ID
+		}
+	}
+	if (mediatorLedgerID == types.Destination{}) {
+		return "", fmt.Errorf("no path to JobCreator")
+	}
+
+	////////////////////
+	//  end plumbing
+	////////////////////
+
+	// values for initial (pre-payment) channel outcome. These are the escrow deposits.
+	jobCreatorDeposit := dealContainer.Deal.Pricing.PaymentCollateral +
+		dealContainer.Deal.Pricing.MediationFee
+	resourceProviderDeposit := dealContainer.Deal.Pricing.ResultsCollateralMultiple *
+		dealContainer.Deal.Pricing.PaymentCollateral
+
+	dealChannel, err := nc.CreatePaymentChannel(
+		[]types.Address{mediatorAddress},
+		jobCreatorAddress,
+		1000000,
+		outcome.Exit{
+			outcome.SingleAssetExit{
+				Asset:         types.Address{}, // the native asset (ETH, FIL, etc)
+				AssetMetadata: outcome.AssetMetadata{},
+				Allocations: []outcome.Allocation{
+					{
+						Destination: types.AddressToDestination(jobCreatorAddress),
+						Amount:      big.NewInt(int64(jobCreatorDeposit)),
+					},
+					{
+						Destination: types.AddressToDestination(resourceProviderAddress),
+						Amount:      big.NewInt(int64(resourceProviderDeposit)),
+					},
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("error creating payment channel: %w", err)
+	}
+
+	// listen for updates to the channel, and wait for it to open
+	updates := nc.PaymentChannelUpdatesChan(dealChannel.ChannelId)
+
+	for u := range updates {
+		if u.Status == query.Open {
+			// channel is open, escrow deposits have been made
+			return fmt.Sprintf("channel-%s", dealChannel.ChannelId), nil
+		}
+		// todo: return error on a timeout
+	}
+
+	return "", fmt.Errorf("channel never opened")
 }
 
 func (controller *ResourceProviderController) agreeOnChain(dealContainer data.DealContainer) (string, error) {
