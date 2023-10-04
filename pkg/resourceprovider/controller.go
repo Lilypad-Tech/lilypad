@@ -15,11 +15,17 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+
+	"github.com/statechannels/go-nitro/channel/state/outcome"
+	"github.com/statechannels/go-nitro/node/query"
+	nitro "github.com/statechannels/go-nitro/rpc"
+	"github.com/statechannels/go-nitro/types"
 )
 
 type ResourceProviderController struct {
 	solverClient *solver.SolverClient
 	options      ResourceProviderOptions
+	nitroClient  nitro.RpcClientApi
 	web3SDK      *web3.Web3SDK
 	web3Events   *web3.EventChannels
 	loop         *system.ControlLoop
