@@ -66,6 +66,7 @@ func NewResourceProviderController(
 	controller := &ResourceProviderController{
 		solverClient: solverClient,
 		options:      options,
+		nitroClient:  nil,
 		web3SDK:      web3SDK,
 		web3Events:   web3.NewEventChannels(),
 		log:          system.NewServiceLogger(system.ResourceProviderService),
@@ -322,15 +323,8 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 	// map over the deals and agree to them
 	for _, dealContainer := range matchedDeals {
 		controller.log.Info("agree", dealContainer)
-		txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
-		if err != nil {
-			// TODO: we need a way of deciding based on certain classes of error what happens
-			// some will be retryable - otherwise will be fatal
-			// we need a way to exit a job loop as a baseline
-			controller.log.Error("error calling agree tx for deal", err)
-			continue
-		}
-		controller.log.Info("agree tx", txHash)
+
+		txHash, err := controller.agreeOnChain(dealContainer)
 
 		// we have agreed to the deal so we need to update the tx in the solver
 		_, err = controller.solverClient.UpdateTransactionsResourceProvider(dealContainer.ID, data.DealTransactionsResourceProvider{
@@ -348,6 +342,19 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 
 	return err
 
+}
+
+func (controller *ResourceProviderController) agreeOnChain(dealContainer data.DealContainer) (string, error) {
+	txHash, err := controller.web3SDK.Agree(dealContainer.Deal)
+	if err != nil {
+		// TODO: we need a way of deciding based on certain classes of error what happens
+		// some will be retryable - otherwise will be fatal
+		// we need a way to exit a job loop as a baseline
+		controller.log.Error("error calling agree tx for deal", err)
+		return "", err
+	}
+	controller.log.Info("agree tx", txHash)
+	return txHash, err
 }
 
 /*
