@@ -30,15 +30,13 @@ The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for 
 
 ## Install CLI
 
-### Go package
-
 #### 1. With Go toolchain 
 
 ```shell
 go install github.com/bacalhau-project/lilypad@latest
 ```
 
-#### 2. Download the binaries
+#### 2. Via officially released binaries
 
 Caveat: only supports x86_64 Linux
 
