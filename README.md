@@ -46,10 +46,6 @@ chmod +x lilypad
 sudo mv lilypad /usr/local/bin
 ```
 
-
-
-
-
 ## Run a job
 
 ```
