@@ -35,6 +35,11 @@ The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for 
 ```shell
 go install github.com/bacalhau-project/lilypad@latest
 ```
+You may then need to set:
+```
+export SERVICE_SOLVER="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+export SERVICE_MEDIATORS="0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+```
 
 #### 2. Via officially released binaries
 
