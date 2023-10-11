@@ -95,7 +95,7 @@ Run the following commands in separate terminals:
 ```
 
 ```bash
-./stack run cowsay
+./stack run cowsay:v0.0.1 -i Message="moo"
 ```
 
 ## stop stack
