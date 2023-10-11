@@ -8,14 +8,14 @@ This cloud is just someone else's computer.
 
 Welcome to the prerelease series of Lilypad v2.
 
-## Testnet
+## Aurora Testnet
 
 The testnet has a base curency of ETH and you will also get LP to pay for jobs (and nodes to stake).
 
 Metamask:
 
 ```
-Network name: Lilypad v2 testnet
+Network name: Lilypad v2 Aurora testnet
 New RPC URL: http://testnetv2.arewehotshityet.com:8545
 Chain ID: 1337
 Currency symbol: ETH
@@ -24,13 +24,26 @@ Block explorer URL: (leave blank)
 
 ### Fund your wallet with ETH and LP
 
-To obtain funds, go to [http://testnetv2.arewehotshityet.com](http://testnetv2.arewehotshityet.com)
+To obtain funds, go to [http://testnetv2.arewehotshityet.com:8080](http://testnetv2.arewehotshityet.com:8080)
 
 The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for jobs).
 
 ## Install CLI
 
-Currently only supports x86_64 Linux
+#### 1. With Go toolchain 
+
+```shell
+go install github.com/bacalhau-project/lilypad@latest
+```
+You may then need to set:
+```
+export SERVICE_SOLVER="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+export SERVICE_MEDIATORS="0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+```
+
+#### 2. Via officially released binaries
+
+Caveat: only supports x86_64 Linux
 
 ```
 curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-b7e9e04/lilypad
@@ -49,14 +62,14 @@ export WEB3_PRIVATE_KEY=<your private key>
 ### Cows
 
 ```
-lilypad run cowsay:v0.0.1 -i Message="hey beautiful"
+lilypad run cowsay:v0.0.1 -i Message="moo"
 ```
 
 
 ### SDXL
 
 ```
-lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=record player in reykjavik"
+lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=beautiful view of iceland with a record player"
 ```
 
 ![image-42](https://github.com/bacalhau-project/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)

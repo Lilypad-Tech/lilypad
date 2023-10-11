@@ -2,10 +2,12 @@ package store
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
+	"github.com/simonfrey/jsonl"
 )
 
 type SolverStoreMemory struct {
@@ -15,6 +17,7 @@ type SolverStoreMemory struct {
 	resultMap        map[string]*data.Result
 	matchDecisionMap map[string]*data.MatchDecision
 	mutex            sync.RWMutex
+	logWriters       map[string]jsonl.Writer
 }
 
 func getMatchID(resourceOffer string, jobOffer string) string {
@@ -22,12 +25,24 @@ func getMatchID(resourceOffer string, jobOffer string) string {
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
+	logWriters := make(map[string]jsonl.Writer)
+
+	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
+	for k := range kinds {
+		logfile, err := os.OpenFile(fmt.Sprintf("/var/tmp/lilypad_%s.jsonl", kinds[k]), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			return nil, err
+		}
+		logWriters[kinds[k]] = jsonl.NewWriter(logfile)
+	}
+
 	return &SolverStoreMemory{
 		jobOfferMap:      map[string]*data.JobOfferContainer{},
 		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
 		dealMap:          map[string]*data.DealContainer{},
 		resultMap:        map[string]*data.Result{},
 		matchDecisionMap: map[string]*data.MatchDecision{},
+		logWriters:       logWriters,
 	}, nil
 }
 
@@ -35,6 +50,8 @@ func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOfferContainer) (*data.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.jobOfferMap[jobOffer.ID] = &jobOffer
+
+	s.logWriters["job_offers"].Write(jobOffer)
 	return &jobOffer, nil
 }
 
@@ -42,6 +59,8 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOfferCon
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.resourceOfferMap[resourceOffer.ID] = &resourceOffer
+
+	s.logWriters["resource_offers"].Write(resourceOffer)
 	return &resourceOffer, nil
 }
 
@@ -49,6 +68,7 @@ func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContaine
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.dealMap[deal.ID] = &deal
+	s.logWriters["deals"].Write(deal)
 	return &deal, nil
 }
 
@@ -56,6 +76,7 @@ func (s *SolverStoreMemory) AddResult(result data.Result) (*data.Result, error) 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.resultMap[result.DealID] = &result
+	s.logWriters["results"].Write(result)
 	return &result, nil
 }
 
@@ -74,6 +95,7 @@ func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer stri
 		Result:        result,
 	}
 	s.matchDecisionMap[id] = decision
+	s.logWriters["decisions"].Write(decision)
 	return decision, nil
 }
 
