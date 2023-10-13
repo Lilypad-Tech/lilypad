@@ -46,7 +46,7 @@ export SERVICE_MEDIATORS="0x90F79bf6EB2c4f870365E785982E1f101E93b906"
 Caveat: only supports x86_64 Linux
 
 ```
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-b7e9e04/lilypad
+curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-6afc1cc/lilypad
 chmod +x lilypad
 sudo mv lilypad /usr/local/bin
 ```
