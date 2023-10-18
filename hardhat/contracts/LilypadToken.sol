@@ -12,7 +12,7 @@ import "./ControllerOwnable.sol";
      * for paying in, we use tx.origin so the actual payee must call the contract
      * for paying out - we use the Controller Ownable feature so only the payments contract
        can pay out from the escrow account
-   * getEscrowBalance
+   * escrowBalanceOf
      * get the current escrow balance for an address
    * payEscrow
      * pay into the escrow account
@@ -67,7 +67,7 @@ contract LilypadToken is ControllerOwnable, ERC20 {
 
   // for on chain triggered jobs - we need to pay X tokens into the solver
   // account so it can manage a job on our behalf
-  // this is always paid via tx.origin so is safge
+  // this is always paid via tx.origin so is safe
   function payOnChainManager(
     address managerAddress,
     uint256 amount

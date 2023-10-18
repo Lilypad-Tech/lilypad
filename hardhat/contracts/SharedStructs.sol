@@ -164,4 +164,12 @@ library SharedStructs {
     string name;
     string value;
   }
+
+  struct JobOffer {
+    uint256 id;
+    // this is the address of a ILilypad
+    address client;
+    string module;
+    JobOfferInput[] inputs; 
+  }
 }
