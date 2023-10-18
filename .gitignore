@@ -8,3 +8,8 @@ hardhat/typechain-types
 .env
 *.env
 ops/testnet/.terraform/providers
+.idea/
+.vscode/
+.run/
+bin/
+vendor/
