@@ -49,6 +49,32 @@ function geth-command() {
 
 ############################################################################
 ############################################################################
+# faucet
+############################################################################
+############################################################################
+
+# fun the faucet container
+function faucet() {
+  source .env
+  eval $(./stack print-contract-env)
+  local privateKey=$(echo -n "$ADMIN_PRIVATE_KEY" | sed 's/^0x//')
+  local tokenAddress=$(echo -n "$WEB3_TOKEN_ADDRESS" | sed 's/^0x//')
+  docker run -d \
+    --name faucet \
+    -p 8080:8080 \
+    --network lilypad \
+    -e WEB3_PROVIDER=http://geth:8545 \
+    -e PRIVATE_KEY=$privateKey \
+    -e TOKEN_ADDRESS=$WEB3_TOKEN_ADDRESS \
+    faucet \
+      --faucet.amount=100 \
+      --faucet.tokenamount=100 \
+      --faucet.minutes=1
+}
+
+
+############################################################################
+############################################################################
 # bacalhau
 ############################################################################
 ############################################################################
@@ -300,26 +326,5 @@ function integration-tests() {
     go test -v -count 1 .
   )
 }
-
-############################################################################
-############################################################################
-# faucet
-############################################################################
-############################################################################
-
-# fun the faucet container
-function faucet() {
-  local privateKey=$(echo -n "$FAUCET_PRIVATE_KEY" | sed 's/^0x//')
-  docker run -d \
-    --name faucet \
-    -p 81:8080 \
-    --network modicum \
-    -e WEB3_PROVIDER=http://geth:8545 \
-    -e PRIVATE_KEY=$privateKey \
-    chainflag/eth-faucet:1.1.0 \
-      --faucet.amount=100 \
-      --faucet.minutes=1
-}
-
 
 eval "$@"

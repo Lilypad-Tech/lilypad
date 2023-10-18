@@ -6,4 +6,5 @@ hardhat/deployments/localhost
 hardhat/deployments/geth
 hardhat/typechain-types
 .env
+*.env
 ops/testnet/.terraform/providers

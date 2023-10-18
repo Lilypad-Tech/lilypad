@@ -9,8 +9,8 @@ import (
 
 func GetDefaultServicesOptions() data.ServiceConfig {
 	return data.ServiceConfig{
-		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", ""),
-		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{}),
+		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"),
+		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{"0x90F79bf6EB2c4f870365E785982E1f101E93b906"}),
 	}
 }
 
@@ -20,7 +20,7 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 		`The solver to connect to (SERVICE_SOLVER)`,
 	)
 	cmd.PersistentFlags().StringSliceVar(
-		&servicesConfig.Mediator, "serviec-mediators", servicesConfig.Mediator,
+		&servicesConfig.Mediator, "service-mediators", servicesConfig.Mediator,
 		`The mediators we trust (SERVICE_MEDIATORS)`,
 	)
 }
