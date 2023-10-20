@@ -173,11 +173,11 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	return string(fileContents), nil
 }
 
-func subst(format string, inputs ...string) string {
+func subst(format string, jsonEncodedInputs ...string) string {
 
-	jsonDecodedInputs := make([]string, len(inputs))
+	jsonDecodedInputs := make([]string, len(jsonEncodedInputs))
 
-	for _, input := range inputs {
+	for _, input := range jsonEncodedInputs {
 		var s string
 
 		if err := json.Unmarshal([]byte(input), &s); err != nil {
