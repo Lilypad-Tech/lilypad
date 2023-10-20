@@ -10,12 +10,13 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/rs/zerolog/log"
+
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
 	"github.com/bacalhau-project/lilypad/pkg/system"
-	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/rs/zerolog/log"
 )
 
 const REPO_DIR = "repos"
@@ -172,6 +173,25 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	return string(fileContents), nil
 }
 
+func subst(format string, inputs ...string) string {
+
+	jsonDecodedInputs := make([]string, len(inputs))
+
+	for _, input := range inputs {
+		var s string
+
+		if err := json.Unmarshal([]byte(input), &s); err != nil {
+			log.Debug().AnErr("subst: json unmarshall", err).Msgf(input)
+			log.Printf("setting json encoded value for input:%s\n", input)
+			s = input
+		}
+
+		jsonDecodedInputs = append(jsonDecodedInputs, s)
+	}
+
+	return fmt.Sprintf(format, jsonDecodedInputs)
+}
+
 // - prepare the module - now we have the text of the template
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
@@ -184,6 +204,9 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 
 	templateName := fmt.Sprintf("%s-%s-%s", module.Repo, module.Path, module.Hash)
 	tmpl, err := template.New(templateName).Parse(moduleText)
+	tmpl.Funcs(template.FuncMap{
+		"subst": subst,
+	})
 	if err != nil {
 		return nil, err
 	}
