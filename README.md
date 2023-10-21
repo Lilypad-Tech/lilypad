@@ -132,6 +132,7 @@ If your module is not deterministic, compute providers will not adopt it and add
 
 1. `subt`: Substitutions are not possible due to [#14](https://github.com/bacalhau-project/lilypad/issues/14). `subt`- enables substitution. It implementes [printf](https://pkg.go.dev/text/template#Template.Funcs) under the hood. Hence the usage is same.
 
+
     
 
 
