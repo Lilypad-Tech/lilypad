@@ -137,16 +137,17 @@ This function is a workaround for the lack of direct substitution support in the
 
 <details>
   <summary> 
-    Usage    
+    Usage   
   </summary>
     The `subt` function can be used in the same way as the `printf` function in Go. You pass in a format string, followed by values that correspond to the placeholders in the format string.
     ```
     const templateText = `
     {{ subt "Hello %s" .name }}
     `
-
     ```
 </details>
+
+[Example Code](https://go.dev/play/p/oBgc2Cetug3)
   
     
 
