@@ -26,8 +26,10 @@ func GetModule(name string) (data.ModuleConfig, error) {
 	}
 	repo, hash := parts[0], parts[1]
 	if strings.Contains(name, "/") {
+		// 3rd party module
 		repo = fmt.Sprintf("https://%s", repo)
 	} else {
+		// lilypad std module
 		repo = fmt.Sprintf("https://github.com/bacalhau-project/lilypad-module-%s", repo)
 	}
 
