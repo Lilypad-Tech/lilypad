@@ -24,7 +24,7 @@ const REPO_DIR = "repos"
 func getRepoLocalPath(repoURL string) (string, error) {
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("url parsing failed with %v", err)
 	}
 
 	pathParts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
