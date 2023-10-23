@@ -26,9 +26,9 @@ func GetModule(name string) (data.ModuleConfig, error) {
 	}
 	repo, hash := parts[0], parts[1]
 	if strings.Contains(name, "/") {
-		repo = fmt.Sprintf("https://%s", parts[0])
+		repo = fmt.Sprintf("https://%s", repo)
 	} else {
-		repo = fmt.Sprintf("https://github.com/bacalhau-project/lilypad-module-%s", parts[0])
+		repo = fmt.Sprintf("https://github.com/bacalhau-project/lilypad-module-%s", repo)
 	}
 
 	// TODO: docs for authoring a module
