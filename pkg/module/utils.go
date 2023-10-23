@@ -109,9 +109,11 @@ func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 
 	// git fetch origin: Resolves #https://github.com/bacalhau-project/lilypad/issues/13
 	gitFetchOptions := &git.FetchOptions{
-		Tags: git.AllTags,
+		Tags:     git.AllTags,
+		Progress: os.Stdout,
 	}
 	gitFetchOptions.Validate() // sets default values like remote=origin
+	log.Info().Str("updating cached git repo", repoDir).Msgf("")
 	err = repo.FetchContext(context.Background(), gitFetchOptions)
 
 	// Check if hash or tag specified exists
