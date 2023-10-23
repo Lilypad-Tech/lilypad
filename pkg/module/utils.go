@@ -2,6 +2,7 @@ package module
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -81,47 +82,56 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		return nil, err
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
+	var repo *git.Repository
+
 	if err == nil && fileInfo.IsDir() {
-		repo, err := git.PlainOpen(repoDir)
+		repo, err = git.PlainOpen(repoDir)
 		// err := os.RemoveAll(repoDir)
 		if err != nil {
 			return nil, err
 		}
-		// Check if hash or tag specified exists
-		h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
+	} else {
+		log.Debug().
+			Str("repo exists", repoDir).
+			Str("repo remote", module.Repo).
+			Msgf("")
+
+		// git fetch origin
+		gitFetchOptions := &git.FetchOptions{
+			Tags: git.AllTags,
+		}
+		gitFetchOptions.Validate() // sets default values like remote=origin
+		err = repo.FetchContext(context.Background(), gitFetchOptions)
+	}
+	// Check if hash or tag specified exists
+	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
+	if err != nil {
+		return nil, err
+	}
+	// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
+	// explicitly to ensure determinism (and that we're running the code we
+	// explicitly approved)
+	_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
+	if err != nil {
+		// this means there is no hash in the repo
+		// so let's clean it up and clone it again
+		err = os.RemoveAll(repoDir)
 		if err != nil {
 			return nil, err
 		}
-		// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
-		// explicitly to ensure determinism (and that we're running the code we
-		// explicitly approved)
-		_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
-		if err != nil {
-			// this means there is no hash in the repo
-			// so let's clean it up and clone it again
-			err = os.RemoveAll(repoDir)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			log.Debug().
-				Str("repo exists", repoDir).
-				Str("repo remote", module.Repo).
-				Msgf("")
-			// this means we do have the hash locally so can just return the repo as is
-			return repo, nil
-		}
 	}
+
 	log.Debug().
 		Str("repo clone", repoDir).
 		Str("repo remote", module.Repo).
 		Msgf("")
 	return git.PlainClone(repoDir, false, &git.CloneOptions{
-		URL: module.Repo,
+		URL:      module.Repo,
+		Progress: os.Stdout,
 	})
 }
 
-// get a module cloned and checked out then return the text content of the template
+// PrepareModule get a module cloned and checked out then return the text content of the template
 //   - process shortcuts
 //   - check if we have the repo cloned
 //   - checkout the correct hash
