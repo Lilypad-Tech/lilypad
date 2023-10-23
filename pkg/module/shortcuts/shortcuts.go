@@ -20,12 +20,11 @@ func GetModule(name string) (data.ModuleConfig, error) {
 	if name == "" {
 		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
 	}
-	var repo, hash string
 	parts := strings.Split(name, ":")
 	if len(parts) != 2 {
 		return data.ModuleConfig{}, fmt.Errorf("invalid module name format: %s", name)
 	}
-	hash = parts[1]
+	repo, hash := parts[0], parts[1]
 	if strings.Contains(name, "/") {
 		repo = fmt.Sprintf("https://%s", parts[0])
 	} else {
