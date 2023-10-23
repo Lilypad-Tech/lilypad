@@ -72,7 +72,7 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 // TODO: check if we have the repo already cloned
 // handle fetching new changes perhaps the commit hash is not the latest
 // at the moment we will do the slow thing and clone the repo every time
-func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
+func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 	repoPath, err := getRepoLocalPath(module.Repo)
 	if err != nil {
 		return nil, err
@@ -82,27 +82,38 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		return nil, err
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
-	var repo *git.Repository
 
-	if err == nil && fileInfo.IsDir() {
-		repo, err = git.PlainOpen(repoDir)
-		// err := os.RemoveAll(repoDir)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	repoCloned := err == nil && fileInfo.IsDir()
+
+	if !repoCloned {
 		log.Debug().
-			Str("repo exists", repoDir).
+			Str("repo clone", repoDir).
 			Str("repo remote", module.Repo).
 			Msgf("")
-
-		// git fetch origin
-		gitFetchOptions := &git.FetchOptions{
-			Tags: git.AllTags,
-		}
-		gitFetchOptions.Validate() // sets default values like remote=origin
-		err = repo.FetchContext(context.Background(), gitFetchOptions)
+		return git.PlainClone(repoDir, false, &git.CloneOptions{
+			URL:      module.Repo,
+			Progress: os.Stdout,
+		})
 	}
+
+	log.Debug().
+		Str("repo exists", repoDir).
+		Str("repo remote", module.Repo).
+		Msgf("")
+
+	repo, err = git.PlainOpen(repoDir)
+	// err := os.RemoveAll(repoDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// git fetch origin: Resolves #https://github.com/bacalhau-project/lilypad/issues/13
+	gitFetchOptions := &git.FetchOptions{
+		Tags: git.AllTags,
+	}
+	gitFetchOptions.Validate() // sets default values like remote=origin
+	err = repo.FetchContext(context.Background(), gitFetchOptions)
+
 	// Check if hash or tag specified exists
 	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
 	if err != nil {
@@ -120,15 +131,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 			return nil, err
 		}
 	}
-
-	log.Debug().
-		Str("repo clone", repoDir).
-		Str("repo remote", module.Repo).
-		Msgf("")
-	return git.PlainClone(repoDir, false, &git.CloneOptions{
-		URL:      module.Repo,
-		Progress: os.Stdout,
-	})
+	return
 }
 
 // PrepareModule get a module cloned and checked out then return the text content of the template
