@@ -13,6 +13,8 @@ import (
 // parse something with no slashes in it as
 // github.com/bacalhau-project/lilypad-module-<shortcode>
 
+const LILYPAD_MODULE_CONFIG_PATH = "/lilypad_module.json.tmpl"
+
 func GetModule(name string) (data.ModuleConfig, error) {
 	// parse name per following valid formats
 	// github.com/user/repo:tag --> Repo: https://github.com/user/repo; Hash = tag
@@ -35,10 +37,10 @@ func GetModule(name string) (data.ModuleConfig, error) {
 
 	// TODO: docs for authoring a module
 	module := data.ModuleConfig{
-		Name: "",
+		Name: "", // TODO:
 		Repo: repo,
 		Hash: hash,
-		Path: "/lilypad_module.json.tmpl",
+		Path: LILYPAD_MODULE_CONFIG_PATH,
 	}
 
 	return module, nil
