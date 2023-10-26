@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches:
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        check-latest: true
+        cache-dependency-path: go.sum
+        cache: true
+        go-version-file: go.mod
+
+    - name: Install dependencies
+      run: go get .
+
+    - name: Build
+      run: go build -v .
+
+    - name: Build (Race)
+      run: go build -v -race .
+
