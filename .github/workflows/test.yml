@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches:
+
+    tags:
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        check-latest: true
+        cache-dependency-path: go.sum
+        cache: true
+        go-version-file: go.mod
+
+    - name: Install dependencies
+      run: go get .
+
+    - name: Test Short
+      run: go test -v -run="^Test" -short ./... -timeout 20m
+
+    - name: Test
+      run: go test -v -run="^Test" ./... -timeout 6h
+
+
+
+
