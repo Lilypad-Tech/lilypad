@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/bacalhau-project/lilypad/pkg/jsonl"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
-	"github.com/simonfrey/jsonl"
 )
 
 type SolverStoreMemory struct {

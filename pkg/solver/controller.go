@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
+	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	jobcreatorweb3 "github.com/bacalhau-project/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // add an enum for various types of event
@@ -149,6 +152,20 @@ func (controller *SolverController) subscribeToWeb3() error {
 		_, err := controller.updateDealMediator(ev.DealId, ev.Mediator.String())
 		if err != nil {
 			controller.log.Error("error updating deal state", err)
+			return
+		}
+
+		// update the store with the state change
+		controller.loop.Trigger()
+	})
+
+	// hear about new jobs added to the job creator
+	controller.web3Events.JobCreator.SubscribeJobAdded(func(ev jobcreatorweb3.JobcreatorJobAdded) {
+		controller.log.Info("JobcreatorJobAdded", "")
+		system.DumpObjectDebug(ev)
+		_, err := controller.runJob(ev)
+		if err != nil {
+			controller.log.Error("error running job", err)
 			return
 		}
 
@@ -478,4 +495,25 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 		Deal:      dealContainer,
 	})
 	return dealContainer, nil
+}
+
+/*
+*
+*
+*
+
+# Run onchain job
+
+*
+*
+*
+*/
+
+func (controller *SolverController) runJob(ev jobcreatorweb3.JobcreatorJobAdded) (*data.DealContainer, error) {
+	options := optionsfactory.NewJobCreatorOptions()
+	fmt.Printf("options --------------------------------------\n")
+	spew.Dump(options)
+	fmt.Printf("ev --------------------------------------\n")
+	spew.Dump(ev)
+	return nil, nil
 }

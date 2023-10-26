@@ -87,7 +87,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
-	github.com/simonfrey/jsonl v0.0.0-20230718192858-195f01ae6957
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
