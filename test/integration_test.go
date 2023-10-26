@@ -188,7 +188,7 @@ func TestNoModeration(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "there was an error running the job")
-	assert.Equal(t, noop.NoopResultsCID, result.Result.DataID, "the data ID was correct")
+	assert.Equal(t, noop.NOOP_RESULTS_CID, result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
 
