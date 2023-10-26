@@ -12,6 +12,7 @@ import "./ILilypadJobClient.sol";
 interface ILilypadJobManager is ILilypadJobClient {
   function runJob(
     string memory module,
-    SharedStructs.JobOfferInput[] memory inputs
+    string[] memory inputs,
+    address payee
   ) external returns (uint256);
 }

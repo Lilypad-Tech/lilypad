@@ -160,16 +160,21 @@ library SharedStructs {
     uint256 timeoutMediateResultsAt;
   }
 
-  struct JobOfferInput {
-    string name;
-    string value;
-  }
-
   struct JobOffer {
     uint256 id;
-    // this is the address of a ILilypad
-    address client;
+    
+    // this is the contract that will be triggered
+    // once there are some results
+    address calling_contract;
+
+    // this is the address that is paying for the job
+    // they must have called approve on the token contract
+    // and granted the solver address the number of tokens
+    // required
+    address payee;
+
+    // the job spec
     string module;
-    JobOfferInput[] inputs; 
+    string[] inputs;
   }
 }

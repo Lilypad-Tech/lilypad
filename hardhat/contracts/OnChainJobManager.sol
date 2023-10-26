@@ -11,16 +11,16 @@ import "./ILilypadToken.sol";
 
 contract JobManager is ILilypadJobManager, ControllerOwnable, Initializable {
 
-  // keep track of which contract has called which job
-  // mapping(string => SharedStructs.Result) private results;
-
+  // the token contract
+  // we check to see what allowance has been granted to be spent on behalf
+  // of the customer of a job
   address private tokenAddress;
   ILilypadToken private tokenContract;
 
-  // simplistic way of the solver updating how much things currently cost
-  // this is based on market pricing - the solver will post the cheapest
-  // TODO: allow more detail here - for example, per module pricing
-  uint256 public defaultModuleCost;
+  // the minimum amount that must be "approved" on the smart contract for the solver to spend
+  // for it to consider running a job for a client
+  // the solver will update this as the market pricing changes
+  uint256 public requiredDeposit;
 
   // auto increment job id
   uint256 public nextJobID;
@@ -29,8 +29,11 @@ contract JobManager is ILilypadJobManager, ControllerOwnable, Initializable {
   mapping(uint256 => SharedStructs.JobOffer) private jobOffers;
 
   event JobAdded(
+    uint256 id,
+    address calling_contract,
+    address payee,
     string module,
-    SharedStructs.JobOfferInput[] inputs
+    string[] inputs
   );
 
   /**
@@ -51,28 +54,50 @@ contract JobManager is ILilypadJobManager, ControllerOwnable, Initializable {
     tokenContract = ILilypadToken(tokenAddress);
   }
 
-  function setDefaultModuleCost(uint256 cost) public onlyController {
-    require(cost > 0, "Min cost");
-    defaultModuleCost = cost;
+  function getTokenAddress() public view returns (address) {
+    return tokenAddress;
   }
 
-  // called by clients - transfer tokens and then emit event so solver
-  // can kick in with a job offer on behalf of the submitting contract
+  function setRequiredDeposit(uint256 cost) public onlyController {
+    require(cost > 0, "Min deposit");
+    requiredDeposit = cost;
+  }
+
+  function getRequiredDeposit() public view returns (uint256) {
+    return requiredDeposit;
+  }
+
+  // called by on-chain clients to make an offer for a job
   function runJob(
+    // what is the module name we are making an offer for
     string memory module,
-    SharedStructs.JobOfferInput[] memory inputs
+    // an array of key=value pairs that will be the inputs to the job
+    string[] memory inputs,
+    // the address of the client who is paying for the job
+    // they must have called the increaseAllowance function
+    // giving the controller (i.e. solver) permission to spend their tokens
+    address payee
   ) public override returns (uint256) {
+    // this makes sure that the person paying for the job has
+    // already called "approve" on the token contract so the solver can
+    // work on it's behalf
+    require(tokenContract.allowance(payee, getControllerAddress()) >= requiredDeposit, "Token allowance not enough");
+
     nextJobID = nextJobID + 1;
     jobOffers[nextJobID] = SharedStructs.JobOffer(
       nextJobID,
       msg.sender,
+      payee,
       module,
       inputs
     );
-    // move X tokens to the solver (i.e. the controller address)
-    // emit the event so the solver can kick in and run the job on behalf
-    // of the on chain client
-    tokenContract.payOnChainManager(getControllerAddress(), defaultModuleCost);
+    emit JobAdded(
+      nextJobID,
+      msg.sender,
+      payee,
+      module,
+      inputs
+    );
 
     return nextJobID;
   }
