@@ -282,6 +282,16 @@ function solver() {
   go run . solver "$@"
 }
 
+# we run the jobcreator as the solver
+function jobcreator() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  go run . jobcreator "$@"
+}
+
 function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)

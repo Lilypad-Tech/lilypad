@@ -5,10 +5,9 @@ pragma solidity ^0.8.6;
 // it will call the IOnChainJobManager with it's job
 // which will end up with the resultsAdded function being called by the manager
 interface ILilypadJobClient {
-  function resultsAdded(
+  function submitResults(
+    uint256 id,
     string memory dealId,
-    string memory resultsId,
-    string memory dataId,
-    uint256 instructionCount
+    string memory dataId
   ) external;
 }

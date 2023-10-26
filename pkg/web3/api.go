@@ -1,6 +1,7 @@
 package web3
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 
@@ -52,7 +53,7 @@ func (sdk *Web3SDK) UpdateUser(
 		system.Info(sdk.Options.Service, "submitted users.UpdateUser", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func (sdk *Web3SDK) AddUserToList(
 		system.Info(sdk.Options.Service, "submitted users.AddUserToList", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return err
 	}
@@ -116,7 +117,7 @@ func (sdk *Web3SDK) Agree(
 		system.Debug(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -143,7 +144,7 @@ func (sdk *Web3SDK) AddResult(
 		system.Debug(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +165,7 @@ func (sdk *Web3SDK) AcceptResult(
 		system.Debug(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +186,7 @@ func (sdk *Web3SDK) CheckResult(
 		system.Debug(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -206,7 +207,7 @@ func (sdk *Web3SDK) MediationAcceptResult(
 		system.Debug(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -227,7 +228,7 @@ func (sdk *Web3SDK) MediationRejectResult(
 		system.Debug(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}

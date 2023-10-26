@@ -217,8 +217,8 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	return strconv.ParseUint(blockNumberHex, 16, 64)
 }
 
-func (sdk *Web3SDK) waitTx(tx *types.Transaction) (*types.Receipt, error) {
-	return bind.WaitMined(context.Background(), sdk.Client, tx)
+func (sdk *Web3SDK) WaitTx(ctx context.Context, tx *types.Transaction) (*types.Receipt, error) {
+	return bind.WaitMined(ctx, sdk.Client, tx)
 }
 
 func (sdk *Web3SDK) GetAddress() common.Address {

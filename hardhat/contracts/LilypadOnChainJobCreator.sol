@@ -68,6 +68,7 @@ contract LilypadOnChainJobCreator is ILilypadJobManager, ControllerOwnable, Init
   }
 
   // called by on-chain clients to make an offer for a job
+  // this will return a ticketID which is a unique onchain identifier for the job
   function runJob(
     // what is the module name we are making an offer for
     string memory module,
@@ -104,12 +105,18 @@ contract LilypadOnChainJobCreator is ILilypadJobManager, ControllerOwnable, Init
 
   // this is called by the solver once we've got results out of the controller
   // it will call the "resultsAdded" function on the original client contract
-  function resultsAdded(
+  function submitResults(
+    uint256 id,
     string memory dealId,
-    string memory resultsId,
-    string memory dataId,
-    uint256 instructionCount
+    string memory dataId
   ) public override {
-
+    SharedStructs.JobOffer storage offer = jobOffers[id];
+    require(offer.id != 0, "Job not found");
+    require(offer.payee == msg.sender, "Not payee");
+    ILilypadJobClient(offer.calling_contract).submitResults(
+      id,
+      dealId,
+      dataId
+    );
   }
 }

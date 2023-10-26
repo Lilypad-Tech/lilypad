@@ -23,6 +23,7 @@ func NewRootCmd() *cobra.Command {
 	RootCmd.AddCommand(newResourceProviderCmd())
 	RootCmd.AddCommand(newRunCmd())
 	RootCmd.AddCommand(newMediatorCmd())
+	RootCmd.AddCommand(newJobCreatorCmd())
 	return RootCmd
 }
 
