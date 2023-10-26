@@ -21,6 +21,7 @@ concurrency:
 env:
   SOLVER_PRIVATE_KEY: 'beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f'
   SOLVER_PUBLIC_KEY: '0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135'
+#  TODO: migrate to ${{secrets.SOLVER_PRIVATE_KEY}}
 
 jobs:
   test:
