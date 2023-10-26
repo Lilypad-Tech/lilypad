@@ -24,8 +24,6 @@ env:
 #  TODO: migrate to ${{secrets.SOLVER_PRIVATE_KEY}}
 
 jobs:
-
-
   test:
     env:
       RESOURCE_PROVIDER_PRIVATE_KEY: ${{env.SOLVER_PRIVATE_KEY}}
