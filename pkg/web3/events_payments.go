@@ -18,6 +18,7 @@ type PaymentEventChannels struct {
 func NewPaymentEventChannels() *PaymentEventChannels {
 	return &PaymentEventChannels{
 		paymentChan: make(chan *payments.PaymentsPayment),
+		paymentSubs: []func(payments.PaymentsPayment){},
 	}
 }
 

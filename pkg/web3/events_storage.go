@@ -18,6 +18,7 @@ type StorageEventChannels struct {
 func NewStorageEventChannels() *StorageEventChannels {
 	return &StorageEventChannels{
 		dealStateChangeChan: make(chan *storage.StorageDealStateChange),
+		dealStateChangeSubs: []func(storage.StorageDealStateChange){},
 	}
 }
 

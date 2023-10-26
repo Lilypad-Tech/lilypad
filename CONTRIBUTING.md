@@ -31,7 +31,7 @@ mv bacalhau /usr/local/bin
 # configure this to where you want the ipfs data to be stored
 export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
 # run bacalhau as both compute node and requester node
-bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+./stack bacalhau-serve
 ```
 
 ### lilypad

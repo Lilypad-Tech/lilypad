@@ -201,6 +201,7 @@ function go-bindings() {
   go-binding LilypadStorage storage
   go-binding LilypadUsers users
   go-binding LilypadMediationRandom mediation
+  go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
   
   echo "Generated all go bindings pkg/contract/bindings/"

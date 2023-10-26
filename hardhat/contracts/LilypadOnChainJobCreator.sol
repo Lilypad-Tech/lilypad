@@ -9,7 +9,7 @@ import "./ILilypadJobClient.sol";
 import "./ControllerOwnable.sol";
 import "./ILilypadToken.sol";
 
-contract JobManager is ILilypadJobManager, ControllerOwnable, Initializable {
+contract LilypadOnChainJobCreator is ILilypadJobManager, ControllerOwnable, Initializable {
 
   // the token contract
   // we check to see what allowance has been granted to be spent on behalf
