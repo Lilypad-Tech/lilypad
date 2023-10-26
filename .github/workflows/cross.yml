@@ -51,3 +51,6 @@ jobs:
     - name: Build (Race)
       run: go build -v -race .
 
+    - name: Test Short
+      run: go test -v -race -run="^Test" -short ./...
+
