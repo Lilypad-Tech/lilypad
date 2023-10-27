@@ -55,6 +55,8 @@ jobs:
         check-latest: true
         cache: 'yarn'
         cache-dependency-path: 'yarn.lock'
+        dir: 'hardhat'
+
 
     - name: Yarn
       uses: borales/actions-yarn@v4
