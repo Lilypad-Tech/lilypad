@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -194,4 +196,12 @@ func TestNoModeration(t *testing.T) {
 
 	fmt.Printf("result --------------------------------------\n")
 	spew.Dump(localPath)
+}
+
+func init() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal().Str("err", err.Error()).Msgf(".env not found")
+	}
+
 }

@@ -14,7 +14,7 @@ func main() {
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Debug().Msgf(".env not found")
+		log.Debug().Str("err", err.Error()).Msgf(".env not found")
 	}
 
 }
