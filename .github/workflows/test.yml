@@ -66,8 +66,7 @@ jobs:
     - name: Load .env file
       uses: xom9ikk/dotenv@v2
       with:
-        path: '.env'
-        load-mode: strict #or skip
+        path: './'
 
     - name: Test Short
       run: go test -v -run="^Test" -short ./... -timeout 20m
