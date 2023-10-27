@@ -52,11 +52,13 @@ jobs:
       with:
         node-version: 20.x
         use-latest: true
+        cache: true
 
     - name: Yarn
       uses: borales/actions-yarn@v4
       with:
         cmd: install
+        dir: hardat
 
 #    - name: Setup Env vars for hardhat
 #      working-directory: hardhat
