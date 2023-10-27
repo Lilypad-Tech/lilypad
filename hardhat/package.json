@@ -1,8 +1,11 @@
 {
   "name": "lilypad",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "license": "Apache-2.0",
-  "scripts": {},
+  "scripts": {
+    "setup": "../stack print-env > .env",
+    "postinstall": "npm run setup"
+  },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.4",
