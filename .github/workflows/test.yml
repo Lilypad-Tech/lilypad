@@ -47,6 +47,23 @@ jobs:
     - name: Install dependencies
       run: go get .
 
+    - name: Set Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        use-latest: true
+
+    - name: Yarn
+      uses: borales/actions-yarn@v4
+      with:
+        cmd: install
+
+#    - name: Setup Env vars for hardhat
+#      working-directory: hardhat
+#      run: |
+#        yarn
+#        npm run setup #FIXME: remove if yarn executes postinstall hook
+
     - name: Test Short
       run: go test -v -run="^Test" -short ./... -timeout 20m
 
