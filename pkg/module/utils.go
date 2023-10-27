@@ -2,6 +2,7 @@ package module
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -10,12 +11,13 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/rs/zerolog/log"
+
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
 	"github.com/bacalhau-project/lilypad/pkg/system"
-	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/rs/zerolog/log"
 )
 
 const REPO_DIR = "repos"
@@ -23,7 +25,7 @@ const REPO_DIR = "repos"
 func getRepoLocalPath(repoURL string) (string, error) {
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("url parsing failed with %v", err)
 	}
 
 	pathParts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
@@ -70,7 +72,7 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 // TODO: check if we have the repo already cloned
 // handle fetching new changes perhaps the commit hash is not the latest
 // at the moment we will do the slow thing and clone the repo every time
-func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
+func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 	repoPath, err := getRepoLocalPath(module.Repo)
 	if err != nil {
 		return nil, err
@@ -80,47 +82,61 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		return nil, err
 	}
 	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
-	if err == nil && fileInfo.IsDir() {
-		repo, err := git.PlainOpen(repoDir)
-		// err := os.RemoveAll(repoDir)
-		if err != nil {
-			return nil, err
-		}
-		// Check if hash or tag specified exists
-		h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
-		if err != nil {
-			return nil, err
-		}
-		// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
-		// explicitly to ensure determinism (and that we're running the code we
-		// explicitly approved)
-		_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
-		if err != nil {
-			// this means there is no hash in the repo
-			// so let's clean it up and clone it again
-			err = os.RemoveAll(repoDir)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			log.Debug().
-				Str("repo exists", repoDir).
-				Str("repo remote", module.Repo).
-				Msgf("")
-			// this means we do have the hash locally so can just return the repo as is
-			return repo, nil
-		}
+
+	repoCloned := err == nil && fileInfo.IsDir()
+
+	if !repoCloned {
+		log.Debug().
+			Str("repo clone", repoDir).
+			Str("repo remote", module.Repo).
+			Msgf("")
+		return git.PlainClone(repoDir, false, &git.CloneOptions{
+			URL:      module.Repo,
+			Progress: os.Stdout,
+		})
 	}
+
 	log.Debug().
-		Str("repo clone", repoDir).
+		Str("repo exists", repoDir).
 		Str("repo remote", module.Repo).
 		Msgf("")
-	return git.PlainClone(repoDir, false, &git.CloneOptions{
-		URL: module.Repo,
-	})
+
+	repo, err = git.PlainOpen(repoDir)
+	// err := os.RemoveAll(repoDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// git fetch origin: Resolves #https://github.com/bacalhau-project/lilypad/issues/13
+	gitFetchOptions := &git.FetchOptions{
+		Tags:     git.AllTags,
+		Progress: os.Stdout,
+	}
+	gitFetchOptions.Validate() // sets default values like remote=origin
+	log.Info().Str("updating cached git repo", repoDir).Msgf("")
+	err = repo.FetchContext(context.Background(), gitFetchOptions)
+
+	// Check if hash or tag specified exists
+	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
+	if err != nil {
+		return nil, err
+	}
+	// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
+	// explicitly to ensure determinism (and that we're running the code we
+	// explicitly approved)
+	_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
+	if err != nil {
+		// this means there is no hash in the repo
+		// so let's clean it up and clone it again
+		err = os.RemoveAll(repoDir)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return
 }
 
-// get a module cloned and checked out then return the text content of the template
+// PrepareModule get a module cloned and checked out then return the text content of the template
 //   - process shortcuts
 //   - check if we have the repo cloned
 //   - checkout the correct hash
@@ -172,6 +188,25 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	return string(fileContents), nil
 }
 
+func subst(format string, jsonEncodedInputs ...string) string {
+
+	jsonDecodedInputs := make([]any, 0, len(jsonEncodedInputs))
+
+	for _, input := range jsonEncodedInputs {
+		var s string
+
+		if err := json.Unmarshal([]byte(input), &s); err != nil {
+			log.Debug().AnErr("subst: json unmarshall", err).Msgf("input:%s", input)
+			panic("subst: invalid input")
+		}
+
+		jsonDecodedInputs = append(jsonDecodedInputs, s)
+	}
+	log.Printf("jsonDecodedInputs:%v", jsonDecodedInputs)
+
+	return fmt.Sprintf(format, jsonDecodedInputs...)
+}
+
 // - prepare the module - now we have the text of the template
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
@@ -184,6 +219,9 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 
 	templateName := fmt.Sprintf("%s-%s-%s", module.Repo, module.Path, module.Hash)
 	tmpl, err := template.New(templateName).Parse(moduleText)
+	tmpl.Funcs(template.FuncMap{
+		"subst": subst,
+	})
 	if err != nil {
 		return nil, err
 	}
