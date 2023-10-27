@@ -109,10 +109,9 @@ contract LilypadOnChainJobCreator is ILilypadJobManager, ControllerOwnable, Init
     uint256 id,
     string memory dealId,
     string memory dataId
-  ) public override {
+  ) public onlyController override {
     SharedStructs.JobOffer storage offer = jobOffers[id];
     require(offer.id != 0, "Job not found");
-    require(offer.payee == msg.sender, "Not payee");
     ILilypadJobClient(offer.calling_contract).submitResults(
       id,
       dealId,

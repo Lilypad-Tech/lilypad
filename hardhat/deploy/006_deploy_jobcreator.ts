@@ -14,7 +14,14 @@ const deployJobCreator: DeployFunction = async function (hre: HardhatRuntimeEnvi
     log: true,
   })
 
+  await deploy("ExampleClient", {
+    from: admin,
+    args: [],
+    log: true,
+  })
+
   const tokenContract = await deployments.get('LilypadToken')
+  const jobCreator = await deployments.get('LilypadOnChainJobCreator')
 
   await execute(
     'LilypadOnChainJobCreator',
@@ -24,6 +31,16 @@ const deployJobCreator: DeployFunction = async function (hre: HardhatRuntimeEnvi
     },
     'initialize',
     tokenContract.address
+  )
+
+  await execute(
+    'ExampleClient',
+    {
+      from: admin,
+      log: true,
+    },
+    'initialize',
+    jobCreator.address
   )
 
   // we set the controller of the job creator to be the solver

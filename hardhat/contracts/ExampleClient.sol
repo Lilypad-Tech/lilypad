@@ -11,6 +11,13 @@ contract ExampleClient is Ownable, Initializable, ILilypadJobClient {
   address private jobManagerAddress;
   ILilypadJobManager private jobManagerContract;
 
+  mapping(uint256 => string) private jobResults;
+
+  event JobCreated(
+    uint256 id,
+    string message
+  );
+
   event JobCompleted(
     uint256 id,
     string dealId,
@@ -27,15 +34,24 @@ contract ExampleClient is Ownable, Initializable, ILilypadJobClient {
     jobManagerContract = ILilypadJobManager(jobManagerAddress);
   }
 
+  function getJobResult(uint256 _jobID) public view returns (string memory) {
+    return jobResults[_jobID];
+  }
+
   function runCowsay(
     string memory message
   ) public {
     string[] memory inputs = new string[](1);
     inputs[0] = string(abi.encodePacked("Message=", message));
-    jobManagerContract.runJob(
+    uint256 id = jobManagerContract.runJob(
       "cowsay:v0.0.1",
       inputs,
       msg.sender
+    );
+
+    emit JobCreated(
+      id,
+      message
     );
   }
 
@@ -44,6 +60,7 @@ contract ExampleClient is Ownable, Initializable, ILilypadJobClient {
     string memory dealId,
     string memory dataId
   ) public override {
+    jobResults[id] = dataId;
     emit JobCompleted(
       id,
       dealId,

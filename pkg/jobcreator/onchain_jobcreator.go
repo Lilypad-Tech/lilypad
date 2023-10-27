@@ -16,10 +16,11 @@ import (
 const JOB_PRICE = 2
 
 type OnChainJobCreator struct {
-	web3SDK    *web3.Web3SDK
-	web3Events *web3.EventChannels
-	options    JobCreatorOptions
-	controller *JobCreatorController
+	web3SDK       *web3.Web3SDK
+	web3Events    *web3.EventChannels
+	options       JobCreatorOptions
+	controller    *JobCreatorController
+	onChainJobIDs map[string]uint64
 }
 
 func NewOnChainJobCreator(
@@ -31,10 +32,11 @@ func NewOnChainJobCreator(
 		return nil, err
 	}
 	jc := &OnChainJobCreator{
-		controller: controller,
-		options:    options,
-		web3SDK:    web3SDK,
-		web3Events: web3.NewEventChannels(),
+		controller:    controller,
+		options:       options,
+		web3SDK:       web3SDK,
+		web3Events:    web3.NewEventChannels(),
+		onChainJobIDs: map[string]uint64{},
 	}
 	return jc, nil
 }
@@ -62,7 +64,33 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 	}
 
 	jobCreator.controller.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
+		if evOffer.State != data.GetAgreementStateIndex("ResultsAccepted") {
+			return
+		}
 
+		onChainID, ok := jobCreator.onChainJobIDs[evOffer.DealID]
+		if !ok {
+			return
+		}
+
+		result, err := jobCreator.GetResult(evOffer.DealID)
+		if err != nil {
+			return
+		}
+
+		fmt.Printf("result --------------------------------------\n")
+		spew.Dump(result)
+		spew.Dump(int64(onChainID))
+
+		tx, err := jobCreator.web3SDK.Contracts.JobCreator.SubmitResults(jobCreator.web3SDK.TransactOpts, big.NewInt(int64(onChainID)), evOffer.DealID, result.DataID)
+		if err != nil {
+			return
+		}
+
+		_, err = jobCreator.web3SDK.WaitTx(ctx, tx)
+		if err != nil {
+			return
+		}
 	})
 
 	jobCreator.web3Events.JobCreator.SubscribeJobAdded(func(ev jobcreatorweb3.JobcreatorJobAdded) {
@@ -95,12 +123,6 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 			fmt.Printf("error creating job offer: %s\n", err.Error())
 			return
 		}
-		fmt.Printf("options --------------------------------------\n")
-		spew.Dump(options)
-		fmt.Printf("ev --------------------------------------\n")
-		spew.Dump(ev)
-		fmt.Printf("offer --------------------------------------\n")
-		spew.Dump(offer)
 
 		container, err := jobCreator.controller.AddJobOffer(offer)
 		if err != nil {
@@ -108,8 +130,7 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 			return
 		}
 
-		fmt.Printf("contianer --------------------------------------\n")
-		spew.Dump(container)
+		jobCreator.onChainJobIDs[container.DealID] = ev.Id.Uint64()
 	})
 
 	return errorChan

@@ -16,6 +16,8 @@ import {
   LilypadStorage,
   LilypadMediationRandom,
   LilypadController,
+  LilypadOnChainJobCreator,
+  ExampleClient,
 } from '../typechain-types'
 
 /*
@@ -189,6 +191,33 @@ export async function connectPayments() {
 
 export async function getPaymentsAddress() {
   return getContractAddress('LilypadPayments')
+}
+
+
+/*
+
+  job manager
+
+*/
+export async function connectJobManager() {
+  return connectContract<LilypadOnChainJobCreator>('LilypadOnChainJobCreator')
+}
+
+export async function getJobManagerAddress() {
+  return getContractAddress('LilypadOnChainJobCreator')
+}
+
+/*
+
+  example client
+
+*/
+export async function connectExampleClient() {
+  return connectContract<ExampleClient>('ExampleClient')
+}
+
+export async function getExampleClientAddress() {
+  return getContractAddress('ExampleClient')
 }
 
 /*
