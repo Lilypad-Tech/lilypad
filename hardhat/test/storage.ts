@@ -37,6 +37,7 @@ describe("Storage", () => {
 
   const dealID = "10"
   const resultsID = "11"
+  const DATA_ID = "12"
   const instructionCount = ethers.getBigInt(25)
 
   function setupStorage() {
@@ -112,6 +113,7 @@ describe("Storage", () => {
       .addResult(
         dealID,
         resultsID,
+        DATA_ID,
         instructionCount,
       )
     )
@@ -245,6 +247,7 @@ describe("Storage", () => {
         .addResult(
           dealID,
           "1",
+          DATA_ID,
           ethers.getBigInt(1),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
@@ -258,6 +261,7 @@ describe("Storage", () => {
         .addResult(
           dealID,
           "1",
+          DATA_ID,
           ethers.getBigInt(1),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
@@ -627,6 +631,7 @@ describe("Storage", () => {
         .addResult(
           dealID,
           resultsID,
+          DATA_ID,
           instructionCount,
         )
       ).to.be.revertedWith('DealAgreed')

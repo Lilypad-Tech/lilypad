@@ -89,11 +89,12 @@ export async function deployController(
   usersAddress: AddressLike,
   paymentsAddress: AddressLike,
   mediationAddress: AddressLike,
+  jobCreatorAddress: AddressLike
 ) {
   const controller = await deployContract<LilypadController>('LilypadController', signer)
   await controller
     .connect(signer)
-    .initialize(storageAddress, usersAddress, paymentsAddress, mediationAddress)
+    .initialize(storageAddress, usersAddress, paymentsAddress, mediationAddress, jobCreatorAddress)
   return controller
 }
 
@@ -273,13 +274,16 @@ export async function setupControllerFixture({
   const storageAddress = await storage.getAddress()
   const usersAddress = await users.getAddress()
   const mediationAddress = await mediation.getAddress()
-  
+
+  const jobCreator = getWallet('job_creator')
+
   const controller = await deployController(
     admin,
     storageAddress,
     usersAddress,
     paymentsAddress,
     mediationAddress,
+    jobCreator
   )
   const controllerAddress = await controller.getAddress()
   await (payments as any)
@@ -303,6 +307,7 @@ export async function setupControllerFixture({
 
 export const DEAL_ID = "10"
 export const RESULTS_ID = "11"
+export const DATA_ID = "12"
 
 export const DEFAULT_VALUES: Record<string, bigint> = {
   instructionPrice: ethers.getBigInt(10),

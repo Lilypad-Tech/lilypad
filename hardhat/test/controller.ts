@@ -24,6 +24,7 @@ import {
   DEFAULT_VALUES,
   DEAL_ID,
   RESULTS_ID,
+  DATA_ID,
 } from './fixtures'
 import {
   LilypadToken,
@@ -151,6 +152,7 @@ describe("Controller", () => {
       .addResult(
         DEAL_ID,
         RESULTS_ID,
+        DATA_ID,
         instructionCount
       )
     return ret
@@ -289,6 +291,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       )
@@ -443,6 +446,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller
@@ -488,6 +492,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller
@@ -541,6 +546,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller

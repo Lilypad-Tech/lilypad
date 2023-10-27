@@ -14,8 +14,10 @@ import {
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
 
+const INFURA_KEY = process.env.INFURA_KEY || "";
+
 const config: HardhatUserConfig = {
-  solidity: '0.8.6',
+  solidity: '0.8.21',
   defaultNetwork: 'geth',
   namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
@@ -23,6 +25,10 @@ const config: HardhatUserConfig = {
     geth: {
       url: 'http://localhost:8545',
       chainId: 1337,
+      accounts: PRIVATE_KEYS,
+    },
+    sepolia: {
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: PRIVATE_KEYS,
     },
   },
