@@ -51,8 +51,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: 20.x
-        use-latest: true
         cache: true
+        check-latest: true
 
     - name: Yarn
       uses: borales/actions-yarn@v4
