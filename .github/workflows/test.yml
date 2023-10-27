@@ -72,17 +72,6 @@ jobs:
       run: |
         source .env
 
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-      timeout-minutes: 10000
-      with:
-        wait-timeout-minutes: 60
-        # ssh-known-hosts: ${{ steps.read_pub_key.outputs.pub_key }}
-        limit-access-to-actor: true
-        limit-access-to-users: Nasfame,pythoneerHiro
-        script: |
-          source ~/.bashrc
-
     - name: Test Short
       run: go test -v -run="^Test" -short ./... -timeout 20m
 
