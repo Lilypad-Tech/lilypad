@@ -51,11 +51,11 @@ jobs:
     - name: Build (Race)
       run: go build -v -race .
 
-    - name: Setup Env vars for hardhat
-      working-directory: hardhat
-      run: |
-        yarn
-        npm run setup #FIXME: remove if yarn executes postinstall hook
+#    - name: Setup Env vars for hardhat
+#      working-directory: hardhat
+#      run: |
+#        yarn
+#        npm run setup
 
 #    - name: Test Short
 #      run: go test -v -race -run="^Test" -short ./...
