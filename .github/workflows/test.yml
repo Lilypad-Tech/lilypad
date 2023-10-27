@@ -58,7 +58,7 @@ jobs:
       uses: borales/actions-yarn@v4
       with:
         cmd: install
-        dir: hardat
+        dir: hardhat
 
 #    - name: Setup Env vars for hardhat
 #      working-directory: hardhat
