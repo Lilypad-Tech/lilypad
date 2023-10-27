@@ -63,13 +63,12 @@ jobs:
         cmd: install
         dir: hardhat
 
-    - name: Expose Env vars for hardhat
-#      working-directory: hardhat
-      run: |
-        #yarn
-        #npm run setup #FIXME: remove if yarn executes postinstall hook
-        source .env
-
+    - name: Load .env file
+      uses: xom9ikk/dotenv@v2
+      with:
+        path: '.env'
+        mode: development
+        load-mode: strict
 
     - name: Test Short
       run: go test -v -run="^Test" -short ./... -timeout 20m
