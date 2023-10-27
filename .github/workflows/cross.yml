@@ -42,6 +42,12 @@ jobs:
         cache-dependency-path: go.sum
         cache: true
 
+    - name: Setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node_version }}
+        architecture: ${{ matrix.architecture }}
+
     - name: Install dependencies
       run: go get .
 
@@ -59,4 +65,4 @@ jobs:
 
 #    - name: Test Short
 #      run: go test -v -race -run="^Test" -short ./...
-# TODO:
+# TODO: architecuter: https://github.com/marketplace/actions/run-on-architecture
