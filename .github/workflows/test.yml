@@ -64,7 +64,7 @@ jobs:
         dir: hardhat
 
     - name: Expose Env vars for hardhat
-      working-directory: hardhat
+#      working-directory: hardhat
       run: |
         #yarn
         #npm run setup #FIXME: remove if yarn executes postinstall hook
