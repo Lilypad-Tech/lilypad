@@ -53,7 +53,7 @@ jobs:
       with:
         node-version: 20.x
         check-latest: true
-        cache: true
+        cache: 'yarn'
 
     - name: Yarn
       uses: borales/actions-yarn@v4
@@ -61,11 +61,6 @@ jobs:
         cmd: install
         dir: hardhat
 
-#    - name: Setup Env vars for hardhat
-#      working-directory: hardhat
-#      run: |
-#        yarn
-#        npm run setup #FIXME: remove if yarn executes postinstall hook
 
     - name: Test Short
       run: go test -v -run="^Test" -short ./... -timeout 20m
