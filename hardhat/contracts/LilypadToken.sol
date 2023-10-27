@@ -12,7 +12,7 @@ import "./ControllerOwnable.sol";
      * for paying in, we use tx.origin so the actual payee must call the contract
      * for paying out - we use the Controller Ownable feature so only the payments contract
        can pay out from the escrow account
-   * getEscrowBalance
+   * escrowBalanceOf
      * get the current escrow balance for an address
    * payEscrow
      * pay into the escrow account

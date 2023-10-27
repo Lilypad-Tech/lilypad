@@ -19,6 +19,7 @@ type TokenEventChannels struct {
 func NewTokenEventChannels() *TokenEventChannels {
 	return &TokenEventChannels{
 		transferChan: make(chan *token.TokenTransfer),
+		transferSubs: []func(token.TokenTransfer){},
 	}
 }
 

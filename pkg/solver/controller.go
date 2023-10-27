@@ -75,6 +75,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		errorChan <- err
 		return errorChan
 	}
+
 	// activate the web3 event listeners
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
@@ -479,3 +480,24 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 	})
 	return dealContainer, nil
 }
+
+/*
+*
+*
+*
+
+# Run onchain job
+
+*
+*
+*
+*/
+
+// func (controller *SolverController) runJob(ev jobcreatorweb3.JobcreatorJobAdded) (*data.DealContainer, error) {
+// 	options := optionsfactory.NewJobCreatorOptions()
+// 	fmt.Printf("options --------------------------------------\n")
+// 	spew.Dump(options)
+// 	fmt.Printf("ev --------------------------------------\n")
+// 	spew.Dump(ev)
+// 	return nil, nil
+// }

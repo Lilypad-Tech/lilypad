@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
@@ -27,6 +28,7 @@ type Contracts struct {
 	Payments   *payments.Payments
 	Storage    *storage.Storage
 	Users      *users.Users
+	JobCreator *jobcreator.Jobcreator
 	Mediation  *mediation.Mediation
 	Controller *controller.Controller
 }
@@ -122,6 +124,24 @@ func NewContracts(
 		return nil, err
 	}
 
+	jobcreatorAddress := options.JobCreatorAddress
+
+	if jobcreatorAddress == "" {
+		loadedJobCreatorAddress, err := controller.GetJobCreatorAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		jobcreatorAddress = loadedJobCreatorAddress.String()
+		log.Debug().
+			Str("load jobcreator address", jobcreatorAddress).
+			Msgf("")
+	}
+
+	jobCreator, err := jobcreator.NewJobcreator(common.HexToAddress(jobcreatorAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
 	mediationAddress := options.MediationAddress
 
 	if mediationAddress == "" {
@@ -145,6 +165,7 @@ func NewContracts(
 		Payments:   payments,
 		Storage:    storage,
 		Users:      users,
+		JobCreator: jobCreator,
 		Mediation:  mediation,
 		Controller: controller,
 	}, nil
@@ -196,8 +217,8 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	return strconv.ParseUint(blockNumberHex, 16, 64)
 }
 
-func (sdk *Web3SDK) waitTx(tx *types.Transaction) (*types.Receipt, error) {
-	return bind.WaitMined(context.Background(), sdk.Client, tx)
+func (sdk *Web3SDK) WaitTx(ctx context.Context, tx *types.Transaction) (*types.Receipt, error) {
+	return bind.WaitMined(ctx, sdk.Client, tx)
 }
 
 func (sdk *Web3SDK) GetAddress() common.Address {

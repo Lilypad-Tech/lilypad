@@ -12,14 +12,6 @@ interface ILilypadPayments {
   ) external;
 
   /**
-   * Escrow
-   */
-
-  function getEscrowBalance(
-    address _tokenAddress
-  ) external returns (uint256);
-
-  /**
    * Agreements
    */
   function agreeResourceProvider(

@@ -126,7 +126,12 @@ library SharedStructs {
     string dealId;
 
     // the CID of the results on IPFS (and directory service)
+    // NOTE - this is not the CID of actual results data rather
+    // of the JSON object reporting that data
     string resultsId;
+
+    // this is the actual lower level data CID
+    string dataId;
 
     // how many instructions were executed by the RP
     uint256 instructionCount;
@@ -153,5 +158,23 @@ library SharedStructs {
     uint256 timeoutSubmitResultsAt;
     uint256 timeoutJudgeResultsAt;
     uint256 timeoutMediateResultsAt;
+  }
+
+  struct JobOffer {
+    uint256 id;
+    
+    // this is the contract that will be triggered
+    // once there are some results
+    address calling_contract;
+
+    // this is the address that is paying for the job
+    // they must have called approve on the token contract
+    // and granted the solver address the number of tokens
+    // required
+    address payee;
+
+    // the job spec
+    string module;
+    string[] inputs;
   }
 }

@@ -19,6 +19,7 @@ type Web3Options struct {
 	StorageAddress    string `json:"storage_address"`
 	UsersAddress      string `json:"users_address"`
 	MediationAddress  string `json:"mediation_address"`
+	JobCreatorAddress string `json:"jobcreator_address"`
 	TokenAddress      string `json:"token_address"`
 
 	// this is injected by whatever service we are running

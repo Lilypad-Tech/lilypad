@@ -201,6 +201,7 @@ function go-bindings() {
   go-binding LilypadStorage storage
   go-binding LilypadUsers users
   go-binding LilypadMediationRandom mediation
+  go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
   
   echo "Generated all go bindings pkg/contract/bindings/"
@@ -279,6 +280,16 @@ function solver() {
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
   go run . solver "$@"
+}
+
+# we run the jobcreator as the solver
+function jobcreator() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  go run . jobcreator "$@"
 }
 
 function resource-provider() {

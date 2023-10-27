@@ -106,3 +106,24 @@ func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []strin
 	options.Web3 = newWeb3Options
 	return options, CheckJobCreatorOptions(options)
 }
+
+func ProcessOnChainJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
+	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+	if err != nil {
+		return options, err
+	}
+	options.Web3 = newWeb3Options
+
+	err = CheckWeb3Options(options.Web3)
+	if err != nil {
+		return options, err
+	}
+	err = CheckServicesOptions(options.Offer.Services)
+	if err != nil {
+		return options, err
+	}
+
+	options.Mediation.CheckResultsPercentage = 0
+
+	return options, nil
+}

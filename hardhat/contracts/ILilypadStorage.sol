@@ -51,6 +51,7 @@ interface ILilypadStorage {
   function addResult(
     string memory dealId,
     string memory resultsId,
+    string memory dataId,
     uint256 instructionCount
   ) external returns (SharedStructs.Result memory);
 
