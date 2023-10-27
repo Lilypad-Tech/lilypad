@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "license": "Apache-2.0",
   "scripts": {
-    "setup": "../stack print-env > .env",
+    "setup": "cd ..; ./stack print-env > .env",
     "postinstall": "npm run setup"
   },
   "dependencies": {
