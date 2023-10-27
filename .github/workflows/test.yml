@@ -63,10 +63,14 @@ jobs:
         cmd: install
         dir: hardhat
 
-    - name: Load .env file
-      uses: xom9ikk/dotenv@v2
-      with:
-        path: './'
+#    - name: Load .env file
+#      uses: xom9ikk/dotenv@v2
+#      with:
+#        path: './' FIXME: not working need to investigate
+
+    - name: Source .env
+      run: |
+        source .env
 
     - name: Setup upterm session
       uses: lhotari/action-upterm@v1
