@@ -5,7 +5,7 @@ IFS=$'\n\t'
 export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export DEFAULT_DATA_DIR="/tmp/geth"
 export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
-export NETWORK=${NETWORK:="geth"}
+export NETWORK=${NETWORK:="sepolia"}
 
 # if "$DIR/.env" exists then source it
 if [[ -f "$DIR/.env" ]]; then

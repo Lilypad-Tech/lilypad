@@ -10,11 +10,14 @@ const deployToken: DeployFunction = async function (hre: HardhatRuntimeEnvironme
   const {
     admin,
   } = await getNamedAccounts()
+  // log the admin address
+  console.log(`admin: ${admin}`)
   await deploy("LilypadToken", {
     from: admin,
     args: [
-      "Lilypad Token",
-      "LP",
+      // FIXME: change the token name and symbol
+      "Lilypad Token Test",
+      "LPTT",
       DEFAULT_TOKEN_SUPPLY,
     ],  
     log: true,

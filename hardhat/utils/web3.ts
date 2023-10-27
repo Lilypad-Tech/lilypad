@@ -27,7 +27,7 @@ import {
 */
 
 // how much ether to send to each account
-export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('1000000')
+export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('.1')
 
 // a billion tokens in total
 export const DEFAULT_TOKEN_SUPPLY = ethers.getBigInt('1000000000')
