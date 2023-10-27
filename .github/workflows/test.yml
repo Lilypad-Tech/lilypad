@@ -54,6 +54,7 @@ jobs:
         node-version: 20.x
         check-latest: true
         cache: 'yarn'
+        cache-dependency-path: 'yarn.lock'
 
     - name: Yarn
       uses: borales/actions-yarn@v4
