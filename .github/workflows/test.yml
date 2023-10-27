@@ -54,8 +54,7 @@ jobs:
         node-version: 20.x
         check-latest: true
         cache: 'yarn'
-        cache-dependency-path: 'yarn.lock'
-        dir: 'hardhat'
+        cache-dependency-path: 'hardhat/yarn.lock'
 
 
     - name: Yarn
