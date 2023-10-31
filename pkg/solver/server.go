@@ -81,6 +81,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	// and write them to anyone who is connected to us
 	websocketEventChannel := make(chan []byte)
 
+	log.Debug().Msgf("begin solverServer.controller.subscribeEvents")
 	solverServer.controller.subscribeEvents(func(ev SolverEvent) {
 		evBytes, err := json.Marshal(ev)
 		if err != nil {

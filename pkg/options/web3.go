@@ -23,6 +23,8 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
+		MediationAddress:  GetDefaultServeOptionString("WEB3_MEDIATION_ADDRESS", ""),
+		JobCreatorAddress: GetDefaultServeOptionString("WEB3_JOBCREATOR_ADDRESS", ""),
 
 		// misc
 		Service: system.DefaultService,

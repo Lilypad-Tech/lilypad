@@ -243,7 +243,7 @@ function print-contract-env() {
 
 function print-local-dev-env() {
   print-contract-env
-  echo "export WEB3_RPC_URL=ws://localhost:8546"
+  echo "export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/$INFURA_KEY"
 }
 
 function fund-services-ether() {
@@ -277,6 +277,9 @@ function solver() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
+  echo "JOB CREATOR ADDRESS: $JOB_CREATOR_ADDRESS"
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
   go run . solver "$@"

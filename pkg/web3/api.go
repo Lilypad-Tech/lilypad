@@ -9,6 +9,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog/log"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {
@@ -82,11 +83,14 @@ func (sdk *Web3SDK) AddUserToList(
 }
 
 func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
+	log.Debug().Msgf("begin GetSolverUrl from contract at address: %s", address)
 	solver, err := sdk.Contracts.Users.GetUser(
 		sdk.CallOpts,
 		common.HexToAddress(address),
 	)
 	if err != nil {
+		log.Error().Msgf("GetUser error")
+		log.Error().Msgf("error: %s", err)
 		return "", err
 	}
 

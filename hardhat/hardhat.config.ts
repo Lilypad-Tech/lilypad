@@ -32,6 +32,9 @@ const config: HardhatUserConfig = {
       accounts: PRIVATE_KEYS,
     },
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
 };
 
 module.exports = config

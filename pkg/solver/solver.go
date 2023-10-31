@@ -7,6 +7,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 )
 
 type SolverOptions struct {
@@ -47,6 +48,7 @@ func NewSolver(
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := solver.controller.Start(ctx, cm)
+	log.Error().Msgf("solver.server.ListenAndServe")
 	go func() {
 		err := solver.server.ListenAndServe(ctx, cm)
 		if err != nil {

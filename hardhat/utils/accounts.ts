@@ -2,13 +2,11 @@
 // because it will cause a circular dependency
 import { Account } from './types'
 import * as dotenv from 'dotenv'
-// FIXME: this is a hack to get the env file to load
-const ENV_FILE = '/mnt/docs/projects/lilypad/.env'
+
+const ENV_FILE = '.env'
 dotenv.config({ path: ENV_FILE })
 
 export const loadEnv = (name: string, defaultValue: string) => {
-  console.log(`Loading ${name} from env`)
-  console.log(process.env[name])
   return process.env[name] || defaultValue
 }
 

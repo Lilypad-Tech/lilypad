@@ -1,10 +1,27 @@
 # Testnet Deployment
 
+### bacalhau
+
+We need a bacalhau node running on the same machine as the resource provider.
+
+Here is how we got bacalhau up and running:
+
+```bash
+# install the latest bacalhau which works with GPUs (https://github.com/bacalhau-project/bacalhau/issues/2858)
+wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz
+tar xfv bacalhau_v1.0.3_linux_amd64.tar.gz
+mv bacalhau /usr/local/bin
+# configure this to where you want the ipfs data to be stored
+export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+# run bacalhau as both compute node and requester node
+./stack bacalhau-serve
+```
+
 ## Create Seven New Accounts
 
 Follow the README.md in the `generate_accts` directory to create seven new accounts.
 
-Update the following environment variables in `.env`:
+Copy hardhat/.env.sample to .env and update the following environment variables:
 ```
 ADDRESS_ADMIN=
 PRIVATE_KEY_ADMIN=
@@ -24,9 +41,14 @@ PRIVATE_KEY_DIRECTORY=
 
 ## Create a new Infura Project
 
-Create a new Infura project and update the following environment variable in `.env`:
+Create a new Infura project and update the following environment variable in `hardhat/.env`:
 ```
 INFURA_KEY=
+```
+
+Also add the infura key to the `.env` file:
+```
+export INFURA_KEY=
 ```
 
 ## Setup Hardhat
@@ -64,8 +86,41 @@ Check the balances
 ./stack deploy-contracts
 ```
 
+## Does this need to happen a second time to get the contract/bindings?
+
+```bash
+./stack go-bindings
+```
+
 ## Fund Services Tokens
 
 ```bash
 ./stack fund-services-tokens
+```
+
+## Environment Variables
+
+update `stack` with new RPC URL in print-local-dev-env():
+```bash
+echo "export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/$INFURA_KEY" 
+```
+
+### Run Services
+
+Run the following commands in separate terminals:
+
+```bash
+./stack solver --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+```
+
+```bash
+./stack mediator --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+```
+
+```bash
+./stack resource-provider --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+```
+
+```bash
+./stack run cowsay:v0.0.1 -i Message="moo"
 ```
