@@ -187,13 +187,24 @@ func ConvertDealMembers(
 	}
 }
 
+func EtherToWei(etherAmount float64) *big.Int {
+	ether := new(big.Float).SetFloat64(etherAmount)
+	weiMultiplier := new(big.Float).SetFloat64(1e18)
+	wei := new(big.Float).Mul(ether, weiMultiplier)
+
+	weiInt := new(big.Int)
+	wei.Int(weiInt)
+
+	return weiInt
+}
+
 func ConvertDealTimeout(
 	timeout DealTimeout,
 	withCollateral bool,
 ) controller.SharedStructsDealTimeout {
-	collateral := big.NewInt(0)
+	collateral := EtherToWei(0)
 	if withCollateral {
-		collateral = big.NewInt(int64(timeout.Collateral))
+		collateral = EtherToWei(float64(timeout.Collateral))
 	}
 	return controller.SharedStructsDealTimeout{
 		Timeout:    big.NewInt(int64(timeout.Timeout)),
@@ -216,9 +227,9 @@ func ConvertDealPricing(
 	pricing DealPricing,
 ) controller.SharedStructsDealPricing {
 	return controller.SharedStructsDealPricing{
-		InstructionPrice:          big.NewInt(int64(pricing.InstructionPrice)),
-		PaymentCollateral:         big.NewInt(int64(pricing.PaymentCollateral)),
+		InstructionPrice:          EtherToWei(float64(pricing.InstructionPrice)),
+		PaymentCollateral:         EtherToWei(float64(pricing.PaymentCollateral)),
 		ResultsCollateralMultiple: big.NewInt(int64(pricing.ResultsCollateralMultiple)),
-		MediationFee:              big.NewInt(int64(pricing.MediationFee)),
+		MediationFee:              EtherToWei(float64(pricing.MediationFee)),
 	}
 }

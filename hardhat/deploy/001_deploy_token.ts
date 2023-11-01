@@ -15,9 +15,8 @@ const deployToken: DeployFunction = async function (hre: HardhatRuntimeEnvironme
   await deploy("LilypadToken", {
     from: admin,
     args: [
-      // FIXME: change the token name and symbol
-      "Lilypad Token Test",
-      "LPTT",
+      "Lilypad Token",
+      "LP",
       DEFAULT_TOKEN_SUPPLY,
     ],  
     log: true,

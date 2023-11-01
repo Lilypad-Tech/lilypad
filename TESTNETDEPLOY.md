@@ -1,10 +1,20 @@
 # Testnet Deployment
 
-### bacalhau
 
-We need a bacalhau node running on the same machine as the resource provider.
+## Installation
 
-Here is how we got bacalhau up and running:
+First, install the required Node.js modules and generate a local `.env` file containing private keys for various services. Run the following commands:
+
+```bash
+(cd hardhat && yarn install)
+./stack print-env > .env
+```
+
+## Booting the Stack
+
+### 1 - Bacalhau
+
+To run a Bacalhau node on the same machine as the resource provider, follow these steps:
 
 ```bash
 # install the latest bacalhau which works with GPUs (https://github.com/bacalhau-project/bacalhau/issues/2858)
@@ -19,9 +29,9 @@ export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
 
 ## Create Seven New Accounts
 
-Follow the README.md in the `generate_accts` directory to create seven new accounts.
+Follow the `README.md` in the `generate_accts` directory to create seven new accounts.
 
-Copy hardhat/.env.sample to .env and update the following environment variables:
+Copy `hardhat/.env.sample` to `.env` and update the following environment variables:
 ```
 ADDRESS_ADMIN=
 PRIVATE_KEY_ADMIN=
@@ -55,8 +65,12 @@ export INFURA_KEY=
 
 set defaultNetwork to `sepolia` in `hardhat.config.js`
 
-update stack script to use `sepolia` network
-export NETWORK=${NETWORK:="sepolia"}
+Update the following values in the `.env` file. Replace `<INFURA_KEY>` with the Infura key from above:
+```
+export NETWORK=sepolia
+export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/<INFURA_KEY>
+export WEB3_CHAIN_ID=11155111
+```
 
 ## Fund the Seven New Accounts
 
@@ -86,23 +100,10 @@ Check the balances
 ./stack deploy-contracts
 ```
 
-## Does this need to happen a second time to get the contract/bindings?
-
-```bash
-./stack go-bindings
-```
-
 ## Fund Services Tokens
 
 ```bash
 ./stack fund-services-tokens
-```
-
-## Environment Variables
-
-update `stack` with new RPC URL in print-local-dev-env():
-```bash
-echo "export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/$INFURA_KEY" 
 ```
 
 ### Run Services
@@ -110,15 +111,15 @@ echo "export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/$INFURA_KEY"
 Run the following commands in separate terminals:
 
 ```bash
-./stack solver --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+./stack solver
 ```
 
 ```bash
-./stack mediator --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+./stack mediator
 ```
 
 ```bash
-./stack resource-provider --web3-chain-id 11155111 --web3-payments-address 0x01B18F94B61253ba63b810ddA371eA54bbACbdC6 --web3-storage-address 0xC5a58D6BDbdB66c50ecD795C5456E1f6ADc52dD9 --web3-users-address 0x11F3f6e51B822c4f0FF8955510f81B6654a9BD0C
+./stack resource-provider
 ```
 
 ```bash

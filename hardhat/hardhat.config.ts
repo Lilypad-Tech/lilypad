@@ -18,7 +18,7 @@ const INFURA_KEY = process.env.INFURA_KEY || "";
 
 const config: HardhatUserConfig = {
   solidity: '0.8.21',
-  defaultNetwork: 'sepolia',
+  defaultNetwork: 'geth',
   namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
     hardhat: {},

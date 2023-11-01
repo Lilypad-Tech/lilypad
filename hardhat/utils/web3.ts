@@ -218,7 +218,7 @@ export async function connectUsers() {
   return connectContract<LilypadUsers>('LilypadUsers')
 }
 
-export async function getUsers() {
+export async function getUsersAddress() {
   return getContractAddress('LilypadUsers')
 }
 

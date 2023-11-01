@@ -310,15 +310,15 @@ export const RESULTS_ID = "11"
 export const DATA_ID = "12"
 
 export const DEFAULT_VALUES: Record<string, bigint> = {
-  instructionPrice: ethers.getBigInt(10),
-  instructionCount: ethers.getBigInt(1),
-  resultsCollateralMultiple: ethers.getBigInt(4),
-  resultsCollateral: ethers.getBigInt(40),
-  paymentCollateral: ethers.getBigInt(30),
-  jobCost: ethers.getBigInt(10),
-  mediationFee: ethers.getBigInt(5),
-  timeout: ethers.getBigInt(100),
-  timeoutCollateral: ethers.getBigInt(10),
+  instructionPrice: ethers.parseEther("10"),
+  instructionCount: ethers.getBigInt("1"),
+  resultsCollateralMultiple: ethers.getBigInt("4"),
+  resultsCollateral: ethers.parseEther("40"),
+  paymentCollateral: ethers.parseEther("30"),
+  jobCost: ethers.parseEther("10"),
+  mediationFee: ethers.parseEther("5"),
+  timeout: ethers.getBigInt("100"),
+  timeoutCollateral: ethers.parseEther("10"),
 }
 
 export function getDefaultTimeouts(
@@ -331,7 +331,7 @@ export function getDefaultTimeouts(
   }
   const defaultTimeoutNoCost: SharedStructs.DealTimeoutStruct = {
     timeout,
-    collateral: ethers.getBigInt(0),
+    collateral: ethers.parseEther("0"),
   }
   const ret: SharedStructs.DealTimeoutsStruct = {
     agree: defaultTimeoutNoCost,

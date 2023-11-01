@@ -45,7 +45,7 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 	errorChan := jobCreator.controller.Start(ctx, cm)
 
 	// TODO: work out how to do dynamic pricing
-	tx, err := jobCreator.web3SDK.Contracts.JobCreator.SetRequiredDeposit(jobCreator.web3SDK.TransactOpts, big.NewInt(JOB_PRICE))
+	tx, err := jobCreator.web3SDK.Contracts.JobCreator.SetRequiredDeposit(jobCreator.web3SDK.TransactOpts, web3.EtherToWei(JOB_PRICE))
 	if err != nil {
 		errorChan <- err
 		return errorChan
@@ -96,7 +96,7 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 	jobCreator.web3Events.JobCreator.SubscribeJobAdded(func(ev jobcreatorweb3.JobcreatorJobAdded) {
 
 		// first we need to move the tokens into our account
-		tx, err := jobCreator.web3SDK.Contracts.Token.TransferFrom(jobCreator.web3SDK.TransactOpts, ev.Payee, jobCreator.web3SDK.GetAddress(), big.NewInt(JOB_PRICE))
+		tx, err := jobCreator.web3SDK.Contracts.Token.TransferFrom(jobCreator.web3SDK.TransactOpts, ev.Payee, jobCreator.web3SDK.GetAddress(), web3.EtherToWei(JOB_PRICE))
 		if err != nil {
 			fmt.Printf("error creating job offer: %s\n", err.Error())
 			return

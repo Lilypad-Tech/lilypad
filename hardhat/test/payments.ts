@@ -29,11 +29,11 @@ const { expect } = chai
 describe("Payments", () => {
 
   const dealID = "10"
-  const timeoutCollateral = ethers.getBigInt(10)
-  const resultsCollateral = ethers.getBigInt(40)
-  const paymentCollateral = ethers.getBigInt(30)
-  const jobCost = ethers.getBigInt(20)
-  const mediationFee = ethers.getBigInt(5)
+  const timeoutCollateral = ethers.parseEther("10")
+  const resultsCollateral = ethers.parseEther("40")
+  const paymentCollateral = ethers.parseEther("30")
+  const jobCost = ethers.parseEther("20")
+  const mediationFee = ethers.parseEther("5")
 
   async function setupPayments() {
     const {
@@ -843,7 +843,7 @@ describe("Payments", () => {
         .agreeResourceProvider(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -855,7 +855,7 @@ describe("Payments", () => {
         .agreeResourceProvider(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -867,8 +867,8 @@ describe("Payments", () => {
         .agreeJobCreator(
           dealID,
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -880,8 +880,8 @@ describe("Payments", () => {
         .agreeJobCreator(
           dealID,
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -893,8 +893,8 @@ describe("Payments", () => {
         .addResult(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -906,8 +906,8 @@ describe("Payments", () => {
         .addResult(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -920,10 +920,10 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -936,10 +936,10 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -951,8 +951,8 @@ describe("Payments", () => {
         .checkResult(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -964,8 +964,8 @@ describe("Payments", () => {
         .checkResult(
           dealID,
           getAddress('resource_provider'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -978,10 +978,10 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -994,10 +994,10 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -1010,9 +1010,9 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -1025,9 +1025,9 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -1040,8 +1040,8 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -1054,8 +1054,8 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -1068,8 +1068,8 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -1082,8 +1082,8 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -1096,9 +1096,9 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -1111,9 +1111,9 @@ describe("Payments", () => {
           dealID,
           getAddress('resource_provider'),
           getAddress('job_creator'),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
-          ethers.getBigInt(1),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
