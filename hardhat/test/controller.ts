@@ -24,6 +24,7 @@ import {
   DEFAULT_VALUES,
   DEAL_ID,
   RESULTS_ID,
+  DATA_ID,
 } from './fixtures'
 import {
   LilypadToken,
@@ -73,13 +74,13 @@ describe("Controller", () => {
     expect(deal.pricing.mediationFee).to.equal(mediationFee)
 
     expect(deal.timeouts.agree.timeout).to.equal(timeout)
-    expect(deal.timeouts.agree.collateral).to.equal(ethers.getBigInt(0))
-    expect(deal.timeouts.submitResults.timeout).to.equal(ethers.getBigInt(timeout))
-    expect(deal.timeouts.submitResults.collateral).to.equal(ethers.getBigInt(timeoutCollateral))
-    expect(deal.timeouts.judgeResults.timeout).to.equal(ethers.getBigInt(timeout))
-    expect(deal.timeouts.judgeResults.collateral).to.equal(ethers.getBigInt(timeoutCollateral))
-    expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(timeout))
-    expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.getBigInt(0))
+    expect(deal.timeouts.agree.collateral).to.equal(ethers.parseEther("0"))
+    expect(deal.timeouts.submitResults.timeout).to.equal(timeout)
+    expect(deal.timeouts.submitResults.collateral).to.equal(timeoutCollateral)
+    expect(deal.timeouts.judgeResults.timeout).to.equal(timeout)
+    expect(deal.timeouts.judgeResults.collateral).to.equal(timeoutCollateral)
+    expect(deal.timeouts.mediateResults.timeout).to.equal(timeout)
+    expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.parseEther("0"))
     
     expect(await storage.hasDeal(DEAL_ID))
       .to.equal(true)
@@ -151,6 +152,7 @@ describe("Controller", () => {
       .addResult(
         DEAL_ID,
         RESULTS_ID,
+        DATA_ID,
         instructionCount
       )
     return ret
@@ -289,6 +291,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       )
@@ -443,6 +446,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller
@@ -488,6 +492,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller
@@ -541,6 +546,7 @@ describe("Controller", () => {
         .addResult(
           DEAL_ID,
           RESULTS_ID,
+          DATA_ID,
           instructionCount
         )
       await controller

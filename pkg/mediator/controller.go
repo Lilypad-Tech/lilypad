@@ -14,6 +14,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/solver/store"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 )
 
 type MediatorController struct {
@@ -42,10 +43,11 @@ func NewMediatorController(
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
 ) (*MediatorController, error) {
-
+	log.Debug().Msgf("begin NewMediatorController")
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Services.Solver)
 	if err != nil {
+		log.Error().Msgf("error GetSolverUrl")
 		return nil, err
 	}
 
@@ -54,6 +56,7 @@ func NewMediatorController(
 		PrivateKey: options.Web3.PrivateKey,
 	})
 	if err != nil {
+		log.Error().Msgf("error NewSolverClient")
 		return nil, err
 	}
 

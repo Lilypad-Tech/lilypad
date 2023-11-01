@@ -53,7 +53,7 @@ func NewContracts(
 	}
 
 	paymentsAddress := options.PaymentsAddress
-
+	log.Debug().Msgf("paymentsAddress: %s", paymentsAddress)
 	if paymentsAddress == "" {
 		loadedPaymentsAddress, err := controller.GetPaymentsAddress(callOpts)
 		if err != nil {
@@ -64,14 +64,13 @@ func NewContracts(
 			Str("load payments address", paymentsAddress).
 			Msgf("")
 	}
-
 	payments, err := payments.NewPayments(common.HexToAddress(paymentsAddress), client)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenAddress := options.TokenAddress
-
+	log.Debug().Msgf("TokenAddress: %s", tokenAddress)
 	if tokenAddress == "" {
 		loadedTokenAddress, err := payments.GetTokenAddress(callOpts)
 		if err != nil {
@@ -89,7 +88,7 @@ func NewContracts(
 	}
 
 	storageAddress := options.StorageAddress
-
+	log.Debug().Msgf("StorageAddress: %s", storageAddress)
 	if storageAddress == "" {
 		loadedStorageAddress, err := controller.GetStorageAddress(callOpts)
 		if err != nil {
@@ -107,7 +106,7 @@ func NewContracts(
 	}
 
 	usersAddress := options.UsersAddress
-
+	log.Debug().Msgf("UsersAddress: %s", usersAddress)
 	if usersAddress == "" {
 		loadedUsersAddress, err := controller.GetUsersAddress(callOpts)
 		if err != nil {
@@ -125,7 +124,7 @@ func NewContracts(
 	}
 
 	jobcreatorAddress := options.JobCreatorAddress
-
+	log.Debug().Msgf("JobCreatorAddress: %s", jobcreatorAddress)
 	if jobcreatorAddress == "" {
 		loadedJobCreatorAddress, err := controller.GetJobCreatorAddress(callOpts)
 		if err != nil {
@@ -143,7 +142,7 @@ func NewContracts(
 	}
 
 	mediationAddress := options.MediationAddress
-
+	log.Debug().Msgf("MediationAddress: %s", mediationAddress)
 	if mediationAddress == "" {
 		loadedMediationAddress, err := controller.GetMediationAddress(callOpts)
 		if err != nil {
@@ -172,6 +171,8 @@ func NewContracts(
 }
 
 func NewContractSDK(options Web3Options) (*Web3SDK, error) {
+	// write to console
+	log.Debug().Msgf("NewContractSDK: %+v", options)
 	client, err := ethclient.Dial(options.RpcURL)
 	if err != nil {
 		return nil, err

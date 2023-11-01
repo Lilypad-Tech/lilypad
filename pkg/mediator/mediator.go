@@ -8,6 +8,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 )
 
 type MediatorOptions struct {
@@ -26,10 +27,14 @@ func NewMediator(
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
 ) (*Mediator, error) {
+	log.Debug().Msgf("begin NewMediatorController")
 	controller, err := NewMediatorController(options, web3SDK, executor)
+	log.Debug().Msgf("end NewMediatorController")
 	if err != nil {
+		log.Error().Msgf("error NewMediatorController")
 		return nil, err
 	}
+	log.Debug().Msgf("begin Mediator")
 	solver := &Mediator{
 		controller: controller,
 		web3SDK:    web3SDK,

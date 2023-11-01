@@ -1,6 +1,10 @@
 // IMPORTANT: we cannot import hardhat directly here
 // because it will cause a circular dependency
 import { Account } from './types'
+import * as dotenv from 'dotenv'
+
+const ENV_FILE = '.env'
+dotenv.config({ path: ENV_FILE })
 
 export const loadEnv = (name: string, defaultValue: string) => {
   return process.env[name] || defaultValue
