@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/controller"
+	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/payments"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
@@ -27,6 +28,7 @@ type Contracts struct {
 	Payments   *payments.Payments
 	Storage    *storage.Storage
 	Users      *users.Users
+	JobCreator *jobcreator.Jobcreator
 	Mediation  *mediation.Mediation
 	Controller *controller.Controller
 }
@@ -51,7 +53,7 @@ func NewContracts(
 	}
 
 	paymentsAddress := options.PaymentsAddress
-
+	log.Debug().Msgf("paymentsAddress: %s", paymentsAddress)
 	if paymentsAddress == "" {
 		loadedPaymentsAddress, err := controller.GetPaymentsAddress(callOpts)
 		if err != nil {
@@ -62,14 +64,13 @@ func NewContracts(
 			Str("load payments address", paymentsAddress).
 			Msgf("")
 	}
-
 	payments, err := payments.NewPayments(common.HexToAddress(paymentsAddress), client)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenAddress := options.TokenAddress
-
+	log.Debug().Msgf("TokenAddress: %s", tokenAddress)
 	if tokenAddress == "" {
 		loadedTokenAddress, err := payments.GetTokenAddress(callOpts)
 		if err != nil {
@@ -87,7 +88,7 @@ func NewContracts(
 	}
 
 	storageAddress := options.StorageAddress
-
+	log.Debug().Msgf("StorageAddress: %s", storageAddress)
 	if storageAddress == "" {
 		loadedStorageAddress, err := controller.GetStorageAddress(callOpts)
 		if err != nil {
@@ -105,7 +106,7 @@ func NewContracts(
 	}
 
 	usersAddress := options.UsersAddress
-
+	log.Debug().Msgf("UsersAddress: %s", usersAddress)
 	if usersAddress == "" {
 		loadedUsersAddress, err := controller.GetUsersAddress(callOpts)
 		if err != nil {
@@ -122,8 +123,26 @@ func NewContracts(
 		return nil, err
 	}
 
-	mediationAddress := options.MediationAddress
+	jobcreatorAddress := options.JobCreatorAddress
+	log.Debug().Msgf("JobCreatorAddress: %s", jobcreatorAddress)
+	if jobcreatorAddress == "" {
+		loadedJobCreatorAddress, err := controller.GetJobCreatorAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		jobcreatorAddress = loadedJobCreatorAddress.String()
+		log.Debug().
+			Str("load jobcreator address", jobcreatorAddress).
+			Msgf("")
+	}
 
+	jobCreator, err := jobcreator.NewJobcreator(common.HexToAddress(jobcreatorAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	mediationAddress := options.MediationAddress
+	log.Debug().Msgf("MediationAddress: %s", mediationAddress)
 	if mediationAddress == "" {
 		loadedMediationAddress, err := controller.GetMediationAddress(callOpts)
 		if err != nil {
@@ -145,12 +164,15 @@ func NewContracts(
 		Payments:   payments,
 		Storage:    storage,
 		Users:      users,
+		JobCreator: jobCreator,
 		Mediation:  mediation,
 		Controller: controller,
 	}, nil
 }
 
 func NewContractSDK(options Web3Options) (*Web3SDK, error) {
+	// write to console
+	log.Debug().Msgf("NewContractSDK: %+v", options)
 	client, err := ethclient.Dial(options.RpcURL)
 	if err != nil {
 		return nil, err
@@ -196,8 +218,8 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	return strconv.ParseUint(blockNumberHex, 16, 64)
 }
 
-func (sdk *Web3SDK) waitTx(tx *types.Transaction) (*types.Receipt, error) {
-	return bind.WaitMined(context.Background(), sdk.Client, tx)
+func (sdk *Web3SDK) WaitTx(ctx context.Context, tx *types.Transaction) (*types.Receipt, error) {
+	return bind.WaitMined(ctx, sdk.Client, tx)
 }
 
 func (sdk *Web3SDK) GetAddress() common.Address {

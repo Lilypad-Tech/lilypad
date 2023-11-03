@@ -18,6 +18,7 @@ type MediationEventChannels struct {
 func NewMediationEventChannels() *MediationEventChannels {
 	return &MediationEventChannels{
 		mediationRequestedChan: make(chan *mediation.MediationMediationRequested),
+		mediationRequestedSubs: []func(mediation.MediationMediationRequested){},
 	}
 }
 

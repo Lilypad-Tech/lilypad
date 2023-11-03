@@ -16,6 +16,9 @@ import {
   LilypadStorage,
   LilypadMediationRandom,
   LilypadController,
+  LilypadOnChainJobCreator,
+  LilypadUsers,
+  ExampleClient,
 } from '../typechain-types'
 
 /*
@@ -25,13 +28,13 @@ import {
 */
 
 // how much ether to send to each account
-export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('1000000')
+export const DEFAULT_ETHER_PER_ACCOUNT = ethers.parseEther('.1')
 
 // a billion tokens in total
-export const DEFAULT_TOKEN_SUPPLY = ethers.getBigInt('1000000000')
+export const DEFAULT_TOKEN_SUPPLY = ethers.parseEther('1000000000')
 
 // each service gets 1000 tokens
-export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.getBigInt('1000')
+export const DEFAULT_TOKENS_PER_ACCOUNT = ethers.parseEther('1000')
 
 /*
 
@@ -189,6 +192,47 @@ export async function connectPayments() {
 
 export async function getPaymentsAddress() {
   return getContractAddress('LilypadPayments')
+}
+
+
+/*
+
+  job manager
+
+*/
+export async function connectJobManager() {
+  return connectContract<LilypadOnChainJobCreator>('LilypadOnChainJobCreator')
+}
+
+export async function getJobManagerAddress() {
+  return getContractAddress('LilypadOnChainJobCreator')
+}
+
+
+/*
+
+  users
+
+*/
+export async function connectUsers() {
+  return connectContract<LilypadUsers>('LilypadUsers')
+}
+
+export async function getUsersAddress() {
+  return getContractAddress('LilypadUsers')
+}
+
+/*
+
+  example client
+
+*/
+export async function connectExampleClient() {
+  return connectContract<ExampleClient>('ExampleClient')
+}
+
+export async function getExampleClientAddress() {
+  return getContractAddress('ExampleClient')
 }
 
 /*

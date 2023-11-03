@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/bacalhau-project/lilypad/pkg/executor"
 	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/rs/zerolog/log"
 )
 
 const RESULTS_DIR = "bacalhau-results"
@@ -30,6 +31,7 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 		fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost),
 		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
 	}
+	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
 	return &BacalhauExecutor{
 		Options:     options,
 		bacalhauEnv: bacalhauEnv,

@@ -1,6 +1,7 @@
 package web3
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog/log"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {
@@ -52,7 +54,7 @@ func (sdk *Web3SDK) UpdateUser(
 		system.Info(sdk.Options.Service, "submitted users.UpdateUser", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return err
 	}
@@ -73,7 +75,7 @@ func (sdk *Web3SDK) AddUserToList(
 		system.Info(sdk.Options.Service, "submitted users.AddUserToList", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return err
 	}
@@ -81,11 +83,14 @@ func (sdk *Web3SDK) AddUserToList(
 }
 
 func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
+	log.Debug().Msgf("begin GetSolverUrl from contract at address: %s", address)
 	solver, err := sdk.Contracts.Users.GetUser(
 		sdk.CallOpts,
 		common.HexToAddress(address),
 	)
 	if err != nil {
+		log.Error().Msgf("GetUser error")
+		log.Error().Msgf("error: %s", err)
 		return "", err
 	}
 
@@ -116,7 +121,7 @@ func (sdk *Web3SDK) Agree(
 		system.Debug(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -126,12 +131,14 @@ func (sdk *Web3SDK) Agree(
 func (sdk *Web3SDK) AddResult(
 	dealId string,
 	resultsId string,
+	dataId string,
 	instructionCount uint64,
 ) (string, error) {
 	tx, err := sdk.Contracts.Controller.AddResult(
 		sdk.TransactOpts,
 		dealId,
 		resultsId,
+		dataId,
 		big.NewInt(int64(instructionCount)),
 	)
 	if err != nil {
@@ -141,7 +148,7 @@ func (sdk *Web3SDK) AddResult(
 		system.Debug(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -162,7 +169,7 @@ func (sdk *Web3SDK) AcceptResult(
 		system.Debug(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +190,7 @@ func (sdk *Web3SDK) CheckResult(
 		system.Debug(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -204,7 +211,7 @@ func (sdk *Web3SDK) MediationAcceptResult(
 		system.Debug(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}
@@ -225,7 +232,7 @@ func (sdk *Web3SDK) MediationRejectResult(
 		system.Debug(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
 		system.DumpObjectDebug(tx)
 	}
-	_, err = sdk.waitTx(tx)
+	_, err = sdk.WaitTx(context.Background(), tx)
 	if err != nil {
 		return "", err
 	}

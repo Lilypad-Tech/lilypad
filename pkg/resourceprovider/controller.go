@@ -455,6 +455,7 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 	txHash, err := controller.web3SDK.AddResult(
 		deal.Deal.ID,
 		createdResult.ID,
+		createdResult.DataID,
 		result.InstructionCount,
 	)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/mediation"
 	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/rs/zerolog/log"
 )
 
 // add an enum for various types of event
@@ -75,7 +76,9 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		errorChan <- err
 		return errorChan
 	}
+
 	// activate the web3 event listeners
+	log.Debug().Msgf("controller.web3Events.Start")
 	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
 	if err != nil {
 		errorChan <- err
@@ -84,6 +87,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 
 	// make sure we are registered as a solver
 	// so that users can lookup our URL
+	log.Debug().Msgf("controller.registerAsSolver")
 	err = controller.registerAsSolver()
 	if err != nil {
 		errorChan <- err
@@ -102,7 +106,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 			return err
 		},
 	)
-
+	log.Debug().Msgf("controller.loop.Start")
 	err = controller.loop.Start(true)
 	if err != nil {
 		errorChan <- err
@@ -199,12 +203,15 @@ func (controller *SolverController) registerAsSolver() error {
 		return err
 	}
 
+	log.Debug().Msgf("GetUser with selfAddress: %s", selfAddress.String())
 	selfUser, err := controller.web3SDK.GetUser(selfAddress)
 	if err != nil {
 		return err
 	}
 
 	// TODO: check the other props and call update if they have changed
+	log.Debug().Msgf("selfUser.Url: %s", selfUser.Url)
+	log.Debug().Msgf("controller.options.Server.URL: %s", controller.options.Server.URL)
 	if selfUser.Url != controller.options.Server.URL {
 		controller.log.Info("url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
 		err = controller.web3SDK.UpdateUser(
@@ -479,3 +486,24 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 	})
 	return dealContainer, nil
 }
+
+/*
+*
+*
+*
+
+# Run onchain job
+
+*
+*
+*
+*/
+
+// func (controller *SolverController) runJob(ev jobcreatorweb3.JobcreatorJobAdded) (*data.DealContainer, error) {
+// 	options := optionsfactory.NewJobCreatorOptions()
+// 	fmt.Printf("options --------------------------------------\n")
+// 	spew.Dump(options)
+// 	fmt.Printf("ev --------------------------------------\n")
+// 	spew.Dump(ev)
+// 	return nil, nil
+// }

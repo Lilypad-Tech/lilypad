@@ -4,11 +4,12 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./SharedStructs.sol";
+import "./ILilypadController.sol";
 import "./ILilypadStorage.sol";
 import "./ILilypadPayments.sol";
 import "./ILilypadMediation.sol";
 
-contract LilypadController is Ownable, Initializable {
+contract LilypadController is ILilypadController, Ownable, Initializable {
 
   /**
    * Types
@@ -18,6 +19,7 @@ contract LilypadController is Ownable, Initializable {
   address private userAddress;
   address private paymentsAddress;
   address private mediationAddress;
+  address private jobCreatorAddress;
 
   ILilypadStorage private storageContract;
   ILilypadPayments private paymentsContract;
@@ -32,12 +34,14 @@ contract LilypadController is Ownable, Initializable {
     address _storageAddress,
     address _usersAddress,
     address _paymentsAddress,
-    address _mediationAddress
+    address _mediationAddress,
+    address _jobCreatorAddress
   ) public initializer {
     setStorageAddress(_storageAddress);
     setUsersAddress(_usersAddress);
     setPaymentsAddress(_paymentsAddress);
     setMediationAddress(_mediationAddress);
+    setJobCreatorAddress(_jobCreatorAddress);
   }
 
   function setStorageAddress(address _storageAddress) public onlyOwner {
@@ -79,6 +83,15 @@ contract LilypadController is Ownable, Initializable {
     return mediationAddress;
   }
 
+  function setJobCreatorAddress(address _jobCreatorAddress) public onlyOwner {
+    require(_jobCreatorAddress != address(0), "JobCreator address");
+    jobCreatorAddress = _jobCreatorAddress;
+  }
+
+  function getJobCreatorAddress() public view returns(address) {
+    return jobCreatorAddress;
+  }
+
   /**
    * Agreements
    */
@@ -99,7 +112,7 @@ contract LilypadController is Ownable, Initializable {
     SharedStructs.DealMembers memory members,
     SharedStructs.DealTimeouts memory timeouts,
     SharedStructs.DealPricing memory pricing
-  ) public returns (SharedStructs.Agreement memory) {
+  ) public override returns (SharedStructs.Agreement memory) {
     SharedStructs.Deal memory deal = storageContract.ensureDeal(
       dealId,
       members,
@@ -145,8 +158,11 @@ contract LilypadController is Ownable, Initializable {
   function addResult(
     string memory dealId,
     string memory resultsId,
+    // this is the CID of the actual data
+    // otherwise onchain clients cannot know the actual data they want to fetch
+    string memory dataId,
     uint256 instructionCount
-  ) public {
+  ) public override {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.DealAgreed), "DealAgreed");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.members.resourceProvider == tx.origin, "Only RP");
@@ -154,6 +170,7 @@ contract LilypadController is Ownable, Initializable {
     storageContract.addResult(
       dealId,
       resultsId,
+      dataId,
       instructionCount
     );
 
@@ -182,7 +199,7 @@ contract LilypadController is Ownable, Initializable {
   // * refund the JC the timeout collateral
   function acceptResult(
     string memory dealId
-  ) public {
+  ) public override {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.members.jobCreator == tx.origin, "Only JC");
@@ -212,7 +229,7 @@ contract LilypadController is Ownable, Initializable {
   // * emit the Mediation event so the mediator kicks in
   function checkResult(
     string memory dealId
-  ) public {
+  ) public override {
     require(storageContract.isState(dealId, SharedStructs.AgreementState.ResultsSubmitted), "ResultsSubmitted");
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     require(deal.members.jobCreator == tx.origin, "Only JC");
@@ -245,7 +262,7 @@ contract LilypadController is Ownable, Initializable {
   // * pay the mediator for mediating
   function mediationAcceptResult(
     string memory dealId
-  ) public {
+  ) public override {
     require(mediationAddress == _msgSender(), "Only mediation");
     require(_canMediateResult(dealId), "Cannot mediate");
     
@@ -274,7 +291,7 @@ contract LilypadController is Ownable, Initializable {
   // * pay the mediator for mediating
   function mediationRejectResult(
     string memory dealId
-  ) public {
+  ) public override {
     // only the current mediation contract can call this
     require(mediationAddress == _msgSender(), "Only mediation");
     require(_canMediateResult(dealId), "Cannot mediate");
@@ -306,7 +323,7 @@ contract LilypadController is Ownable, Initializable {
 
   function timeoutAgree(
     string memory dealId
-  ) public {
+  ) public override {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
     require(deal.members.jobCreator == tx.origin || deal.members.resourceProvider == tx.origin, "Only JC or RP");
@@ -339,7 +356,7 @@ contract LilypadController is Ownable, Initializable {
   // * emit the event
   function timeoutSubmitResult(
     string memory dealId
-  ) public {
+  ) public override {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
     require(deal.members.jobCreator == tx.origin, "Only JC");
@@ -366,7 +383,7 @@ contract LilypadController is Ownable, Initializable {
   // * emit the event
   function timeoutJudgeResult(
     string memory dealId
-  ) public {
+  ) public override {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
     require(deal.members.resourceProvider == tx.origin, "Only RP");
@@ -392,7 +409,7 @@ contract LilypadController is Ownable, Initializable {
   // * emit the event
   function timeoutMediateResult(
     string memory dealId
-  ) public {
+  ) public override {
     SharedStructs.Deal memory deal = storageContract.getDeal(dealId);
     SharedStructs.Agreement memory agreement = storageContract.getAgreement(dealId);
     require(deal.members.resourceProvider == tx.origin || deal.members.jobCreator == tx.origin, "Only RP or JC");

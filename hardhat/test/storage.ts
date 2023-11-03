@@ -37,6 +37,7 @@ describe("Storage", () => {
 
   const dealID = "10"
   const resultsID = "11"
+  const DATA_ID = "12"
   const instructionCount = ethers.getBigInt(25)
 
   function setupStorage() {
@@ -112,6 +113,7 @@ describe("Storage", () => {
       .addResult(
         dealID,
         resultsID,
+        DATA_ID,
         instructionCount,
       )
     )
@@ -245,7 +247,8 @@ describe("Storage", () => {
         .addResult(
           dealID,
           "1",
-          ethers.getBigInt(1),
+          DATA_ID,
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Controller address must be defined')
     })
@@ -258,7 +261,8 @@ describe("Storage", () => {
         .addResult(
           dealID,
           "1",
-          ethers.getBigInt(1),
+          DATA_ID,
+          ethers.parseEther("1"),
         )
       ).to.be.revertedWith('ControllerOwnable: Only the controller can call this method')
     })
@@ -434,14 +438,14 @@ describe("Storage", () => {
       expect(deal.pricing.resultsCollateralMultiple).to.equal(DEFAULT_VALUES.resultsCollateralMultiple)
       expect(deal.pricing.mediationFee).to.equal(DEFAULT_VALUES.mediationFee)
 
-      expect(deal.timeouts.agree.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
-      expect(deal.timeouts.agree.collateral).to.equal(ethers.getBigInt(0))
-      expect(deal.timeouts.submitResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
-      expect(deal.timeouts.submitResults.collateral).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeoutCollateral))
-      expect(deal.timeouts.judgeResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
-      expect(deal.timeouts.judgeResults.collateral).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeoutCollateral))
-      expect(deal.timeouts.mediateResults.timeout).to.equal(ethers.getBigInt(DEFAULT_VALUES.timeout))
-      expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.getBigInt(0))
+      expect(deal.timeouts.agree.timeout).to.equal(DEFAULT_VALUES.timeout)
+      expect(deal.timeouts.agree.collateral).to.equal(ethers.parseEther("0"))
+      expect(deal.timeouts.submitResults.timeout).to.equal(DEFAULT_VALUES.timeout)
+      expect(deal.timeouts.submitResults.collateral).to.equal(DEFAULT_VALUES.timeoutCollateral)
+      expect(deal.timeouts.judgeResults.timeout).to.equal(DEFAULT_VALUES.timeout)
+      expect(deal.timeouts.judgeResults.collateral).to.equal(DEFAULT_VALUES.timeoutCollateral)
+      expect(deal.timeouts.mediateResults.timeout).to.equal(DEFAULT_VALUES.timeout)
+      expect(deal.timeouts.mediateResults.collateral).to.equal(ethers.parseEther("0"))
 
       expect(await storage.hasDeal(dealID))
         .to.equal(true)
@@ -536,7 +540,7 @@ describe("Storage", () => {
     //   'Mediation fee does not match',
     // ]
     // const badArgs: any = {
-    //   0: ethers.getBigInt(100),
+    //   0: ethers.parseEther("100"),
     //   1: getAddress('mediator'),
     //   2: getAddress('mediator'),
     // }
@@ -544,17 +548,17 @@ describe("Storage", () => {
     //   dealID,
     //   getAddress('resource_provider'),
     //   getAddress('job_creator'),
-    //   ethers.getBigInt(1),
-    //   ethers.getBigInt(1),
-    //   ethers.getBigInt(1),
-    //   ethers.getBigInt(1),
-    //   ethers.getBigInt(1),
-    //   ethers.getBigInt(1)
+    //   ethers.parseEther("1"),
+    //   ethers.parseEther("1"),
+    //   ethers.parseEther("1"),
+    //   ethers.parseEther("1"),
+    //   ethers.parseEther("1"),
+    //   ethers.parseEther("1")
     // ]
     // compareErrors.forEach((expectedError, i) => {
     //   if(i == 0) return
     //   const passArgs: any[] = [].concat(...goodArgs)
-    //   passArgs[i] = badArgs[i] || ethers.getBigInt(0)
+    //   passArgs[i] = badArgs[i] || ethers.parseEther("0")
     //   it(`Should compare error: ${expectedError}`, async function () {
     //     const storage = await loadFixture(setupStorageWithUsersAndDeal)
     //     const connectedStorage = storage.connect(getWallet('admin')) as any
@@ -580,9 +584,9 @@ describe("Storage", () => {
 
       const agreement = await storage.getAgreement(dealID)
       expect(agreement.state).to.equal(getAgreementState('DealAgreed'))
-      expect(agreement.resourceProviderAgreedAt).to.not.equal(ethers.getBigInt(0))
-      expect(agreement.jobCreatorAgreedAt).to.not.equal(ethers.getBigInt(0))
-      expect(agreement.dealAgreedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.resourceProviderAgreedAt).to.not.equal(ethers.parseEther("0"))
+      expect(agreement.jobCreatorAgreedAt).to.not.equal(ethers.parseEther("0"))
+      expect(agreement.dealAgreedAt).to.not.equal(ethers.parseEther("0"))
 
       expect(await storage.isState(dealID, getAgreementState('DealAgreed')))
         .to.equal(true)
@@ -615,7 +619,7 @@ describe("Storage", () => {
       expect(result.instructionCount).to.equal(instructionCount)
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.resultsSubmittedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.resultsSubmittedAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('ResultsSubmitted'))
     })
 
@@ -627,6 +631,7 @@ describe("Storage", () => {
         .addResult(
           dealID,
           resultsID,
+          DATA_ID,
           instructionCount,
         )
       ).to.be.revertedWith('DealAgreed')
@@ -645,7 +650,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('ResultsAccepted'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.resultsAcceptedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.resultsAcceptedAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('ResultsAccepted'))
     })
 
@@ -662,7 +667,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('ResultsChecked'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.resultsCheckedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.resultsCheckedAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('ResultsChecked'))
     })
 
@@ -707,7 +712,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('MediationAccepted'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.mediationAcceptedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.mediationAcceptedAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('MediationAccepted'))
     })
 
@@ -724,7 +729,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('MediationRejected'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.mediationRejectedAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.mediationRejectedAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('MediationRejected'))
     })
 
@@ -766,7 +771,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('TimeoutSubmitResults'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.timeoutSubmitResultsAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.timeoutSubmitResultsAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('TimeoutSubmitResults'))
     })
 
@@ -783,7 +788,7 @@ describe("Storage", () => {
         .withArgs(dealID, getAgreementState('TimeoutJudgeResults'))
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.timeoutJudgeResultsAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.timeoutJudgeResultsAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('TimeoutJudgeResults'))
     })
 
@@ -801,7 +806,7 @@ describe("Storage", () => {
       
 
       const agreement = await storage.getAgreement(dealID)
-      expect(agreement.timeoutMediateResultsAt).to.not.equal(ethers.getBigInt(0))
+      expect(agreement.timeoutMediateResultsAt).to.not.equal(ethers.parseEther("0"))
       expect(agreement.state).to.equal(getAgreementState('TimeoutMediateResults'))
     })
 

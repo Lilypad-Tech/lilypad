@@ -6,6 +6,7 @@ import (
 	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -50,6 +51,7 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 		return err
 	}
 
+	log.Debug().Msgf("Starting mediator service.")
 	mediatorErrors := mediatorService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {
 		select {

@@ -3,6 +3,7 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "./ControllerOwnable.sol";
 
 /*
@@ -12,7 +13,7 @@ import "./ControllerOwnable.sol";
      * for paying in, we use tx.origin so the actual payee must call the contract
      * for paying out - we use the Controller Ownable feature so only the payments contract
        can pay out from the escrow account
-   * getEscrowBalance
+   * escrowBalanceOf
      * get the current escrow balance for an address
    * payEscrow
      * pay into the escrow account
@@ -33,7 +34,7 @@ import "./ControllerOwnable.sol";
   now, only the payments contract can call the escrow functions that pay out
 
  */
-contract LilypadToken is ControllerOwnable, ERC20 {
+contract LilypadToken is ControllerOwnable, ERC20, ERC20Pausable {
 
   // keep track of the current escrow balance for each address
   mapping(address => uint256) private escrowBalances;
@@ -100,5 +101,17 @@ contract LilypadToken is ControllerOwnable, ERC20 {
     escrowBalances[slashedAddress] -= amount;
     _transfer(address(this), owner(), amount);
     return true;
+  }
+
+  function pause() public onlyOwner {
+      _pause();
+  }
+
+  function unpause() public onlyOwner {
+      _unpause();
+  }
+
+  function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20, ERC20Pausable) {
+      super._beforeTokenTransfer(from, to, amount);
   }
 }

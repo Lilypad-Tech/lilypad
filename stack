@@ -201,6 +201,7 @@ function go-bindings() {
   go-binding LilypadStorage storage
   go-binding LilypadUsers users
   go-binding LilypadMediationRandom mediation
+  go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
   
   echo "Generated all go bindings pkg/contract/bindings/"
@@ -242,7 +243,6 @@ function print-contract-env() {
 
 function print-local-dev-env() {
   print-contract-env
-  echo "export WEB3_RPC_URL=ws://localhost:8546"
 }
 
 function fund-services-ether() {
@@ -255,6 +255,10 @@ function fund-services-tokens() {
 
 function balances() {
   hardhat-script scripts/balances.ts
+}
+
+function run-cowsay-onchain() {
+  hardhat-script scripts/run-cowsay-onchain.ts
 }
 
 ############################################################################
@@ -272,13 +276,43 @@ function run() {
   go run . run "$@"
 }
 
+function runsdxl() {
+  # Check for the number of arguments provided
+  if [ $# -lt 3 ]; then
+    echo "Usage: $0 runsdxl <model> PROMPT=\"<prompt>\""
+    exit 1
+  fi
+
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  local model="$1"
+  shift  # Remove the first argument, so "$@" contains only the second one
+  local prompt="$@"
+  go run . run $model -i "PromptEnv=$prompt"
+}
+
 function solver() {
   source .env
   eval $(./stack print-local-dev-env)
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
   go run . solver "$@"
+}
+
+# we run the jobcreator as the solver
+function jobcreator() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  go run . jobcreator "$@"
 }
 
 function resource-provider() {

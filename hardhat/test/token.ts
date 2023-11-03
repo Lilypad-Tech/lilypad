@@ -54,7 +54,7 @@ describe("Token", () => {
 
   describe("Access control", () => {
     it("Can only run if there is a controller address set", async function () {
-      const amount = ethers.getBigInt(100)
+      const amount = ethers.parseEther("100")
       const token = await setupTokenFixture({
         testMode: false,
         withFunds: false,
@@ -70,7 +70,7 @@ describe("Token", () => {
     })
 
     it("Can only be run by the controller", async function () {
-      const amount = ethers.getBigInt(100)
+      const amount = ethers.parseEther("100")
       const token = await setupTokenFixture({
         testMode: false,
         withFunds: false,
@@ -91,7 +91,7 @@ describe("Token", () => {
   describe("Escrow", () => {
 
     it("Should handle payEscrow and refundEscrow", async function () {
-      const amount = ethers.getBigInt(100)
+      const amount = ethers.parseEther("100")
       const token = await loadFixture(setupTokenWithFunds)
       const tokenAddress = await token.getAddress()
 
@@ -145,7 +145,7 @@ describe("Token", () => {
     })
 
     it("Should handle payEscrow and payJob", async function () {
-      const amount = ethers.getBigInt(100)
+      const amount = ethers.parseEther("100")
       const token = await loadFixture(setupTokenWithFunds)
       const tokenAddress = await token.getAddress()
 
@@ -204,7 +204,7 @@ describe("Token", () => {
     })
 
     it("Should handle payEscrow and slashEscrow", async function () {
-      const amount = ethers.getBigInt(100)
+      const amount = ethers.parseEther("100")
       const token = await loadFixture(setupTokenWithFunds)
       const tokenAddress = await token.getAddress()
 
