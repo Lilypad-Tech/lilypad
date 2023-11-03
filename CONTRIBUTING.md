@@ -118,6 +118,18 @@ Run SDXL:
 ./stack runsdxl sdxl:v0.9-lilypad1 PROMPT="beautiful view of iceland with a record player"
 ```
 
+### 4 - Run Cowsay On-Chain
+
+Start the on-chain Job Creator:
+
+```bash
+./stack jobcreator
+```
+
+```bash
+./stack run-cowsay-onchain
+```
+
 ## Stopping the Stack
 
 To stop Geth at any time, use the following command:

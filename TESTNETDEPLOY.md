@@ -63,7 +63,10 @@ export INFURA_KEY=
 
 ## Setup Hardhat
 
-set defaultNetwork to `sepolia` in `hardhat.config.js`
+Add NETWORK to the `hardhat/.env` file:
+```
+NETWORK=sepolia
+```
 
 Update the following values in the `.env` file. Replace `<INFURA_KEY>` with the Infura key from above:
 ```
@@ -114,14 +117,43 @@ Run the following commands in separate terminals:
 ./stack solver
 ```
 
+Wait for the solver to start when `🟡 SOL solver registered` is logged, and then run:
+
 ```bash
 ./stack mediator
 ```
+
+If you have a GPU, run the following command in a separate terminal window:
+
+```bash
+./stack resource-provider --offer-gpu 1
+```
+
+Otherwise, if you don't have a GPU:
 
 ```bash
 ./stack resource-provider
 ```
 
+Run Cowsay:
+
 ```bash
 ./stack run cowsay:v0.0.1 -i Message="moo"
 ```
+
+Run SDXL:
+
+```bash
+./stack runsdxl sdxl:v0.9-lilypad1 PROMPT="beautiful view of iceland with a record player"
+```
+
+### 4 - Run Cowsay On-Chain
+
+Start the on-chain Job Creator:
+
+```bash
+./stack jobcreator
+```
+
+```bash
+./stack run-cowsay-onchain
