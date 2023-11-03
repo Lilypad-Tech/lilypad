@@ -18,7 +18,7 @@ require (
 	k8s.io/apimachinery v0.28.3
 )
 
-require github.com/joho/godotenv v1.5.1 // indirect
+require github.com/joho/godotenv v1.5.1
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
