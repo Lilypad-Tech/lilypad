@@ -6,6 +6,7 @@ import {
   getWallet,
   getAddress,
 } from '../utils/web3'
+import { ethers } from 'hardhat'
 
 async function main() {
   // it's annoying to not be able to use argv but hardhat complains about it
@@ -14,6 +15,11 @@ async function main() {
   const token = await connectToken()
   const manager = await connectJobManager()
   const client = await connectExampleClient()
+
+  const setRequiredDepositTx = await manager
+    .connect(getWallet('solver'))
+    .setRequiredDeposit(ethers.parseEther("2"))
+  await setRequiredDepositTx.wait()
 
   const requiredDeposit = await manager.getRequiredDeposit()
 

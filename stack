@@ -257,6 +257,10 @@ function balances() {
   hardhat-script scripts/balances.ts
 }
 
+function run-cowsay-onchain() {
+  hardhat-script scripts/run-cowsay-onchain.ts
+}
+
 ############################################################################
 ############################################################################
 # services
@@ -270,6 +274,24 @@ function run() {
   export SERVICE_SOLVER=$SOLVER_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   go run . run "$@"
+}
+
+function runsdxl() {
+  # Check for the number of arguments provided
+  if [ $# -lt 3 ]; then
+    echo "Usage: $0 runsdxl <model> PROMPT=\"<prompt>\""
+    exit 1
+  fi
+
+  source .env
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  local model="$1"
+  shift  # Remove the first argument, so "$@" contains only the second one
+  local prompt="$@"
+  go run . run $model -i "PromptEnv=$prompt"
 }
 
 function solver() {

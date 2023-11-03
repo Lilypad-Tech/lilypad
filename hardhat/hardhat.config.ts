@@ -14,11 +14,13 @@ import {
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
 
+const NETWORK = process.env.NETWORK || "geth";
+
 const INFURA_KEY = process.env.INFURA_KEY || "";
 
 const config: HardhatUserConfig = {
   solidity: '0.8.21',
-  defaultNetwork: 'geth',
+  defaultNetwork: NETWORK,
   namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
     hardhat: {},
