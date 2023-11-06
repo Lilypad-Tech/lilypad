@@ -12,7 +12,7 @@ jobs:
           name: Build for multiple platforms
           command: |
             goos=("darwin" "darwin" "linux" "linux")
-            goarch=("arm64" "x86_64" "arm64" "x86_64")
+            goarch=("arm64" "amd64" "arm64" "amd64")
             for i in "${!goos[@]}"; do
               mkdir -p build/${goos[$i]}-${goarch[$i]}
               GOOS=${goos[$i]} GOARCH=${goarch[$i]} go build -o build/${goos[$i]}-${goarch[$i]}/lilypad
@@ -38,9 +38,9 @@ jobs:
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
             gh release create v2.0.0-${SHORTSHA} --notes "Release v2.0.0-${SHORTSHA}" \
               /tmp/build/darwin-arm64/lilypad \
-              /tmp/build/darwin-x86_64/lilypad \
+              /tmp/build/darwin-amd64/lilypad \
               /tmp/build/linux-arm64/lilypad \
-              /tmp/build/linux-x86_64/lilypad
+              /tmp/build/linux-amd64/lilypad
 
 workflows:
   test-and-deploy:
