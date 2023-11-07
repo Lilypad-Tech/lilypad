@@ -15,7 +15,7 @@ jobs:
             goarch=("arm64" "amd64" "arm64" "amd64")
             for i in "${!goos[@]}"; do
               mkdir -p build/${goos[$i]}-${goarch[$i]}
-              GOOS=${goos[$i]} GOARCH=${goarch[$i]} go build -o build/${goos[$i]}-${goarch[$i]}/lilypad
+              GOOS=${goos[$i]} GOARCH=${goarch[$i]} go build -o build/${goos[$i]}-${goarch[$i]}/lilypad-${goos[$i]}-${goarch[$i]}
             done
       - persist_to_workspace:
           root: build/
@@ -40,10 +40,10 @@ jobs:
             wget https://github.com/cli/cli/releases/download/v2.35.0/gh_2.35.0_linux_amd64.deb
             sudo dpkg -i gh_2.35.0_linux_amd64.deb
             gh release create v2.0.0-${SHORTSHA} --notes "Release v2.0.0-${SHORTSHA}" \
-              /tmp/build/darwin-arm64/lilypad \
-              /tmp/build/darwin-amd64/lilypad \
-              /tmp/build/linux-arm64/lilypad \
-              /tmp/build/linux-amd64/lilypad
+              /tmp/build/darwin-arm64/lilypad-darwin-arm64 \
+              /tmp/build/darwin-amd64/lilypad-darwin-amd64 \
+              /tmp/build/linux-arm64/lilypad-linux-arm64 \
+              /tmp/build/linux-amd64/lilypad-linux-amd64
 
 workflows:
   test-and-deploy:
