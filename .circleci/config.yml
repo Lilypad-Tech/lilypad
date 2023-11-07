@@ -21,6 +21,9 @@ jobs:
           root: build/
           paths:
             - "*"
+      - store_artifacts:
+          path: build/
+          destination: build_artifacts
 
   release:
     docker:
