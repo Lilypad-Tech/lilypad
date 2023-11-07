@@ -8,7 +8,7 @@ jobs:
       - image: cimg/go:1.21.1
     steps:
       - run:
-        name: Add GitHub to known_hosts and clone repository
+          name: Add GitHub to known_hosts and clone repository
           command: |
             echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> ~/.ssh/known_hosts
             git clone "$CIRCLE_REPOSITORY_URL" && cd $(basename "$CIRCLE_REPOSITORY_URL" .git) && git checkout 6afc1cc
@@ -36,7 +36,7 @@ jobs:
       - attach_workspace:
           at: /tmp/build
       - run:
-        name: Add GitHub to known_hosts and clone repository
+          name: Add GitHub to known_hosts and clone repository
           command: |
             echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> ~/.ssh/known_hosts
             git clone "$CIRCLE_REPOSITORY_URL" && cd $(basename "$CIRCLE_REPOSITORY_URL" .git) && git checkout 6afc1cc
