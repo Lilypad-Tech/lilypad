@@ -18,7 +18,7 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
 
 		// contract addresses
-		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1"),
+		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", "0xCCAaFD2AdD790788436f10e2C84585C46388b9aF"),
 		PaymentsAddress:   GetDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
