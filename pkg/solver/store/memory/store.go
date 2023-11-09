@@ -1,6 +1,8 @@
 package store
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -24,24 +26,97 @@ func getMatchID(resourceOffer string, jobOffer string) string {
 	return fmt.Sprintf("%s-%s", resourceOffer, jobOffer)
 }
 
+func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T, error) {
+	logfile, err := os.OpenFile(filename, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer logfile.Close()
+
+	scanner := bufio.NewScanner(logfile)
+
+	var structsArray []*T
+
+	for scanner.Scan() {
+		var record *T
+		if err := json.Unmarshal(scanner.Bytes(), record); err != nil {
+			fmt.Printf("Error unmarshalling line: %v\n", err)
+			continue
+		}
+		structsArray = append(structsArray, record)
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	structsMap := map[string]*T{}
+	for _, record := range structsArray {
+		structsMap[getID(record)] = record
+	}
+
+	return structsMap, scanner.Err()
+}
+
+func getJSONLFilename(kind string) string {
+	return fmt.Sprintf("/var/tmp/lilypad_%s.jsonl", kind)
+}
+
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	logWriters := make(map[string]jsonl.Writer)
 
 	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
-	for k := range kinds {
-		logfile, err := os.OpenFile(fmt.Sprintf("/var/tmp/lilypad_%s.jsonl", kinds[k]), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+
+	jobOffers, err := loadJSONLFile[data.JobOfferContainer](getJSONLFilename("job_offers"), func(jobOffer *data.JobOfferContainer) string {
+		return jobOffer.ID
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resourceOffers, err := loadJSONLFile[data.ResourceOfferContainer](getJSONLFilename("resource_offers"), func(resourceOffer *data.ResourceOfferContainer) string {
+		return resourceOffer.ID
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deals, err := loadJSONLFile[data.DealContainer](getJSONLFilename("deals"), func(deal *data.DealContainer) string {
+		return deal.ID
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := loadJSONLFile[data.Result](getJSONLFilename("results"), func(result *data.Result) string {
+		return result.DealID
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	decisions, err := loadJSONLFile[data.MatchDecision](getJSONLFilename("decisions"), func(decision *data.MatchDecision) string {
+		return getMatchID(decision.ResourceOffer, decision.JobOffer)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, kind := range kinds {
+		logfile, err := os.OpenFile(getJSONLFilename(kind), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return nil, err
 		}
-		logWriters[kinds[k]] = jsonl.NewWriter(logfile)
+		logWriters[kind] = jsonl.NewWriter(logfile)
 	}
 
 	return &SolverStoreMemory{
-		jobOfferMap:      map[string]*data.JobOfferContainer{},
-		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
-		dealMap:          map[string]*data.DealContainer{},
-		resultMap:        map[string]*data.Result{},
-		matchDecisionMap: map[string]*data.MatchDecision{},
+		jobOfferMap:      jobOffers,
+		resourceOfferMap: resourceOffers,
+		dealMap:          deals,
+		resultMap:        results,
+		matchDecisionMap: decisions,
 		logWriters:       logWriters,
 	}, nil
 }
