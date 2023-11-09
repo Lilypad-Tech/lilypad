@@ -16,7 +16,7 @@ Metamask:
 
 ```
 Network name: Lilypad v2 Aurora testnet
-New RPC URL: http://testnetv2.arewehotshityet.com:8545
+New RPC URL: http://testnet.lilypad.tech:8545
 Chain ID: 1337
 Currency symbol: ETH
 Block explorer URL: (leave blank)
@@ -24,7 +24,7 @@ Block explorer URL: (leave blank)
 
 ### Fund your wallet with ETH and LP
 
-To obtain funds, go to [http://testnetv2.arewehotshityet.com:8080](http://testnetv2.arewehotshityet.com:8080)
+To obtain funds, go to [http://testnet.lilypad.tech:8080](http://testnet.lilypad.tech:8080)
 
 The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for jobs).
 
@@ -46,7 +46,7 @@ export SERVICE_MEDIATORS="0x2d83ced7562e406151bd49c749654429907543b4"
 Caveat: only supports x86_64 Linux
 
 ```
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-6afc1cc/lilypad
+curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-a9f88f7/lilypad
 chmod +x lilypad
 sudo mv lilypad /usr/local/bin
 ```
