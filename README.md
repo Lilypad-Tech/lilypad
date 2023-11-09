@@ -24,7 +24,7 @@ Block explorer URL: (leave blank)
 
 ### Fund your wallet with ETH and LP
 
-To obtain funds, go to [http://testnet.lilypad.tech:8080](http://testnet.lilypad.tech:8080)
+To obtain funds, go to [http://faucet.lilypad.tech:8080](http://faucet.lilypad.tech:8080)
 
 The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for jobs).
 
