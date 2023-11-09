@@ -10,6 +10,14 @@
 sudo adduser $USER docker
 ```
 
+We need to point DNS for `testnet.lilypad.tech` at the node and open the following ports:
+
+ * 80
+ * 443
+ * 8080
+ * 8545
+ * 8546
+ 
 log out and log in again
 
 ```bash
@@ -19,10 +27,28 @@ sudo chown $USER app
 cd /app/
 git clone https://github.com/bacalhau-project/lilypad
 cd lilypad
+(cd hardhat && yarn install)
+```
+
+Then we create the production keys:
+
+```bash
+(cd hardhat && npx hardhat run scripts/generate-addresses.ts)
+```
+
+This will print out the various private keys. We need to copy these into the `/app/lilypad/.env` file.
+
+Now we can boot geth and it will fund the various accounts:
+
+```bash
 ./stack boot
 ```
 
-We now have the `/app/lilypad/.env` file populated.
+Let's check this:
+
+```bash
+./stack balances
+```
 
 Time to make the following files by copying the respective private key from `/app/lilypad/.env`
 
@@ -35,6 +61,8 @@ WEB3_PRIVATE_KEY=xxx
  * `/app/lilypad/solver.env` (copy `SOLVER_PRIVATE_KEY` from `.env`)
  * `/app/lilypad/mediator.env` (copy `MEDIATOR_PRIVATE_KEY` from `.env`)
  * `/app/lilypad/resource-provider.env` (copy `RESOURCE_PROVIDER_PRIVATE_KEY` from `.env`)
+ * `/app/lilypad/job-creator.env` (copy `SOLVER_PRIVATE_KEY` from `.env`)
+    * IMPORTANT: this has to be the solver private key because the job creator runs as it
 
 Now - we copy the systemd units and reload systemd:
 
@@ -69,4 +97,5 @@ sudo systemctl start bacalhau
 sudo systemctl start solver
 sudo systemctl start mediator
 sudo systemctl start resource-provider
+sudo systemctl start job-creator
 ```

@@ -1,0 +1,18 @@
+[Unit]
+Description=Lilypad V2 On Chain Job Creator
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Environment="LOG_TYPE=json"
+Environment="LOG_LEVEL=debug"
+Environment="HOME=/app/lilypad"
+EnvironmentFile=/app/lilypad/job-creator.env
+Environment="SERVICE_SOLVER=0xd4646ef9f7336b06841db3019b617ceadf435316"
+Environment="SERVICE_MEDIATORS=0x2d83ced7562e406151bd49c749654429907543b4"
+Restart=always
+RestartSec=5s
+ExecStart=/usr/bin/lilypad jobcreator
+
+[Install]
+WantedBy=multi-user.target
