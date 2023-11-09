@@ -8,7 +8,7 @@ Environment="LOG_TYPE=json"
 Environment="LOG_LEVEL=debug"
 Environment="HOME=/app/lilypad"
 EnvironmentFile=/app/lilypad/resource-provider.env
-Environment="SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+Environment="SERVICE_SOLVER=0x16dfb253f7d1510498c849e7f3ce7a01384f2c2a"
 Environment="SERVICE_MEDIATORS=0x0e0f5b1402c15a2439eeb5b106b99b1523e5cdbc"
 Restart=always
 RestartSec=5s
