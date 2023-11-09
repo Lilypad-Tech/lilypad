@@ -3,8 +3,8 @@ import Wallet from 'ethereumjs-wallet'
 
 const generate = (name: string) => {
   const wallet = Wallet.generate()
-  console.log(`export PRIVATE_KEY_${name}=${wallet.getPrivateKeyString()}`)
-  console.log(`export ADDRESS_${name}=${wallet.getAddressString()}`)
+  console.log(`export ${name}_PRIVATE_KEY=${wallet.getPrivateKeyString()}`)
+  console.log(`export ${name}_ADDRESS=${wallet.getAddressString()}`)
 }
 
 async function main() {
