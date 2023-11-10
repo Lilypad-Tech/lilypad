@@ -109,6 +109,27 @@ Check the balances
 ./stack fund-services-tokens
 ```
 
+## Update the .env file with contract addresses
+
+Make sure NETWORK in `hardhat/.env` is set to `sepolia`.
+
+Append the deployed contract addresses to the `.env` file:
+
+```bash
+./stack print-contract-env >> .env
+```
+
+That should add seven contract addresses to the `.env` file. For example:
+```
+export WEB3_CONTROLLER_ADDRESS=0x433C91FA54b9c11550b07672E1FA2b06860e5b05
+export WEB3_TOKEN_ADDRESS=0x90bC5e91B2bC6BBa240001B169fd73DeA75E072A
+export WEB3_MEDIATION_ADDRESS=0xe294485d0C03adCe1BE2c2791522A6c0585A4f7B
+export WEB3_JOBCREATOR_ADDRESS=0x4aC3C9F7e431dce628440b5037d23890c28E5C3F
+export WEB3_PAYMENTS_ADDRESS=0xC5b1737A2282E6283c54f67bC401426058BC170F
+export WEB3_STORAGE_ADDRESS=0x79Ee2d28eDDd9Ee0b68613b29Dab474623F8D1c6
+export WEB3_USERS_ADDRESS=0x70eC3b0aFA059174dD54d7702624f1Dd402b706b
+```
+
 ### Run Services
 
 Run the following commands in separate terminals:
