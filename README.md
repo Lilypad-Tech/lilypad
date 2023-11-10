@@ -48,6 +48,8 @@ chmod +x lilypad
 sudo mv lilypad /usr/local/bin/lilypad
 ```
 
+You can also, at your option, choose to compile Lilypad using Go and install it that way on any machine that supports the Go toolchain.
+
 ## Run a job
 
 ```
