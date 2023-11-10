@@ -17,7 +17,6 @@ async function main() {
   const storageAddress = await getStorageAddress()
   const usersAddress = await getUsersAddress()
   
-  console.log(`export WEB3_RPC_URL=ws://localhost:8546`)
   console.log(`export WEB3_CONTROLLER_ADDRESS=${controllerAddress}`)
   console.log(`export WEB3_TOKEN_ADDRESS=${tokenAddress}`)
   console.log(`export WEB3_MEDIATION_ADDRESS=${mediationAddress}`)
