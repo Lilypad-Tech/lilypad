@@ -32,26 +32,23 @@ The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for 
 
 ## Install CLI
 
-#### 1. With Go toolchain 
+Download the latest release of Lilypad for your platform. Both the amd64/x86_64 and arm64 variants of macOS and Linux are supported. (If you are on Apple Silicon, you'll want arm64).
 
-```shell
-go install github.com/bacalhau-project/lilypad@latest
-```
-You may then need to set:
-```
-export SERVICE_SOLVER="0xd4646ef9f7336b06841db3019b617ceadf435316"
-export SERVICE_MEDIATORS="0x2d83ced7562e406151bd49c749654429907543b4"
-```
-
-#### 2. Via officially released binaries
-
-Caveat: only supports x86_64 Linux
+The commands below will automatically detect your OS and processor architecture and download the correct Lilypad build for your machine.
 
 ```
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-a9f88f7/lilypad
+# Detect your machine's architecture and set it as $OSARCH
+OSARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}') && export OSARCH
+# Detect your operating system and set it as $OSNAME
+OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Linux") print "linux"; else print "unsupported_os"}') && export OSNAME;
+# Download the latest production build
+curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-701b8cb/lilypad-$OSNAME-$OSARCH
+# Make Lilypad executable and install it
 chmod +x lilypad
-sudo mv lilypad /usr/local/bin
+sudo mv lilypad /usr/local/bin/lilypad
 ```
+
+You can also, at your option, choose to compile Lilypad using Go and install it that way on any machine that supports the Go toolchain.
 
 ## Run a job
 
