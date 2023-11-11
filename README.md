@@ -129,3 +129,28 @@ Tips:
 
 If your module is not deterministic, compute providers will not adopt it and add it to their allowlists.
 
+
+### Writing Advanced Modules
+
+1. `subt`:
+The `subt` function allows for substitutions in your template, a feature that addresses the issue outlined in [#14](https://github.com/bacalhau-project/lilypad/issues/14).
+
+This function is a workaround for the lack of direct substitution support in the module. It implements the [printf](https://pkg.go.dev/text/template#Template.Funcs) function under the hood, which allows you to format strings with placeholders.
+
+<details>
+  <summary> 
+    Usage   
+  </summary>
+    The `subt` function can be used in the same way as the `printf` function in Go. You pass in a format string, followed by values that correspond to the placeholders in the format string.
+    ```
+    const templateText = `
+    {{ subt "Hello %s" .name }}
+    `
+    ```
+</details>
+
+[Example Code](https://go.dev/play/p/oBgc2Cetug3)
+  
+    
+
+
