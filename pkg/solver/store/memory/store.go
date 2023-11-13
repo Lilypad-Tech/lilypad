@@ -26,9 +26,9 @@ func getMatchID(resourceOffer string, jobOffer string) string {
 	return fmt.Sprintf("%s-%s", resourceOffer, jobOffer)
 }
 
-func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T, error) {
+func loadJSONLFile[T any](filename string) ([]*T, error) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return make(map[string]*T), nil
+		return nil, nil
 	}
 
 	logfile, err := os.OpenFile(filename, os.O_RDONLY, 0644)
@@ -42,15 +42,24 @@ func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T
 	structsArray := []*T{}
 
 	for scanner.Scan() {
-		var record *T
-		if err := json.Unmarshal(scanner.Bytes(), record); err != nil {
-			fmt.Printf("Error unmarshalling line: %v\n", err)
+		var record T
+		if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
+			fmt.Printf("Error unmarshalling line from %s: %v\n", filename, err.Error())
 			continue
 		}
-		structsArray = append(structsArray, record)
+		structsArray = append(structsArray, &record)
 	}
 
 	err = scanner.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return structsArray, nil
+}
+
+func loadJSONLMap[T any](filename string, getID func(*T) string) (map[string]*T, error) {
+	structsArray, err := loadJSONLFile[T](filename)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +69,7 @@ func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T
 		structsMap[getID(record)] = record
 	}
 
-	return structsMap, scanner.Err()
+	return structsMap, nil
 }
 
 func getJSONLFilename(kind string) string {
@@ -72,35 +81,35 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 
 	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
 
-	jobOffers, err := loadJSONLFile[data.JobOfferContainer](getJSONLFilename("job_offers"), func(jobOffer *data.JobOfferContainer) string {
+	jobOffers, err := loadJSONLMap[data.JobOfferContainer](getJSONLFilename("job_offers"), func(jobOffer *data.JobOfferContainer) string {
 		return jobOffer.ID
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	resourceOffers, err := loadJSONLFile[data.ResourceOfferContainer](getJSONLFilename("resource_offers"), func(resourceOffer *data.ResourceOfferContainer) string {
+	resourceOffers, err := loadJSONLMap[data.ResourceOfferContainer](getJSONLFilename("resource_offers"), func(resourceOffer *data.ResourceOfferContainer) string {
 		return resourceOffer.ID
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	deals, err := loadJSONLFile[data.DealContainer](getJSONLFilename("deals"), func(deal *data.DealContainer) string {
+	deals, err := loadJSONLMap[data.DealContainer](getJSONLFilename("deals"), func(deal *data.DealContainer) string {
 		return deal.ID
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	results, err := loadJSONLFile[data.Result](getJSONLFilename("results"), func(result *data.Result) string {
+	results, err := loadJSONLMap[data.Result](getJSONLFilename("results"), func(result *data.Result) string {
 		return result.DealID
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	decisions, err := loadJSONLFile[data.MatchDecision](getJSONLFilename("decisions"), func(decision *data.MatchDecision) string {
+	decisions, err := loadJSONLMap[data.MatchDecision](getJSONLFilename("decisions"), func(decision *data.MatchDecision) string {
 		return getMatchID(decision.ResourceOffer, decision.JobOffer)
 	})
 	if err != nil {
@@ -129,7 +138,6 @@ func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOfferContainer) (*data.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.jobOfferMap[jobOffer.ID] = &jobOffer
-
 	s.logWriters["job_offers"].Write(jobOffer)
 	return &jobOffer, nil
 }
@@ -138,7 +146,6 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOfferCon
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.resourceOfferMap[resourceOffer.ID] = &resourceOffer
-
 	s.logWriters["resource_offers"].Write(resourceOffer)
 	return &resourceOffer, nil
 }
@@ -317,6 +324,7 @@ func (s *SolverStoreMemory) UpdateJobOfferState(id string, dealID string, state 
 	jobOffer.DealID = dealID
 	jobOffer.State = state
 	s.jobOfferMap[id] = jobOffer
+	s.logWriters["job_offers"].Write(jobOffer)
 	return jobOffer, nil
 }
 
@@ -330,6 +338,7 @@ func (s *SolverStoreMemory) UpdateResourceOfferState(id string, dealID string, s
 	resourceOffer.DealID = dealID
 	resourceOffer.State = state
 	s.resourceOfferMap[id] = resourceOffer
+	s.logWriters["resource_offers"].Write(resourceOffer)
 	return resourceOffer, nil
 }
 
@@ -342,6 +351,7 @@ func (s *SolverStoreMemory) UpdateDealState(id string, state uint8) (*data.DealC
 	}
 	deal.State = state
 	s.dealMap[id] = deal
+	s.logWriters["deals"].Write(deal)
 	return deal, nil
 }
 
@@ -354,6 +364,7 @@ func (s *SolverStoreMemory) UpdateDealMediator(id string, mediator string) (*dat
 	}
 	deal.Mediator = mediator
 	s.dealMap[id] = deal
+	s.logWriters["deals"].Write(deal)
 	return deal, nil
 }
 
@@ -380,8 +391,11 @@ func (s *SolverStoreMemory) UpdateDealTransactionsResourceProvider(id string, da
 	if data.TimeoutMediateResult != "" {
 		txs.TimeoutMediateResult = data.TimeoutMediateResult
 	}
+	s.dealMap[id] = deal
+	s.logWriters["deals"].Write(deal)
 	return deal, nil
 }
+
 func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -409,6 +423,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsJobCreator(id string, data dat
 		txs.TimeoutMediateResult = data.TimeoutMediateResult
 	}
 	s.dealMap[id] = deal
+	s.logWriters["deals"].Write(deal)
 	return deal, nil
 }
 
@@ -427,6 +442,7 @@ func (s *SolverStoreMemory) UpdateDealTransactionsMediator(id string, data data.
 		txs.MediationRejectResult = data.MediationRejectResult
 	}
 	s.dealMap[id] = deal
+	s.logWriters["deals"].Write(deal)
 	return deal, nil
 }
 
@@ -447,12 +463,29 @@ func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 func (s *SolverStoreMemory) GetLeaderboardData() ([]data.LeaderboardEntry, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	return []data.LeaderboardEntry{
-		{
-			ResourceProvider: "test",
-			JobCount:         12,
-		},
-	}, nil
+
+	countPerResourceProvider := map[string]int{}
+
+	for _, deal := range s.dealMap {
+		if data.IsSuccessfulAgreementState(deal.State) {
+			currentCount, ok := countPerResourceProvider[deal.ResourceProvider]
+			if !ok {
+				currentCount = 0
+			}
+			countPerResourceProvider[deal.ResourceProvider] = currentCount + 1
+		}
+	}
+
+	results := []data.LeaderboardEntry{}
+
+	for resourceProvider, count := range countPerResourceProvider {
+		results = append(results, data.LeaderboardEntry{
+			ResourceProvider: resourceProvider,
+			JobCount:         count,
+		})
+	}
+
+	return results, nil
 }
 
 // Compile-time interface check:

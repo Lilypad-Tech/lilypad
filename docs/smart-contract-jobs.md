@@ -4,6 +4,8 @@ We have deloyed the [LilypadOnChainJobCreator](../hardhat/contracts/LilypadOnCha
 
 It works in tandem with the `lilypad jobcreator` on-chain which will watch the on-chain contract and manage jobs on behalf of contracts that submit them.
 
+**IMPORTANT** the lilypad jobcreator service must be up and running alongside the solver for this to work (there is a systemd unit file alongside the others for this).
+
 #### Creating a job
 
 You will need to know the contract address for the on-chain job creator so we can submit transactions to it.
