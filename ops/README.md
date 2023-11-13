@@ -99,3 +99,18 @@ sudo systemctl start mediator
 sudo systemctl start resource-provider
 sudo systemctl start job-creator
 ```
+
+## facuet
+
+We run a faucet that will give users ERC-20 tokens to spend on the network.
+
+This is built from [this repo](https://github.com/bacalhau-project/eth-faucet).
+
+```
+git clone git@github.com:bacalhau-project/eth-faucet.git
+cd eth-faucet
+docker build -t faucet .
+```
+
+We can then run it using the `./stack faucet` command.
+
