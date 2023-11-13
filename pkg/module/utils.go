@@ -54,6 +54,7 @@ func CheckModuleOptions(options data.ModuleConfig) error {
 func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	// we have been given a shortcut
 	// let's try to resolve this shortcut into a full module definition
+
 	if module.Name != "" {
 		module, err := shortcuts.GetModule(module.Name)
 		if err != nil {
