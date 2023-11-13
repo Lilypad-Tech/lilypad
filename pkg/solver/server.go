@@ -3,6 +3,7 @@ package solver
 import (
 	"archive/tar"
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,6 +51,9 @@ func NewSolverServer(
  *
 */
 
+//go:embed leaderboard/*
+var leaderboardFiles embed.FS
+
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
 	router := mux.NewRouter()
 
@@ -75,6 +79,21 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
+
+	leaderboardFS := corehttp.FS(leaderboardFiles)
+	fileServer := corehttp.FileServer(leaderboardFS)
+
+	subrouter.HandleFunc("/leaderboard_data", http.GetHandler(solverServer.getLeaderboardData)).Methods("GET")
+
+	subrouter.PathPrefix("/leaderboard/").Handler(corehttp.StripPrefix(fmt.Sprintf("%s/", http.API_SUB_PATH), fileServer))
+	subrouter.HandleFunc("/leaderboard", func(w corehttp.ResponseWriter, r *corehttp.Request) {
+		corehttp.Redirect(w, r, fmt.Sprintf("%s/leaderboard/", http.API_SUB_PATH), corehttp.StatusFound)
+	})
+
+	// fileServer := corehttp.FileServer(corehttp.FS(leaderboardFiles))
+	// subrouter.PathPrefix("/leaderboard").Handler(corehttp.StripPrefix(fmt.Sprintf("%s/leaderboard", http.API_SUB_PATH), corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+	// 	fileServer.ServeHTTP(w, r)
+	// })))
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -219,6 +238,10 @@ func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *co
 		return data.Result{}, fmt.Errorf("result not found")
 	}
 	return *result, nil
+}
+
+func (solverServer *solverServer) getLeaderboardData(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.LeaderboardEntry, error) {
+	return solverServer.store.GetLeaderboardData()
 }
 
 /*

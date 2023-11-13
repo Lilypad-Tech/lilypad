@@ -444,5 +444,16 @@ func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 	return nil
 }
 
+func (s *SolverStoreMemory) GetLeaderboardData() ([]data.LeaderboardEntry, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return []data.LeaderboardEntry{
+		{
+			ResourceProvider: "test",
+			JobCount:         12,
+		},
+	}, nil
+}
+
 // Compile-time interface check:
 var _ store.SolverStore = (*SolverStoreMemory)(nil)

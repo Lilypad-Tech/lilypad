@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard App</title>
+    <style>
+        body {
+            font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            width: 50%;
+        }
+        th {
+          background-color: #333333;
+          color: #ffffff;
+        }
+
+        .container {
+          width: 1024px;
+          max-width: 1024px;
+          text-align: center;
+        }
+
+        .logo {
+          width: 600px;
+          /* margin-bottom: 20px; */
+        }
+
+        .feature {
+          width: 600px;
+          border: 1px solid #ffffff;
+          margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+      <img src="./logo.png" class="logo">
+      <h2>Leaderboard</h2>
+    </div>
+    <div class="container">
+      <div id="app"></div>
+    </div>
+    <div class="container">
+      <img src="./feature.png" class="feature">
+    </div>
+    
+    <script type="text/javascript">
+      let data = []
+
+      function getTable() {
+        const rows = data.map((item, index) => `
+<tr>
+    <td>${item.resource_provider}</td>
+    <td>${item.job_count}</td>
+</tr>
+        `)
+
+        return `
+<table>
+  <thead>
+    <tr>
+      <th>Resource Provider</th>
+      <th>Job Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rows}
+  </tbody>
+</table>
+`
+      }
+
+      function render() {
+        const table = getTable()
+        document.getElementById('app').innerHTML = table
+      }
+
+
+      async function loadData() {
+        const response = await fetch('/api/v1/leaderboard_data');
+        data = await response.json()
+        render()
+      }
+
+      loadData()
+      setInterval(loadData, 5000)
+    </script>
+</body>
+</html>

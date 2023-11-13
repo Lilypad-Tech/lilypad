@@ -262,3 +262,8 @@ type DealContainer struct {
 	Transactions     DealTransactions `json:"transactions"`
 	Mediator         string           `json:"mediator"`
 }
+
+type LeaderboardEntry struct {
+	ResourceProvider string `json:"resource_provider"`
+	JobCount         int    `json:"job_count"`
+}
