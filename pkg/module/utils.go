@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -115,7 +116,7 @@ func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 	gitFetchOptions.Validate() // sets default values like remote=origin
 	log.Info().Str("updating cached git repo", repoDir).Msgf("")
 	err = repo.FetchContext(context.Background(), gitFetchOptions)
-	if err != nil {
+	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
 		return nil, err
 	}
 
