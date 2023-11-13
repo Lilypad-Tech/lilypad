@@ -27,6 +27,10 @@ func getMatchID(resourceOffer string, jobOffer string) string {
 }
 
 func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T, error) {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return make(map[string]*T), nil
+	}
+
 	logfile, err := os.OpenFile(filename, os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
@@ -35,7 +39,7 @@ func loadJSONLFile[T any](filename string, getID func(*T) string) (map[string]*T
 
 	scanner := bufio.NewScanner(logfile)
 
-	var structsArray []*T
+	structsArray := []*T{}
 
 	for scanner.Scan() {
 		var record *T
