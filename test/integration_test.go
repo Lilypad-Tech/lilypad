@@ -18,6 +18,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/web3"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testOptions struct {
@@ -117,7 +118,6 @@ func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, er
 		// this should point to the shortcut
 		"cowsay:v0.0.2",
 	})
-
 	if err != nil {
 		return ret, err
 	}
@@ -131,7 +131,6 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-
 	solver, err := getSolver(t, options)
 	if err != nil {
 		return nil, err
@@ -163,7 +162,6 @@ func testStackWithOptions(
 	}
 
 	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions, func(evOffer data.JobOfferContainer) {
-
 	})
 	if err != nil {
 		return nil, err
@@ -186,7 +184,7 @@ func TestNoModeration(t *testing.T) {
 		executor:         executorOptions,
 	})
 
-	assert.NoError(t, err, "there was an error running the job")
+	require.NoError(t, err, "there was an error running the job")
 	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
