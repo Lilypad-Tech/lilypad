@@ -243,6 +243,7 @@ function print-contract-env() {
 
 function print-local-dev-env() {
   print-contract-env
+  echo "export WEB3_RPC_URL=ws://localhost:8546"
 }
 
 function fund-services-ether() {
