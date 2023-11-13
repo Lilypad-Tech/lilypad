@@ -28,6 +28,14 @@ contract LilypadStorage is ControllerOwnable, Initializable {
   // a map of deal id -> result
   mapping(string => SharedStructs.Result) private mediations;
 
+  event Deal(
+    string dealId,
+    address solver,
+    address jobCreator,
+    address resourceProvider,
+    address[] mediators
+  );
+
   event DealStateChange(
     string dealId,
     SharedStructs.AgreementState state
@@ -143,6 +151,8 @@ contract LilypadStorage is ControllerOwnable, Initializable {
       );
       dealsForParty[members.resourceProvider].push(dealId);
       dealsForParty[members.jobCreator].push(dealId);
+
+      emit Deal(dealId, members.solver, members.jobCreator, members.resourceProvider, members.mediators);
     }
     return deals[dealId];
   }

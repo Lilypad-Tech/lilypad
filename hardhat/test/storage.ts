@@ -71,7 +71,7 @@ describe("Storage", () => {
     const timeouts = getDefaultTimeouts()
     const pricing = getDefaultPricing()
 
-    expect(await storage
+    await expect(storage
       .connect(getWallet('admin'))
       .ensureDeal(
         dealID,
@@ -79,7 +79,8 @@ describe("Storage", () => {
         timeouts,
         pricing
       )
-    ).to.not.be.reverted
+    ).to.emit(storage, "Deal")
+    .withArgs(dealID, members.solver, members.jobCreator, members.resourceProvider, members.mediators)
     return storage
   }
 

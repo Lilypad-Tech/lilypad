@@ -132,7 +132,9 @@ export WEB3_USERS_ADDRESS=0x70eC3b0aFA059174dD54d7702624f1Dd402b706b
 
 ### Run Services
 
-Run the following commands in separate terminals:
+Run the following commands in separate terminals.
+
+Update `SERVER_URL` in `stack` `solver` to point to the server `export SERVER_URL=http://35.222.207.181:8080`
 
 ```bash
 ./stack solver
@@ -178,3 +180,11 @@ Start the on-chain Job Creator:
 
 ```bash
 ./stack run-cowsay-onchain
+
+
+### Verify the Contracts
+
+```bash
+cd hardhat
+npx hardhat verify --network sepolia <CONTRACTADDR> "Lilypad Token Test" "LPTT" 1000000000000000000000000000
+```
