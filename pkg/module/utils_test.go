@@ -2,32 +2,34 @@ package module
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 )
 
 func TestPrepareModule(t *testing.T) {
+	t.Setenv("DATA_DIR", t.TempDir())
 	text, err := PrepareModule(data.ModuleConfig{
 		Name: "cowsay:v0.0.2",
 	})
 
 	assert.NoError(t, err, "Should not return an error")
 	assert.Contains(t, text, "cowsay", "Should contain the message")
-	fmt.Printf("%s\n", text)
+	t.Logf("%s", text)
 }
 
 func TestLoadModule(t *testing.T) {
+	t.Setenv("DATA_DIR", t.TempDir())
 	module, err := LoadModule(data.ModuleConfig{
 		Name: "cowsay:v0.0.2",
 	}, map[string]string{
 		"Message": "Hello, world!",
 	})
 
-	assert.NoError(t, err, "Should not return an error")
+	require.NoError(t, err, "Should not return an error")
 	assert.Equal(t, "grycap/cowsay@sha256:fad516b39e3a587f33ce3dbbb1e646073ef35e0b696bcf9afb1a3e399ce2ab0b", module.Job.Spec.Docker.Image)
 	assert.Equal(t, "Hello, world!", module.Job.Spec.Docker.Entrypoint[1])
 }

@@ -115,6 +115,9 @@ func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 	gitFetchOptions.Validate() // sets default values like remote=origin
 	log.Info().Str("updating cached git repo", repoDir).Msgf("")
 	err = repo.FetchContext(context.Background(), gitFetchOptions)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if hash or tag specified exists
 	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
@@ -189,7 +192,6 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 }
 
 func subst(format string, jsonEncodedInputs ...string) string {
-
 	jsonDecodedInputs := make([]any, 0, len(jsonEncodedInputs))
 
 	for _, input := range jsonEncodedInputs {
