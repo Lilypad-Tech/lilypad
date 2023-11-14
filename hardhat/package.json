@@ -2,7 +2,9 @@
   "name": "lilypad",
   "version": "0.0.1",
   "license": "Apache-2.0",
-  "scripts": {},
+  "scripts": {
+    "testhh": "yarn hardhat test --network hardhat"
+  },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.4",
