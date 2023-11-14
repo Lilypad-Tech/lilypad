@@ -33,6 +33,10 @@ const config: HardhatUserConfig = {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: PRIVATE_KEYS,
     },
+    mumbai: {
+      url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+      accounts: PRIVATE_KEYS,
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
