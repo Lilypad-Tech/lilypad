@@ -59,7 +59,7 @@ function faucet() {
   eval $(./stack print-contract-env)
   local privateKey=$(echo -n "$ADMIN_PRIVATE_KEY" | sed 's/^0x//')
   local tokenAddress=$(echo -n "$WEB3_TOKEN_ADDRESS" | sed 's/^0x//')
-  docker run -d \
+  docker run --restart=always -d \
     --name faucet \
     -p 8080:8080 \
     --network lilypad \
