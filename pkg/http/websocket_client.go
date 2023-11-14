@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/recws-org/recws"
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,52 +14,29 @@ func ConnectWebSocket(
 	url string,
 	messageChan chan []byte,
 	ctx context.Context,
-) *websocket.Conn {
-	closed := false
+) *recws.RecConn {
 
-	var conn *websocket.Conn
+	ws := &recws.RecConn{
+		KeepAliveTimeout: 10 * time.Second,
+	}
+	ws.Dial(url, nil)
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				closed = true
-				if conn != nil {
-					conn.Close()
-				}
-
+				go ws.Close()
+				log.Printf("Websocket closed %s", ws.GetURL())
 				return
-			}
-		}
-	}()
-
-	for {
-		var err error
-		log.Debug().Msgf("WebSocket connection connecting: %s", url)
-		conn, _, err = websocket.DefaultDialer.Dial(url, nil)
-		if err != nil {
-			log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
-			if closed {
-				break
-			}
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		break
-	}
-
-	if !closed {
-		go func() {
-			for {
-				messageType, p, err := conn.ReadMessage()
-				if err != nil {
-					if closed {
-						return
-					}
-					log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
-					time.Sleep(2 * time.Second)
-					conn = ConnectWebSocket(url, messageChan, ctx)
+			default:
+				if !ws.IsConnected() {
+					log.Printf("Websocket disconnected %s", ws.GetURL())
 					continue
+				}
+				messageType, p, err := ws.ReadMessage()
+				if err != nil {
+					log.Printf("Error: ReadMessage %s", ws.GetURL())
+					return
 				}
 				if messageType == websocket.TextMessage {
 					log.Debug().
@@ -68,8 +46,7 @@ func ConnectWebSocket(
 					messageChan <- p
 				}
 			}
-		}()
-	}
-
-	return conn
+		}
+	}()
+	return ws
 }
