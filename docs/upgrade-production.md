@@ -60,10 +60,14 @@ sudo systemctl stop mediator
 ./stack boot # THIS WILL WIPE OUT GETH AND ALL THE BLOCKCHAIN DATA
 ```
 
+lilysaas will now be stopped, go start it again with `(cd /app/lilysaas; docker-compose up -d)`
+
 now we need to edit the code to set the new default controller contract address from `stack boot` above
 https://github.com/bacalhau-project/lilypad/blob/main/pkg/options/web3.go#L21
+or `vim pkg/options/web3.go`
 
 commit and push and then use the resulting binary for the control plane and resource providers
+(if the stars aligned you may find the controller address hasn't changed, in which case you can skip pushing a change to git)
 
 ```
 go build
