@@ -18,20 +18,16 @@ func ConnectWebSocket(
 
 	var conn *websocket.Conn
 
+	// if we ever get a cancellation from the context, try to close the connection
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				closed = true
-				if conn != nil {
-					conn.Close()
-				}
-
-				return
-			}
+		<-ctx.Done()
+		closed = true
+		if conn != nil {
+			conn.Close()
 		}
 	}()
 
+	// retry connecting until we get a connection
 	for {
 		var err error
 		log.Debug().Msgf("WebSocket connection connecting: %s", url)
@@ -47,6 +43,9 @@ func ConnectWebSocket(
 		break
 	}
 
+	// now that we have a connection, if we haven't been closed yet, forever
+	// read from the connection and send messages down the channel, unless we
+	// fail a read in which case we try to reconnect
 	if !closed {
 		go func() {
 			for {
@@ -58,7 +57,12 @@ func ConnectWebSocket(
 					log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
 					time.Sleep(2 * time.Second)
 					conn = ConnectWebSocket(url, messageChan, ctx)
-					continue
+					// exit this goroutine now, another one will be spawned if
+					// the recursive call to ConnectWebSocket succeeds. Not
+					// exiting this goroutine here will cause goroutines to pile
+					// up forever concurrently calling conn.ReadMessage(), which
+					// is not thread-safe.
+					return
 				}
 				if messageType == websocket.TextMessage {
 					log.Debug().
