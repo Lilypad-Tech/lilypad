@@ -33,7 +33,7 @@ github should have build the binary by now, go download the latest one from http
 ```
 cd /app/lilypad
 ## CHANGE THE HASH BELOW TO THE LATEST FROM RELEASES PAGE!!
-wget https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-f70e4e1/lilypad-linux-amd64
+wget https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-XXX/lilypad-linux-amd64
 chmod +x lilypad-linux-amd64
 sudo mv lilypad-linux-amd64 /usr/bin/lilypad
 sudo systemctl restart resource-provider-gpu

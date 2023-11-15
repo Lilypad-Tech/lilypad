@@ -81,7 +81,8 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 
 	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
 
-	jobOffers, err := loadJSONLMap[data.JobOfferContainer](getJSONLFilename("job_offers"), func(jobOffer *data.JobOfferContainer) string {
+	// XXX loading these in causes the solver to act on wrong old resource offers
+	/*jobOffers, err := loadJSONLMap[data.JobOfferContainer](getJSONLFilename("job_offers"), func(jobOffer *data.JobOfferContainer) string {
 		return jobOffer.ID
 	})
 	if err != nil {
@@ -93,7 +94,7 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	})
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	deals, err := loadJSONLMap[data.DealContainer](getJSONLFilename("deals"), func(deal *data.DealContainer) string {
 		return deal.ID
@@ -102,7 +103,7 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 		return nil, err
 	}
 
-	results, err := loadJSONLMap[data.Result](getJSONLFilename("results"), func(result *data.Result) string {
+	/*results, err := loadJSONLMap[data.Result](getJSONLFilename("results"), func(result *data.Result) string {
 		return result.DealID
 	})
 	if err != nil {
@@ -114,7 +115,7 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	})
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	for _, kind := range kinds {
 		logfile, err := os.OpenFile(getJSONLFilename(kind), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
@@ -125,11 +126,11 @@ func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	}
 
 	return &SolverStoreMemory{
-		jobOfferMap:      jobOffers,
-		resourceOfferMap: resourceOffers,
-		dealMap:          deals,
-		resultMap:        results,
-		matchDecisionMap: decisions,
+		jobOfferMap:      map[string]*data.JobOfferContainer{},
+		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
+		dealMap:          deals, // the only thing the leaderboard needs
+		resultMap:        map[string]*data.Result{},
+		matchDecisionMap: map[string]*data.MatchDecision{},
 		logWriters:       logWriters,
 	}, nil
 }
