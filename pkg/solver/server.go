@@ -313,6 +313,10 @@ func (solverServer *solverServer) updateTransactionsResourceProvider(payload dat
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
 	}
+	if deal == nil {
+		log.Error().Err(err).Msgf("deal not found")
+		return nil, fmt.Errorf("deal not found")
+	}
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
@@ -333,6 +337,10 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
 	}
+	if deal == nil {
+		log.Error().Err(err).Msgf("deal not found")
+		return nil, fmt.Errorf("deal not found")
+	}
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
@@ -352,6 +360,10 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
+	}
+	if deal == nil {
+		log.Error().Err(err).Msgf("deal not found")
+		return nil, fmt.Errorf("deal not found")
 	}
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
