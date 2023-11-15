@@ -28,18 +28,21 @@ journalctl -f -u solver
 ssh node05.lukemarsden.net
 ```
 
+github should have build the binary by now, go download the latest one from https://github.com/bacalhau-project/lilypad/releases
+
 ```
 cd /app/lilypad
-git checkout main
-git pull
-go build
-sudo mv lilypad /usr/bin/lilypad
+## CHANGE THE HASH BELOW TO THE LATEST FROM RELEASES PAGE!!
+wget https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-f70e4e1/lilypad-linux-amd64
+chmod +x lilypad-linux-amd64
+sudo mv lilypad-linux-amd64 /usr/bin/lilypad
 sudo systemctl restart resource-provider-gpu
 ```
 
 ```
 journalctl -f -u resource-provider-gpu
 ```
+
 
 ## if the smart contract has changed:
 
@@ -81,24 +84,5 @@ sudo systemctl start mediator # not used currently
 journalctl -f -u solver
 ```
 
-### gpu node(s)
-
-```
-ssh node05.lukemarsden.net
-```
-
-github should have build the binary by now, go download the latest one from https://github.com/bacalhau-project/lilypad/releases
-
-```
-cd /app/lilypad
-## CHANGE THE HASH BELOW TO THE LATEST FROM RELEASES PAGE!!
-wget https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-f70e4e1/lilypad-linux-amd64
-chmod +x lilypad-linux-amd64
-sudo mv lilypad-linux-amd64 /usr/bin/lilypad
-sudo systemctl restart resource-provider-gpu
-```
-
-```
-journalctl -f -u resource-provider-gpu
-```
+now follow instructions to upgrade gpu node above
 
