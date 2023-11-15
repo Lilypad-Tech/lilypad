@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"os"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/system"
@@ -83,6 +84,12 @@ func (sdk *Web3SDK) AddUserToList(
 }
 
 func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
+	// allow for the overriding of the solver url
+	// for use in cases where things like NAT hairpins cause us problems
+	// this is mainly a fix for lilysaas
+	if os.Getenv("OVERRIDE_SOVLER_URL") != "" {
+		return os.Getenv("OVERRIDE_SOVLER_URL"), nil
+	}
 	log.Debug().Msgf("begin GetSolverUrl from contract at address: %s", address)
 	solver, err := sdk.Contracts.Users.GetUser(
 		sdk.CallOpts,
