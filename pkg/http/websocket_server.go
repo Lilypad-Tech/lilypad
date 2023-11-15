@@ -59,7 +59,7 @@ func StartWebSocketServer(
 					Msgf("")
 				func() {
 					// hold the mutex while we iterate over connections because
-					// you can't modify a mutex while iterating over it (fatal
+					// you can't modify a map while iterating over it (fatal
 					// error: concurrent map iteration and map write)
 					mutex.Lock()
 					defer mutex.Unlock()
