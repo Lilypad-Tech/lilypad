@@ -276,6 +276,9 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
 	}
+	if deal == nil {
+		return nil, fmt.Errorf("deal not found")
+	}
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
