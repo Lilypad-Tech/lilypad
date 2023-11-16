@@ -30,8 +30,6 @@ func RunJob(
 		return nil, err
 	}
 
-	jobCreatorService.SubscribeToJobOfferUpdates(eventSub)
-
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
 
 	// let's process our options into an actual job offer
@@ -50,6 +48,15 @@ func RunJob(
 	}
 
 	updateChan := make(chan data.JobOfferContainer)
+
+	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
+		// filter events on behalf of callers so they don't see events relating
+		// to other jobs running concurrently
+		if evOffer.JobOffer.ID != jobOfferContainer.ID {
+			return
+		}
+		eventSub(evOffer)
+	})
 
 	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
 		// spew.Dump(evOffer)
