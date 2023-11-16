@@ -223,7 +223,6 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	if err != nil {
 		return nil, err
 	}
-	// TODO: golang handlebars implementation, with shortcode for string encoding e.g. escape_string
 
 	templateName := fmt.Sprintf("%s-%s-%s", module.Repo, module.Path, module.Hash)
 	tmpl, err := template.New(templateName).Parse(moduleText)
