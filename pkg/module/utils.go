@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/go-git/go-git/v5"
@@ -207,10 +208,17 @@ func subst(format string, jsonEncodedInputs ...string) string {
 	return fmt.Sprintf(format, jsonDecodedInputs...)
 }
 
+var moduleMutex sync.Mutex
+
 // - prepare the module - now we have the text of the template
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
 func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Module, error) {
+	// don't load modules concurrently, if they're the same module, the git
+	// operations tread on eachother somehow ("error loading module: EOF")
+	moduleMutex.Lock()
+	defer moduleMutex.Unlock()
+
 	moduleText, err := PrepareModule(module)
 	if err != nil {
 		return nil, err
