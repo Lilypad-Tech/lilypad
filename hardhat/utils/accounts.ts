@@ -11,11 +11,11 @@ export const loadEnv = (name: string, defaultValue: string) => {
 }
 
 export const loadPrivateKey = (name: string, defaultValue: string) => {
-  return loadEnv(`PRIVATE_KEY_${name.toUpperCase()}`, defaultValue)
+  return loadEnv(`${name.toUpperCase()}_PRIVATE_KEY`, defaultValue)
 }
 
 export const loadAddress = (name: string, defaultValue: string) => {
-  return loadEnv(`ADDRESS_${name.toUpperCase()}`, defaultValue)
+  return loadEnv(`${name.toUpperCase()}_ADDRESS`, defaultValue)
 }
 
 // the default values here are the hardhat defualt insecure accounts

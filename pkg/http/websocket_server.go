@@ -57,15 +57,25 @@ func StartWebSocketServer(
 					Str("action", fmt.Sprintf("ws WRITE: %d", len(connections))).
 					Str("payload", string(message)).
 					Msgf("")
-				for _, connWrapper := range connections {
-					connWrapper.mu.Lock()
-					if err := connWrapper.conn.WriteMessage(websocket.TextMessage, message); err != nil {
-						log.Error().Msgf("Error writing to websocket: %s", err.Error())
-						connWrapper.mu.Unlock()
-						return
+				func() {
+					// hold the mutex while we iterate over connections because
+					// you can't modify a map while iterating over it (fatal
+					// error: concurrent map iteration and map write)
+					mutex.Lock()
+					defer mutex.Unlock()
+					for _, connWrapper := range connections {
+						// wrap in a func so that we can defer the unlock so we can
+						// unlock the mutex on panics as well as errors
+						func() {
+							connWrapper.mu.Lock()
+							defer connWrapper.mu.Unlock()
+							if err := connWrapper.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+								log.Error().Msgf("Error writing to websocket: %s", err.Error())
+								// don't stop reading from messageChan just because one write failed
+							}
+						}()
 					}
-					connWrapper.mu.Unlock()
-				}
+				}()
 			case <-ctx.Done():
 				return
 			}

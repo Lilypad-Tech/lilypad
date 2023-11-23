@@ -4,6 +4,8 @@ This cloud is just someone else's computer.
 
 ![image](https://github.com/bacalhau-project/lilypad/assets/264658/d91dad9a-ca46-43d4-a94b-d33454efc7ae)
 
+Lilypad enables users to run AI workloads easily in a decentralized GPU network where anyone can get paid to connect their compute nodes to the network and run jobs. Users have access to easy Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://lilypad.tech) on the web.
+
 # Getting started
 
 Welcome to the prerelease series of Lilypad v2.
@@ -16,7 +18,7 @@ Metamask:
 
 ```
 Network name: Lilypad v2 Aurora testnet
-New RPC URL: http://testnetv2.arewehotshityet.com:8545
+New RPC URL: http://testnet.lilypad.tech:8545
 Chain ID: 1337
 Currency symbol: ETH
 Block explorer URL: (leave blank)
@@ -24,32 +26,29 @@ Block explorer URL: (leave blank)
 
 ### Fund your wallet with ETH and LP
 
-To obtain funds, go to [http://testnetv2.arewehotshityet.com:8080](http://testnetv2.arewehotshityet.com:8080)
+To obtain funds, go to [http://faucet.lilypad.tech:8080](http://faucet.lilypad.tech:8080)
 
 The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for jobs).
 
 ## Install CLI
 
-#### 1. With Go toolchain 
+Download the latest release of Lilypad for your platform. Both the amd64/x86_64 and arm64 variants of macOS and Linux are supported. (If you are on Apple Silicon, you'll want arm64).
 
-```shell
-go install github.com/bacalhau-project/lilypad@latest
-```
-You may then need to set:
-```
-export SERVICE_SOLVER="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
-export SERVICE_MEDIATORS="0x90F79bf6EB2c4f870365E785982E1f101E93b906"
-```
-
-#### 2. Via officially released binaries
-
-Caveat: only supports x86_64 Linux
+The commands below will automatically detect your OS and processor architecture and download the correct Lilypad build for your machine.
 
 ```
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-6afc1cc/lilypad
+# Detect your machine's architecture and set it as $OSARCH
+OSARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}') && export OSARCH
+# Detect your operating system and set it as $OSNAME
+OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Linux") print "linux"; else print "unsupported_os"}') && export OSNAME;
+# Download the latest production build
+curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-d63a7ff/lilypad-$OSNAME-$OSARCH
+# Make Lilypad executable and install it
 chmod +x lilypad
-sudo mv lilypad /usr/local/bin
+sudo mv lilypad /usr/local/bin/lilypad
 ```
+
+You can also, at your option, choose to compile Lilypad using Go and install it that way on any machine that supports the Go toolchain.
 
 ## Run a job
 
@@ -127,3 +126,24 @@ Tips:
 
 If your module is not deterministic, compute providers will not adopt it and add it to their allowlists.
 
+
+### Writing Advanced Modules
+
+1. `subt`:
+The `subt` function allows for substitutions in your template, a feature that addresses the issue outlined in [#14](https://github.com/bacalhau-project/lilypad/issues/14).
+
+This function is a workaround for the lack of direct substitution support in the module. It implements the [printf](https://pkg.go.dev/text/template#Template.Funcs) function under the hood, which allows you to format strings with placeholders.
+
+<details>
+  <summary> 
+    Usage   
+  </summary>
+    The `subt` function can be used in the same way as the `printf` function in Go. You pass in a format string, followed by values that correspond to the placeholders in the format string.
+    ```
+    const templateText = `
+    {{ subt "Hello %s" .name }}
+    `
+    ```
+</details>
+
+[Example Code](https://go.dev/play/p/oBgc2Cetug3)

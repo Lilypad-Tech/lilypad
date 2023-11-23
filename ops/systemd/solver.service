@@ -9,7 +9,7 @@ Environment="LOG_LEVEL=debug"
 Environment="HOME=/app/lilypad"
 EnvironmentFile=/app/lilypad/solver.env
 Environment="SERVER_PORT=80"
-Environment="SERVER_URL=http://testnetv2.arewehotshityet.com"
+Environment="SERVER_URL=http://testnet.lilypad.tech"
 Restart=always
 RestartSec=5s
 ExecStart=/usr/bin/lilypad solver

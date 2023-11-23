@@ -24,6 +24,7 @@
     "bluebird": "^3.7.2",
     "chai": "^4.2.0",
     "dotenv": "^16.3.1",
+    "ethereumjs-wallet": "^1.0.2",
     "ethers": "6",
     "hardhat": "^2.17.1",
     "hardhat-deploy": "^0.11.37",
