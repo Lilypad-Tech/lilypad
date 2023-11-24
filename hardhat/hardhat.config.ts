@@ -23,7 +23,14 @@ const config: HardhatUserConfig = {
   defaultNetwork: NETWORK,
   namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
-    hardhat: {},
+    hardhat: {
+      accounts: [
+        {
+          privateKey: process.env.PRIVATE_KEY || 'beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f',
+          balance: "1000000000000000000000000", // 1000 ETH
+        },
+      ],
+    },
     geth: {
       url: 'http://localhost:8545',
       chainId: 1337,
