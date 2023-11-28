@@ -52,3 +52,8 @@ func runVersion(cmd *cobra.Command) error {
 
 	return nil
 }
+
+func init() {
+
+	fmt.Println("versiion", VERSION)
+}
