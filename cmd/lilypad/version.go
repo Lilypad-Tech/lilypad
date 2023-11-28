@@ -45,5 +45,7 @@ func runVersion(cmd *cobra.Command) error {
 
 	fmt.Printf("Lilypad: %s\n", VERSION)
 
+	// TODO: suggest updating to the latest version if the current version is not the latest version
+
 	return nil
 }
