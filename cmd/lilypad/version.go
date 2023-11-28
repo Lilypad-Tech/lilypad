@@ -37,7 +37,9 @@ func runVersion(cmd *cobra.Command) error {
 	defer commandCtx.Cleanup()
 
 	if VERSION == "" {
-		return fmt.Errorf("version not found: download the latest binary from %s", GO_BINARY_URL)
+		fmt.Printf("version not found: download the latest binary from %s", GO_BINARY_URL)
+		// unnecessary help shows up when returned as error, so shortciruting here
+		return nil
 	}
 
 	fmt.Printf("Lilypad: %s\n", VERSION)
