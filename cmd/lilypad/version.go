@@ -9,7 +9,7 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 )
 
-// VERSION: use `go build -ldflags="-X lilypad.VERSION=x.y.z" `
+// VERSION use `go build -ldflags="-X lilypad.VERSION=x.y.z" `
 const VERSION = ""
 const GO_BINARY_URL = "https://github.com/bacalhau-project/lilypad/releases/"
 
