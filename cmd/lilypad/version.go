@@ -21,7 +21,7 @@ func newVersionCmd() *cobra.Command {
 		Aliases: []string{"-v"},
 		Short:   "Get the lilypad version",
 		Long:    "Get the lilypad version",
-		Example: "lilypad version",
+		Example: "lilypad version, lilypad -v",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runVersion(cmd)
 		},
