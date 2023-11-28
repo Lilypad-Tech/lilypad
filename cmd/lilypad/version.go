@@ -11,6 +11,7 @@ import (
 
 // VERSION: use `go build -ldflags="-X lilypad.VERSION=x.y.z" `
 const VERSION = ""
+const GO_BINARY_URL = "https://github.com/bacalhau-project/lilypad/releases/"
 
 func newVersionCmd() *cobra.Command {
 	options := optionsfactory.NewSolverOptions()
@@ -34,6 +35,10 @@ func newVersionCmd() *cobra.Command {
 func runVersion(cmd *cobra.Command) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
+
+	if VERSION == "" {
+		return fmt.Errorf("version not found: download the latest binary from %s", GO_BINARY_URL)
+	}
 
 	fmt.Printf("Lilypad: %s\n", VERSION)
 
