@@ -13,5 +13,5 @@ func main() {
 var VERSION string
 
 func init() {
-	fmt.Println("Version main", VERSION)
+	fmt.Println("Version main:", VERSION)
 }

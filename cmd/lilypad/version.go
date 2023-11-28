@@ -9,10 +9,8 @@ import (
 	"github.com/bacalhau-project/lilypad/pkg/system"
 )
 
-// VERSION use `go build -ldflags="-X lilypad.VERSION=vX.Y.Z" `
 var VERSION string
 
-// COMMIT_SHA use `go build -ldflags="-X lilypad.COMMIT_SHA=$(git rev-parse HEAD)" `
 var COMMIT_SHA string
 
 const GO_BINARY_URL = "https://github.com/bacalhau-project/lilypad/releases/"
