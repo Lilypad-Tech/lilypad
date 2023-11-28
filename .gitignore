@@ -7,6 +7,7 @@ hardhat/deployments/geth
 hardhat/typechain-types
 .env
 *.env
+.env.*
 ops/testnet/.terraform/providers
 .idea/
 .vscode/
