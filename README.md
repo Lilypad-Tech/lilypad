@@ -43,6 +43,9 @@ The commands below will automatically detect your OS and processor architecture 
 OSARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}') && export OSARCH
 # Detect your operating system and set it as $OSNAME
 OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Linux") print "linux"; else print "unsupported_os"}') && export OSNAME;
+```
+Then Download & Install
+```
 # Download the latest production build
 curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-d63a7ff/lilypad-$OSNAME-$OSARCH
 # Make Lilypad executable and install it
@@ -74,6 +77,9 @@ lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=beautiful view of iceland wi
 ```
 
 ![image-42](https://github.com/bacalhau-project/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)
+
+Not working?
+Try ```rm -rf /tmp/lilypad/data/repos``` uninstall lilypad path and reinstall from the start
 
 ## Run a node, earn LP
 
