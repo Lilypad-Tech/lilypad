@@ -32,7 +32,9 @@ The faucet will give you both ETH (to pay for gas) and LP (to stake and pay for 
 
 ## Install CLI
 
-Download the latest release of Lilypad for your platform. Both the amd64/x86_64 and arm64 variants of macOS and Linux are supported. (If you are on Apple Silicon, you'll want arm64).
+Download the latest release of Lilypad for your platform. Both the amd64/x86_64 and arm64 variants of macOS and Linux are supported. (If you are on Apple Silicon, you'll want arm64). 
+
+Nb:  to check your version use ```which lilypad``` - if an old version run ```rm <path>``` to clean the version and reinstall new version
 
 The commands below will automatically detect your OS and processor architecture and download the correct Lilypad build for your machine.
 
