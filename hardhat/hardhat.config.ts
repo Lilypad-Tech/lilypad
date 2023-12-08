@@ -33,6 +33,10 @@ const config: HardhatUserConfig = {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: PRIVATE_KEYS,
     },
+    prod: {
+      url: 'http://testnet.lilypad.tech:8545',
+      chainId: 1337,
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
