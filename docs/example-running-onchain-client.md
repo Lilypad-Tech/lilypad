@@ -9,6 +9,7 @@ clone the repo (if you have not):
 ```bash
 git clone https://github.com/bacalhau-project/lilypad.git
 cd lilypad
+# note - remove this once the branch is merged
 git checkout example-onchain-client
 ```
 
