@@ -1,10 +1,13 @@
 package lilypad
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/bacalhau-project/lilypad/pkg/data"
@@ -133,12 +136,33 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 	spinner.Stop()
-	fmt.Printf("\n🍂 Lilypad job completed, try 👇\n    open %s\n    cat %s/stdout\n    cat %s/stderr\n    https://ipfs.io/ipfs/%s\n",
-		solver.GetDownloadsFilePath(result.JobOffer.DealID),
-		solver.GetDownloadsFilePath(result.JobOffer.DealID),
+
+	userJobTryTutorial := struct {
+		OpenFolder    string
+		OpenFile      string
+		DownloadsPath string
+		DataId        string
+	}{
+		"open",
+		"cat",
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		result.Result.DataID,
-	)
+	}
+
+	if runtime.GOOS == "windows" {
+		userJobTryTutorial.OpenFile = "notepad"
+		userJobTryTutorial.OpenFolder = "start"
+	}
+
+	templateString := `
+🍂 Lilypad job completed, try 👇
+    open {{.DownloadsPath}}
+    cat {{.DownloadsPath}}/stdout
+    cat {{.DownloadsPath}}/stderr
+    https://ipfs.io/ipfs/{{.DataID}}
+`
+	outputString, err := ApplyTemplate(templateString, userJobTryTutorial)
+	fmt.Print(outputString)
 	return err
 }
 
@@ -184,4 +208,22 @@ func stopOnSignal(spinner *yacspin.Spinner) {
 
 		os.Exit(0)
 	}()
+}
+
+// ApplyTemplate applies the given template string to the provided struct and returns the result as a string.
+func ApplyTemplate[T map[string]any | any](templateString string, data T) (string, error) {
+	tmpl, err := template.New("genericTemplate").Parse(templateString)
+	if err != nil {
+		return "", err
+	}
+	var resultBuffer bytes.Buffer
+
+	err = tmpl.Execute(&resultBuffer, data)
+	if err != nil {
+		return "", err
+	}
+
+	resultString := resultBuffer.String()
+
+	return resultString, nil
 }
