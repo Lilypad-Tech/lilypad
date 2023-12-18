@@ -132,10 +132,9 @@ Tips:
 * Don't read any sources of entropy (e.g. /dev/random)
 * When referencing docker images, you MUST specify their sha256 hashes, as shown in this example
 
-If your module is not deterministic, compute providers will not adopt it and add it to their allowlists.
+If your module is not deterministic, compute providers will not adopt it and blacklist your module
 
-
-### Writing Advanced Modules
+.### Writing Advanced Modules
 
 1. `subt`:
 The `subt` function allows for substitutions in your template, a feature that addresses the issue outlined in [#14](https://github.com/bacalhau-project/lilypad/issues/14).
