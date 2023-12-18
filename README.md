@@ -150,7 +150,7 @@ This function is a workaround for the lack of direct substitution support in the
     ```
     const templateText = `
     {{ subt "Hello %s" .name }}
-    `
+    ` 
     ```
 </details>
 
