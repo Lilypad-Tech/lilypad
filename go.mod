@@ -1,6 +1,6 @@
 module github.com/bacalhau-project/lilypad
 
-go 1.20
+go 1.21
 
 require (
 	github.com/davecgh/go-spew v1.1.1
@@ -17,6 +17,8 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	k8s.io/apimachinery v0.28.3
 )
+
+require github.com/joho/godotenv v1.5.1
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -113,3 +115,5 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+replace github.com/vitalfrog/jsonl v0.0.0-20230718192858-195f01ae6957 => github.com/simonfrey/jsonl v0.0.0-20230718192858-195f01ae6957

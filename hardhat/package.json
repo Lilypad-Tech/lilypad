@@ -1,8 +1,13 @@
 {
-  "name": "lilypad",
-  "version": "0.0.1",
+  "name": "lilypad-hardhat",
+  "version": "2.0.0",
   "license": "Apache-2.0",
-  "scripts": {},
+  "private": true,
+  "scripts": {
+    "setup": "cd ..; ./stack print-env > .env",
+    "postinstall": "npm run setup",
+    "hardhat:local": "hardhat node --network hardhat"
+  },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.4",

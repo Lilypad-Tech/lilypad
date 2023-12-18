@@ -6,6 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bacalhau-project/lilypad/pkg/data"
 	"github.com/bacalhau-project/lilypad/pkg/executor/noop"
 	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
@@ -16,8 +21,6 @@ import (
 	solvermemorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
 	"github.com/bacalhau-project/lilypad/pkg/system"
 	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/stretchr/testify/assert"
 )
 
 type testOptions struct {
@@ -187,10 +190,18 @@ func TestNoModeration(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "there was an error running the job")
-	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
+	assert.Equal(t, noop.NOOP_RESULTS_CID, result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
 
 	fmt.Printf("result --------------------------------------\n")
 	spew.Dump(localPath)
+}
+
+func init() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal().Str("err", err.Error()).Msgf(".env not found")
+	}
+
 }

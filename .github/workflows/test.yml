@@ -1,0 +1,123 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+
+    tags:
+
+  pull_request:
+    branches:
+
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WEB3_PUBLIC_KEY: '0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135'
+  SERVICE_SOLVER: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+  SERVICE_MEDIATORS: "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+  WEB3_PRIVATE_KEY: 'beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f'
+
+#  TODO: migrate to ${{secrets.SOLVER_PRIVATE_KEY}}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        check-latest: true
+        cache-dependency-path: go.sum
+        cache: true
+        go-version-file: go.mod
+
+    - name: Install dependencies
+      run: go get .
+
+    - name: Set Node.js
+      continue-on-error: true
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        check-latest: true
+        cache: 'yarn'
+        cache-dependency-path: 'hardhat/yarn.lock'
+
+
+    - name: Yarn
+      uses: borales/actions-yarn@v4
+      with:
+        cmd: install
+        dir: hardhat
+
+    - name: Source .env
+      run: |
+        source .env
+
+    - name: Setup Bacalhau
+      run: |
+        # install the latest bacalhau which works with GPUs (https://github.com/bacalhau-project/bacalhau/issues/2858)
+        wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz
+        tar xfv bacalhau_v1.0.3_linux_amd64.tar.gz
+        mv bacalhau /usr/local/bin
+        # configure this to where you want the ipfs data to be stored
+        export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+        # run bacalhau as both compute node and requester node
+        ./stack bacalhau-serve &
+        sleep 10
+        
+
+    - name: Setup Lilypad Nodes- Mediator, Resource providers...
+      run: |
+        export ADMIN_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export FAUCET_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export FAUCET_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export SOLVER_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export SOLVER_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export MEDIATOR_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export MEDIATOR_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export RESOURCE_PROVIDER_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export RESOURCE_PROVIDER_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export JOB_CREATOR_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export JOB_CREATOR_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        export DIRECTORY_ADDRESS=0x5fbb58c8b15E498442b72E2c8Dad82266ea7e135
+        export DIRECTORY_PRIVATE_KEY=beb00ab9be22a34a9c940c27d1d6bfe59db9ab9de4930c968b16724907591b3f
+        
+  
+        export INFURA_KEY=cd97920f485a4ed0b1f7f4bfb447b1dc
+        export LOG_LEVEL=info
+        export NETWORK=geth
+        export NETWORK=sepolia
+        
+        export WEB3_RPC_URL=wss://sepolia.infura.io/ws/v3/cd97920f485a4ed0b1f7f4bfb447b1dc
+        export WEB3_CHAIN_ID=11155111
+        
+        ./stack balances
+        ./stack compile-contracts
+        ./stack deploy-contracts
+        
+        ./stack solver 
+        sleep 10
+        ./stack mediator
+    
+    
+    
+
+    - name: Test Short
+      run: go test -v -run="^Test" -short ./... -timeout 20m
+
+    - name: Test
+      run: go test -v -run="^Test" ./... -timeout 6h
+
+
+
+

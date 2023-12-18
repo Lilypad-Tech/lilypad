@@ -24,10 +24,12 @@ type NoopExecutor struct {
 	Options NoopExecutorOptions
 }
 
+const NOOP_RESULTS_CID = "123"
+
 func NewNoopExecutorOptions() NoopExecutorOptions {
 	return NoopExecutorOptions{
 		BadActor:         false,
-		ResultsCID:       "123",
+		ResultsCID:       NOOP_RESULTS_CID,
 		Stdout:           "Hello World!",
 		Stderr:           "",
 		ExitCode:         "0",

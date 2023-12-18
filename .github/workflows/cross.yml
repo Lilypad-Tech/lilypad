@@ -1,0 +1,62 @@
+name: Cross
+
+on:
+  push:
+    branches:
+      - main
+
+    tags:
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  cross:
+    strategy:
+      max-parallel: 3 #cpu cores /- runner
+      fail-fast: true
+      matrix:
+        go-version: ['1.20.x', '1.21.x']
+#        arch: [ x64, arm, arm64 ]
+        os: [ windows-latest,macos-latest, ubuntu-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+        check-latest: true
+        cache-dependency-path: go.sum
+        cache: true
+
+    - name: Install dependencies
+      run: go get .
+
+    - name: Build
+      run: go build -v .
+
+    - name: Build (Race)
+      run: go build -v -race .
+
+#    - name: Setup Env vars for hardhat
+#      working-directory: hardhat
+#      run: |
+#        yarn
+#        npm run setup
+
+#    - name: Test Short
+#      run: go test -v -race -run="^Test" -short ./...
+# TODO: architecuter: https://github.com/marketplace/actions/run-on-architecture
