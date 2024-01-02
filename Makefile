@@ -7,3 +7,8 @@ release:
 
 
 
+.PHONY: release install
+
+install-windows:
+	make release
+	cp ./bin/lilypad.exe $env:GOBIN
