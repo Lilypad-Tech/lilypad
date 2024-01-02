@@ -10,9 +10,10 @@ import (
 
 var Fatal = FatalErrorHandler
 
-func init() { //nolint:gochecknoinits
-	NewRootCmd()
-}
+//FIXME: why @Kai?
+//func init() { //nolint:gochecknoinits
+//	NewRootCmd()
+//}
 
 func NewRootCmd() *cobra.Command {
 	RootCmd := &cobra.Command{

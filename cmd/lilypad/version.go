@@ -50,3 +50,9 @@ func runVersion(cmd *cobra.Command) error {
 
 	return nil
 }
+
+//func init() {
+//	if VERSION == "" {
+//		VERSION = "v2" //TODO: @release, FIX: L41
+//	}
+//}
