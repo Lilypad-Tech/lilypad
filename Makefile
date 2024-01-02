@@ -11,4 +11,5 @@ release:
 
 install-windows:
 	make release
-	cp ./bin/lilypad.exe $env:GOBIN
+	cp ./bin/lilypad.exe $$GOBIN
+#Ps1: cmd	cp ./bin/lilypad.exe $env:GOBIN
