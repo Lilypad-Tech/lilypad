@@ -9,7 +9,7 @@ release:
 
 .PHONY: release install
 
-install-windows:
+install:
 	make release
 	cp ./bin/lilypad.exe $$GOBIN
 #Ps1: cmd	cp ./bin/lilypad.exe $env:GOBIN
