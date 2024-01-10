@@ -2,6 +2,7 @@ package lilypad
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -61,8 +62,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 
 	spinner, err := createSpinner("Lilypad submitting job", "🌟")
 	if err != nil {
-		fmt.Printf("failed to make spinner from config struct: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("failed to make spinner from config struct: %v\n", err)
 	}
 
 	// start the spinner animation
@@ -87,8 +87,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	}
 
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
@@ -119,14 +118,12 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		}
 		spinner, err = createSpinner(desc, emoji)
 		if err != nil {
-			fmt.Printf("failed to make spinner from config struct: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("failed to make spinner from config struct: %v\\n\", err")
 		}
 
 		// start the spinner animation
 		if err := spinner.Start(); err != nil {
-			fmt.Printf("failed to start spinner: %s", err)
-			os.Exit(1)
+			log.Fatalf("failed to start spinner: %s", err)
 		}
 
 		// UPDATE FUNCTION
