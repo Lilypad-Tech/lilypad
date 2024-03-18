@@ -15,9 +15,9 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/rs/zerolog/log"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/module/shortcuts"
-	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/module/shortcuts"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 )
 
 const REPO_DIR = "repos"
@@ -107,7 +107,7 @@ func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 		return nil, err
 	}
 
-	// git fetch origin: Resolves #https://github.com/bacalhau-project/lilypad/issues/13
+	// git fetch origin: Resolves #https://github.com/lilypad-tech/lilypad/issues/13
 	gitFetchOptions := &git.FetchOptions{
 		Tags:     git.AllTags,
 		Progress: os.Stdout,

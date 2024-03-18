@@ -1,10 +1,10 @@
 package lilypad
 
 import (
-	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
-	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
-	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
+	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
 

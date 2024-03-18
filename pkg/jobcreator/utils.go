@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/module"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/module"
 )
 
 // this will load the module in the offer options

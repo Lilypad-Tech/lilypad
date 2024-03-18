@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/bacalhau-project/lilypad/pkg/data/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
 )
 
 // used by resource providers to describe their resources

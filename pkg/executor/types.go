@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
 type ExecutorResults struct {

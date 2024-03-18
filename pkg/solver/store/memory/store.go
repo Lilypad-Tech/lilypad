@@ -5,9 +5,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/jsonl"
-	"github.com/bacalhau-project/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/jsonl"
+	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 )
 
 type SolverStoreMemory struct {

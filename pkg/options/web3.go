@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
 

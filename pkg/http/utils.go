@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 )

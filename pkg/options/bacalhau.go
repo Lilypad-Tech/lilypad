@@ -3,7 +3,7 @@ package options
 import (
 	"fmt"
 
-	"github.com/bacalhau-project/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	"github.com/spf13/cobra"
 )
 

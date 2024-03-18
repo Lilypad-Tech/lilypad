@@ -5,15 +5,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
-	"github.com/bacalhau-project/lilypad/pkg/system"
+	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 )
 
 var VERSION string
 
 var COMMIT_SHA string
 
-const GO_BINARY_URL = "https://github.com/bacalhau-project/lilypad/releases/"
+const GO_BINARY_URL = "https://github.com/lilypad-tech/lilypad/releases/"
 
 func newVersionCmd() *cobra.Command {
 	options := optionsfactory.NewSolverOptions()

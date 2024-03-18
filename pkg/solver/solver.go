@@ -3,10 +3,10 @@ package solver
 import (
 	"context"
 
-	"github.com/bacalhau-project/lilypad/pkg/http"
-	"github.com/bacalhau-project/lilypad/pkg/solver/store"
-	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/bacalhau-project/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 

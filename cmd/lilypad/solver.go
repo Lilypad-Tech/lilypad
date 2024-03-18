@@ -1,11 +1,11 @@
 package lilypad
 
 import (
-	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
-	"github.com/bacalhau-project/lilypad/pkg/solver"
-	memorystore "github.com/bacalhau-project/lilypad/pkg/solver/store/memory"
-	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/bacalhau-project/lilypad/pkg/web3"
+	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
+	"github.com/lilypad-tech/lilypad/pkg/solver"
+	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
 

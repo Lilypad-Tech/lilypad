@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/http"
-	"github.com/bacalhau-project/lilypad/pkg/solver"
-	"github.com/bacalhau-project/lilypad/pkg/solver/store"
-	"github.com/bacalhau-project/lilypad/pkg/system"
-	"github.com/bacalhau-project/lilypad/pkg/web3"
-	"github.com/bacalhau-project/lilypad/pkg/web3/bindings/storage"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/solver"
+	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 )
 
 type JobOfferSubscriber func(offer data.JobOfferContainer)

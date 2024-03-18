@@ -1,4 +1,4 @@
-module github.com/bacalhau-project/lilypad
+module github.com/lilypad-tech/lilypad
 
 go 1.20
 

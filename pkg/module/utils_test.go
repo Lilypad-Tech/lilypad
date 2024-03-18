@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
 func TestPrepareModule(t *testing.T) {

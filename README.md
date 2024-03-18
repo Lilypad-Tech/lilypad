@@ -2,7 +2,7 @@
 
 This cloud is just someone else's computer.
 
-![image](https://github.com/bacalhau-project/lilypad/assets/264658/d91dad9a-ca46-43d4-a94b-d33454efc7ae)
+![image](https://github.com/lilypad-tech/lilypad/assets/264658/d91dad9a-ca46-43d4-a94b-d33454efc7ae)
 
 Lilypad enables users to run AI workloads easily in a decentralized GPU network where anyone can get paid to connect their compute nodes to the network and run jobs. Users have access to easy Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://lilypad.tech) on the web.
 
@@ -47,7 +47,7 @@ OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Li
 Then Download & Install
 ```
 # Download the latest production build
-curl -sSL -o lilypad https://github.com/bacalhau-project/lilypad/releases/download/v2.0.0-d63a7ff/lilypad-$OSNAME-$OSARCH
+curl -sSL -o lilypad https://github.com/lilypad-tech/lilypad/releases/download/v2.0.0-d63a7ff/lilypad-$OSNAME-$OSARCH
 # Make Lilypad executable and install it
 chmod +x lilypad
 sudo mv lilypad /usr/local/bin/lilypad
@@ -76,7 +76,7 @@ lilypad run cowsay:v0.0.1 -i Message="moo"
 lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=beautiful view of iceland with a record player"
 ```
 
-![image-42](https://github.com/bacalhau-project/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)
+![image-42](https://github.com/lilypad-tech/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)
 
 Not working?
 Try ```rm -rf /tmp/lilypad/data/repos``` uninstall lilypad path and reinstall from the start
@@ -87,21 +87,21 @@ Try ```rm -rf /tmp/lilypad/data/repos``` uninstall lilypad path and reinstall fr
 lilypad serve
 ```
 
-systemd units & more details [here](https://github.com/bacalhau-project/lilypad/tree/main/ops)
+systemd units & more details [here](https://github.com/lilypad-tech/lilypad/tree/main/ops)
 
 ## Available modules
 
 Check the github releases page for each module or just use the git hash as the tag.
 
-* [sdxl](https://github.com/bacalhau-project/lilypad-module-sdxl)
-* [stable-diffusion](https://github.com/bacalhau-project/lilypad-module-stable-diffusion)
-* [duckdb](https://github.com/bacalhau-project/lilypad-module-duckdb)
-* [fastchat](https://github.com/bacalhau-project/lilypad-module-fastchat)
-* [lora-inference](https://github.com/bacalhau-project/lilypad-module-lora-inference)
-* [lora-training](https://github.com/bacalhau-project/lilypad-module-lora-training)
-* [filecoin-data-prep](https://github.com/bacalhau-project/lilypad-module-filecoin-data-prep)
-* [wasm](https://github.com/bacalhau-project/lilypad-module-wasm)
-* [cowsay](https://github.com/bacalhau-project/lilypad-module-cowsay)
+* [sdxl](https://github.com/lilypad-tech/lilypad-module-sdxl)
+* [stable-diffusion](https://github.com/lilypad-tech/lilypad-module-stable-diffusion)
+* [duckdb](https://github.com/lilypad-tech/lilypad-module-duckdb)
+* [fastchat](https://github.com/lilypad-tech/lilypad-module-fastchat)
+* [lora-inference](https://github.com/lilypad-tech/lilypad-module-lora-inference)
+* [lora-training](https://github.com/lilypad-tech/lilypad-module-lora-training)
+* [filecoin-data-prep](https://github.com/lilypad-tech/lilypad-module-filecoin-data-prep)
+* [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
+* [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay)
 
 
 ## Write a module
@@ -112,7 +112,7 @@ Module versions are just git tags.
 
 In your repo, create a file called `lilypad_module.json.tmpl`
 
-See [cowsay](https://github.com/bacalhau-project/lilypad-module-cowsay) for example
+See [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay) for example
 
 This is a json template with Go text/template style `{{.Message}}` sections which will be replaced by Lilypad with json encoded inputs to modules. You can also do fancy things with go templates like setting defaults, see cowsay for example. While developing a module, you can use the git hash to test it.
 
@@ -137,7 +137,7 @@ If your module is not deterministic, compute providers will not adopt it and bla
 .### Writing Advanced Modules
 
 1. `subt`:
-The `subt` function allows for substitutions in your template, a feature that addresses the issue outlined in [#14](https://github.com/bacalhau-project/lilypad/issues/14).
+The `subt` function allows for substitutions in your template, a feature that addresses the issue outlined in [#14](https://github.com/lilypad-tech/lilypad/issues/14).
 
 This function is a workaround for the lack of direct substitution support in the module. It implements the [printf](https://pkg.go.dev/text/template#Template.Funcs) function under the hood, which allows you to format strings with placeholders.
 

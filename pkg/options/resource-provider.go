@@ -3,9 +3,9 @@ package options
 import (
 	"fmt"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/resourceprovider"
-	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 

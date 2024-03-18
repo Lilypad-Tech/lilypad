@@ -25,7 +25,7 @@ cd /
 sudo mkdir app
 sudo chown $USER app
 cd /app/
-git clone https://github.com/bacalhau-project/lilypad
+git clone https://github.com/lilypad-tech/lilypad
 cd lilypad
 (cd hardhat && yarn install)
 ```

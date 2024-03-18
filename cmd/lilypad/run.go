@@ -8,11 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bacalhau-project/lilypad/pkg/data"
-	"github.com/bacalhau-project/lilypad/pkg/jobcreator"
-	optionsfactory "github.com/bacalhau-project/lilypad/pkg/options"
-	"github.com/bacalhau-project/lilypad/pkg/solver"
-	"github.com/bacalhau-project/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
+	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
+	"github.com/lilypad-tech/lilypad/pkg/solver"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
