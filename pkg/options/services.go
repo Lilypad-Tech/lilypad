@@ -9,8 +9,8 @@ import (
 
 func GetDefaultServicesOptions() data.ServiceConfig {
 	return data.ServiceConfig{
-		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", "0xd4646ef9f7336b06841db3019b617ceadf435316"),
-		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{"0x2d83ced7562e406151bd49c749654429907543b4"}),
+		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", "0x346d811cbb883548252418121f5bb0371eb07049"),
+		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{"0xA99fd5f0D91664417401F63d72a41eCdDC2d6961"}),
 	}
 }
 

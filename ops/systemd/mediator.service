@@ -8,7 +8,7 @@ Environment="LOG_TYPE=json"
 Environment="LOG_LEVEL=debug"
 Environment="HOME=/app/lilypad"
 EnvironmentFile=/app/lilypad/mediator.env
-Environment="SERVICE_SOLVER=0xd4646ef9f7336b06841db3019b617ceadf435316"
+Environment="SERVICE_SOLVER=0x346d811cbb883548252418121f5bb0371eb07049"
 Restart=always
 RestartSec=5s
 ExecStart=/usr/bin/lilypad mediator
