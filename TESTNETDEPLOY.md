@@ -31,7 +31,7 @@ export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
 
 Follow the `README.md` in the `generate_accts` directory to create seven new accounts.
 
-Copy `hardhat/.env.sample` to `.env` and update the following environment variables:
+Copy `hardhat/.env.sample` to `hardhat/.env` and update the following environment variables:
 ```
 ADMIN_ADDRESS=
 ADMIN_PRIVATE_KEY=
