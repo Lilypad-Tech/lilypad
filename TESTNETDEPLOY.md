@@ -77,7 +77,10 @@ export WEB3_CHAIN_ID=11155111
 
 ## Fund the Seven New Accounts
 
-Fund the `admin` acccount with .7 ETH.
+Fund the `admin` account with .7 ETH.
+```bash
+./stack fund-admin
+```
 
 Fund the remaining six accounts with .1 ETH each.
 
