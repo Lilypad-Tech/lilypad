@@ -9,7 +9,7 @@ Environment="LOG_LEVEL=debug"
 Environment="HOME=/app/lilypad"
 EnvironmentFile=/app/lilypad/resource-provider.env
 Environment="SERVICE_SOLVER=0x346d811cbb883548252418121f5bb0371eb07049"
-Environment="SERVICE_MEDIATORS=0xA99fd5f0D91664417401F63d72a41eCdDC2d6961"
+Environment="SERVICE_MEDIATORS=0xc66b9b74e307f30e7af79c03fee6ceb8b1ced997"
 Restart=always
 RestartSec=5s
 ExecStart=/usr/bin/lilypad resource-provider
