@@ -5,6 +5,7 @@ hardhat/deployments/hardhat
 hardhat/deployments/localhost
 hardhat/deployments/geth
 hardhat/typechain-types
+lilypad
 .env
 *.env
 .env.*
