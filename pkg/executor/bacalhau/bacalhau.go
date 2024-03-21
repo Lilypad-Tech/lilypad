@@ -148,7 +148,7 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 
 	output, err := describeCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error calling describe command results %s -> %s", dealID, err.Error())
+		return nil, fmt.Errorf("error calling describe command results %s -> %s", jobID, dealID, err.Error())
 	}
 
 	var job bacalhau.JobWithInfo
