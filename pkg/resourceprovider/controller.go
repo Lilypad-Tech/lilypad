@@ -428,10 +428,9 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		response, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
 
 		if err != nil {
-			return fmt.Errorf("error uploading results: %s", err.Error())
-
 			// Log the response body in debug mode
-			controller.log.Debug("Response was ", response)
+			controller.log.Debug("[debug] error uploading results. response was ", response)
+			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
 
 		return nil
