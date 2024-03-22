@@ -361,12 +361,15 @@ func PostRequestBuffer[ResultType any](
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		// Print a debug line with the response body.
+		log.Debug().Msgf("[debug] error while reading. response body: %s", body)
 		return result, err
 	}
 
 	// parse body as json into result
 	err = json.Unmarshal(body, &result)
 	if err != nil {
+		log.Debug().Msgf("[debug] error while unmarshaling. response body: %s", body)
 		return result, err
 	}
 
