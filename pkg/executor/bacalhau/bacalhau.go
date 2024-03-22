@@ -121,17 +121,14 @@ func (executor *BacalhauExecutor) copyJobResults(dealID string, jobID string) (s
 		return "", fmt.Errorf("error creating a local folder of results %s -> %s", dealID, err.Error())
 	}
 
-	copyResultsCmd := exec.Command(
-		"bacalhau",
-		"get",
-		jobID,
-		"--output-dir", resultsDir,
-	)
+	copyCmdText := fmt.Sprintf("bacalhau get %s --output-dir %s", jobID, resultsDir)
+	log.Debug().Msgf("Executing command: %s", copyCmdText) // Log the command before execution for debugging
+	copyResultsCmd := exec.Command("bacalhau", "get", jobID, "--output-dir", resultsDir)
 	copyResultsCmd.Env = executor.bacalhauEnv
 
 	_, err = copyResultsCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error copying results %s -> %s", dealID, err.Error())
+		return "", fmt.Errorf("error copying results %s -> %s, command executed: %s", dealID, err.Error(), copyCmdText)
 	}
 
 	return resultsDir, nil
@@ -148,7 +145,7 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 
 	output, err := describeCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error calling describe command results %s -> %s", jobID, dealID, err.Error())
+		return nil, fmt.Errorf("error calling describe command results %s -> %s", dealID, err.Error())
 	}
 
 	var job bacalhau.JobWithInfo
