@@ -189,8 +189,7 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 }
 
 func subst(format string, jsonEncodedInputs ...string) string {
-
-	jsonDecodedInputs := make([]any, 0, len(jsonEncodedInputs))
+	jsonDecodedInputs := make([]interface{}, 0, len(jsonEncodedInputs))
 
 	for _, input := range jsonEncodedInputs {
 		var s string
@@ -202,7 +201,7 @@ func subst(format string, jsonEncodedInputs ...string) string {
 
 		jsonDecodedInputs = append(jsonDecodedInputs, s)
 	}
-	log.Printf("jsonDecodedInputs:%v", jsonDecodedInputs)
+	log.Printf("jsonDecodedInputs: %v", jsonDecodedInputs)
 
 	return fmt.Sprintf(format, jsonDecodedInputs...)
 }
@@ -218,12 +217,12 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	// TODO: golang handlebars implementation, with shortcode for string encoding e.g. escape_string
 
 	templateName := fmt.Sprintf("%s-%s-%s", module.Repo, module.Path, module.Hash)
-	tmpl, err := template.New(templateName).Parse(moduleText)
-	tmpl.Funcs(template.FuncMap{
+	tmpl := template.New(templateName).Funcs(template.FuncMap{
 		"subst": subst,
 	})
+	tmpl, err = tmpl.Parse(moduleText)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse template: %v", err)
 	}
 
 	newInputs := make(map[string]string)
