@@ -3,7 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export DEFAULT_DATA_DIR="/tmp/geth"
+export DEFAULT_DATA_DIR="/data/geth"
 export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
 export NETWORK=${NETWORK:="geth"}
 
@@ -27,7 +27,7 @@ function geth() {
     -p 8545:8545 \
     -p 8546:8546 \
     -v ${DATA_DIRECTORY}:/data/geth \
-    ethereum/client-go \
+    ethereum/client-go:v1.13.5 \
       --datadir /data/geth \
       --dev \
       --ws \
@@ -301,7 +301,7 @@ function solver() {
   export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   export SERVER_PORT=8080
-  export SERVER_URL=http://localhost:8080
+  export SERVER_URL=http://testnet.lilypad.tech:8080
   go run . solver "$@"
 }
 
@@ -318,6 +318,7 @@ function jobcreator() {
 function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)
+  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
   export SERVICE_SOLVER=$SOLVER_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
@@ -327,6 +328,7 @@ function resource-provider() {
 function mediator() {
   source .env
   eval $(./stack print-local-dev-env)
+  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   export SERVICE_SOLVER=$SOLVER_ADDRESS

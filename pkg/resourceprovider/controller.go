@@ -425,8 +425,11 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
 
-		_, err = controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
+		response, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
+
 		if err != nil {
+			// Log the response body in debug mode
+			controller.log.Debug("[debug] error uploading results. response was ", response)
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
 
