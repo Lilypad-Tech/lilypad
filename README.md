@@ -2,7 +2,7 @@
 
 This cloud is just someone else's computer.
 
-![image](https://github.com/lilypad-tech/lilypad/assets/264658/d91dad9a-ca46-43d4-a94b-d33454efc7ae)
+![image](https://raw.githubusercontent.com/Lilypad-Tech/lilypad/main/assets/xkcd-the-cloud.png)
 
 Lilypad enables users to run AI workloads easily in a decentralized GPU network where anyone can get paid to connect their compute nodes to the network and run jobs. Users have access to easy Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://lilypad.tech) on the web.
 
