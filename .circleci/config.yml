@@ -13,11 +13,14 @@ jobs:
           command: |
             goos=("darwin" "darwin" "linux" "linux")
             goarch=("arm64" "amd64" "arm64" "amd64")
-            for i in "${!goos[@]}"; do
-              mkdir -p build/${goos[$i]}-${goarch[$i]}
-              GOOS=${goos[$i]} GOARCH=${goarch[$i]} go build -o build/${goos[$i]}-${goarch[$i]}/lilypad-${goos[$i]}-${goarch[$i]} \
-              -v -ldflags=" -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$$(git describe --tags --abbrev=0)' \
-              -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$$(git rev-parse HEAD)'"
+            for os in "${goos[@]}"; do
+              for arch in "${goarch[@]}"; do
+                output_dir="build/${os}-${arch}"
+                output_name="lilypad-${os}-${arch}"
+                mkdir -p "${output_dir}"
+                GOOS=${os} GOARCH=${arch} go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' \
+                  -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+              done
             done
       - persist_to_workspace:
           root: build/
