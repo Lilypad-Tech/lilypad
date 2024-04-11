@@ -47,7 +47,7 @@ OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Li
 Then, download & install:
 ```
 # Download the latest production build
-curl -sSL -o lilypad https://github.com/lilypad-tech/lilypad/releases/download/v2.0.0-d63a7ff/lilypad-$OSNAME-$OSARCH
+curl https://api.github.com/repos/lilypad-tech/lilypad/releases/latest | grep "browser_download_url.*lilypad-$OSNAME-$OSARCH" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O lilypad
 # Make Lilypad executable and install it
 chmod +x lilypad
 sudo mv lilypad /usr/local/bin/lilypad
@@ -64,12 +64,12 @@ export WEB3_PRIVATE_KEY=<your private key>
 
 ### Cows
 ```
-lilypad run cowsay:v0.0.1 -i Message="moo"
+lilypad run cowsay:v0.0.3 -i Message="moo"
 ```
 
 ### SDXL
 ```
-lilypad run sdxl:v0.9-lilypad1 -i PromptEnv="PROMPT=beautiful view of iceland with a record player"
+lilypad run sdxl-pipeline:v1.0-base-lilypad3 -i Prompt='beautiful view of iceland with a record player' -i Steps=200
 ```
 
 ![image-42](https://github.com/lilypad-tech/lilypad/assets/264658/d48bb897-79a0-4f3a-b938-e85a8cfa3f0e)
