@@ -1,6 +1,6 @@
 # Lilypad 🍃
 
-Lilypad enables users to run AI workloads easily in a decentralized GPU network where anyone can get paid to connect their compute nodes to the network and run jobs. Users have access to easy Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://lilypad.tech) on the web.
+Lilypad enables users to run containerised AI workloads easily in a decentralized GPU network, where anyone can get paid to connect their compute nodes to the network and run container jobs. Users have access to easily run jobs such as Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://app.lilypad.tech) on the web.
 
 Visit the [Lilypad Docs](https://docs.lilypad.tech/) site for a more comprehensive overview to getting up and running incluing a [Quick Start Guide](https://lilypad.team/quickstart)
 
@@ -34,7 +34,7 @@ As a distributed network lilypad also brings with it the ability to run as a nod
 
 ## The Lilypad Community 
 
-[Read our Blog](https://blog.lilypadnetwork.org/)
+[Read our Blog](https://lilypad.team/blog)
 
 [Join the Discord](https://lilypad.team/discord)
 
