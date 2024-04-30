@@ -1,0 +1,30 @@
+{
+  "Sidecar": {
+    "Name": "lilypad",
+    "VM": "Subnet-EVM",
+    "VMVersion": "v0.6.3",
+    "RPCVersion": 35,
+    "Subnet": "lilypad",
+    "TokenName": "LILY Token",
+    "TokenSymbol": "LILY",
+    "ChainID": "",
+    "Version": "1.4.0",
+    "Networks": null,
+    "ElasticSubnet": null,
+    "ImportedFromAPM": false,
+    "ImportedVMID": "",
+    "CustomVMRepoURL": "",
+    "CustomVMBranch": "",
+    "CustomVMBuildScript": "",
+    "TeleporterReady": true,
+    "TeleporterKey": "cli-teleporter-deployer",
+    "TeleporterVersion": "v1.0.0",
+    "RunRelayer": true,
+    "SubnetEVMMainnetChainID": 0
+  },
+  "Genesis": "ewogICJhaXJkcm9wQW1vdW50IjogbnVsbCwKICAiYWlyZHJvcEhhc2giOiAiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwKICAiYWxsb2MiOiB7CiAgICAiODA1YzBhMWQ3ZGI2MWI3N2QzNGMzNWZjMWFhMzI4YjBmZmIyZmJiYyI6IHsKICAgICAgImJhbGFuY2UiOiAiMHhkM2MyMWJjZWNjZWRhMTAwMDAwMCIKICAgIH0sCiAgICAiRmZBRTg4MTY2REJFYzczOTg4MjI1ZWQ4NUU2MEZBYzAyN0IzNEU0NSI6IHsKICAgICAgImJhbGFuY2UiOiAiNjAwMDAwMDAwMDAwMDAwMDAwMDAwIgogICAgfQogIH0sCiAgImJhc2VGZWVQZXJHYXMiOiBudWxsLAogICJibG9iR2FzVXNlZCI6IG51bGwsCiAgImNvaW5iYXNlIjogIjB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsCiAgImNvbmZpZyI6IHsKICAgICJieXphbnRpdW1CbG9jayI6IDAsCiAgICAiY2hhaW5JZCI6IDQyLAogICAgImNvbnN0YW50aW5vcGxlQmxvY2siOiAwLAogICAgImR1cmFuZ29UaW1lc3RhbXAiOiAxNzE0NTE3NDA0LAogICAgImVpcDE1MEJsb2NrIjogMCwKICAgICJlaXAxNTVCbG9jayI6IDAsCiAgICAiZWlwMTU4QmxvY2siOiAwLAogICAgImZlZUNvbmZpZyI6IHsKICAgICAgImJhc2VGZWVDaGFuZ2VEZW5vbWluYXRvciI6IDM2LAogICAgICAiYmxvY2tHYXNDb3N0U3RlcCI6IDIwMDAwMCwKICAgICAgImdhc0xpbWl0IjogODAwMDAwMCwKICAgICAgIm1heEJsb2NrR2FzQ29zdCI6IDEwMDAwMDAsCiAgICAgICJtaW5CYXNlRmVlIjogMjUwMDAwMDAwMDAsCiAgICAgICJtaW5CbG9ja0dhc0Nvc3QiOiAwLAogICAgICAidGFyZ2V0QmxvY2tSYXRlIjogMiwKICAgICAgInRhcmdldEdhcyI6IDUwMDAwMDAwCiAgICB9LAogICAgImhvbWVzdGVhZEJsb2NrIjogMCwKICAgICJpc3RhbmJ1bEJsb2NrIjogMCwKICAgICJtdWlyR2xhY2llckJsb2NrIjogMCwKICAgICJwZXRlcnNidXJnQmxvY2siOiAwLAogICAgInN1Ym5ldEVWTVRpbWVzdGFtcCI6IDAsCiAgICAid2FycENvbmZpZyI6IHsKICAgICAgImJsb2NrVGltZXN0YW1wIjogMTcxNDUxNzQxMywKICAgICAgInF1b3J1bU51bWVyYXRvciI6IDY3CiAgICB9CiAgfSwKICAiZGlmZmljdWx0eSI6ICIweDAiLAogICJleGNlc3NCbG9iR2FzIjogbnVsbCwKICAiZXh0cmFEYXRhIjogIjB4IiwKICAiZ2FzTGltaXQiOiAiMHg3YTEyMDAiLAogICJnYXNVc2VkIjogIjB4MCIsCiAgIm1peEhhc2giOiAiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwKICAibm9uY2UiOiAiMHgwIiwKICAibnVtYmVyIjogIjB4MCIsCiAgInBhcmVudEhhc2giOiAiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwKICAidGltZXN0YW1wIjogIjB4MCIKfQ==",
+  "ChainConfig": null,
+  "SubnetConfig": null,
+  "NetworkUpgrades": null,
+  "NodeConfig": null
+}
