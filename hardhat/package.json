@@ -24,10 +24,12 @@
     "ethers": "6",
     "hardhat": "^2.17.1",
     "hardhat-deploy": "^0.11.37",
-    "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.1",
     "typechain": "^8.2.0",
     "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "hardhat-gas-reporter": "^2.1.1"
   }
 }
