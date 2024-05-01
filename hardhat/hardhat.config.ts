@@ -1,5 +1,5 @@
-import { HardhatUserConfig } from 'hardhat/config'
-// import type { HardhatUserConfig } from "hardhat/config";
+//import { HardhatUserConfig } from 'hardhat/config'
+import type { HardhatUserConfig } from "hardhat/config";
 import "hardhat-deploy";
 import '@typechain/hardhat'
 import '@nomicfoundation/hardhat-toolbox'
@@ -37,7 +37,7 @@ const config: HardhatUserConfig = {
       accounts: PRIVATE_KEYS,
     },
     lilypad: {
-      url: 'http://127.0.0.1:9650/ext/bc/2K2MUJvsDrFwJdGdcQKDy2hS8Jxti4yrsfS3JJ1UNnSkp7nKGi/rpc',
+      url: 'http://127.0.0.1:9650/ext/bc/lilypad/rpc',
       chainId: 42,
       accounts: PRIVATE_KEYS,
     },

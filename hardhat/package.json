@@ -2,7 +2,12 @@
   "name": "lilypad",
   "version": "0.0.1",
   "license": "Apache-2.0",
-  "scripts": {},
+  "scripts": {
+    "clean": "npx hardhat clean --network lilypad && rm -rf ignition/deployments deployments artifacts cache",
+    "deploy:lilypad": "npx hardhat ignition deploy ./ignition/modules/LilypadControllerModule.ts --network lilypad",
+    "compile": "npx hardhat compile",
+    "test:lilypad": "npx hardhat test --network lilypad"
+  },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^4.9.3",
