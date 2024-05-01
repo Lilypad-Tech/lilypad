@@ -44,7 +44,7 @@ contract ExampleClient is Ownable, Initializable, ILilypadJobClient {
     string[] memory inputs = new string[](1);
     inputs[0] = string(abi.encodePacked("Message=", message));
     uint256 id = jobManagerContract.runJob(
-      "cowsay:v0.0.1",
+      "cowsay:v0.0.3",
       inputs,
       msg.sender
     );
