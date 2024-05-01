@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import {
   DEFAULT_TOKEN_SUPPLY,
 } from '../utils/web3'

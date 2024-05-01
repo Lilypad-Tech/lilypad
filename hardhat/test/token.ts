@@ -1,10 +1,12 @@
-import {
-  loadFixture,
-} from '@nomicfoundation/hardhat-toolbox/network-helpers'
-import chai from 'chai'
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+//import chai from 'chai'
 import bluebird from 'bluebird'
-import chaiAsPromised from 'chai-as-promised'
-import { ethers } from 'hardhat'
+//import chaiAsPromised from 'chai-as-promised'
+import "@nomicfoundation/hardhat-chai-matchers";
+
+import { ethers, ignition } from "hardhat";
+import TokenModule from "../ignition/modules/LilypadTokenModule";
+
 import {
   getWallet,
   getAddress,
@@ -17,9 +19,10 @@ import {
 import {
   setupTokenFixture,
 } from './fixtures'
+import { expect } from "chai";
 
-chai.use(chaiAsPromised)
-const { expect } = chai
+//chai.use(chaiAsPromised)
+//const { expect } = chai
 
 describe("Token", () => {
 

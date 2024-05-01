@@ -1,10 +1,13 @@
-import { HardhatUserConfig } from 'hardhat/config'
+//import { HardhatUserConfig } from 'hardhat/config'
+import type { HardhatUserConfig } from "hardhat/config";
 import '@typechain/hardhat'
 import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-chai-matchers'
-import 'hardhat-deploy'
+import "@nomicfoundation/hardhat-ignition-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import * as dotenv from 'dotenv'
+//require('@nomicfoundation/hardhat-chai-matchers');
 
 import {
   ACCOUNT_ADDRESSES,
@@ -21,7 +24,7 @@ const INFURA_KEY = process.env.INFURA_KEY || "";
 const config: HardhatUserConfig = {
   solidity: '0.8.21',
   defaultNetwork: NETWORK,
-  namedAccounts: ACCOUNT_ADDRESSES,
+  //namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
     hardhat: {},
     geth: {
