@@ -150,7 +150,7 @@ async function main() {
   if(!receipt) throw new Error(`no receipt`)
 
   console.log(`submitted job: ${runjobTx.hash}`)
-  
+
   let jobID = 0
 
   receipt.logs.forEach(log => {
