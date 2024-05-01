@@ -3,14 +3,30 @@ version: '3.8'
 name: lilypad-chain
 
 services:
-  lilypad-node:
+  #lilypad-node:
+  #  build:
+  #    context: infra/ava
+  #    dockerfile: Dockerfile
+  #  entrypoint: tail -f /dev/null
+  #  ports:
+  #    - 9650:9650
+  #    - 9652:9652
+  #    - 9654:9654
+  #    - 9656:9656
+  #    - 9658:9658
+  
+  lilypad-geth:
     build:
-      context: infra/ava
+      context: infra/geth
       dockerfile: Dockerfile
-    entrypoint: tail -f /dev/null
     ports:
-      - "9650:9650"
-      - "9652:9652"
-      - "9654:9654"
-      - "9656:9656"
-      - "9658:9658"
+      - 30303:30303
+      - 30303:30303/udp
+      - 8545:8545
+      - 8546:8546
+    stop_grace_period: 2m
+    healthcheck:
+      test: ["CMD-SHELL", "geth attach --datadir /data --exec eth.blockNumber"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

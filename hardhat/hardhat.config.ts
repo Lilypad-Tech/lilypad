@@ -25,16 +25,19 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     geth: {
-      url: 'http://localhost:8545',
+      url: 'http://127.0.0.1:8545',
       chainId: 1337,
       accounts: PRIVATE_KEYS,
+      allowUnlimitedContractSize: true,
+      gas: 5000000, //units of gas you are willing to pay, aka gas limit
+      gasPrice:  50000000000, //gas is typically in units of gwei, but you must enter it as wei here
     },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: PRIVATE_KEYS,
     },
     lilypad: {
-      url: 'http://127.0.0.1:9650/ext/bc/2K2MUJvsDrFwJdGdcQKDy2hS8Jxti4yrsfS3JJ1UNnSkp7nKGi/rpc',
+      url: 'http://127.0.0.1:9652/ext/bc/2K2MUJvsDrFwJdGdcQKDy2hS8Jxti4yrsfS3JJ1UNnSkp7nKGi/rpc',
       chainId: 42,
       accounts: PRIVATE_KEYS,
     },
