@@ -2,7 +2,6 @@ import {
   loadFixture,
 } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import chai from 'chai'
-import bluebird from 'bluebird'
 import chaiAsPromised from 'chai-as-promised'
 import { ethers } from 'hardhat'
 import {
