@@ -291,6 +291,7 @@ function runsdxl() {
   local model="$1"
   shift  # Remove the first argument, so "$@" contains only the second one
   local prompt="$@"
+
   go run . run $model -i "PromptEnv=$prompt"
 }
 
@@ -301,7 +302,8 @@ function solver() {
   export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   export SERVER_PORT=8080
-  export SERVER_URL=http://testnet.lilypad.tech:8080
+  export SERVER_URL=http://localhost:8080
+  # todo: metrics event
   go run . solver "$@"
 }
 
@@ -312,13 +314,14 @@ function jobcreator() {
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
   export SERVICE_SOLVER=$SOLVER_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  # todo: metrics event
   go run . jobcreator "$@"
 }
 
 function resource-provider() {
   source .env
   eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
+  export WEB3_RPC_URL=ws://localhost:8546
   export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
   export SERVICE_SOLVER=$SOLVER_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
@@ -328,10 +331,11 @@ function resource-provider() {
 function mediator() {
   source .env
   eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
+  export WEB3_RPC_URL=ws://localhost:8546
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   export SERVICE_SOLVER=$SOLVER_ADDRESS
+  # todo: metrics event
   go run . mediator "$@"
 }
 

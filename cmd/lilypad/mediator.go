@@ -45,7 +45,7 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 	if err != nil {
 		return err
 	}
-
+	// log.Info().Msg(options)
 	mediatorService, err := mediator.NewMediator(options, web3SDK, executor)
 	if err != nil {
 		return err

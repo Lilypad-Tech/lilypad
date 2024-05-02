@@ -3,6 +3,7 @@ module github.com/lilypad-tech/lilypad
 go 1.20
 
 require (
+	github.com/aws/aws-sdk-go v1.52.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
@@ -17,6 +18,14 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	k8s.io/apimachinery v0.28.3
 )
+
+require github.com/jmespath/go-jmespath v0.4.0 // indirect
+
+// require (
+// 	github.com/aws/aws-sdk-go-v2 v1.26.1
+// 	github.com/aws/aws-sdk-go-v2/config v1.18.45
+// 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
+// )
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
