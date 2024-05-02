@@ -3,7 +3,6 @@ module github.com/lilypad-tech/lilypad
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.52.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
@@ -12,14 +11,14 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/ipfs/go-merkledag v0.11.0
+	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.9
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/theckman/yacspin v0.13.12
 	k8s.io/apimachinery v0.28.3
 )
-
-require github.com/jmespath/go-jmespath v0.4.0 // indirect
 
 // require (
 // 	github.com/aws/aws-sdk-go-v2 v1.26.1

@@ -307,6 +307,10 @@ function solver() {
   go run . solver "$@"
 }
 
+function metrics() {
+  # todo: metrics event
+  go run . metrics "$@"
+}
 # we run the jobcreator as the solver
 function jobcreator() {
   source .env
