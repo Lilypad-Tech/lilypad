@@ -1,0 +1,97 @@
+version: '3'
+services:
+  geth2:
+    image: ethereum/client-go:v1.13.5
+    # restart: always
+    networks:
+      - lilypad
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+    # volumes:
+      # - ${DATA_DIRECTORY}:/data/geth
+    command: >
+      --datadir /data/geth
+      --dev
+      --ws
+      --ws.api web3,eth,net
+      --ws.addr 0.0.0.0
+      --ws.port 8546
+      --ws.origins '*'
+      --http
+      --http.api web3,eth,net
+      --http.addr 0.0.0.0
+      --http.corsdomain '*'
+      --http.port 8545
+      --http.vhosts '*'
+      
+    #&& geth --exec \"eth.sendTransaction({from: eth.coinbase, to: \\\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\\\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \\\"ether\\\"))  })\" attach /data/geth/geth.ipc
+    # entrypoint: [/bin/sh -c,"ls"]
+    # command:  > 
+    #   "/usr/local/bin/geth --datadir /data/geth --dev --ws --ws.api web3,eth,net --ws.addr 0.0.0.0 --ws.port 8546 --ws.origins '*' --http --http.api web3,eth,net --http.addr 0.0.0.0 --http.corsdomain '*' --http.port 8545 --http.vhosts '*' &
+    #   sleep 10 &&
+    #   geth --exec \"eth.sendTransaction({from: eth.coinbase, to: \\\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\\\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \\\"ether\\\"))  })\" attach /data/geth/geth.ipc &&
+    #   tail -f /dev/null
+    #   "
+  postgres:
+    image: postgres
+    restart: always
+    networks:
+      - lilypad
+    ports:
+      - 5432:5432
+    volumes:
+      # - $DIR/migrations:$DIR/migrations
+      - ./migrations:/migrations
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: public
+
+  metrics:
+    # build:
+    #   context: .
+    #   dockerfile: ./docker/dockerfile
+    image: lilypad:latest
+    # restart: always
+    depends_on:
+      - postgres
+    networks:
+      - lilypad
+    command: ["./stack", "doppler", "docker", "&&", "./stack", "metrics"]
+
+  solver:
+    # build:
+    #   context: .
+    #   dockerfile: ./docker/dockerfile
+    image: lilypad:latest
+    # restart: always
+    # depends_on:
+    #   - geth
+    networks:
+      - lilypad
+    command: ["./stack", "doppler", "docker", "&&", "./stack", "docker_solver"]  
+  mediator:
+    build:
+      context: .
+      dockerfile: ./docker/dockerfile
+    image: lilypad:latest
+    # restart: always
+    # depends_on:
+    #   - geth
+    networks:
+      - lilypad
+    command: ["./stack", "doppler", "docker", "&&", "./stack", "docker_mediator"]  
+  provider:
+      # build:
+      #   context: .
+      #   dockerfile: ./docker/dockerfile
+      image: lilypad:latest
+      # restart: always
+      # depends_on:
+      #   - geth
+      networks:
+        - lilypad
+      command: ["./stack", "doppler", "docker", "&&", "./stack", "resource-provider --offer-gpu 1"]  
+networks:
+  lilypad:

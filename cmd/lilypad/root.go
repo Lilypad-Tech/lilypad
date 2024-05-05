@@ -3,8 +3,10 @@ package lilypad
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +18,10 @@ var Fatal = FatalErrorHandler
 //}
 
 func NewRootCmd() *cobra.Command {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	RootCmd := &cobra.Command{
 		Use:   getCommandLineExecutable(),
 		Short: "Lilypad",
@@ -27,6 +33,9 @@ func NewRootCmd() *cobra.Command {
 	RootCmd.AddCommand(newMediatorCmd())
 	RootCmd.AddCommand(newJobCreatorCmd())
 	RootCmd.AddCommand(newVersionCmd())
+	RootCmd.AddCommand(newEnvCmd())
+	RootCmd.AddCommand(newMetricsCmd())
+
 	return RootCmd
 }
 

@@ -1,0 +1,42 @@
+# Start from the latest golang base image
+FROM golang:latest as builder
+
+# Add Maintainer Info
+# LABEL maintainer="Your Name <youremail@domain.com>"
+
+# Set the Current Working Directory inside the container
+WORKDIR /app
+
+# Clone the repository
+# RUN git clone https://github.com/Lilypad-Tech/lilypad .
+
+RUN apt update
+RUN apt install -y  nano
+RUN apt install -y  nodejs
+RUN apt install -y  npm
+RUN apt install -y  yarn
+# Build the Go app
+# RUN go build -o main .
+
+# Start from the latest node base image
+# FROM node:latest
+
+# Set the Current Working Directory inside the container
+# WORKDIR /app
+
+# Copy everything from the builder image
+# COPY --from=builder /app .
+COPY .. /app
+
+# Install npm
+# RUN cd hardhat
+WORKDIR /app/hardhat
+RUN npm install
+# RUN cd ..
+WORKDIR /app
+RUN go build .
+RUN ./stack print-env > .env
+# RUN cd ..
+# RUN ./stack boot
+# Final command
+CMD ["tail", "-f", "/dev/null"]

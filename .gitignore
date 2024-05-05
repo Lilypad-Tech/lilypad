@@ -13,7 +13,11 @@ lilypad
 ops/testnet/.terraform/providers
 .idea/
 .vscode/
-.run/
+.run/package lilylogger
+
+package.json
+package-lock.json
+
 bin/
 vendor/
 ./data/

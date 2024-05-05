@@ -29,6 +29,11 @@ const config: HardhatUserConfig = {
       chainId: 1337,
       accounts: PRIVATE_KEYS,
     },
+    local_docker_network: {
+      url: 'http://geth2:8545',
+      chainId: 1337,
+      accounts: PRIVATE_KEYS,
+    },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: PRIVATE_KEYS,

@@ -11,6 +11,166 @@ export NETWORK=${NETWORK:="geth"}
 if [[ -f "$DIR/.env" ]]; then
   source "$DIR/.env"
 fi
+#experimental
+function dockerize(){
+   docker network ls | grep lilypad || docker network create lilypad
+  
+  # If a container named "postgres" exists, remove it
+  if [ "$(docker ps -aq -f name=postgres)" ]; then
+    docker rm -f postgres
+  fi
+  if [ "$(docker ps -aq -f name=solver)" ]; then
+    docker rm -f solver
+  fi
+  if [ "$(docker ps -aq -f name=metrics)" ]; then
+    docker rm -f metrics
+  fi
+
+  docker run --restart always \
+    --name postgres \
+    --network lilypad \
+    -p 5432:5432 \
+    -v $DIR/migrations:$DIR/migrations \
+    -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_DB=public -d postgres
+  docker build -t lilypad:latest -f "./docker/dockerfile" . 
+ 
+   docker run --restart always \
+    --name metrics \
+    --network lilypad \
+    -d lilypad:latest
+  docker exec metrics ./stack doppler docker
+  docker exec metrics ./stack metrics &
+  
+  docker run --restart always \
+    --name solver \
+    --network lilypad \
+    -d lilypad:latest
+  docker exec solver ./stack doppler docker  
+  docker exec solver ./stack docker_solver
+  #compile-contracts
+  #deploy-contracts
+}
+function docker_solver() {
+  source .env
+  # eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  export SERVER_PORT=8080
+  export SERVER_URL=http://localhost:8080
+  export WEB3_RPC_URL=ws://geth2:8546
+  cd hardhat
+  npx hardhat compile --network local_docker_network
+  npx hardhat deploy --network local_docker_network
+  # todo: metrics event
+  cd ..
+  # eval $(./stack print-local-dev-env)
+  # eval $(hardhat-script scripts/print-env-docker.ts | grep export)
+  cd hardhat
+  npx hardhat run scripts/print-env-docker.ts >../.env
+  eval $( npx hardhat run scripts/print-env-docker.ts)
+  cd ..
+  eval $(./stack print-local-dev-env)
+  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
+  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
+  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
+  export SERVER_PORT=8080
+  export SERVER_URL=http://localhost:8080
+  export WEB3_RPC_URL=ws://geth2:8546
+  ./stack doppler docker
+  # fund-admin
+  fund-services-ether
+  cd hardhat
+  npx hardhat compile --network local_docker_network
+  npx hardhat deploy --network local_docker_network
+  # todo: metrics event
+  cd ..
+  # fund-services-ether
+  # deploy
+  go run . solver "$@"
+}
+function docker_mediator() {
+  source .env
+  eval $(./stack print-local-dev-env)
+  # export WEB3_RPC_URL=ws://localhost:8546
+  export WEB3_RPC_URL=$WEB3_RPC_URL
+  cd hardhat
+  npx hardhat compile --network local_docker_network
+  npx hardhat deploy --network local_docker_network
+  # todo: metrics event
+  cd ..
+  
+  cd hardhat
+  npx hardhat run scripts/print-env-docker.ts >../.env
+  eval $( npx hardhat run scripts/print-env-docker.ts)
+  cd ..
+  export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
+  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
+  export SERVICE_SOLVER=$SOLVER_ADDRESS
+  # todo: metrics event
+  go run . mediator "$@"
+}
+
+############################################################################
+############################################################################
+# postgres
+############################################################################
+############################################################################
+
+# run a local postgres for logging events
+function postgres() {
+  docker network ls | grep lilypad || docker network create lilypad
+
+  # If a container named "postgres" exists, remove it
+  if [ "$(docker ps -aq -f name=postgres)" ]; then
+    docker rm -f postgres
+  fi
+
+  docker run --restart always \
+    --name postgres \
+    --network lilypad \
+    -p 5432:5432 \
+    -v $DIR/migrations:$DIR/migrations \
+    -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_DB=public -d postgres
+
+    # -p 8546:8546 \
+    # -v ${DATA_DIRECTORY}:/data/postgres \
+    # ethereum/client-go:v1.13.5 \
+    #   --datadir /data/geth \
+    #   --dev \
+    #   --ws \
+    #   --ws.api web3,eth,net \
+    #   --ws.addr 0.0.0.0 \
+    #   --ws.port 8546 \
+    #   --ws.origins '*' \
+    #   --http \
+    #   --http.api web3,eth,net \
+    #   --http.addr 0.0.0.0 \
+    #   --http.corsdomain '*' \
+    #   --http.port 8545 \
+    #   --http.vhosts '*'
+}
+############################################################################
+############################################################################
+# metrics
+############################################################################
+############################################################################
+
+# update envs for non dev-local environment
+function metrics() {
+  go run . metrics "$@"
+}
+
+############################################################################
+############################################################################
+# doppler
+############################################################################
+############################################################################
+
+# update envs for non dev-local environment
+function doppler() {
+  go run . env "$@"
+}
 
 ############################################################################
 ############################################################################
@@ -134,6 +294,18 @@ function deploy() {
 }
 
 function boot() {
+  clean
+  boot-message "Starting geth"
+  geth
+  sleep 5
+  boot-message "Funding admin account"
+  fund-admin
+  boot-message "Funding services with ether"
+  fund-services-ether
+  deploy
+}
+#experimental
+function dockerboot() {
   clean
   boot-message "Starting geth"
   geth
@@ -335,7 +507,8 @@ function resource-provider() {
 function mediator() {
   source .env
   eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://localhost:8546
+  # export WEB3_RPC_URL=ws://localhost:8546
+  export WEB3_RPC_URL=$WEB3_RPC_URL
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   export SERVICE_SOLVER=$SOLVER_ADDRESS
