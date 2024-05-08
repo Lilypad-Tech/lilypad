@@ -25,3 +25,6 @@ vendor/
 go1.22.2.linux-amd64
 bacalhau_v1.0.3_linux_amd64.tar.gz
 go1.22.2.linux-amd64.tar.gz
+*.log
+*/logs_bulk/*
+*/tmp/*

@@ -68,6 +68,7 @@ function docker_solver() {
   # eval $(hardhat-script scripts/print-env-docker.ts | grep export)
   cd hardhat
   npx hardhat run scripts/print-env-docker.ts >../.env
+  npx hardhat run scripts/print-env-docker.ts >../share/.env
   eval $( npx hardhat run scripts/print-env-docker.ts)
   cd ..
   eval $(./stack print-local-dev-env)
@@ -77,12 +78,16 @@ function docker_solver() {
   export SERVER_PORT=8080
   export SERVER_URL=http://localhost:8080
   export WEB3_RPC_URL=ws://geth2:8546
+  export METRICS_HOST=metrics
   ./stack doppler docker
   # fund-admin
   fund-services-ether
   cd hardhat
   npx hardhat compile --network local_docker_network
   npx hardhat deploy --network local_docker_network
+  npx hardhat run scripts/print-env-docker.ts >../.env
+  npx hardhat run scripts/print-env-docker.ts >../share/.env
+  npx hardhat run scripts/print-contract-env.ts >../share/contract.env
   # todo: metrics event
   cd ..
   # fund-services-ether
@@ -90,24 +95,41 @@ function docker_solver() {
   go run . solver "$@"
 }
 function docker_mediator() {
+  cp ./share/.env .env
   source .env
-  eval $(./stack print-local-dev-env)
+  # eval $(./stack print-local-dev-env)
   # export WEB3_RPC_URL=ws://localhost:8546
   export WEB3_RPC_URL=$WEB3_RPC_URL
-  cd hardhat
-  npx hardhat compile --network local_docker_network
-  npx hardhat deploy --network local_docker_network
-  # todo: metrics event
-  cd ..
+  # cd hardhat
+  # npx hardhat compile --network local_docker_network
+  # npx hardhat deploy --network local_docker_network
+  # # todo: metrics event
+  # cd ..
+
+  # # cd hardhat
+  # npx hardhat run scripts/print-env-docker.ts >../.env
+  # eval $( npx hardhat run scripts/print-env-docker.ts)
+  # cd ..
   
-  cd hardhat
-  npx hardhat run scripts/print-env-docker.ts >../.env
-  eval $( npx hardhat run scripts/print-env-docker.ts)
-  cd ..
   export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
   export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
   export SERVICE_SOLVER=$SOLVER_ADDRESS
+  
+  export WEB3_CONTROLLER_ADDRESS=0x74ef2B06A1D2035C33244A4a263FF00B84504865
+  export WEB3_TOKEN_ADDRESS=0xeC1BB74f5799811c0c1Bff94Ef76Fb40abccbE4a
+  export WEB3_MEDIATION_ADDRESS=0x75b0B516B47A27b1819D21B26203Abf314d42CCE
+  export WEB3_JOBCREATOR_ADDRESS=0xD94A92749C0bb33c4e4bA7980c6dAD0e3eFfb720
+  export WEB3_PAYMENTS_ADDRESS=0xF6a8aD553b265405526030c2102fda2bDcdDC177
+  export WEB3_STORAGE_ADDRESS=0x6732128F9cc0c4344b2d4DC6285BCd516b7E59E6
+  export WEB3_USERS_ADDRESS=0xAe9Ed85dE2670e3112590a2BB17b7283ddF44d9c
+  export SERVER_URL=http://solver:8080
+  export SERVER_HOST=solver
+  export SERVER_URL=http://solver:8080
+  export SERVER_HOST=solver
+  # eval $(./stack print-contract-env)
+  eval $(cat .env)
   # todo: metrics event
+  echo $(env)
   go run . mediator "$@"
 }
 

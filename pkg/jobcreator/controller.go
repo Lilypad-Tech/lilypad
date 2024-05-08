@@ -202,6 +202,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 
 func (controller *JobCreatorController) solve() error {
 	controller.log.Debug("solving", "")
+	// lilymetrics.LogJob("system.JobCreatorService", "JobCreator", "Solving", "Solving")
 	err := controller.agreeToDeals()
 	if err != nil {
 		return err

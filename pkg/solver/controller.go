@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -70,7 +69,6 @@ func NewSolverController(
 }
 
 func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	lilymetrics.LogMetric("solver", "start")
 	errorChan := make(chan error)
 	// get the local subscriptions setup
 	err := controller.subscribeToWeb3()

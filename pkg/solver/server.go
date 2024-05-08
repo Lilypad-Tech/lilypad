@@ -9,13 +9,15 @@ import (
 	corehttp "net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -294,6 +296,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 	results.DealID = id
+	lilymetrics.LogMetric("solver", "{\\\"status\\\":\\\"complete\\\",\\\"DealID\\\": \\\""+id+"\\\"}")
 	return solverServer.store.AddResult(results)
 }
 
@@ -336,6 +339,9 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 	vars := mux.Vars(req)
 	id := vars["id"]
 	deal, err := solverServer.store.GetDeal(id)
+	resource, err := solverServer.store.GetResourceOffer(deal.ResourceOffer)
+	detail := "{\\\"status\":\\\"started\\\",\\\"DealID\\\": \\\"" + id + "\\\", \\\"ResourceOffer\\\":\\\"" + strings.Join(resource.ResourceOffer.Modules, "") + "\\\"}"
+	lilymetrics.LogMetric("solver", detail)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err

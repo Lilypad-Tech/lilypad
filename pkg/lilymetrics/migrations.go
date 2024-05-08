@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 
 	// "github.com/golang-migrate/migrate/database/postgres"
@@ -21,7 +22,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func MigrateUp() {
+func MigrateUp(dir_name string) {
+
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
@@ -34,7 +36,7 @@ func MigrateUp() {
 	defer db.Close()
 	// /home/arsen/lilypad/migrations
 	// err = CopyDir("/home/arsen/lilypad/migrations", "/data/postgres/migrations")
-	migration_path := os.Getenv("DIR") + "/migrations"
+	migration_path := os.Getenv("DIR") + "/migrations/" + dir_name
 	fmt.Println("Migration path: ", migration_path)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +45,7 @@ func MigrateUp() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	driver, err := postgres.WithInstance(db, &postgres.Config{MigrationsTable: dir_name + "_version"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +55,18 @@ func MigrateUp() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	m.Up()
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		//log.Fatalf("Error running migrations: %v", err)
+		fmt.Println("Error running migrations: %v", err)
+	}
+	// if err != nil && err != migrate.ErrNoChange {
+	//     if isDuplicateKeyViolation(err) {
+	//         log.Println("Ignoring duplicate key violation and continuing with migration...")
+	//     } else {
+	// 		fmt.Println("Error running migrations: %v", err)
+	//     }
+	// }
+
 	fmt.Println("Migration Complete")
 	// migrator, err := migrate.New("file:///"+migration_path, connStr) //"postgres://user:password@localhost:5432/database?sslmode=disable")
 	// if err != nil {
@@ -66,6 +79,15 @@ func MigrateUp() {
 	// }
 
 	// fmt.Println("Database migration successful!")
+}
+func isDuplicateKeyViolation(err error) bool {
+	// Check if the error is related to a duplicate key violation
+	// This assumes you're using the pq driver which returns a specific error for duplicate key violations
+	// Adjust this function based on the error type returned by your PostgreSQL driver
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == "23505" // PostgreSQL error code for unique_violation
+	}
+	return false
 }
 func CopyDir(src string, dst string) error {
 	entries, err := ioutil.ReadDir(src)

@@ -1,0 +1,57 @@
+
+# Forwarding logs to Logs.betterstack.com
+# ---------------------------------------
+# Generated on 2024-05-06: https://logs.betterstack.com/otel/NPWeUKd9MbVpj4Sp8myF2LHu
+# Learn more about OpenTelemetry Collector configuration: https://opentelemetry.io/docs/collector/configuration/
+
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+  # Collect metrics from OpenTelemetry collector itself
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['localhost:8888']
+
+  # Collecting logs for following services: Apache, Elasticsearch, Nginx, MySQL, MongoDB, PostgreSQL, RabbitMQ, Redis, Auth log, Uncomplicated Firewall (UFW), Docker, HAProxy, Traefik
+  filelog/betterstack:
+    # include: ['/var/log/apache/*.log', '/var/log/elasticsearch/*.log', '/var/log/nginx/*.log', '/var/log/mysql/*.log', '/var/log/mongodb/*.log', '/var/log/postgresql/*.log', '/var/log/rabbitmq/*.log', '/var/log/redis/*.log', '/var/log/auth.log', '/var/log/ufw.log', '/var/log/docker/*.log', '/var/log/haproxy/*.log', '/var/log/traefik/*.log']
+    ['/var/log/lilypad/*.log']
+    start_at: beginning
+    include_file_path: true
+
+
+processors:
+  attributes/betterstack:
+    actions:
+      - key: better_stack_source_token
+        value: NPWeUKd9MbVpj4Sp8myF2LHu
+        action: insert
+  batch:
+
+exporters:
+  otlp/betterstack:
+    endpoint: "https://in-otel.logs.betterstack.com:443"
+  prometheusremotewrite/betterstack:
+    endpoint: "https://in-otel.logs.betterstack.com/metrics"
+
+service:
+  pipelines:
+    metrics/betterstack:
+      receivers: [otlp, prometheus] # You can add more metrics receivers here
+      processors: [batch, attributes/betterstack]
+      exporters: [prometheusremotewrite/betterstack]
+    logs/betterstack:
+      receivers: [otlp, filelog/betterstack] # You can add more logs receivers here
+      processors: [batch, attributes/betterstack]
+      exporters: [otlp/betterstack]
+
+# --- end of 2024-05-06: https://logs.betterstack.com/otel/NPWeUKd9MbVpj4Sp8myF2LHu
+

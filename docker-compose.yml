@@ -41,8 +41,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      # - $DIR/migrations:$DIR/migrations
-      - ./migrations:/migrations
+      - ./share:/share
     environment:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
@@ -54,6 +53,9 @@ services:
     #   dockerfile: ./docker/dockerfile
     image: lilypad:latest
     # restart: always
+    volumes:
+      # - $DIR/migrations:$DIR/migrations
+      - ./share:/app/share
     depends_on:
       - postgres
     networks:
@@ -61,10 +63,12 @@ services:
     command: ["./stack", "doppler", "docker", "&&", "./stack", "metrics"]
 
   solver:
-    # build:
-    #   context: .
-    #   dockerfile: ./docker/dockerfile
+    build:
+      context: .
+      dockerfile: ./docker/dockerfile
     image: lilypad:latest
+    volumes:
+      - ./share:/app/share
     # restart: always
     # depends_on:
     #   - geth
@@ -76,9 +80,12 @@ services:
       context: .
       dockerfile: ./docker/dockerfile
     image: lilypad:latest
+    volumes:
+      - ./share:/app/share
     # restart: always
-    # depends_on:
-    #   - geth
+    depends_on:
+      - geth2
+      # - solver
     networks:
       - lilypad
     command: ["./stack", "doppler", "docker", "&&", "./stack", "docker_mediator"]  
@@ -87,6 +94,8 @@ services:
       #   context: .
       #   dockerfile: ./docker/dockerfile
       image: lilypad:latest
+      volumes:
+      - ./share:/app/share  
       # restart: always
       # depends_on:
       #   - geth
