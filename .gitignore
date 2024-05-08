@@ -6,10 +6,8 @@ hardhat/deployments/localhost
 hardhat/deployments/geth
 hardhat/typechain-types
 node_modules/*
-lilypad
-.env
-*.env
-.env.*
+
+
 ops/testnet/.terraform/providers
 .idea/
 .vscode/
@@ -28,3 +26,5 @@ go1.22.2.linux-amd64.tar.gz
 *.log
 */logs_bulk/*
 */tmp/*
+
+.env

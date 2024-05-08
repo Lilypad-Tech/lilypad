@@ -191,7 +191,7 @@ function metrics() {
 
 # update envs for non dev-local environment
 function doppler() {
-  go run . env "$@"
+  go run . config "$@"
 }
 
 ############################################################################
