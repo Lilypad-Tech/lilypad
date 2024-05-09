@@ -340,6 +340,8 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 	id := vars["id"]
 	deal, err := solverServer.store.GetDeal(id)
 	resource, err := solverServer.store.GetResourceOffer(deal.ResourceOffer)
+
+	//todo: more elegant way to create a json string
 	detail := "{\\\"status\":\\\"started\\\",\\\"DealID\\\": \\\"" + id + "\\\", \\\"ResourceOffer\\\":\\\"" + strings.Join(resource.ResourceOffer.Modules, "") + "\\\"}"
 	lilymetrics.LogMetric("solver", detail)
 	if err != nil {

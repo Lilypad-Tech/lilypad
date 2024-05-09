@@ -12,11 +12,6 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 
-	// "github.com/golang-migrate/migrate/database/postgres"
-	// "github.com/golang-migrate/migrate/database/postgres"
-	// "github.com/golang-migrate/migrate/database/postgres"
-	// "github.com/golang-migrate/migrate/database/postgres"
-	// "github.com/golang-migrate/migrate/database/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -29,15 +24,13 @@ func MigrateUp(dir_name string) {
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
 	connStr := "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " sslmode=disable"
-	db, err := sql.Open("postgres", connStr) //"postgres://user:password@localhost:5432/database?sslmode=disable")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	// /home/arsen/lilypad/migrations
-	// err = CopyDir("/home/arsen/lilypad/migrations", "/data/postgres/migrations")
+
 	migration_path := os.Getenv("DIR") + "/migrations/" + dir_name
-	fmt.Println("Migration path: ", migration_path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,30 +48,11 @@ func MigrateUp(dir_name string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Migration" + migration_path)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		//log.Fatalf("Error running migrations: %v", err)
-		fmt.Println("Error running migrations: %v", err)
+		fmt.Println("Error running migrations:", err)
 	}
-	// if err != nil && err != migrate.ErrNoChange {
-	//     if isDuplicateKeyViolation(err) {
-	//         log.Println("Ignoring duplicate key violation and continuing with migration...")
-	//     } else {
-	// 		fmt.Println("Error running migrations: %v", err)
-	//     }
-	// }
 
-	fmt.Println("Migration Complete")
-	// migrator, err := migrate.New("file:///"+migration_path, connStr) //"postgres://user:password@localhost:5432/database?sslmode=disable")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// err = migrator.Up()
-	// if err != nil && err != migrate.ErrNoChange {
-	// 	log.Fatal(err)
-	// }
-
-	// fmt.Println("Database migration successful!")
 }
 func isDuplicateKeyViolation(err error) bool {
 	// Check if the error is related to a duplicate key violation

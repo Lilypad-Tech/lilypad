@@ -75,7 +75,7 @@ func newEnvCmd() *cobra.Command {
 				myEnv["POSTGRES_USER"] = "lp"
 			}
 			if myEnv["POSTGRES_PASSWORD"] == "" {
-				myEnv["POSTGRES_PASSWORD"] = "password"
+				myEnv["POSTGRES_PASSWORD"] = "password" //todo: instead generate random password
 			}
 			if myEnv["POSTGRES_DB"] == "" {
 				myEnv["POSTGRES_DB"] = "mydb"

@@ -1,7 +1,6 @@
 package system
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -11,8 +10,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/diode"
 	"github.com/rs/zerolog/log"
-	"go.opentelemetry.io/otel"
-	// "go.opentelemetry.io/otel/exporters/otlp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	oteltrace "go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
 type ServiceLogger struct {
@@ -47,6 +48,29 @@ func shouldLog(msg string) bool {
 	// Check if the message contains the filter string
 	return strings.Contains(msg, filterString)
 }
+func newConsoleExporter() (oteltrace.SpanExporter, error) {
+	// return stdouttrace.New()
+	return nil, nil
+}
+func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
+	// Ensure default SDK resources and the required service name are set.
+	r, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName("myapp"),
+		),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exp),
+		sdktrace.WithResource(r),
+	)
+}
 func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	logLevelString := os.Getenv("LOG_LEVEL")
@@ -79,21 +103,42 @@ func SetupLogging() {
 	// Setup ZeroLog with caller information
 	zerolog.CallerSkipFrameCount = 3
 
-	tracer := otel.Tracer("logger")
-	_, span := tracer.Start(context.Background(), "logging-setup")
+	//tracer := otel.Tracer("logger")
+	// _, span := tracer.Start(context.Background(), "logging-setup")
 
 	// Add trace and span IDs for file output
 	logger := log.Output(multi).With().
 		Caller().
 		Logger().Level(logLevel)
 
+	// Initialize OpenTelemetry NoopTracerProvider
+
+	// otel.SetTracerProvider(tp)
+	// Get tracer
+	// tracer := otel.Tracer("example.com/component")
+
+	// // Example context, replace with your context creation method
+	// ctx := context.Background()
+	// exp, err := newConsoleExporter()
+	// tp := newTraceProvider(exp)
+	// otel.SetTracerProvider(tp)
+
 	filteredLogger := logger.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, msg string) {
-		if shouldLog(msg) {
-			fmt.Println("should log")
-			e.Str("trace_id", span.SpanContext().TraceID().String()). // Include trace ID
-											Str("span_id", span.SpanContext().SpanID().String()). // Include span ID
-											Msg(msg)
-		}
+		// ctx, span := tracer.Start(r.Context(), "HTTP GET /devices")
+		// pc, _, _, _ := runtime.Caller(1)
+		// funcName := runtime.FuncForPC(pc).Name()
+		// fmt.Println("level", e)
+		// tracer = tp.Tracer(msg)
+		// _, span := tracer.Start(ctx, msg)
+		// defer span.End()
+
+		// Start span
+		// _, span := tracer.Start(ctx, "logged-span")
+		// defer span.End()
+		// e.Str("trace_id", span.SpanContext().TraceID().String()). // Include trace ID
+		// 								Str("span_id", span.SpanContext().SpanID().String()). // Include span ID
+		// 								Msg(msg)
+
 	})).Level(logLevel)
 
 	log.Logger = filteredLogger

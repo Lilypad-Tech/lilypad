@@ -1,6 +1,7 @@
 package lilymetrics
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/rs/zerolog"
 
 	_ "github.com/lib/pq"
+	// "go.opentelemetry.io/otel"
 )
 
 type Event struct {
@@ -30,17 +32,13 @@ var sqlLogFile os.File
 // handleEvent listens for incoming event data and logs it into the PostgreSQL database.
 func generateLogFileName() string {
 	currentTime := time.Now()
-	return "app_" + currentTime.Format("2006-01-02_15") + ".log"
+	return "migrations/tmp/lilylog_" + currentTime.Format("2006-01-02_15") + ".log"
 }
 func generateSqlFileName() string {
 	currentTime := time.Now()
 	return "migrations/tmp/" + currentTime.Format("200601021504") + "_logs.up.sql"
 }
 
-//	func generateSqlFileName() string {
-//		currentTime := time.Now()
-//		return "migrations/tmp/" + currentTime.Format("2006010215") + "_data.sql"
-//	}
 func (e Event) String() string {
 	// convert the Event to a string
 	// for example, you could marshal it to JSON:
@@ -76,38 +74,7 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	event.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-	// event.Details = "This is a test event"
-	// event.Type = event.
-
-	fmt.Println("Received event")
-	// if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-	// 	http.Error(w, "Bad request", http.StatusBadRequest)
-	// 	return
-	// }
-
-	// var event map[string]interface{}
-	// err := decoder.Decode(&event)
-	// if err != nil {
-	//     http.Error(w, err.Error(), http.StatusBadRequest)
-	//     return
-	// }
 	logger.Info().Msg(event.Details)
-	// Now you can use the event map
-	fmt.Println("details:", event.Details)
-	// defer r.Body.Close()
-
-	// r = fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, event.Type, event.Details)
-	// fmt.Println(r)
-
-	// sql := fmt.Sprintf(`"INSERT INTO logs (type, timestamp, details) VALUES ("%s", "%s","%s")"`, event.Type, event.Timestamp, event.Details)
-	// fmt.Println(sql)
-	// _, err = db.Exec("INSERT INTO logs (type, timestamp, details) VALUES ($1, $2, $3)", event.Type, event.Timestamp, event.Details)
-
-	if err != nil {
-		log.Printf("Error inserting event into database: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
 
 	log.Printf("Event Received and Logged: %+v", event)
 	w.WriteHeader(http.StatusOK)
@@ -120,33 +87,48 @@ func handleGetEvent(w http.ResponseWriter, r *http.Request) {
 func escapeSingleQuotes(s string) string {
 	return fmt.Sprintf("%s", s)
 }
-func RunMetrics() {
 
+// func newConsoleExporter() (oteltrace.SpanExporter, error) {
+// 	return stdouttrace.New()
+// 	// return nil, nil
+// }
+// func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
+// 	// Ensure default SDK resources and the required service name are set.
+// 	r, err := resource.Merge(
+// 		resource.Default(),
+// 		resource.NewWithAttributes(
+// 			semconv.SchemaURL,
+// 			semconv.ServiceName("Metrics"),
+// 		),
+// 	)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+//		return sdktrace.NewTracerProvider(
+//			sdktrace.WithBatcher(exp),
+//			sdktrace.WithResource(r),
+//		)
+//	}
+func RunMetrics() {
+	// defer Trace(context.Background(), "Migrations").End()
+	span := Trace(context.Background(), "Migrations")
+	MigrateUp("logs_bulk")
+	MigrateUp("schema")
+	span.End()
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbName := "postgres" //os.Getenv("POSTGRES_DB")
 	connStr := "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " sslmode=disable"
-	fmt.Println("connStr: ", connStr)
-	MigrateUp("logs_bulk")
-	MigrateUp("schema")
 
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		fmt.Println("Error opening database connection")
 	}
-	// defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	router := mux.NewRouter()
-	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
-	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
-	router.HandleFunc("/", handleGetEvent).Methods("GET") // Only keep the event handler route
 
 	// Generate the initial log file name based on the current time
 	logFileName := generateLogFileName()
@@ -155,49 +137,23 @@ func RunMetrics() {
 	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	// sqlLogFile, err := os.OpenFile(sqlLogFileName, os.O_CREATE|os.O_APPEND, 0666)
 	sqlLogFile, err := os.Create(sqlLogFileName)
-	// sqlLogFile.WriteString("test\n")
-	// sqlLogFile.Close()
 	if err != nil {
-		// log.Fatal().Err(err).Msg("Failed to open log file")
-		// sql := fmt.Sprintf(`"INSERT INTO logs (type, timestamp, details) VALUES ("%s", "%s","%s")"`, event.Type, event.Timestamp, event.Details)
-		// fmt.Println(sql)
 		fmt.Println("Failed to open log file")
 	}
 
 	// Initialize the logger with the initial log file
 	logger = zerolog.New(logFile).With().Timestamp().Logger().Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, msg string) {
-		// fmt.Print(e)
-		// contextData, ok := e.GetCtx().Value("timestamp").(string)
-		// if ok {
-		// 	e.Str("timestamp", contextData)
-		// }
 		currentTime := time.Now().UTC().Format(time.RFC3339Nano)
-
-		// table_name := "logs"
-		// sql := fmt.Sprintf(`INSERT INTO logs (type, timestamp, details) VALUES ('%s', '%s', '%s');`, level, currentTime, strings.ReplaceAll(msg, "'", "\""))
 		_, err = db.Exec("INSERT INTO logs (type, timestamp, details) VALUES ($1, $2, $3)", level, currentTime, msg)
 		if err != nil {
 			log.Printf("Error inserting event into database: %v", err)
 		}
 		sql := fmt.Sprintf(`INSERT INTO logs_bulk (type, timestamp, details) VALUES ('%s', '%s', '%s');`, level, currentTime, strings.ReplaceAll(msg, "'", "\""))
 		sqlLogFile.WriteString(sql + "\n")
-		//  := e.Str("timestamp")
-		// event := Event{
-		// 	Type:      "your type here",
-		// 	Timestamp: "your timestamp here",
-		// 	Details:   msg,
-		// }
-
-		// eventJson, _ := json.Marshal(event)
-		// timestamp, _ := time.Parse(time.RFC3339, timestampStr)
-		//sql := fmt.Sprintf(`"INSERT INTO logs (type, timestamp, details) VALUES ("%s", "%s","%s")"`, e.Type, e.Timestamp, "e.Details")
-
-		// _, err = db.Exec("INSERT INTO logs (type, timestamp, details) VALUES ($1, $2, $3)", event.Type, event.Timestamp, event.Details)
-
 		fmt.Println("should log " + sql)
 
 	}))
-	// logger.Info().Msg("test")
+
 	// Start a goroutine to periodically check and update the log file name
 	go func() {
 		for {
@@ -223,9 +179,8 @@ func RunMetrics() {
 			}
 
 			// Get file information
-
 			if size == 0 {
-				os.Remove(sqlLogFile.Name())
+				os.Remove(sqlLogFile.Name()) // todo: instead remove all empty files
 			} else {
 				os.Rename(sqlLogFile.Name(), "migrations/logs_bulk/"+filepath.Base(sqlLogFile.Name()))
 			}
@@ -241,14 +196,20 @@ func RunMetrics() {
 			}
 
 			// Update the logger to use the new log file
-			//logger = zerolog.New(newLogFile).With().Timestamp().Logger()
-
 			// Assign the new log file to the logFile variable
 			logFile = newLogFile
 			sqlLogFile = newSqlLogFile
 		}
 	}()
 
+	stupRoutes()
+
+}
+func stupRoutes() {
+	router := mux.NewRouter()
+	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
+	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
+	router.HandleFunc("/", handleGetEvent).Methods("GET") // Only keep the event handler route
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 func main() {
