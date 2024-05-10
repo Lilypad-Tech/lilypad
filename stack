@@ -399,6 +399,32 @@ function resource-provider-docker-run() {
     resource-provider
 }
 
+function bacalhau(){
+  export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs \
+    && export LOG_LEVEL=debug \
+    && bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+}
+
+function bacalhau-docker-build() {
+  docker build \
+    --no-cache \
+    -t bacalhau \
+    -f ./docker/bacalhau/Dockerfile \
+    .
+}
+
+function bacalhau-docker-run() {
+  docker run \
+    --privileged \
+    --rm \
+    --name bacalhau \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -v /tmp/lilypad/data:/tmp/lilypad/data \
+    -p 1234:1234 \
+    bacalhau
+}
+
 function mediator() {
   source .env
   eval $(./stack print-local-dev-env)
