@@ -350,14 +350,27 @@ function solver-docker-run() {
     solver
 }
 
-# we run the jobcreator as the solver
-function jobcreator() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . jobcreator "$@"
+function job-creator() {
+  echo "Reminder to do doppler setup to project->job-creator and config->dev"
+  doppler run -p job-creator -c dev -- go run . jobcreator
+}
+
+function job-creator-docker-build() {
+  docker build \
+    -t job-creator \
+    -f ./docker/job-creator/Dockerfile \
+    --build-arg doppler_config=dev \
+    .
+}
+
+function job-creator-docker-run() {
+  docker run \
+    --rm \
+    --name job-creator \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p job-creator -c dev docker --max-age 1m --plain)" \
+    job-creator
 }
 
 function resource-provider() {
