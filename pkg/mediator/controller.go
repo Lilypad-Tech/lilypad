@@ -99,6 +99,9 @@ func NewMediatorController(
 // before we trigger our control loop (rambling comment of the day award goes to....)
 func (controller *MediatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		// OTEL_LOG_OTEL_LOG
+		// Let's log that we have agreed to a deal
+
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealMediatorUpdated {
 			if ev.Deal == nil {
@@ -113,6 +116,8 @@ func (controller *MediatorController) subscribeToSolver() error {
 
 			solver.ServiceLogSolverEvent(system.MediatorService, ev)
 
+			// OTEL_LOG_OTEL_LOG
+			// Let's log that we are triggering the solver
 			// trigger the solver
 			controller.loop.Trigger()
 		}
@@ -178,6 +183,8 @@ func (controller *MediatorController) Start(ctx context.Context, cm *system.Clea
 func (controller *MediatorController) solve() error {
 	controller.log.Debug("solving", "")
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we have both sides agreeing we should run a job
 	// if there are jobs that have had both sides agree then we should run the job
 	err := controller.runJobs()
 	if err != nil {

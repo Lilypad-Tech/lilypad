@@ -34,6 +34,9 @@ func RunJob(
 
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we are processing our options into a job offer
+
 	// let's process our options into an actual job offer
 	// this will also validate the module we are asking for
 	offer, err := jobCreatorService.GetJobOfferFromOptions(options.Offer)
@@ -44,6 +47,8 @@ func RunJob(
 	// wait a short period because we've just started the job creator service
 	time.Sleep(100 * time.Millisecond)
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we are adding a job offer
 	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
 	if err != nil {
 		return nil, err

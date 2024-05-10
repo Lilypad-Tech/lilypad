@@ -103,6 +103,7 @@ func SetupLogging() {
 	// Setup ZeroLog with caller information
 	zerolog.CallerSkipFrameCount = 3
 
+	// OTEL_LOG_OTEL_LOG
 	//tracer := otel.Tracer("logger")
 	// _, span := tracer.Start(context.Background(), "logging-setup")
 
@@ -124,7 +125,9 @@ func SetupLogging() {
 	// otel.SetTracerProvider(tp)
 
 	filteredLogger := logger.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, msg string) {
+		// OTEL_LOG_OTEL_LOG
 		// ctx, span := tracer.Start(r.Context(), "HTTP GET /devices")
+		
 		// pc, _, _, _ := runtime.Caller(1)
 		// funcName := runtime.FuncForPC(pc).Name()
 		// fmt.Println("level", e)

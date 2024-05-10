@@ -25,6 +25,8 @@ func doOffersMatch(
 	resourceOffer data.ResourceOffer,
 	jobOffer data.JobOffer,
 ) bool {
+	// OTEL_LOG_OTEL_LOG
+	// Let's log each of these possibilities - whether we fail to match CPU, GPU or RAM, let's log it
 	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
@@ -53,6 +55,9 @@ func doOffersMatch(
 		return false
 	}
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we are checking against specified modules
+
 	// if the resource provider has specified modules then check them
 	if len(resourceOffer.Modules) > 0 {
 		moduleID, err := data.GetModuleID(jobOffer.Module)
@@ -62,6 +67,8 @@ func doOffersMatch(
 				Msgf("error getting module ID")
 			return false
 		}
+		// OTEL_LOG_OTEL_LOG
+		// Let's log that we could not find our module
 		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
 		hasModule := false
 		for _, module := range resourceOffer.Modules {
@@ -81,6 +88,8 @@ func doOffersMatch(
 		}
 	}
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we do not support market priced resource offers
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
 		log.Trace().
@@ -90,6 +99,8 @@ func doOffersMatch(
 		return false
 	}
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we could not come to an agreement due to price differences
 	// if both are fixed price then we filter out "cannot afford"
 	if resourceOffer.Mode == data.FixedPrice && jobOffer.Mode == data.FixedPrice {
 		if resourceOffer.DefaultPricing.InstructionPrice > jobOffer.Pricing.InstructionPrice {
@@ -110,6 +121,8 @@ func doOffersMatch(
 		return false
 	}
 
+	// OTEL_LOG_OTEL_LOG
+	// Let's log that we have no matching solver
 	if resourceOffer.Services.Solver != jobOffer.Services.Solver {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
@@ -151,6 +164,8 @@ func getMatchingDeals(
 				return nil, err
 			}
 
+			// OTEL_LOG_OTEL_LOG
+			// Let's log that we have already tried to match the two elements and should not try again
 			// if this exists it means we've already tried to match the two elements and should not try again
 			if decision != nil {
 				continue
@@ -166,6 +181,8 @@ func getMatchingDeals(
 			}
 		}
 
+		// OTEL_LOG_OTEL_LOG
+		// Let's log that we have matched resource offers to job offers
 		// yay - we've got some matching resource offers
 		// let's choose the cheapest one
 		if len(matchingResourceOffers) > 0 {
@@ -178,6 +195,8 @@ func getMatchingDeals(
 				return nil, err
 			}
 
+			// OTEL_LOG_OTEL_LOG
+			// Let's log our matching decision
 			// add the match decision for this job offer
 			for _, matchingResourceOffer := range matchingResourceOffers {
 
