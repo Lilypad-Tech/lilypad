@@ -327,14 +327,27 @@ function chain-command() {
 }
 
 function solver() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  export SERVER_PORT=8080
-  export SERVER_URL=http://testnet.lilypad.tech:8080
-  go run . solver "$@"
+  echo "Reminder to do doppler setup to project->solver and config->dev"
+  doppler run -p solver -c dev -- go run . solver
+}
+
+function solver-docker-build() {
+  docker build \
+    -t solver \
+    -f ./docker/solver/Dockerfile \
+    --build-arg doppler_config=dev \
+    .
+}
+
+function solver-docker-run() {
+  docker run \
+    --rm \
+    --name solver \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -p 8080:8080 \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p solver -c dev docker --max-age 1m --plain)" \
+    solver
 }
 
 # we run the jobcreator as the solver
