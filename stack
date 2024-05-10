@@ -426,12 +426,6 @@ function bacalhau-docker-run() {
 }
 
 function mediator() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
-  export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
-  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
   go run . mediator "$@"
 }
 
