@@ -261,31 +261,69 @@ function run-cowsay-onchain() {
 ############################################################################
 ############################################################################
 
-function run() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . run "$@"
+function chain() {
+  DATA_DIR=${@:-/data/chain}
+
+  docker run \
+    --rm \
+    --name chain \
+    -p 8545:8545 \
+    -p 8546:8546 \
+    -v ${DATA_DIR}:/data/chain \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    ethereum/client-go:v1.13.5 \
+      --datadir /data/chain \
+      --dev \
+      --ws \
+      --ws.api web3,eth,net \
+      --ws.addr 0.0.0.0 \
+      --ws.port 8546 \
+      --ws.origins '*'
+      --http \
+      --http.api web3,eth,net \
+      --http.addr 0.0.0.0 \
+      --http.corsdomain '*' \
+      --http.port 8545 \
+      --http.vhosts '*'
 }
 
-function runsdxl() {
-  # Check for the number of arguments provided
-  if [ $# -lt 3 ]; then
-    echo "Usage: $0 runsdxl <model> PROMPT=\"<prompt>\""
-    exit 1
-  fi
+function chain-docker-build() {
+  docker build \
+    -t chain \
+    -f ./docker/chain/Dockerfile \
+    .
+}
 
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  local model="$1"
-  shift  # Remove the first argument, so "$@" contains only the second one
-  local prompt="$@"
-  go run . run $model -i "PromptEnv=$prompt"
+function chain-docker-run() {
+  DATA_DIR=${@:-/data/chain}
+
+  docker run \
+    --rm \
+    --name chain \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -p 8545:8545 \
+    -p 8546:8546 \
+    -v ${DATA_DIR}:/data/chain \
+    chain
+}
+
+function chain-boot() {
+  boot-message "Funding admin account"
+  chain-fund-admin
+  boot-message "Funding services with ether"
+  fund-services-ether
+  boot-message "Funding services with ether"
+  deploy
+}
+
+function chain-fund-admin() {
+  chain-command "eth.sendTransaction({from: eth.coinbase, to: \"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })"
+}
+
+function chain-command() {
+  docker exec -i chain geth --exec "$@" attach /data/chain/geth.ipc
 }
 
 function solver() {
