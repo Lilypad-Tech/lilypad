@@ -445,11 +445,6 @@ function unit-tests() {
 
 # this assumes boot having been run already
 function integration-tests() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
   (
     set -euo pipefail
     cd test
