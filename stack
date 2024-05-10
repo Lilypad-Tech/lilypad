@@ -2,15 +2,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export DEFAULT_DATA_DIR="/data/geth"
-export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
-export NETWORK=${NETWORK:="geth"}
-
-# if "$DIR/.env" exists then source it
-if [[ -f "$DIR/.env" ]]; then
-  source "$DIR/.env"
-fi
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATA_DIRECTORY=${DATA_DIRECTORY:="/data/chain"}
+NETWORK=${NETWORK:="geth"}
 
 ############################################################################
 ############################################################################
@@ -109,7 +103,7 @@ function clean-deploy() {
 
 function clean() {
   docker rm -f $(docker ps -aq) || true
-  sudo rm -rf ${DATA_DIRECTORY}
+  rm -rf ${DATA_DIRECTORY}/*
   clean-deploy
 }
 
@@ -168,7 +162,7 @@ function go-binding() {
       "contracts/$name.sol" \
       -o artifacts
 
-  sudo chown -R $USER:$USER hardhat/artifacts
+  chown -R $USER hardhat/artifacts
   mkdir -p hardhat/artifacts/bindings/$pkg
 
   # generate the go bindings
@@ -181,8 +175,8 @@ function go-binding() {
       "--abi=artifacts/$name.abi" \
       "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
 
-  sudo chown -R $USER:$USER hardhat/artifacts/bindings/$pkg
-  sudo chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
+  chown -R $USER hardhat/artifacts/bindings/$pkg
+  chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
   cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
 
   echo "Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
@@ -203,7 +197,7 @@ function go-bindings() {
   go-binding LilypadMediationRandom mediation
   go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
-  
+
   echo "Generated all go bindings pkg/contract/bindings/"
 }
 
