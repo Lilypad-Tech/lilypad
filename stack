@@ -374,13 +374,29 @@ function job-creator-docker-run() {
 }
 
 function resource-provider() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
-  export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . resource-provider "$@"
+  echo "Reminder to do doppler setup to project->resource-provider and config->dev"
+  doppler run -p resource-provider -c dev -- go run . resource-provider
+}
+
+function resource-provider-docker-build() {
+  docker build \
+    -t resource-provider \
+    -f ./docker/resource-provider/Dockerfile \
+    --build-arg doppler_config=dev \
+    --build-arg DOPPLER_TOKEN_BACALHAU="$(doppler configs tokens create -p bacalhau -c dev bacalhau_docker --plain)" \
+    --build-arg DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --plain)" \
+    .
+}
+
+function resource-provider-docker-run() {
+  docker run \
+    --rm \
+    --name resource-provider \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -e DOPPLER_TOKEN_BACALHAU="$(doppler configs tokens create -p bacalhau -c dev bacalhau_docker --max-age 1m --plain)" \
+    -e DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --max-age 1m --plain)" \
+    resource-provider
 }
 
 function mediator() {
