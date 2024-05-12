@@ -1,10 +1,12 @@
 package jobcreator
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
@@ -14,11 +16,18 @@ type RunJobResults struct {
 	Result   data.Result
 }
 
+// var (
+// 	span trace.Span
+// )
+
 func RunJob(
 	ctx *system.CommandContext,
 	options JobCreatorOptions,
 	eventSub JobOfferSubscriber,
 ) (*RunJobResults, error) {
+	fmt.Println("trace started")
+	span := lilymetrics.Trace(context.Background())
+	defer span.End()
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
 		return nil, err
@@ -37,22 +46,25 @@ func RunJob(
 	// OTEL_LOG_OTEL_LOG
 	// Let's log that we are processing our options into a job offer
 
+	sub_span := lilymetrics.TraceSection(context.Background(), "GetJobOfferFromOptions")
 	// let's process our options into an actual job offer
 	// this will also validate the module we are asking for
 	offer, err := jobCreatorService.GetJobOfferFromOptions(options.Offer)
 	if err != nil {
 		return nil, err
 	}
-
+	sub_span.End()
 	// wait a short period because we've just started the job creator service
 	time.Sleep(100 * time.Millisecond)
 
 	// OTEL_LOG_OTEL_LOG
 	// Let's log that we are adding a job offer
+	sub_span = lilymetrics.TraceSection(context.Background(), "AddJobOffer")
 	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
 	if err != nil {
 		return nil, err
 	}
+	sub_span.End()
 
 	updateChan := make(chan data.JobOfferContainer)
 
@@ -83,6 +95,7 @@ waitloop:
 	}
 
 	result, err := jobCreatorService.GetResult(finalJobOffer.DealID)
+
 	if err != nil {
 		return nil, err
 	}

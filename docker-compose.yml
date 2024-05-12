@@ -1,5 +1,14 @@
 version: '3'
 services:
+  init:
+    image: &tempoImage grafana/tempo:latest
+    user: root
+    entrypoint:
+      - "chown"
+      - "10001:10001"
+      - "/var/tempo"
+    volumes:
+      - ./tempo-data:/var/tempo
   geth2:
     image: ethereum/client-go:v1.13.5
     # restart: always
@@ -102,5 +111,47 @@ services:
       networks:
         - lilypad
       command: ["./stack", "doppler", "docker", "&&", "./stack", "resource-provider --offer-gpu 1"]  
+  grafana:
+    networks:
+    - lilypad  
+    image: grafana/grafana:10.4.2
+    volumes:
+      - ./docker/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    ports:
+      - "3000:3000"
+  tempo:
+    image: *tempoImage
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./docker/tempo.yaml:/etc/tempo.yaml
+      - ./tempo-data:/var/tempo
+    ports:
+      - "14268"  # jaeger ingest
+      - "3200"   # tempo
+      - "4317"  # otlp grpc
+      # - "4318"  # otlp http
+      - "9411"   # zipkin
+      - 4318:4318  
+    depends_on:
+      - init   
+    networks:
+    - lilypad 
+  prometheus:
+    networks:
+    - lilypad 
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./docker/prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - "9090:9090"    
 networks:
   lilypad:

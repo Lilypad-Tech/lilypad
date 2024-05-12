@@ -7,6 +7,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -142,6 +143,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 }
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+
 	errorChan := make(chan error)
 	err := controller.subscribeToSolver()
 	if err != nil {
@@ -171,6 +173,8 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
+			span := lilymetrics.TraceSection(context.Background(), "NewControlLoop")
+			defer span.End()
 			err := controller.solve()
 			if err != nil {
 				errorChan <- err

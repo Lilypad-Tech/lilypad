@@ -1,16 +1,23 @@
 package solver
 
 import (
+	"context"
 	"sort"
 	"strings"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ListOfResourceOffers []data.ResourceOffer
+
+var (
+	span trace.Span
+)
 
 func (a ListOfResourceOffers) Len() int { return len(a) }
 func (a ListOfResourceOffers) Less(i, j int) bool {
@@ -27,6 +34,8 @@ func doOffersMatch(
 ) bool {
 	// OTEL_LOG_OTEL_LOG
 	// Let's log each of these possibilities - whether we fail to match CPU, GPU or RAM, let's log it
+	span = lilymetrics.Trace(context.Background())
+	defer span.End()
 	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
@@ -54,7 +63,7 @@ func doOffersMatch(
 			Msgf("did not match RAM")
 		return false
 	}
-
+	// span.End()
 	// OTEL_LOG_OTEL_LOG
 	// Let's log that we are checking against specified modules
 
@@ -90,8 +99,10 @@ func doOffersMatch(
 
 	// OTEL_LOG_OTEL_LOG
 	// Let's log that we do not support market priced resource offers
+
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
+		// lilymetrics.Trace(context.Background(), "doOffersMatch() do not support market priced resource offers").End()
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
 			Str("job offer", jobOffer.ID).
@@ -137,6 +148,8 @@ func doOffersMatch(
 func getMatchingDeals(
 	db store.SolverStore,
 ) ([]data.Deal, error) {
+	span := lilymetrics.Trace(context.Background())
+	defer span.End()
 	deals := []data.Deal{}
 
 	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{

@@ -3,11 +3,11 @@ package lilymetrics
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"runtime"
 
 	"go.opentelemetry.io/otel"
@@ -22,10 +22,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	tracer       trace.Tracer
-	otlpEndpoint string
-)
+// var (
+// 	tracer       trace.Tracer
+// 	otlpEndpoint string
+// )
 
 type BasicAuthTransport struct {
 	Username string
@@ -53,51 +53,51 @@ func newConsoleExporter() (oteltrace.SpanExporter, error) {
 //	}
 func newOTLPExporter(ctx context.Context) (oteltrace.SpanExporter, error) {
 	// Change default HTTPS -> HTTP
-	// insecureOpt := otlptracehttp.WithInsecure()
+	insecureOpt := otlptracehttp.WithInsecure()
 	// auth := otlptracehttp.NewClient()
-	// // Update default OTLP reciver endpoint
-	// endpointOpt := otlptracehttp.WithEndpoint(otlpEndpoint)
+	// Update default OTLP reciver endpoint
+	endpointOpt := otlptracehttp.WithEndpoint("localhost:4318")
 
-	// return otlptracehttp.New(ctx, insecureOpt, endpointOpt)
-	otlpEndpoint = os.Getenv("OTLP_ENDPOINT")
-	if otlpEndpoint == "" {
-		log.Fatalln("You MUST set OTLP_ENDPOINT env variable!")
-	}
-	username := os.Getenv("OTLP_USERNAME")
-	password := os.Getenv("OTLP_PASSWORD")
-	// Create an HTTP client with basic authentication
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-		},
-	}
+	return otlptracehttp.New(ctx, insecureOpt, endpointOpt)
+	// otlpEndpoint = os.Getenv("OTLP_ENDPOINT")
+	// if otlpEndpoint == "" {
+	// 	log.Fatalln("You MUST set OTLP_ENDPOINT env variable!")
+	// }
+	// username := os.Getenv("OTLP_USERNAME")
+	// password := os.Getenv("OTLP_PASSWORD")
+	// // Create an HTTP client with basic authentication
+	// httpClient := &http.Client{
+	// 	Transport: &http.Transport{
+	// 		Proxy: http.ProxyFromEnvironment,
+	// 	},
+	// }
 
-	// Set up basic authentication
-	httpClient.Transport = &BasicAuthTransport{
-		Username: username,
-		Password: password,
-		Base:     httpClient.Transport,
-	}
+	// // Set up basic authentication
+	// httpClient.Transport = &BasicAuthTransport{
+	// 	Username: username,
+	// 	Password: password,
+	// 	Base:     httpClient.Transport,
+	// }
 
-	//Initialize the exporter with the HTTP client
-	// otlptracehttp.NewClient()
+	// //Initialize the exporter with the HTTP client
+	// // otlptracehttp.NewClient()
 
-	auth := username + ":" + password
-	authEncoded := base64.StdEncoding.EncodeToString([]byte(auth))
-	authHeader := "Basic " + authEncoded
+	// auth := username + ":" + password
+	// authEncoded := base64.StdEncoding.EncodeToString([]byte(auth))
+	// authHeader := "Basic " + authEncoded
 
-	exporter, err := otlptracehttp.New(
-		ctx,
-		otlptracehttp.WithHeaders(map[string]string{
-			"Authorization": authHeader,
-		}),
-		otlptracehttp.WithEndpoint(otlpEndpoint),
-	)
+	// exporter, err := otlptracehttp.New(
+	// 	ctx,
+	// 	otlptracehttp.WithHeaders(map[string]string{
+	// 		"Authorization": authHeader,
+	// 	}),
+	// 	otlptracehttp.WithEndpoint(otlpEndpoint),
+	// )
 
-	if err != nil {
-		// handle error
-	}
-	return exporter, err
+	// if err != nil {
+	// 	// handle error
+	// }
+	// return exporter, err
 }
 func (bat *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(bat.Username, bat.Password)
@@ -109,7 +109,7 @@ func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceName("Metrics"),
+			semconv.ServiceName(os.Args[1]), //"Metrics"),
 		),
 	)
 
@@ -122,11 +122,45 @@ func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 		sdktrace.WithResource(r),
 	)
 }
-func Trace(ctx context.Context, name string) trace.Span {
+func getCallStack() []string {
+	// Set the maximum depth of the call stack to retrieve
+	const depth = 32
+
+	// Create a slice to store the function names
+	stack := make([]uintptr, depth)
+
+	// Retrieve the call stack
+	n := runtime.Callers(0, stack)
+	if n == 0 {
+		return nil
+	}
+
+	// Trim the stack to the actual size
+	stack = stack[:n]
+
+	// Retrieve function names for each entry in the call stack
+	var functionNames []string
+	for _, pc := range stack {
+		if fn := runtime.FuncForPC(pc); fn != nil {
+			functionNames = append(functionNames, fn.Name())
+		}
+	}
+
+	return functionNames
+
+}
+func Trace(ctx context.Context) trace.Span {
+	return TraceSection(ctx, "")
+}
+func TraceSection(ctx context.Context, name string) trace.Span {
 
 	pc, _, _, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
-	tracer := otel.Tracer(funcName)
+	if path.Base(funcName) == "lilymetrics.Trace" {
+		pc, _, _, _ = runtime.Caller(2)
+		funcName = runtime.FuncForPC(pc).Name()
+	}
+	// tracer := otel.Tracer(strings.Join(getCallStack(), "->"))
 
 	// Example context, replace with your context creation method
 	// ctx := context.Background()
@@ -134,9 +168,9 @@ func Trace(ctx context.Context, name string) trace.Span {
 	tp := newTraceProvider(exp)
 	otel.SetTracerProvider(tp)
 
-	tracer = tp.Tracer(funcName)
+	tracer := tp.Tracer(funcName)
 
-	_, span := tracer.Start(ctx, name)
+	_, span := tracer.Start(ctx, path.Base(funcName)+" "+name)
 	// fmt.Println(p, name)
 	return span
 }

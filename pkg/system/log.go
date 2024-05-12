@@ -1,12 +1,14 @@
 package system
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/diode"
 	"github.com/rs/zerolog/log"
@@ -125,9 +127,10 @@ func SetupLogging() {
 	// otel.SetTracerProvider(tp)
 
 	filteredLogger := logger.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, msg string) {
+
 		// OTEL_LOG_OTEL_LOG
 		// ctx, span := tracer.Start(r.Context(), "HTTP GET /devices")
-		
+
 		// pc, _, _, _ := runtime.Caller(1)
 		// funcName := runtime.FuncForPC(pc).Name()
 		// fmt.Println("level", e)
@@ -200,6 +203,7 @@ func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, tit
 	e := log.WithLevel(level).
 		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data))
 	e.Caller().Msg("")
+
 }
 
 func Error(service Service, title string, err error) {
@@ -215,6 +219,7 @@ func Debug(service Service, title string, data interface{}) {
 }
 
 func Trace(service Service, title string, data interface{}) {
+	lilymetrics.TraceSection(context.Background(), title+" "+fmt.Sprintf("%+v", data)).End()
 	logWithCaller(5, zerolog.TraceLevel, service, title, data)
 }
 

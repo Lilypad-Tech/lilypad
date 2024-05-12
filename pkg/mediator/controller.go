@@ -9,12 +9,14 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/module"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type MediatorController struct {
@@ -37,6 +39,10 @@ type MediatorController struct {
 // reacts to events in the system - this 10 second background
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
+
+var (
+	span trace.Span
+)
 
 func NewMediatorController(
 	options MediatorOptions,
@@ -101,7 +107,8 @@ func (controller *MediatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
 		// OTEL_LOG_OTEL_LOG
 		// Let's log that we have agreed to a deal
-
+		span = lilymetrics.Trace(context.Background())
+		defer span.End()
 		// we need to agree to the deal now we've heard about it
 		if ev.EventType == solver.DealMediatorUpdated {
 			if ev.Deal == nil {
@@ -118,9 +125,12 @@ func (controller *MediatorController) subscribeToSolver() error {
 
 			// OTEL_LOG_OTEL_LOG
 			// Let's log that we are triggering the solver
+			sub_span := lilymetrics.TraceSection(context.Background(), "Trigger")
 			// trigger the solver
 			controller.loop.Trigger()
+			sub_span.End()
 		}
+
 	})
 	return nil
 }
@@ -185,11 +195,14 @@ func (controller *MediatorController) solve() error {
 
 	// OTEL_LOG_OTEL_LOG
 	// Let's log that we have both sides agreeing we should run a job
+	span := lilymetrics.Trace(context.Background())
+	defer span.End()
 	// if there are jobs that have had both sides agree then we should run the job
 	err := controller.runJobs()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

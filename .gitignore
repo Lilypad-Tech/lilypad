@@ -28,3 +28,4 @@ go1.22.2.linux-amd64.tar.gz
 */tmp/*
 
 .env
+tempo-data
