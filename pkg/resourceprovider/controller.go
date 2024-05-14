@@ -9,6 +9,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/module"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -408,6 +409,8 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		Error:  "",
 	}
 	err := func() error {
+		span := lilymetrics.Trace(context.Background())
+		defer span.End()
 		controller.log.Info("loading module", "")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {

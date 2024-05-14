@@ -228,6 +228,7 @@ func getMatchingDeals(
 		}
 	}
 
+	lilymetrics.Matcher(len(jobOffers),len(resourceOffers),len(deals))
 	log.Debug().
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).

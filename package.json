@@ -1,1 +1,10 @@
-{}
+{
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject",
+        "watch-js": "nodemon --exec 'npm run build' --watch /src/*.js",
+        "watch-go": "nodemon --exec './stack metrics' --watch '**/**.go'"
+      }
+}

@@ -5,6 +5,11 @@ const ENDPOINT = 'http://localhost:8000'; // Change this to your server's endpoi
 const App = () => {
     const [updates, setUpdates] = useState([]);
     const [response, setResponse] = useState('');
+    const [stdout, setStdout] = useState('');
+    const [matcher, setMatcher] = useState('');
+    const [deal, setDeal] = useState('');
+    const [result, setResult] = useState('');
+    
     const socket = io({transports: ['websocket']});
     // let socket;
     useEffect(() => {
@@ -28,9 +33,27 @@ const App = () => {
           console.log('Connected to server');
         });
     
+        
+        socket.on('deal', data => {
+          console.log('Received deal:', data);
+          setDeal(data)
+          //setResponse(data);
+        });
+        
+        socket.on('matcher', data => {
+          console.log('Received matcher:', data);
+          setMatcher(data)
+          //setResponse(data);
+        });
+        socket.on('result', data => {
+          console.log('result deal:', data);
+          setResult(data)
+          //setResponse(data);
+        });
         socket.on('reply', data => {
           console.log('Received reply:', data);
-          setResponse(data);
+          setStdout(data)
+          //setResponse(data);
         });
         socket.on('update', data => {
             console.log('Received reply:', data);
@@ -66,11 +89,28 @@ const App = () => {
     }
     return (
         <div>
-            {/* <button onClick={pingServer}>Ping</button> */}
+            <button onClick={pingServer}>Cow Say</button>
+            <br/>
+            Matches:
+            <br/>
+            <code>{matcher}</code>
+            <br/>
+            Deal Status:
+            <br/>
+            <code>{deal}</code>
+            <br/>
+            Result:
+            <br/>
+            <pre>{result}</pre>
+            <br/>
+            Messages:
+            <br/>
+            <code>{stdout}</code>
             <h1>Live Logs</h1>
+            
             <ul>
                 {updates.map((update) => (
-                    <li key={update.id}>{update.message}</li>
+                    <li key={update.id}> {new Date(update.timestamp).toLocaleString('en-US')}  {update.message}</li>
                 ))}
             </ul>
         </div>

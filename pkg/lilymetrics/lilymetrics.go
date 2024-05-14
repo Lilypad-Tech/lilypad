@@ -1,13 +1,16 @@
 package lilymetrics
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -36,8 +39,9 @@ type Event struct {
 	Details   string `json:"details"`
 }
 type Update struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+	ID        string `json:"id"`
+	Timestamp string `json:"timestamp"`
+	Message   string `json:"message"`
 }
 
 var db *sql.DB
@@ -64,18 +68,80 @@ func (e Event) String() string {
 	}
 	return string(bytes)
 }
-func handleJobEvent(w http.ResponseWriter, r *http.Request) {
-
-	decoder := json.NewDecoder(r.Body)
-	var event Event
-	// var event map[string]interface{}
-	err := decoder.Decode(&event)
+func handleMatcherEvent(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logger.Info().Msg(event.String())
-	fmt.Println("Received event", event)
+	defer r.Body.Close()
+
+	data := string(body)
+	server.BroadcastToNamespace("/", "matcher", data, "data")
+	fmt.Println("Received data:", data)
+}
+func handleJobEvent(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	b := string(body)
+
+	server.BroadcastToNamespace("/", "deal", b, "data")
+	fmt.Println("Received data:", b)
+	if strings.Contains(b, "ResultsAccepted") {
+		fmt.Println("status: ResultsAccepted")
+		// r := data.dealid
+		// server.BroadcastToNamespace("/", "result", r, "data")
+		type Data struct {
+			Dealid string `json:"dealid"`
+			State  string `json:"state"`
+		}
+
+		// body, err := io.ReadAll(r.Body)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		// defer r.Body.Close()
+
+		var data Data
+		// var val []byte = []byte(`"{\"channel\":\"buu\",\"name\":\"john\", \"msg\":\"doe\"}"`)
+
+		// s, err := strconv.Unquote(string(b))
+
+		// if err != nil {
+		// 	fmt.Println("Error unquoting JSON string")
+		// 	return
+		// }
+		err = json.Unmarshal([]byte(b), &data)
+		if err != nil {
+			fmt.Println("Error unmarshalling JSON data")
+			// http.Error(w, err.Error(), http.StatusBadRequest)
+			// return
+		}
+
+		//server.BroadcastToNamespace("/", "result", string(body), "data")
+		// fmt.Println("ResultsAccepted:", string(body))
+		// if strings.Contains(string(body), "ResultsAccepted") {
+		jobresult := data.Dealid
+		cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+jobresult+"/stdout")
+
+		output, err := cmdstd.Output()
+		if err != nil {
+			fmt.Println("Error:", err)
+			//return true
+		}
+
+		fmt.Println(string(output))
+		server.BroadcastToNamespace("/", "result", string(output), "data")
+		// }
+	}
+
 }
 
 func handleEvent(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +210,7 @@ func handleGetEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func getLatestLogs() []Update {
-	rows, err := db.Query("SELECT  id, timestamp,details FROM logs ORDER BY timestamp limit 10")
+	rows, err := db.Query("SELECT  id, timestamp,details FROM logs ORDER BY  timestamp desc limit 5")
 	if err != nil {
 
 	}
@@ -162,12 +228,13 @@ func getLatestLogs() []Update {
 			log.Println("Error scanning row: %v", err)
 		}
 
-		updates = append(updates, Update{ID: logs.id, Message: logs.details})
+		updates = append(updates, Update{ID: logs.id, Timestamp: logs.timestamp, Message: logs.details})
 	}
 
 	if err := rows.Err(); err != nil {
 
 	}
+
 	return updates
 }
 func escapeSingleQuotes(s string) string {
@@ -264,6 +331,20 @@ func emitSocketEvent(eventName string, data []Update) { // data *pq.Notification
 }
 func RunMetrics() {
 	// defer Trace(context.Background(), "Migrations").End()
+
+	// go exec.Command("bacalhau", "serve", " --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked")
+	// // cmdstd.Start()
+	// // output, errr := cmdstd.Output()
+	// // if errr != nil {
+	// // 	fmt.Println("Error:", errr)
+	// // }
+	// // fmt.Println(string(output))
+	// time.Sleep(5 * time.Second)
+	// go exec.Command("./stack", "solver")
+	// go exec.Command("./stack", "mediator")
+	// go exec.Command("./stack", "resource-provider", "--offer-gpu 1")
+	// go exec.Command("./stack", "jobcreator")
+
 	span := TraceSection(context.Background(), "Migrations")
 	MigrateUp("logs_bulk")
 	MigrateUp("schema")
@@ -381,8 +462,17 @@ func stupRoutes() {
 	})
 
 	server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-		log.Println("notice:", msg)
-		s.Emit("reply", "have "+msg)
+		// 	//exec.Command("../../hardhat/run-cowsay-onchain.ts")
+		// 	exec.Command("../../.stack  run-cowsay-onchain")
+		//s.Emit("reply", "have "+msg)
+		// return
+		//cmd := exec.Command("pwd")
+		//s.Emit("reply", "have "+scanner.Text())
+		//shouldReturn :=
+		go newFunction(msg)
+		// if shouldReturn {
+		// 	return
+		// }
 	})
 
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
@@ -424,12 +514,76 @@ func stupRoutes() {
 	// })
 	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
 	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
+	router.HandleFunc("/metrics-dashboard/matcher", handleMatcherEvent).Methods("POST")
+
 	// router.HandleFunc("/", http.FileServer(http.Dir("../frontend"))).Methods("GET") // Only keep the event handler route
 
 	router.HandleFunc("/updates", handleGetEvent).Methods("GET")
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("dashboard/build"))))
 	http.Handle("/", http.FileServer(http.Dir("dashboard/build")))
-	log.Fatal(http.ListenAndServe(":8001", router))
+	log.Fatal(http.ListenAndServe(":8000", router))
+}
+
+func newFunction(msg string) bool {
+	log.Println("notice:", msg)
+
+	// cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/QmYqdpiry4h9P39JTZ65NjhhS2QQou448LWRckE96cpkxY/stdout")
+
+	// output, err := cmdstd.Output()
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// 	//return true
+	// }
+
+	// fmt.Println(string(output))
+	// server.BroadcastToNamespace("/", "reply", output, "data")
+	// return false
+	server.BroadcastToNamespace("/", "reply", msg, "data")
+
+	cmd := exec.Command("./stack", "run-cowsay-onchain")
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		r := scanner.Text()
+		fmt.Println("from scanner ", r)
+		// if strings.Contains(r, "Job result:") {
+		// 	words := strings.Fields(r)
+		// 	lastWord := words[len(words)-1]
+		// 	fmt.Println("JOB " + lastWord)
+		// 	cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+lastWord+"/stdout")
+
+		// 	output, err := cmdstd.Output()
+		// 	fmt.Println(string(output))
+		// 	server.BroadcastToNamespace("/", "reply", output, "data")
+		// 	if err != nil {
+		// 		fmt.Println("Error:", err)
+		// 		return true
+		// 	}
+
+		// 	break
+		// } else {
+		server.BroadcastToNamespace("/", "reply", r, "data")
+		// }
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+	return false
 }
 func _Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -446,6 +600,19 @@ func _Middleware(next http.Handler) http.Handler {
 	})
 }
 func main() {
+
+	// err := cmd.Start()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// cmd := exec.Command("bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked")
+
+	// err := cmd.Start()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
 	RunMetrics()
 
 }

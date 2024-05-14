@@ -452,6 +452,8 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	id := vars["id"]
 
 	err := func() error {
+		span := lilymetrics.Trace(context.Background())
+		defer span.End()
 		deal, err := solverServer.store.GetDeal(id)
 		if err != nil {
 			log.Error().Err(err).Msgf("error loading deal")

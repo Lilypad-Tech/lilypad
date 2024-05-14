@@ -30,7 +30,7 @@ func MigrateUp(dir_name string) {
 	}
 	defer db.Close()
 
-	migration_path := os.Getenv("DIR") + "/migrations/" + dir_name
+	migration_path := os.Getenv("PWD") + "/migrations/" + dir_name
 	if err != nil {
 		log.Fatal(err)
 	}

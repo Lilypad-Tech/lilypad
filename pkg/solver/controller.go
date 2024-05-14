@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -141,6 +142,7 @@ func (controller *SolverController) subscribeToWeb3() error {
 			return
 		}
 		controller.log.Info("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		lilymetrics.LogJob(string(ev.DealId), data.GetAgreementStateString(ev.State))
 		system.DumpObjectDebug(ev)
 		// update the store with the state change
 		controller.loop.Trigger()

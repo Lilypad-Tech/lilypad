@@ -495,8 +495,8 @@ function solver() {
   export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
   export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
   export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  export SERVER_PORT=8080
-  export SERVER_URL=http://localhost:8080
+  export SERVER_PORT=8081
+  export SERVER_URL=http://localhost:8081
   # todo: metrics event
   go run . solver "$@"
 }

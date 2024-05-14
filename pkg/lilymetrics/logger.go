@@ -188,21 +188,48 @@ func LogDeal(source string, deal, status string) {
 	defer resp.Body.Close()
 }
 
-func LogJob(source string, module_id string, job_id string, status string) {
-	log.Print(module_id)
+// func LogJob(source string, module_id string, job_id string, status string) {
+// 	log.Print(module_id)
 
-	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/job"
-	json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, status)
+// 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/job"
+// 	json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, status)
+// 	fmt.Println(json)
+// 	data := []byte(json)
+
+//		resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		defer resp.Body.Close()
+//	}
+func Matcher(jobOffers int, resourceOffers int, deals int) {
+
+	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/matcher"
+	json := fmt.Sprintf(`{"jobOffers":"%d","resourceOffers":"%d","deals":"%d"}`, jobOffers, resourceOffers, deals)
 	fmt.Println(json)
 	data := []byte(json)
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
 	}
 	defer resp.Body.Close()
 }
+func LogJob(dealid string, state string) {
+	// log.Print(module_id)
 
+	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/job"
+	// json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, status)
+	json := fmt.Sprintf(`{"dealid":"%s","state":"%s"}`, dealid, state)
+	fmt.Println(json)
+	data := []byte(json)
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		// log.Fatal(err)
+	}
+	defer resp.Body.Close()
+}
 func LogMetric(module_id string, detail string) {
 	log.Print(module_id)
 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/log"
@@ -212,7 +239,7 @@ func LogMetric(module_id string, detail string) {
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
 	}
 	defer resp.Body.Close()
 }

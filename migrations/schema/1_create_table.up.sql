@@ -93,6 +93,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM logs WHERE timestamp = NEW.timestamp) THEN
         INSERT INTO logs (type, timestamp, details)
         VALUES (NEW.type, NEW.timestamp, NEW.details);
+        NOTIFY updates;
     END IF;
     RETURN NEW;
 END;

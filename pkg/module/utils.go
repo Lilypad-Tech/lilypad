@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/module/shortcuts"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 )
@@ -210,6 +211,8 @@ func subst(format string, jsonEncodedInputs ...string) string {
 // - inject the given values using template syntax
 // - JSON parse and check we don't have errors
 func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Module, error) {
+	span := lilymetrics.Trace(context.Background())
+	defer span.End()
 	moduleText, err := PrepareModule(module)
 	if err != nil {
 		return nil, err

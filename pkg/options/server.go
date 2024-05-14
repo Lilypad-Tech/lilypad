@@ -11,7 +11,7 @@ func GetDefaultServerOptions() http.ServerOptions {
 	return http.ServerOptions{
 		URL:  GetDefaultServeOptionString("SERVER_URL", ""),
 		Host: GetDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
-		Port: GetDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
+		Port: GetDefaultServeOptionInt("SERVER_PORT", 8081), //nolint:gomnd
 	}
 }
 
