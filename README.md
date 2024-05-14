@@ -2,7 +2,7 @@
 
 Lilypad enables users to run containerised AI workloads easily in a decentralized GPU network, where anyone can get paid to connect their compute nodes to the network and run container jobs. Users have access to easily run jobs such as Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://app.lilypad.tech) on the web.
 
-Visit the [Lilypad Docs](https://docs.lilypad.tech/) site for a more comprehensive overview to getting up and running incluing a [Quick Start Guide](https://lilypad.team/quickstart)
+Visit the [Lilypad Docs](https://docs.lilypad.tech/) site for a more comprehensive overview to getting up and running including a [Quick Start Guide](https://lilypad.team/quickstart)
 
 ## Getting started running container jobs on Lilypad
 
@@ -30,7 +30,7 @@ Containerized job modules can be built and added to the available module list; f
 
 ## Getting started running a Node on Lilypad Network
 
-As a distributed network lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
+As a distributed network Lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
 
 ## The Lilypad Community 
 
