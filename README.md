@@ -19,7 +19,7 @@ The current list of modules can be found in the following repositories:
 
 * [lilysay](https://github.com/Lilypad-Tech/lilypad-module-lilysay)
 * [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay)
-* [Stable Diffusion XL](https://github.com/lilypad-tech/lilypad-module-sdxl)
+* [Stable Diffusion XL](https://github.com/Lilypad-Tech/lilypad-module-sdxl-pipeline/)
 * [Stable Diffusion Video](https://github.com/Lilypad-Tech/lilypad-module-sdv-pipeline)
 * [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
 
@@ -27,7 +27,7 @@ Containerised job modules can be built and added to the available module list; f
 
 ## Getting started running a Node on Lilypad Network
 
-As a distributed network lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
+As a distributed network Lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
 
 ## The Lilypad Community 
 
