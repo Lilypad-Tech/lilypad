@@ -16,17 +16,14 @@ lilypad run cowsay:v0.0.3 -i Message="moo"
 
 The current list of modules can be found in the following repositories: 
 
-* [sdxl](https://github.com/lilypad-tech/lilypad-module-sdxl)
-* [stable-diffusion](https://github.com/lilypad-tech/lilypad-module-stable-diffusion)
-* [duckdb](https://github.com/lilypad-tech/lilypad-module-duckdb)
-* [fastchat](https://github.com/lilypad-tech/lilypad-module-fastchat)
-* [lora-inference](https://github.com/lilypad-tech/lilypad-module-lora-inference)
-* [lora-training](https://github.com/lilypad-tech/lilypad-module-lora-training)
-* [filecoin-data-prep](https://github.com/lilypad-tech/lilypad-module-filecoin-data-prep)
-* [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
-* [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay)
 
-Containerized job modules can be built and added to the available module list; for more details visit the [building a job](https://lilypad.team/building) documentation. If you would like to contribute, open a pull request on this repository to add your link to the list above.
+* [lilysay](https://github.com/Lilypad-Tech/lilypad-module-lilysay)
+* [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay)
+* [Stable Diffusion XL](https://github.com/Lilypad-Tech/lilypad-module-sdxl-pipeline/)
+* [Stable Diffusion Video](https://github.com/Lilypad-Tech/lilypad-module-sdv-pipeline)
+* [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
+
+Containerised job modules can be built and added to the available module list; for more details visit the [building a job](https://lilypad.team/building) documentation. If you would like to contribute, open a pull request on this repository to add your link to the list above.
 
 ## Getting started running a Node on Lilypad Network
 
