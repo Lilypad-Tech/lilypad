@@ -2,58 +2,79 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export DEFAULT_DATA_DIR="/data/geth"
-export DATA_DIRECTORY=${DATA_DIRECTORY:="$DEFAULT_DATA_DIR"}
-export NETWORK=${NETWORK:="geth"}
-
-# if "$DIR/.env" exists then source it
-if [[ -f "$DIR/.env" ]]; then
-  source "$DIR/.env"
-fi
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
 
 ############################################################################
-############################################################################
-# geth
-############################################################################
+# chain
 ############################################################################
 
-# run a local geth node in dev mode mounted against a local data directory
-function geth() {
-  docker network ls | grep lilypad || docker network create lilypad
-  docker run -d --restart always \
-    --name geth \
+function chain-docker-build() {
+  docker build \
+    -t chain \
+    -f ./docker/chain/Dockerfile \
+    --build-arg arch=${OS_ARCH} \
+    --build-arg admin_address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
+    .
+}
+
+function chain-docker-run() {
+  DATA_DIR=${@:-/data/chain}
+
+  docker run \
+    --rm \
+    --name chain \
     --network lilypad \
+    --add-host localhost:host-gateway \
     -p 8545:8545 \
     -p 8546:8546 \
-    -v ${DATA_DIRECTORY}:/data/geth \
-    ethereum/client-go:v1.13.5 \
-      --datadir /data/geth \
-      --dev \
-      --ws \
-      --ws.api web3,eth,net \
-      --ws.addr 0.0.0.0 \
-      --ws.port 8546 \
-      --ws.origins '*' \
-      --http \
-      --http.api web3,eth,net \
-      --http.addr 0.0.0.0 \
-      --http.corsdomain '*' \
-      --http.port 8545 \
-      --http.vhosts '*'
+    -v ${DATA_DIR}:/data/chain \
+    chain
 }
 
-function geth-command() {
-  docker exec -i geth geth --exec "$@" attach /data/geth/geth.ipc
+function chain-boot() {
+  echo "- Funding services with ether"
+  fund-services-ether
+  echo "- Funding services with ether"
+  deploy
 }
 
-############################################################################
+function deploy() {
+  clean-deploy
+  echo "- Compiling contracts"
+  compile-contracts
+  echo "- Deploying contracts"
+  deploy-contracts
+  echo "- Funding services with tokens"
+  fund-services-tokens
+  echo "- Printing balances"
+  balances
+}
+
+
+function chain-fund-admin() {
+  docker exec -i chain geth --exec "eth.sendTransaction({from: eth.coinbase, to: \"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })" attach /data/chain/geth.ipc
+}
+
+function clean() {
+  DATA_DIR=${@:-/data/chain}
+
+  docker rm -f $(docker ps -aq) || true
+  rm -rf ${DATA_DIR}/*
+  clean-deploy
+}
+
+function clean-deploy() {
+  rm -rf $(pwd)/hardhat/artifacts
+  rm -rf $(pwd)/hardhat/cache
+  rm -rf $(pwd)/hardhat/deployments/geth
+}
+
 ############################################################################
 # faucet
 ############################################################################
-############################################################################
 
-# fun the faucet container
+# TODO
 function faucet() {
   source .env
   eval $(./stack print-contract-env)
@@ -74,118 +95,16 @@ function faucet() {
 
 
 ############################################################################
-############################################################################
-# bacalhau
-############################################################################
-############################################################################
-
-function bacalhau-serve() {
-  bacalhau serve \
-    --node-type compute,requester \
-    --peer none \
-    --private-internal-ipfs=false \
-    --job-selection-accept-networked
-}
-
-# move ALL the money apart from 1 eth to the given admin account
-# this expects the .env file to already have been created
-function fund-admin() {
-  if [[ -z "$ADMIN_ADDRESS" ]]; then
-    echo >&2 "ADMIN_ADDRESS must be set (source ${DIR}/.env)"
-    exit 1
-  fi
-  geth-command "eth.sendTransaction({from: eth.coinbase, to: \"${ADMIN_ADDRESS}\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })"
-}
-
-function geth-stop() {
-  docker rm -f geth 2> /dev/null || true
-}
-
-function clean-deploy() {
-  rm -rf ${DIR}/hardhat/artifacts
-  rm -rf ${DIR}/hardhat/cache
-  rm -rf ${DIR}/hardhat/deployments/geth
-}
-
-function clean() {
-  docker rm -f $(docker ps -aq) || true
-  sudo rm -rf ${DATA_DIRECTORY}
-  clean-deploy
-}
-
-function boot-message() {
-  echo ""
-  echo "############################################################################"
-  echo "# $@"
-  echo "############################################################################"
-  echo ""
-}
-
-function deploy() {
-  clean-deploy
-  boot-message "Compiling contracts"
-  compile-contracts
-  boot-message "Deploying contracts"
-  deploy-contracts
-  boot-message "Funding services with tokens"
-  fund-services-tokens
-  boot-message "Printing balances"
-  balances
-}
-
-function boot() {
-  clean
-  boot-message "Starting geth"
-  geth
-  sleep 5
-  boot-message "Funding admin account"
-  fund-admin
-  boot-message "Funding services with ether"
-  fund-services-ether
-  deploy
-}
-
-############################################################################
-############################################################################
 # hardhat
 ############################################################################
-############################################################################
 
-function go-binding() {
-  local name="$1"
-  local pkg="$2"
-
-  # compile the sol files into bytecode and ABI
-  docker run --rm \
-    -v $DIR/hardhat:/src \
-    -w /src \
-    --entrypoint solc \
-    lilypad-solc \
-       --base-path . \
-       --include-path node_modules \
-       --overwrite \
-      --abi --bin \
-      "contracts/$name.sol" \
-      -o artifacts
-
-  sudo chown -R $USER:$USER hardhat/artifacts
-  mkdir -p hardhat/artifacts/bindings/$pkg
-
-  # generate the go bindings
-  docker run --rm \
-    -v $DIR/hardhat:/src \
-    -w /src \
-    --entrypoint abigen \
-    lilypad-solc \
-      "--bin=artifacts/$name.bin" \
-      "--abi=artifacts/$name.abi" \
-      "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
-
-  sudo chown -R $USER:$USER hardhat/artifacts/bindings/$pkg
-  sudo chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
-  cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
-
-  echo "Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
+function compile-contracts() {
+  (
+    set -euo pipefail
+    cd hardhat
+    npx hardhat compile
+  )
+  go-bindings
 }
 
 function go-bindings() {
@@ -203,26 +122,58 @@ function go-bindings() {
   go-binding LilypadMediationRandom mediation
   go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
-  
-  echo "Generated all go bindings pkg/contract/bindings/"
+
+  echo "- Generated all go bindings pkg/contract/bindings/"
 }
 
-function compile-contracts() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat compile
-  )
-  go-bindings
+function go-binding() {
+  local name="$1"
+  local pkg="$2"
+
+  # compile the sol files into bytecode and ABI
+  docker run --rm \
+    -v $(pwd)/hardhat:/src \
+    -w /src \
+    --entrypoint solc \
+    lilypad-solc \
+       --base-path . \
+       --include-path node_modules \
+       --overwrite \
+      --abi --bin \
+      "contracts/$name.sol" \
+      -o artifacts
+
+  chown -R $USER hardhat/artifacts
+  mkdir -p hardhat/artifacts/bindings/$pkg
+
+  # generate the go bindings
+  docker run --rm \
+    -v $(pwd)/hardhat:/src \
+    -w /src \
+    --entrypoint abigen \
+    lilypad-solc \
+      "--bin=artifacts/$name.bin" \
+      "--abi=artifacts/$name.abi" \
+      "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
+
+  chown -R $USER hardhat/artifacts/bindings/$pkg
+  chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
+  cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
+
+  echo "- Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
 }
 
 function deploy-contracts() {
   (
     set -euo pipefail
     cd hardhat
-    npx hardhat deploy --network "$NETWORK"
+    npx hardhat deploy --network geth
   )
 }
+
+############################################################################
+# helpers
+############################################################################
 
 function hardhat-script() {
   (
@@ -232,7 +183,6 @@ function hardhat-script() {
   )
 }
 
-# print the env settings for the various accounts and private keys
 function print-env() {
   hardhat-script scripts/print-env.ts | grep export
 }
@@ -258,109 +208,144 @@ function balances() {
 }
 
 function run-cowsay-onchain() {
-  hardhat-script scripts/run-cowsay-onchain.ts
+  cd hardhat
+  doppler run -p run-cowsay-onchain -c dev -- npx hardhat run scripts/run-cowsay-onchain.ts
 }
 
 ############################################################################
+# solver
 ############################################################################
-# services
-############################################################################
-############################################################################
-
-function run() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . run "$@"
-}
-
-function runsdxl() {
-  # Check for the number of arguments provided
-  if [ $# -lt 3 ]; then
-    echo "Usage: $0 runsdxl <model> PROMPT=\"<prompt>\""
-    exit 1
-  fi
-
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$JOB_CREATOR_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  local model="$1"
-  shift  # Remove the first argument, so "$@" contains only the second one
-  local prompt="$@"
-  go run . run $model -i "PromptEnv=$prompt"
-}
 
 function solver() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export JOB_CREATOR_ADDRESS=$JOB_CREATOR_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  export SERVER_PORT=8080
-  export SERVER_URL=http://testnet.lilypad.tech:8080
-  go run . solver "$@"
+  echo "- Reminder to do doppler setup to project->solver and config->dev"
+  doppler run -p solver -c dev -- go run . solver
 }
 
-# we run the jobcreator as the solver
-function jobcreator() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_PRIVATE_KEY=$SOLVER_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . jobcreator "$@"
+function solver-docker-build() {
+  docker build \
+    -t solver \
+    -f ./docker/solver/Dockerfile \
+    --build-arg arch=${OS_ARCH} \
+    .
 }
+
+function solver-docker-run() {
+  docker run \
+    --rm \
+    --name solver \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -p 8080:8080 \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p solver -c dev docker --max-age 1m --plain)" \
+    solver
+}
+
+############################################################################
+# job creator
+############################################################################
+
+function job-creator() {
+  echo "- Reminder to do doppler setup to project->job-creator and config->dev"
+  doppler run -p job-creator -c dev -- go run . jobcreator
+}
+
+function job-creator-docker-build() {
+  docker build \
+    -t job-creator \
+    -f ./docker/job-creator/Dockerfile \
+    .
+}
+
+function job-creator-docker-run() {
+  docker run \
+    --rm \
+    --name job-creator \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p job-creator -c dev docker --max-age 1m --plain)" \
+    job-creator
+}
+
+############################################################################
+# resource provider
+############################################################################
 
 function resource-provider() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
-  export WEB3_PRIVATE_KEY=$RESOURCE_PROVIDER_PRIVATE_KEY
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  go run . resource-provider "$@"
+  echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
+  doppler run -p resource-provider -c dev -- go run . resource-provider
 }
 
+function resource-provider-docker-build() {
+  docker build \
+    -t resource-provider \
+    -f ./docker/resource-provider/Dockerfile \
+    --build-arg doppler_config=dev \
+    --build-arg DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --plain)" \
+    .
+}
+
+function resource-provider-docker-run() {
+  docker run \
+    --rm \
+    --name resource-provider \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -e DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --max-age 1m --plain)" \
+    resource-provider
+}
+
+############################################################################
+# bacalhau node
+############################################################################
+
+function bacalhau-node(){
+  export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+  export LOG_LEVEL=debug
+  bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+}
+
+function bacalhau-docker-build() {
+  docker build \
+    -t bacalhau \
+    -f ./docker/bacalhau/Dockerfile \
+    .
+}
+
+function bacalhau-docker-run() {
+  docker run \
+    --privileged \
+    --rm \
+    --name bacalhau \
+    --network lilypad \
+    --add-host localhost:host-gateway \
+    -v /tmp/lilypad/data:/tmp/lilypad/data \
+    -p 1234:1234 \
+    bacalhau
+}
+
+############################################################################
+# mediator
+############################################################################
+
 function mediator() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_RPC_URL=ws://testnet.lilypad.tech:8546
-  export WEB3_PRIVATE_KEY=$MEDIATOR_PRIVATE_KEY
-  export WEB3_DIRECTORY_ADDRESS=$DIRECTORY_ADDRESS
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
   go run . mediator "$@"
 }
 
 ############################################################################
-############################################################################
 # tests
-############################################################################
 ############################################################################
 
 function unit-tests() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat test --network hardhat
-  )
+  cd hardhat
+  npx hardhat test --network hardhat
 }
 
-# this assumes boot having been run already
+# this assumes chain is running
+# and chain-fund-admin
+# and chain-boot
 function integration-tests() {
-  source .env
-  eval $(./stack print-local-dev-env)
-  export WEB3_SOLVER_ADDRESS=$SOLVER_ADDRESS
-  export SERVICE_SOLVER=$SOLVER_ADDRESS
-  export SERVICE_MEDIATORS=$MEDIATOR_ADDRESS
-  (
-    set -euo pipefail
-    cd test
-    go test -v -count 1 .
-  )
+  cd test
+  doppler run -p integration-tests -c dev -- go test -v -count 1 .
 }
 
 eval "$@"
