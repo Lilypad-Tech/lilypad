@@ -55,6 +55,11 @@ export const ACCOUNTS: Account[] = [{
   address: loadAddress('directory', '0x976EA74026E726554dB657fA54763abd0C3a0aa9'),
   privateKey: loadPrivateKey('directory', '0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e'),
   metadata: {},
+}, {
+  name: 'user',
+  address: loadAddress('user', '0x1da99b9e884C9e7B15361957577978c1fa66AfBb'),
+  privateKey: loadPrivateKey('user', 'b3994e7660abe5f65f729bb64163c6cd6b7d0b1a8c67881a7346e3e8c7f026f5'),
+  metadata: {},
 }]
 
 // map of account name -> account
