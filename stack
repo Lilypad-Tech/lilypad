@@ -454,7 +454,12 @@ function balances() {
 function run-cowsay-onchain() {
   hardhat-script scripts/run-cowsay-onchain.ts
 }
-
+function run-sdxl-onchain() {
+  hardhat-script scripts/run-sdxl-onchain.ts
+}
+function run-sdxl-onchain() {
+  hardhat-script scripts/run-sdxl-onchain.ts
+}
 ############################################################################
 ############################################################################
 # services
@@ -472,7 +477,8 @@ function run() {
 
 function runsdxl() {
   # Check for the number of arguments provided
-  if [ $# -lt 3 ]; then
+  #example:  ./stack runsdxl sdxl:v0.9-lilypad1 PROMPT="moo"
+  if [ $# -lt 2 ]; then
     echo "Usage: $0 runsdxl <model> PROMPT=\"<prompt>\""
     exit 1
   fi

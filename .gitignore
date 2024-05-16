@@ -27,5 +27,9 @@ go1.22.2.linux-amd64.tar.gz
 */logs_bulk/*
 */tmp/*
 
-.env
+.env*
 tempo-data
+tmp
+outputs
+lilypad
+__debug_bin*

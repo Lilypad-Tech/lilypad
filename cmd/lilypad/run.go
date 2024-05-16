@@ -8,12 +8,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/theckman/yacspin"
@@ -27,6 +28,7 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			lilymetrics.LogMetric("RUN", strings.Join(args, " "))
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args)
 			if err != nil {
 				return err
@@ -95,6 +97,8 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	result, err := jobcreator.RunJob(commandCtx, options, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()
 		st := data.GetAgreementStateString(evOffer.State)
+		lilymetrics.LogJob(evOffer.DealID, st, "")
+
 		var desc string
 		var emoji string
 		switch st {
@@ -145,6 +149,8 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		result.Result.DataID,
 	)
+	lilymetrics.LogJob(result.JobOffer.DealID, "Complete", result.Result.DataID)
+	lilymetrics.LogResult("result", lilymetrics.FolderInfo(solver.GetDownloadsFilePath(result.JobOffer.DealID)))
 	return err
 }
 

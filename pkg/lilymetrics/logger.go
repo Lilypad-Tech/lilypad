@@ -56,7 +56,7 @@ func newOTLPExporter(ctx context.Context) (oteltrace.SpanExporter, error) {
 	insecureOpt := otlptracehttp.WithInsecure()
 	// auth := otlptracehttp.NewClient()
 	// Update default OTLP reciver endpoint
-	endpointOpt := otlptracehttp.WithEndpoint("localhost:4318")
+	endpointOpt := otlptracehttp.WithEndpoint("host.docker.internal:4318")
 
 	return otlptracehttp.New(ctx, insecureOpt, endpointOpt)
 	// otlpEndpoint = os.Getenv("OTLP_ENDPOINT")
@@ -212,15 +212,17 @@ func Matcher(jobOffers int, resourceOffers int, deals int) {
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		// log.Fatal(err)
+	} else {
+		resp.Body.Close()
 	}
-	defer resp.Body.Close()
+
 }
-func LogJob(dealid string, state string) {
+func LogJob(dealid string, state string, metadata string) {
 	// log.Print(module_id)
 
 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/job"
 	// json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, status)
-	json := fmt.Sprintf(`{"dealid":"%s","state":"%s"}`, dealid, state)
+	json := fmt.Sprintf(`{"dealid":"%s","state":"%s","metadata":"%s"}`, dealid, state, metadata)
 	fmt.Println(json)
 	data := []byte(json)
 
@@ -234,6 +236,19 @@ func LogMetric(module_id string, detail string) {
 	log.Print(module_id)
 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/log"
 	json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, detail)
+	fmt.Println(json)
+	data := []byte(json)
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		// log.Fatal(err)
+	}
+	defer resp.Body.Close()
+}
+func LogResult(module_id string, detail string) {
+	log.Print(module_id)
+	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/result"
+	json := fmt.Sprintf(`{"Type":"%s","result":%s}`, module_id, detail)
 	fmt.Println(json)
 	data := []byte(json)
 

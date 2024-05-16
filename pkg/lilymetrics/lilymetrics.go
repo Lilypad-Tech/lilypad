@@ -80,7 +80,7 @@ func handleMatcherEvent(w http.ResponseWriter, r *http.Request) {
 	server.BroadcastToNamespace("/", "matcher", data, "data")
 	fmt.Println("Received data:", data)
 }
-func handleJobEvent(w http.ResponseWriter, r *http.Request) {
+func handleJobResult(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -91,15 +91,17 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 
 	b := string(body)
 
-	server.BroadcastToNamespace("/", "deal", b, "data")
+	server.BroadcastToNamespace("/", "resultfolder", b, "data")
+	return
 	fmt.Println("Received data:", b)
-	if strings.Contains(b, "ResultsAccepted") {
-		fmt.Println("status: ResultsAccepted")
+	if strings.Contains(b, "Complete") {
+		fmt.Println("status: Complete")
 		// r := data.dealid
 		// server.BroadcastToNamespace("/", "result", r, "data")
 		type Data struct {
-			Dealid string `json:"dealid"`
-			State  string `json:"state"`
+			Dealid   string `json:"dealid"`
+			State    string `json:"state"`
+			Metadata string `json:"metadata"`
 		}
 
 		// body, err := io.ReadAll(r.Body)
@@ -132,13 +134,135 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 		cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+jobresult+"/stdout")
 
 		output, err := cmdstd.Output()
+		o := string(output)
 		if err != nil {
 			fmt.Println("Error:", err)
 			//return true
 		}
+		// data.Dealid.
+		// data.Dealid.Result.DataID
+		if strings.Contains(o, "Got 1 images") {
+
+			// info := exec.Command("bacalhau", "list", "--id-filter", data.Metadata, "--output", "json")
+			// os.Setenv("BACALHAU_API_HOST", "localhost")
+			// info.Env = os.Environ()
+			// //info.Env = Env["BACALHAU_API_HOST=localhost"]
+			// //executor.bacalhauEnv
+			// output, err := info.Output()
+			// fmt.Println("bacalhau list output ", string(output))
+
+			// var jobData []JobData
+			// err = json.Unmarshal([]byte(output), &jobData)
+			// if err != nil {
+			// 	fmt.Println("Error:", err)
+
+			// }
+			// fmt.Println("cid ", jobData[0].State.Executions[0].PublishedResults.CID)
+
+			// o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "?download=true&filename=image-42.png"
+			o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "/outputs/image-42.png"
+			server.BroadcastToNamespace("/", "imgresult", o, "data")
+		} else {
+			server.BroadcastToNamespace("/", "result", o, "data")
+
+		}
+		//http://0.0.0.0:8080/ipfs/QmeCZ71AETUyiwLJ2JZLjatbzuumyg7gc1wFVdmDxRR9dE?download=true&filename=image-42.png
 
 		fmt.Println(string(output))
-		server.BroadcastToNamespace("/", "result", string(output), "data")
+
+		// }
+	}
+
+}
+func handleJobEvent(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	b := string(body)
+
+	server.BroadcastToNamespace("/", "deal", b, "data")
+	fmt.Println("Received data:", b)
+	if strings.Contains(b, "Complete") {
+		fmt.Println("status: Complete")
+		// r := data.dealid
+		// server.BroadcastToNamespace("/", "result", r, "data")
+		type Data struct {
+			Dealid   string `json:"dealid"`
+			State    string `json:"state"`
+			Metadata string `json:"metadata"`
+		}
+
+		// body, err := io.ReadAll(r.Body)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		// defer r.Body.Close()
+
+		var data Data
+		// var val []byte = []byte(`"{\"channel\":\"buu\",\"name\":\"john\", \"msg\":\"doe\"}"`)
+
+		// s, err := strconv.Unquote(string(b))
+
+		// if err != nil {
+		// 	fmt.Println("Error unquoting JSON string")
+		// 	return
+		// }
+		err = json.Unmarshal([]byte(b), &data)
+		if err != nil {
+			fmt.Println("Error unmarshalling JSON data")
+			// http.Error(w, err.Error(), http.StatusBadRequest)
+			// return
+		}
+
+		//server.BroadcastToNamespace("/", "result", string(body), "data")
+		// fmt.Println("ResultsAccepted:", string(body))
+		// if strings.Contains(string(body), "ResultsAccepted") {
+		jobresult := data.Dealid
+		cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+jobresult+"/stdout")
+
+		output, err := cmdstd.Output()
+		o := string(output)
+		if err != nil {
+			fmt.Println("Error:", err)
+			//return true
+		}
+		// data.Dealid.
+		// data.Dealid.Result.DataID
+		if strings.Contains(o, "Got 1 images") {
+
+			// info := exec.Command("bacalhau", "list", "--id-filter", data.Metadata, "--output", "json")
+			// os.Setenv("BACALHAU_API_HOST", "localhost")
+			// info.Env = os.Environ()
+			// //info.Env = Env["BACALHAU_API_HOST=localhost"]
+			// //executor.bacalhauEnv
+			// output, err := info.Output()
+			// fmt.Println("bacalhau list output ", string(output))
+
+			// var jobData []JobData
+			// err = json.Unmarshal([]byte(output), &jobData)
+			// if err != nil {
+			// 	fmt.Println("Error:", err)
+
+			// }
+			// fmt.Println("cid ", jobData[0].State.Executions[0].PublishedResults.CID)
+
+			// o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "?download=true&filename=image-42.png"
+			o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "/outputs/image-42.png"
+			server.BroadcastToNamespace("/", "imgresult", o, "data")
+		} else {
+			server.BroadcastToNamespace("/", "result", o, "data")
+
+		}
+		//http://0.0.0.0:8080/ipfs/QmeCZ71AETUyiwLJ2JZLjatbzuumyg7gc1wFVdmDxRR9dE?download=true&filename=image-42.png
+
+		fmt.Println(string(output))
+
 		// }
 	}
 
@@ -284,13 +408,13 @@ func initializeListener() *pq.Listener {
 		log.Fatalln(err)
 		// log.Fatal().Err(err).Msg("Error listening for PostgreSQL notifications")
 	}
-	log.Println("RETURN Listener")
+	// log.Println("RETURN Listener")
 	return listener
 }
 
 func handleNotifications(server *socketio.Server, l *pq.Listener) {
 	for {
-		log.Println("update")
+		// log.Println("update")
 		select {
 		case <-l.Notify:
 			fmt.Println("received notification, new work available")
@@ -301,12 +425,12 @@ func handleNotifications(server *socketio.Server, l *pq.Listener) {
 			// }
 			updates := getLatestLogs()
 			emitSocketEvent("updates", updates)
-		case <-time.After(90 * time.Second):
-			go l.Ping()
-			// Check if there's more work available, just in case it takes
-			// a while for the Listener to notice connection loss and
-			// reconnect.
-			fmt.Println("received no work for 90 seconds, checking for new work")
+			// case <-time.After(90 * time.Second):
+			// 	go l.Ping()
+			// 	// Check if there's more work available, just in case it takes
+			// 	// a while for the Listener to notice connection loss and
+			// 	// reconnect.
+			// 	fmt.Println("received no work for 90 seconds, checking for new work")
 		}
 		// select {
 		// case notification := <-listener.Notify:
@@ -346,8 +470,9 @@ func RunMetrics() {
 	// go exec.Command("./stack", "jobcreator")
 
 	span := TraceSection(context.Background(), "Migrations")
-	MigrateUp("logs_bulk")
 	MigrateUp("schema")
+	MigrateUp("logs_bulk")
+
 	span.End()
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbUser := os.Getenv("POSTGRES_USER")
@@ -457,7 +582,7 @@ func stupRoutes() {
 	go handleNotifications(server, listener)
 	server.OnConnect("/", func(s socketio.Conn) error {
 		s.SetContext("")
-		log.Println("connected:", s.ID())
+		// log.Println("connected:", s.ID())
 		return nil
 	})
 
@@ -469,12 +594,14 @@ func stupRoutes() {
 		//cmd := exec.Command("pwd")
 		//s.Emit("reply", "have "+scanner.Text())
 		//shouldReturn :=
-		go newFunction(msg)
+		go runCowSay(msg)
 		// if shouldReturn {
 		// 	return
 		// }
 	})
-
+	server.OnEvent("/", "task", func(s socketio.Conn, msg string) {
+		go runTask(msg)
+	})
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
 		log.Println("chat:", msg)
 		s.SetContext(msg)
@@ -515,16 +642,18 @@ func stupRoutes() {
 	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
 	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
 	router.HandleFunc("/metrics-dashboard/matcher", handleMatcherEvent).Methods("POST")
+	router.HandleFunc("/metrics-dashboard/result", handleJobResult).Methods("POST")
 
 	// router.HandleFunc("/", http.FileServer(http.Dir("../frontend"))).Methods("GET") // Only keep the event handler route
 
 	router.HandleFunc("/updates", handleGetEvent).Methods("GET")
+	router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("dashboard/build"))))
 	http.Handle("/", http.FileServer(http.Dir("dashboard/build")))
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
-func newFunction(msg string) bool {
+func runCowSay(msg string) bool {
 	log.Println("notice:", msg)
 
 	// cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/QmYqdpiry4h9P39JTZ65NjhhS2QQou448LWRckE96cpkxY/stdout")
@@ -582,6 +711,55 @@ func newFunction(msg string) bool {
 
 	if err := cmd.Wait(); err != nil {
 		log.Fatal(err)
+	}
+	return false
+}
+func runTask(msg string) bool {
+	log.Println("notice:", msg)
+
+	server.BroadcastToNamespace("/", "reply", msg, "data")
+
+	// var args [2]string
+	// args[0] = "run"
+	// args[1] = msg
+	words := strings.Fields(msg)
+	binaryName := os.Getenv("PWD") + "/lilypad"
+	cobraCommand := "run"
+	//cobraArgs := []string{"github.com/Lilypad-Tech/lilypad-module-sdxl:v0.9-lilypad1", "-i PROMPT='A happy little tree'"} // Example arguments
+	cobraArgs := []string{words[0], words[1], strings.Join(words[2:], " ")} // Example arguments
+
+	// Combine the binary name, Cobra command, and arguments
+	command := append([]string{binaryName, cobraCommand}, cobraArgs...)
+
+	// Execute the Cobra command
+	cmd := exec.Command(command[0], command[1:]...)
+	//cmd := exec.Command(os.Getenv("PWD")+"/lilypad", msg) //"runsdxl sdxl:v0.9-lilypad1 PROMPT='moo'")
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		r := scanner.Text()
+		fmt.Println("from scanner ", r)
+
+		server.BroadcastToNamespace("/", "reply", r, "data")
+		// }
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		//log.Fatal(err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		//log.Fatal(err)
 	}
 	return false
 }

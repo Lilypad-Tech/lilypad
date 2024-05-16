@@ -19,6 +19,7 @@ import {
   LilypadOnChainJobCreator,
   LilypadUsers,
   ExampleClient,
+  JobClient,
 } from '../typechain-types'
 
 /*
@@ -234,6 +235,21 @@ export async function connectExampleClient() {
 export async function getExampleClientAddress() {
   return getContractAddress('ExampleClient')
 }
+
+/*
+
+  example Job client
+
+*/
+export async function connectJobClient() {
+  return connectContract<JobClient>('JobClient')
+}
+
+export async function getJobClientAddress() {
+  return getContractAddress('JobClient')
+}
+
+
 
 /*
 
