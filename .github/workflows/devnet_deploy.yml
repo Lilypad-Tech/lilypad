@@ -1,0 +1,147 @@
+name: Deploy Devnet
+
+on:
+  push:
+    branches:
+      - main
+      - gorka/isolate-components
+
+jobs:
+  contracts:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Compile and deploy contracts
+        id: compile-and-deploy-contracts
+        env:
+          WEB3_RPC_URL: ${{ secrets.WEB3_RPC_URL }}
+        run: |
+          echo "# TODO"
+
+  solver-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
+
+      - name: Solver build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_SOLVER: ${{ secrets.ECR_REPOSITORY_SOLVER }}
+          CLOUDFLARE_TOKEN_SOLVER: ${{ secrets.CLOUDFLARE_TOKEN_SOLVER }}
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY_SOLVER \
+            -f ./docker/solver/Dockerfile \
+            --build-arg="expose_via=cloudflare" \
+            --build-arg="cloudflare_token=${CLOUDFLARE_TOKEN_SOLVER}"\
+            --build-arg="doppler_config=devnet" \
+            .
+          docker tag $ECR_REPOSITORY_SOLVER:latest $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
+
+      - name: Solver deploy to EC2 instance
+        uses: appleboy/ssh-action@master
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_SOLVER: ${{ secrets.ECR_REPOSITORY_SOLVER }}
+          DOPPLER_TOKEN_SOLVER: ${{ secrets.DOPPLER_TOKEN_SOLVER }}
+        with:
+          host: ${{ secrets.EC2_HOST_SOLVER }}
+          username: ${{ secrets.EC2_USERNAME_SOLVER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY_SOLVER }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY_SOLVER, DOPPLER_TOKEN_SOLVER
+          script_stop: true
+          script: |
+            docker stop solver || true
+            docker rm solver || true
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker system prune -af
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
+            docker run \
+              -d \
+              --restart always \
+              --name solver \
+              -e DOPPLER_TOKEN=$DOPPLER_TOKEN_SOLVER \
+              $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
+
+  job-creator-build-deploy:
+    needs: [solver-build-deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
+
+      - name: Job creator build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_JOB_CREATOR: ${{ secrets.ECR_REPOSITORY_JOB_CREATOR }}
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY_JOB_CREATOR \
+            -f ./docker/job-creator/Dockerfile \
+            --build-arg doppler_config=devnet \
+            .
+          docker tag $ECR_REPOSITORY_JOB_CREATOR:latest $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
+
+      - name: Job creator deploy to EC2 instance
+        uses: appleboy/ssh-action@master
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_JOB_CREATOR: ${{ secrets.ECR_REPOSITORY_JOB_CREATOR }}
+          DOPPLER_TOKEN_JOB_CREATOR: ${{ secrets.DOPPLER_TOKEN_JOB_CREATOR }}
+        with:
+          host: ${{ secrets.EC2_HOST_JOB_CREATOR }}
+          username: ${{ secrets.EC2_USERNAME_JOB_CREATOR }}
+          key: ${{ secrets.EC2_PRIVATE_KEY_JOB_CREATOR }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY_JOB_CREATOR, DOPPLER_TOKEN_JOB_CREATOR
+          script_stop: true
+          script: |
+            docker stop job-creator || true
+            docker rm job-creator || true
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker system prune -af
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
+            docker run \
+              -d \
+              --restart always \
+              --name job-creator \
+              -e DOPPLER_TOKEN=$DOPPLER_TOKEN_JOB_CREATOR \
+              $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest

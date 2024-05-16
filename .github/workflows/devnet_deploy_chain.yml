@@ -1,0 +1,69 @@
+name: Deploy Devnet chain
+
+on: workflow_dispatch
+
+jobs:
+  chain-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
+
+      - name: Chain build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_CHAIN: ${{ secrets.ECR_REPOSITORY_CHAIN }}
+          CLOUDFLARE_TOKEN_HTTP: ${{ secrets.CLOUDFLARE_TOKEN_HTTP }}
+          CLOUDFLARE_TOKEN_WS: ${{ secrets.CLOUDFLARE_TOKEN_WS }}
+          ADMIN_ADDRESS: ${{ secrets.ADMIN_ADDRESS }}
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY_CHAIN \
+            -f ./docker/chain/Dockerfile \
+            --build-arg="admin_address=${ADMIN_ADDRESS}" \
+            --build-arg="expose_via=cloudflare" \
+            --build-arg="cloudflare_token_http=${CLOUDFLARE_TOKEN_HTTP}"\
+            --build-arg="cloudflare_token_ws=${CLOUDFLARE_TOKEN_WS}"\
+            .
+          docker tag $ECR_REPOSITORY_CHAIN:latest $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
+
+      - name: Chain deploy to EC2 instance
+        uses: appleboy/ssh-action@master
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_CHAIN: ${{ secrets.ECR_REPOSITORY_CHAIN }}
+        with:
+          host: ${{ secrets.EC2_HOST_CHAIN }}
+          username: ${{ secrets.EC2_USERNAME_CHAIN }}
+          key: ${{ secrets.EC2_PRIVATE_KEY_CHAIN }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY_CHAIN
+          script_stop: true
+          script: |
+            docker stop chain || true
+            docker rm chain || true
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker system prune -af
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
+            docker run \
+              -d \
+              --restart always \
+              --name chain \
+              -v /data/chain:/data/chain \
+              $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
