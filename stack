@@ -33,6 +33,8 @@ function chain-docker-run() {
 }
 
 function chain-boot() {
+  echo "- Install local dependencies"
+  cd hardhat && yarn install && cd ..
   echo "- Funding services with ether"
   fund-services-ether
   echo "- Funding services with ether"
@@ -272,7 +274,7 @@ function job-creator-docker-run() {
 
 function resource-provider() {
   echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run -p resource-provider -c dev -- go run . resource-provider
+  doppler run -p resource-provider -c dev -- go run . resource-provider "$@"
 }
 
 function resource-provider-docker-build() {
