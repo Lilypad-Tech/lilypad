@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - gorka/isolate-components
 
 jobs:
   contracts:
