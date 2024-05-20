@@ -21,6 +21,9 @@ const App = () => {
   const [imgresult, setImgresult] = useState('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjOHPmzH8ACDADZKt3GNsAAAAASUVORK5CYII=');
   const [selectedValue, setSelectedValue] = useState("github.com/arsen3d/lilypad-module-lilysay:0.1.0 Message=");
   const [promptValue, setPromptValue] = useState("A happy little tree");
+  const [imageDisplay, setImageDisplay] = useState("none");
+
+  
   const handleSelectChange = (event) => {
     setSelectedValue(event.target.value);
   };
@@ -115,6 +118,9 @@ const App = () => {
       }
       if (deepSearch(JSON.parse(data), 'image/png', "relpath") != null) {
         setImgresult("/files" + deepSearch(JSON.parse(data), 'image/png', "relpath").value)
+        setImageDisplay("visible")
+      }else{
+        setImageDisplay("none")
       }
       //JSON.parse(JSON.parse(data).result.Details.contents[3].contents[0].contents[0].content).response
       // console.log(deepSearch(JSON.parse(data), 'stdout', "content"));
@@ -214,30 +220,30 @@ const App = () => {
       <br />
       Result:
       <br />
-      <pre>{result}</pre>
-      <br />
-      <br />
-      <img style={{display:"none"}} width={512} height={512} src={imgresult} />
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <pre>{result}</pre>
+        <img style={{ display: imageDisplay }} width={256} height={256} src={imgresult} />
+      </div>
       <br />
       Messages:
       <br />
       <code>{stdout}</code>
-      <h1>Jobs</h1>
+      <h1>Job Metrics</h1>
 
       <table border={1}>
         <tr><td>Start</td><td>Updated</td><td>Duration</td><td>Module</td><td>Status</td></tr>
-        {(jobupdates!=null && jobupdates.length)?jobupdates.map((update) => (
-          
-          <tr key={update.id}> 
-          <td>{new Date(update.time_start).toLocaleString('en-US')}</td> 
-          <td>{new Date(update.time_update).toLocaleString('en-US')}  </td> 
-          <td>{new Date((new Date(update.time_update) - new Date(update.time_start))).getSeconds()} Seconds</td>
-          <td>{update.module_id} </td>
-          <td>{update.status}</td>
+        {(jobupdates != null && jobupdates.length) ? jobupdates.map((update) => (
+
+          <tr key={update.id}>
+            <td>{new Date(update.time_start).toLocaleString('en-US')}</td>
+            <td>{new Date(update.time_update).toLocaleString('en-US')}  </td>
+            <td>{new Date((new Date(update.time_update) - new Date(update.time_start))).getSeconds()} Seconds</td>
+            <td>{update.module_id} </td>
+            <td>{update.status}</td>
 
           </tr>
-        
-        )):null}
+
+        )) : null}
       </table>
       <h1>Logs</h1>
 

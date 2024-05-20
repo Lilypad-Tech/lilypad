@@ -28,7 +28,7 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			lilymetrics.LogMetric("RUN", strings.Join(args, " "))
+			//lilymetrics.LogMetric("RUN", strings.Join(args, " "))
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args)
 			if err != nil {
 				return err
@@ -149,7 +149,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		result.Result.DataID,
 	)
-	lilymetrics.LogJob(result.JobOffer.DealID, "Complete", result.Result.DataID)
+	// lilymetrics.LogJob(result.JobOffer.DealID, "Complete", result.Result.DataID)
 	lilymetrics.LogResult("result", lilymetrics.FolderInfo(solver.GetDownloadsFilePath(result.JobOffer.DealID)))
 	return err
 }

@@ -148,7 +148,7 @@ func handleJobResult(w http.ResponseWriter, r *http.Request) {
 		}
 		//http://0.0.0.0:8080/ipfs/QmeCZ71AETUyiwLJ2JZLjatbzuumyg7gc1wFVdmDxRR9dE?download=true&filename=image-42.png
 
-		fmt.Println(string(output))
+		fmt.Println("output", string(output))
 
 		// }
 	}
@@ -283,7 +283,7 @@ func handleStatusEvent(w http.ResponseWriter, r *http.Request) {
 
 		if count == 0 {
 			// Insert new job if job_id does not exist
-			_, err := db.Exec("INSERT INTO jobs (job_id, status, time_start, module_id,details) VALUES ($1, $2, $3, $4)", jobID, status, currentTime, module_id, "{}")
+			_, err := db.Exec("INSERT INTO jobs (job_id, status, time_start, module_id,details) VALUES ($1, $2, $3, $4, $5)", jobID, status, currentTime, module_id, "{}")
 			return err
 		}
 
@@ -633,11 +633,11 @@ func setupRoutes() {
 	})
 
 	server.OnError("/", func(s socketio.Conn, e error) {
-		log.Println("meet error:", e)
+		log.Println("socket error:", e)
 	})
 
 	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		log.Println("closed", reason)
+		log.Println("disconnected/closed", reason)
 	})
 
 	//start the socket server

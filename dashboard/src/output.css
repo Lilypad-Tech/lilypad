@@ -545,6 +545,10 @@ video {
   --tw-contain-style:  ;
 }
 
+.visible {
+  visibility: visible;
+}
+
 .flex {
   display: flex;
 }
