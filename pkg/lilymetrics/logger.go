@@ -232,6 +232,21 @@ func LogJob(dealid string, state string, metadata string) {
 	}
 	defer resp.Body.Close()
 }
+func LogJobStatus(job_id string, status string, module_id string) {
+	// log.Print(module_id)
+
+	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/status"
+	// json := fmt.Sprintf(`{"Type":"%s","Details":"%s"}`, module_id, status)
+	json := fmt.Sprintf(`{"job_id":"%s","status":"%s","module_id":"%s"}`, job_id, status, module_id)
+	fmt.Println(json)
+	data := []byte(json)
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		// log.Fatal(err)
+	}
+	defer resp.Body.Close()
+}
 func LogMetric(module_id string, detail string) {
 	log.Print(module_id)
 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/log"

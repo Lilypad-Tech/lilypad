@@ -39,8 +39,8 @@ CREATE TABLE jobs (
 	module_id varchar(255) NULL,
 	job_id varchar(255) NULL,
 	status varchar(255) NULL,
-	duration varchar(255) NULL,
-	"timestamp" timestamptz NULL,
+	"time_start" timestamptz NULL,
+	"time_update" timestamptz NULL,
 	details jsonb NULL,
 	CONSTRAINT events_pkey PRIMARY KEY (id),
 	CONSTRAINT events_unique UNIQUE (job_id)

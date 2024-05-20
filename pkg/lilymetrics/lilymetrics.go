@@ -33,17 +33,6 @@ import (
 	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 )
 
-type Event struct {
-	Type      string `json:"type"`
-	Timestamp string `json:"timestamp"`
-	Details   string `json:"details"`
-}
-type Update struct {
-	ID        string `json:"id"`
-	Timestamp string `json:"timestamp"`
-	Message   string `json:"message"`
-}
-
 var db *sql.DB
 var logger zerolog.Logger
 var sqlLogFile os.File
@@ -59,15 +48,6 @@ func generateSqlFileName() string {
 	return "migrations/tmp/" + currentTime.Format("200601021504") + "_logs.up.sql"
 }
 
-func (e Event) String() string {
-	// convert the Event to a string
-	// for example, you could marshal it to JSON:
-	bytes, err := json.Marshal(e)
-	if err != nil {
-		return "error marshaling Event to JSON: " + err.Error()
-	}
-	return string(bytes)
-}
 func handleMatcherEvent(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -174,6 +154,7 @@ func handleJobResult(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
 func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
@@ -187,6 +168,12 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 
 	server.BroadcastToNamespace("/", "deal", b, "data")
 	fmt.Println("Received data:", b)
+	// currentTime := time.Now().UTC().Format(time.RFC3339Nano)
+	// _, err = db.Exec("INSERT INTO jobs (type, timestamp, details) VALUES ($1, $2, $3)", level, currentTime, msg)
+
+	if err != nil {
+		log.Printf("Error inserting event into database: %v", err)
+	}
 	if strings.Contains(b, "Complete") {
 		fmt.Println("status: Complete")
 		// r := data.dealid
@@ -203,11 +190,8 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 		// 	return
 		// }
 		// defer r.Body.Close()
-
+		//time_updated := time.Now().UTC().Format(time.RFC3339Nano)
 		var data Data
-		// var val []byte = []byte(`"{\"channel\":\"buu\",\"name\":\"john\", \"msg\":\"doe\"}"`)
-
-		// s, err := strconv.Unquote(string(b))
 
 		// if err != nil {
 		// 	fmt.Println("Error unquoting JSON string")
@@ -267,7 +251,52 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+func handleStatusEvent(w http.ResponseWriter, r *http.Request) {
 
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	b := string(body)
+
+	server.BroadcastToNamespace("/", "deal", b, "data")
+	fmt.Println("Received data:", b)
+	var data JobUpdate
+
+	err = json.Unmarshal([]byte(b), &data)
+	if err != nil {
+		fmt.Println("Error unmarshalling JSON data")
+
+	}
+	currentTime := time.Now().UTC().Format(time.RFC3339Nano)
+	// Define your function to insert or update a job
+	insertOrUpdateJob := func(jobID, status, module_id string) error {
+		// Check if job_id exists
+		var count int
+		err := db.QueryRow("SELECT COUNT(*) FROM jobs WHERE job_id = $1", jobID).Scan(&count)
+		if err != nil {
+			return err
+		}
+
+		if count == 0 {
+			// Insert new job if job_id does not exist
+			_, err := db.Exec("INSERT INTO jobs (job_id, status, time_start, module_id,details) VALUES ($1, $2, $3, $4)", jobID, status, currentTime, module_id, "{}")
+			return err
+		}
+
+		// Update status and timeupdated if job_id exists
+		_, err = db.Exec("UPDATE jobs SET status = $1, time_update = $2 WHERE job_id = $3", status, currentTime, jobID)
+		return err
+	}
+	err = insertOrUpdateJob(data.JobID, data.Status, data.ModuleID)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+}
 func handleEvent(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
@@ -287,36 +316,9 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Event received and logged successfully"))
 }
 
-type Log struct {
-	id        string
-	timestamp string
-	details   string
-}
+func handleGetJobUpdates(w http.ResponseWriter, r *http.Request) {
 
-func handleGetEvent(w http.ResponseWriter, r *http.Request) {
-	// w.WriteHeader(http.StatusOK)
-	// w.Write([]byte("{result:'ok'}"))
-	// Create a Response struct
-	// updates := []Update{
-	// 	{ID: "1", Message: "Update 1"},
-	// 	{ID: "2", Message: "Update 2"},
-	// 	{ID: "3", Message: "Update 3"},
-	// }
-	// Handle error
-	// Close the rows when the function exits
-	// Create a slice to hold updates
-	// Iterate through the rows
-	// Create a variable to hold each log
-	// Scan the values from the row into the Log struct fields
-	// Handle error
-	// Convert the Log into an Update and append it to the updates slice
-	// Check for any errors during iteration
-	// Handle error
-	updates := getLatestLogs()
-	// Create a map to hold the JSON data
-	// responseMap := map[string]interface{}{
-	// 	"updates": updates,
-	// }
+	updates := getLatestJobs()
 
 	// Marshal the map into JSON
 	jsonData, err := json.Marshal(updates)
@@ -332,7 +334,52 @@ func handleGetEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+func handleGetLogUpdates(w http.ResponseWriter, r *http.Request) {
 
+	updates := getLatestLogs()
+
+	// Marshal the map into JSON
+	jsonData, err := json.Marshal(updates)
+	if err != nil {
+		http.Error(w, "Failed to marshal JSON", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON data to the response writer
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+func getLatestJobs() []JobUpdate {
+	rows, err := db.Query("SELECT id, module_id, job_id, status, time_update, time_start, details FROM jobs ORDER BY  time_start desc limit 5")
+	if err != nil {
+
+	}
+
+	defer rows.Close()
+
+	var updates []JobUpdate
+
+	for rows.Next() {
+
+		var jobs DbJob
+
+		if err := rows.Scan(&jobs.id, &jobs.module_id, &jobs.job_id, &jobs.status, &jobs.time_update, &jobs.time_start, &jobs.details); err != nil {
+
+			log.Println("Error scanning row: %v", err)
+		}
+
+		updates = append(updates, JobUpdate{ID: jobs.id, ModuleID: jobs.module_id, JobID: jobs.job_id, Status: jobs.status, TimeUpdate: jobs.time_update, TimeStart: jobs.time_start, Details: jobs.details})
+	}
+
+	if err := rows.Err(); err != nil {
+
+	}
+
+	return updates
+}
 func getLatestLogs() []Update {
 	rows, err := db.Query("SELECT  id, timestamp,details FROM logs ORDER BY  timestamp desc limit 5")
 	if err != nil {
@@ -360,9 +407,6 @@ func getLatestLogs() []Update {
 	}
 
 	return updates
-}
-func escapeSingleQuotes(s string) string {
-	return fmt.Sprintf("%s", s)
 }
 
 // func newConsoleExporter() (oteltrace.SpanExporter, error) {
@@ -408,7 +452,6 @@ func initializeListener() *pq.Listener {
 		log.Fatalln(err)
 		// log.Fatal().Err(err).Msg("Error listening for PostgreSQL notifications")
 	}
-	// log.Println("RETURN Listener")
 	return listener
 }
 
@@ -449,31 +492,13 @@ func handleNotifications(server *socketio.Server, l *pq.Listener) {
 func emitSocketEvent(eventName string, data []Update) { // data *pq.Notification
 	// Emit the event to all connected clients
 	server.BroadcastToNamespace("/", "update", data, "data")
-	// if err != nil {
-	// 	log.Println("Error broadcasting event to clients")
-	// }
 }
 func RunMetrics() {
-	// defer Trace(context.Background(), "Migrations").End()
-
-	// go exec.Command("bacalhau", "serve", " --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked")
-	// // cmdstd.Start()
-	// // output, errr := cmdstd.Output()
-	// // if errr != nil {
-	// // 	fmt.Println("Error:", errr)
-	// // }
-	// // fmt.Println(string(output))
-	// time.Sleep(5 * time.Second)
-	// go exec.Command("./stack", "solver")
-	// go exec.Command("./stack", "mediator")
-	// go exec.Command("./stack", "resource-provider", "--offer-gpu 1")
-	// go exec.Command("./stack", "jobcreator")
-
 	span := TraceSection(context.Background(), "Migrations")
 	MigrateUp("schema")
 	MigrateUp("logs_bulk")
-
 	span.End()
+
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
@@ -559,15 +584,11 @@ func RunMetrics() {
 		}
 	}()
 
-	stupRoutes()
+	setupRoutes()
 
 }
 
-var allowOriginFunc = func(r *http.Request) bool {
-	return true
-}
-
-func stupRoutes() {
+func setupRoutes() {
 	server = socketio.NewServer(&engineio.Options{
 		Transports: []transport.Transport{
 			&polling.Transport{
@@ -578,8 +599,12 @@ func stupRoutes() {
 			},
 		},
 	})
+	defer server.Close()
+	//setup postgress notification listener
 	listener := initializeListener()
 	go handleNotifications(server, listener)
+
+	//setup socket routes
 	server.OnConnect("/", func(s socketio.Conn) error {
 		s.SetContext("")
 		// log.Println("connected:", s.ID())
@@ -587,21 +612,13 @@ func stupRoutes() {
 	})
 
 	server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-		// 	//exec.Command("../../hardhat/run-cowsay-onchain.ts")
-		// 	exec.Command("../../.stack  run-cowsay-onchain")
-		//s.Emit("reply", "have "+msg)
-		// return
-		//cmd := exec.Command("pwd")
-		//s.Emit("reply", "have "+scanner.Text())
-		//shouldReturn :=
 		go runCowSay(msg)
-		// if shouldReturn {
-		// 	return
-		// }
 	})
+
 	server.OnEvent("/", "task", func(s socketio.Conn, msg string) {
 		go runTask(msg)
 	})
+
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
 		log.Println("chat:", msg)
 		s.SetContext(msg)
@@ -623,109 +640,38 @@ func stupRoutes() {
 		log.Println("closed", reason)
 	})
 
+	//start the socket server
 	go func() {
 		if err := server.Serve(); err != nil {
 			log.Fatalf("socketio listen error: %s\n", err)
 		}
 	}()
-	defer server.Close()
 
 	router := mux.NewRouter()
-	// http.Handle("/socket.io/", server)
+	//messages comming in from socket front end get routed to socket server
 	router.HandleFunc("/socket.io/", func(w http.ResponseWriter, r *http.Request) {
 		server.ServeHTTP(w, r)
 	})
-	// router.Handle("/socket.io/", func(context echo.Context) error {
-	// 	server.ServeHTTP(context.Response(), context.Request())
-	// 	return nil
-	// })
+
 	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
 	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
+	router.HandleFunc("/metrics-dashboard/status", handleStatusEvent).Methods("POST")
 	router.HandleFunc("/metrics-dashboard/matcher", handleMatcherEvent).Methods("POST")
 	router.HandleFunc("/metrics-dashboard/result", handleJobResult).Methods("POST")
+	router.HandleFunc("/log-updates", handleGetLogUpdates).Methods("GET")
+	router.HandleFunc("/job-updates", handleGetJobUpdates).Methods("GET")
 
-	// router.HandleFunc("/", http.FileServer(http.Dir("../frontend"))).Methods("GET") // Only keep the event handler route
-
-	router.HandleFunc("/updates", handleGetEvent).Methods("GET")
 	router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("dashboard/build"))))
 	http.Handle("/", http.FileServer(http.Dir("dashboard/build")))
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
-
-func runCowSay(msg string) bool {
-	log.Println("notice:", msg)
-
-	// cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/QmYqdpiry4h9P39JTZ65NjhhS2QQou448LWRckE96cpkxY/stdout")
-
-	// output, err := cmdstd.Output()
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// 	//return true
-	// }
-
-	// fmt.Println(string(output))
-	// server.BroadcastToNamespace("/", "reply", output, "data")
-	// return false
-	server.BroadcastToNamespace("/", "reply", msg, "data")
-
-	cmd := exec.Command("./stack", "run-cowsay-onchain")
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		r := scanner.Text()
-		fmt.Println("from scanner ", r)
-		// if strings.Contains(r, "Job result:") {
-		// 	words := strings.Fields(r)
-		// 	lastWord := words[len(words)-1]
-		// 	fmt.Println("JOB " + lastWord)
-		// 	cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+lastWord+"/stdout")
-
-		// 	output, err := cmdstd.Output()
-		// 	fmt.Println(string(output))
-		// 	server.BroadcastToNamespace("/", "reply", output, "data")
-		// 	if err != nil {
-		// 		fmt.Println("Error:", err)
-		// 		return true
-		// 	}
-
-		// 	break
-		// } else {
-		server.BroadcastToNamespace("/", "reply", r, "data")
-		// }
-
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	return false
-}
 func runTask(msg string) bool {
 	log.Println("notice:", msg)
-
 	server.BroadcastToNamespace("/", "reply", msg, "data")
-
-	// var args [2]string
-	// args[0] = "run"
-	// args[1] = msg
 	words := strings.Fields(msg)
 	binaryName := os.Getenv("PWD") + "/lilypad"
 	cobraCommand := "run"
-	//cobraArgs := []string{"github.com/Lilypad-Tech/lilypad-module-sdxl:v0.9-lilypad1", "-i PROMPT='A happy little tree'"} // Example arguments
 	cobraArgs := []string{words[0], words[1], strings.Join(words[2:], " ")} // Example arguments
 
 	// Combine the binary name, Cobra command, and arguments
@@ -733,7 +679,6 @@ func runTask(msg string) bool {
 
 	// Execute the Cobra command
 	cmd := exec.Command(command[0], command[1:]...)
-	//cmd := exec.Command(os.Getenv("PWD")+"/lilypad", msg) //"runsdxl sdxl:v0.9-lilypad1 PROMPT='moo'")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -748,10 +693,6 @@ func runTask(msg string) bool {
 	for scanner.Scan() {
 		r := scanner.Text()
 		fmt.Println("from scanner ", r)
-
-		server.BroadcastToNamespace("/", "reply", r, "data")
-		// }
-
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -763,39 +704,7 @@ func runTask(msg string) bool {
 	}
 	return false
 }
-func _Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		allowHeaders := "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, PUT, PATCH, GET, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", allowHeaders)
-
-		next.ServeHTTP(w, r)
-	})
-}
 func main() {
-
-	// err := cmd.Start()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// cmd := exec.Command("bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked")
-
-	// err := cmd.Start()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	RunMetrics()
-
 }
-
-// var upgrader = websocket.Upgrader{
-// 	ReadBufferSize:  1024,
-// 	WriteBufferSize: 1024,
-// }

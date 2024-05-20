@@ -290,7 +290,7 @@ function clean-deploy() {
 }
 
 function clean() {
-  docker rm -f $(docker ps -aq) || true
+  # docker rm -f $(docker ps -aq) || true
   sudo rm -rf ${DATA_DIRECTORY}
   clean-deploy
 }

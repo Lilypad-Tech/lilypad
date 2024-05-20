@@ -1,0 +1,14 @@
+// const path = require('path');
+// const LiveReloadPlugin = require('webpack-livereload-plugin');
+
+// module.exports = {
+//   entry: './src/App.js',
+//   output: {
+//     filename: 'main.js',
+//     path: path.resolve(__dirname, 'dist'),
+//   },
+//   mode: 'development',
+//   plugins: [
+//     new LiveReloadPlugin()
+//   ],
+// };

@@ -89,3 +89,42 @@ type JobData struct {
 	Job   Job      `json:"Job"`
 	State JobState `json:"State"`
 }
+type Log struct {
+	id        string
+	timestamp string
+	details   string
+}
+type Event struct {
+	Type      string `json:"type"`
+	Timestamp string `json:"timestamp"`
+	Details   string `json:"details"`
+}
+type Update struct {
+	ID        string `json:"id"`
+	Timestamp string `json:"timestamp"`
+	Message   string `json:"message"`
+}
+type Data struct {
+	Dealid   string `json:"dealid"`
+	State    string `json:"state"`
+	Metadata string `json:"metadata"`
+}
+type JobUpdate struct {
+	ID         string `json:"id"`
+	ModuleID   string `json:"module_id"`
+	JobID      string `json:"job_id"`
+	Status     string `json:"status"`
+	TimeUpdate string `json:"time_update"`
+	Details    string `json:"details"`
+	TimeStart  string `json:"time_start"`
+	// Message     string `json:"message"`
+}
+type DbJob struct {
+	id          string
+	module_id   string
+	job_id      string
+	status      string
+	time_update string
+	details     string
+	time_start  string
+}

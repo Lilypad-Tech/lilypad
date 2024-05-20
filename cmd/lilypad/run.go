@@ -97,7 +97,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	result, err := jobcreator.RunJob(commandCtx, options, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()
 		st := data.GetAgreementStateString(evOffer.State)
-		lilymetrics.LogJob(evOffer.DealID, st, "")
+		lilymetrics.LogJobStatus(evOffer.DealID, st, (evOffer).JobOffer.Module.Repo)
 
 		var desc string
 		var emoji string
