@@ -23,7 +23,9 @@ Order matters because the `solver`, `job creator` and `resource provider` will r
 
 ### 1. Blockchain node
 
-This has been implemented in a docker container and two functions are already in place to build and run the container: `./stack chain-docker-build` and `./stack chain-docker-run`. The run command accepts an optional parameter for a local path where to store the blockchain data. This is handy to keep the current state of the blockchain around even after restarts on the container. The first time this commands are executed the blockchain will be in its genesis state, several things need to happen:
+This has been implemented in a docker container and two functions are already in place to build and run the container: `./stack chain-docker-build` and `./stack chain-docker-run`. The run command accepts an optional parameter for a local path where to store the blockchain data. This is handy to keep the current state of the blockchain around even after restarts on the container. The path defaults to `/data/chain` which won't work on every system but can be replaced with a directory of your choosing.
+
+The first time these commands are executed the blockchain will be in its genesis state, several things need to happen:
 
 - Fund the admin account, which will be used to deploy the smart contracts and token.
 - Compile and deploy the smart contracts.
