@@ -24,7 +24,6 @@ function chain-docker-run() {
   docker run \
     --rm \
     --name chain \
-    --network lilypad \
     --add-host localhost:host-gateway \
     -p 8545:8545 \
     -p 8546:8546 \
@@ -85,7 +84,6 @@ function faucet() {
   docker run -d \
     --name faucet \
     -p 8080:8080 \
-    --network lilypad \
     -e WEB3_PROVIDER=http://geth:8545 \
     -e PRIVATE_KEY=$privateKey \
     -e TOKEN_ADDRESS=$WEB3_TOKEN_ADDRESS \
@@ -235,7 +233,6 @@ function solver-docker-run() {
   docker run \
     --rm \
     --name solver \
-    --network lilypad \
     --add-host localhost:host-gateway \
     -p 8080:8080 \
     -e DOPPLER_TOKEN="$(doppler configs tokens create -p solver -c dev docker --max-age 1m --plain)" \
@@ -262,7 +259,6 @@ function job-creator-docker-run() {
   docker run \
     --rm \
     --name job-creator \
-    --network lilypad \
     --add-host localhost:host-gateway \
     -e DOPPLER_TOKEN="$(doppler configs tokens create -p job-creator -c dev docker --max-age 1m --plain)" \
     job-creator
@@ -290,7 +286,6 @@ function resource-provider-docker-run() {
   docker run \
     --rm \
     --name resource-provider \
-    --network lilypad \
     --add-host localhost:host-gateway \
     -e DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --max-age 1m --plain)" \
     resource-provider
@@ -318,7 +313,6 @@ function bacalhau-docker-run() {
     --privileged \
     --rm \
     --name bacalhau \
-    --network lilypad \
     --add-host localhost:host-gateway \
     -v /tmp/lilypad/data:/tmp/lilypad/data \
     -p 1234:1234 \
