@@ -13,8 +13,7 @@ ops/testnet/.terraform/providers
 .vscode/
 .run/package lilylogger
 
-package.json
-package-lock.json
+
 
 bin/
 vendor/

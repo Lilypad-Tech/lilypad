@@ -248,9 +248,9 @@ const App = () => {
       <h1>Logs</h1>
 
       <ul>
-        {logupdates.map((update) => (
+        {logupdates!=null?logupdates.map((update) => (
           <li key={update.id}> {new Date(update.timestamp).toLocaleString('en-US')}  {update.message}</li>
-        ))}
+        )):null}
       </ul>
     </div>
   );

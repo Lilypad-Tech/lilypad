@@ -18,6 +18,18 @@ import (
 )
 
 func MigrateUp(dir_name string) {
+	migration_path := os.Getenv("PWD") + "/migrations/" + dir_name
+	files, err := ioutil.ReadDir(migration_path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(files) == 0 {
+		fmt.Println("The directory is empty")
+		return
+	} else {
+		fmt.Println("The directory is not empty, run migration")
+	}
 
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbUser := os.Getenv("POSTGRES_USER")
@@ -30,7 +42,7 @@ func MigrateUp(dir_name string) {
 	}
 	defer db.Close()
 
-	migration_path := os.Getenv("PWD") + "/migrations/" + dir_name
+	// migration_path := os.Getenv("PWD") + "/migrations/" + dir_name
 	if err != nil {
 		log.Fatal(err)
 	}

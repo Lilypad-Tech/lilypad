@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -56,48 +57,11 @@ func newOTLPExporter(ctx context.Context) (oteltrace.SpanExporter, error) {
 	insecureOpt := otlptracehttp.WithInsecure()
 	// auth := otlptracehttp.NewClient()
 	// Update default OTLP reciver endpoint
-	endpointOpt := otlptracehttp.WithEndpoint("host.docker.internal:4318")
+	//
+	endpointOpt := otlptracehttp.WithEndpoint(os.Getenv("TEMPO") + ":4318")
 
 	return otlptracehttp.New(ctx, insecureOpt, endpointOpt)
-	// otlpEndpoint = os.Getenv("OTLP_ENDPOINT")
-	// if otlpEndpoint == "" {
-	// 	log.Fatalln("You MUST set OTLP_ENDPOINT env variable!")
-	// }
-	// username := os.Getenv("OTLP_USERNAME")
-	// password := os.Getenv("OTLP_PASSWORD")
-	// // Create an HTTP client with basic authentication
-	// httpClient := &http.Client{
-	// 	Transport: &http.Transport{
-	// 		Proxy: http.ProxyFromEnvironment,
-	// 	},
-	// }
 
-	// // Set up basic authentication
-	// httpClient.Transport = &BasicAuthTransport{
-	// 	Username: username,
-	// 	Password: password,
-	// 	Base:     httpClient.Transport,
-	// }
-
-	// //Initialize the exporter with the HTTP client
-	// // otlptracehttp.NewClient()
-
-	// auth := username + ":" + password
-	// authEncoded := base64.StdEncoding.EncodeToString([]byte(auth))
-	// authHeader := "Basic " + authEncoded
-
-	// exporter, err := otlptracehttp.New(
-	// 	ctx,
-	// 	otlptracehttp.WithHeaders(map[string]string{
-	// 		"Authorization": authHeader,
-	// 	}),
-	// 	otlptracehttp.WithEndpoint(otlpEndpoint),
-	// )
-
-	// if err != nil {
-	// 	// handle error
-	// }
-	// return exporter, err
 }
 func (bat *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(bat.Username, bat.Password)
@@ -261,6 +225,8 @@ func LogMetric(module_id string, detail string) {
 	defer resp.Body.Close()
 }
 func LogResult(module_id string, detail string) {
+	Post("metrics-dashboard/result", fmt.Sprintf(`{"Type":"%s","result":%s}`, module_id, detail))
+	return
 	log.Print(module_id)
 	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/metrics-dashboard/result"
 	json := fmt.Sprintf(`{"Type":"%s","result":%s}`, module_id, detail)
@@ -272,4 +238,16 @@ func LogResult(module_id string, detail string) {
 		// log.Fatal(err)
 	}
 	defer resp.Body.Close()
+}
+
+func Post(path string, json string) {
+	data := []byte(json)
+	url := "http://" + os.Getenv("METRICS_HOST") + ":8000/" + path
+	client := &http.Client{Timeout: time.Second * 1}
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		resp.Body.Close() // log.Fatal(err)
+	}
 }

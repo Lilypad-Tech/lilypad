@@ -18,7 +18,6 @@ import (
 	// "net/http"
 
 	// "github.com/elazarl/goproxy/transport"
-	"github.com/gorilla/mux"
 
 	// "github.com/gorilla/websocket"
 	"github.com/lib/pq"
@@ -27,10 +26,6 @@ import (
 
 	// "go.opentelemetry.io/otel"
 	socketio "github.com/googollee/go-socket.io"
-	"github.com/googollee/go-socket.io/engineio"
-	"github.com/googollee/go-socket.io/engineio/transport"
-	"github.com/googollee/go-socket.io/engineio/transport/polling"
-	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 )
 
 var db *sql.DB
@@ -76,40 +71,18 @@ func handleJobResult(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received data:", b)
 	if strings.Contains(b, "Complete") {
 		fmt.Println("status: Complete")
-		// r := data.dealid
-		// server.BroadcastToNamespace("/", "result", r, "data")
 		type Data struct {
 			Dealid   string `json:"dealid"`
 			State    string `json:"state"`
 			Metadata string `json:"metadata"`
 		}
 
-		// body, err := io.ReadAll(r.Body)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// defer r.Body.Close()
-
 		var data Data
-		// var val []byte = []byte(`"{\"channel\":\"buu\",\"name\":\"john\", \"msg\":\"doe\"}"`)
-
-		// s, err := strconv.Unquote(string(b))
-
-		// if err != nil {
-		// 	fmt.Println("Error unquoting JSON string")
-		// 	return
-		// }
 		err = json.Unmarshal([]byte(b), &data)
 		if err != nil {
 			fmt.Println("Error unmarshalling JSON data")
-			// http.Error(w, err.Error(), http.StatusBadRequest)
-			// return
 		}
 
-		//server.BroadcastToNamespace("/", "result", string(body), "data")
-		// fmt.Println("ResultsAccepted:", string(body))
-		// if strings.Contains(string(body), "ResultsAccepted") {
 		jobresult := data.Dealid
 		cmdstd := exec.Command("cat", "/tmp/lilypad/data/downloaded-files/"+jobresult+"/stdout")
 
@@ -117,42 +90,13 @@ func handleJobResult(w http.ResponseWriter, r *http.Request) {
 		o := string(output)
 		if err != nil {
 			fmt.Println("Error:", err)
-			//return true
 		}
-		// data.Dealid.
-		// data.Dealid.Result.DataID
-		if strings.Contains(o, "Got 1 images") {
 
-			// info := exec.Command("bacalhau", "list", "--id-filter", data.Metadata, "--output", "json")
-			// os.Setenv("BACALHAU_API_HOST", "localhost")
-			// info.Env = os.Environ()
-			// //info.Env = Env["BACALHAU_API_HOST=localhost"]
-			// //executor.bacalhauEnv
-			// output, err := info.Output()
-			// fmt.Println("bacalhau list output ", string(output))
-
-			// var jobData []JobData
-			// err = json.Unmarshal([]byte(output), &jobData)
-			// if err != nil {
-			// 	fmt.Println("Error:", err)
-
-			// }
-			// fmt.Println("cid ", jobData[0].State.Executions[0].PublishedResults.CID)
-
-			// o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "?download=true&filename=image-42.png"
-			o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "/outputs/image-42.png"
-			server.BroadcastToNamespace("/", "imgresult", o, "data")
-		} else {
-			server.BroadcastToNamespace("/", "result", o, "data")
-
-		}
-		//http://0.0.0.0:8080/ipfs/QmeCZ71AETUyiwLJ2JZLjatbzuumyg7gc1wFVdmDxRR9dE?download=true&filename=image-42.png
+		server.BroadcastToNamespace("/", "result", o, "data")
 
 		fmt.Println("output", string(output))
 
-		// }
 	}
-
 }
 
 func handleJobEvent(w http.ResponseWriter, r *http.Request) {
@@ -184,19 +128,8 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 			Metadata string `json:"metadata"`
 		}
 
-		// body, err := io.ReadAll(r.Body)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// defer r.Body.Close()
-		//time_updated := time.Now().UTC().Format(time.RFC3339Nano)
 		var data Data
 
-		// if err != nil {
-		// 	fmt.Println("Error unquoting JSON string")
-		// 	return
-		// }
 		err = json.Unmarshal([]byte(b), &data)
 		if err != nil {
 			fmt.Println("Error unmarshalling JSON data")
@@ -216,38 +149,8 @@ func handleJobEvent(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Error:", err)
 			//return true
 		}
-		// data.Dealid.
-		// data.Dealid.Result.DataID
-		if strings.Contains(o, "Got 1 images") {
-
-			// info := exec.Command("bacalhau", "list", "--id-filter", data.Metadata, "--output", "json")
-			// os.Setenv("BACALHAU_API_HOST", "localhost")
-			// info.Env = os.Environ()
-			// //info.Env = Env["BACALHAU_API_HOST=localhost"]
-			// //executor.bacalhauEnv
-			// output, err := info.Output()
-			// fmt.Println("bacalhau list output ", string(output))
-
-			// var jobData []JobData
-			// err = json.Unmarshal([]byte(output), &jobData)
-			// if err != nil {
-			// 	fmt.Println("Error:", err)
-
-			// }
-			// fmt.Println("cid ", jobData[0].State.Executions[0].PublishedResults.CID)
-
-			// o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "?download=true&filename=image-42.png"
-			o = "http://172.23.16.133:8080/ipfs/" + data.Metadata + "/outputs/image-42.png"
-			server.BroadcastToNamespace("/", "imgresult", o, "data")
-		} else {
-			server.BroadcastToNamespace("/", "result", o, "data")
-
-		}
-		//http://0.0.0.0:8080/ipfs/QmeCZ71AETUyiwLJ2JZLjatbzuumyg7gc1wFVdmDxRR9dE?download=true&filename=image-42.png
-
+		server.BroadcastToNamespace("/", "result", o, "data")
 		fmt.Println(string(output))
-
-		// }
 	}
 
 }
@@ -461,11 +364,7 @@ func handleNotifications(server *socketio.Server, l *pq.Listener) {
 		select {
 		case <-l.Notify:
 			fmt.Println("received notification, new work available")
-			// updates := []Update{
-			// 	{ID: "1", Message: "Update 1"},
-			// 	{ID: "2", Message: "Update 2"},
-			// 	{ID: "3", Message: "Update 3"},
-			// }
+
 			updates := getLatestLogs()
 			emitSocketEvent("updates", updates)
 			// case <-time.After(90 * time.Second):
@@ -588,84 +487,6 @@ func RunMetrics() {
 
 }
 
-func setupRoutes() {
-	server = socketio.NewServer(&engineio.Options{
-		Transports: []transport.Transport{
-			&polling.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-			&websocket.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-		},
-	})
-	defer server.Close()
-	//setup postgress notification listener
-	listener := initializeListener()
-	go handleNotifications(server, listener)
-
-	//setup socket routes
-	server.OnConnect("/", func(s socketio.Conn) error {
-		s.SetContext("")
-		// log.Println("connected:", s.ID())
-		return nil
-	})
-
-	server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-		go runCowSay(msg)
-	})
-
-	server.OnEvent("/", "task", func(s socketio.Conn, msg string) {
-		go runTask(msg)
-	})
-
-	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
-		log.Println("chat:", msg)
-		s.SetContext(msg)
-		return "recv " + msg
-	})
-
-	server.OnEvent("/", "bye", func(s socketio.Conn) string {
-		last := s.Context().(string)
-		s.Emit("bye", last)
-		s.Close()
-		return last
-	})
-
-	server.OnError("/", func(s socketio.Conn, e error) {
-		log.Println("socket error:", e)
-	})
-
-	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		log.Println("disconnected/closed", reason)
-	})
-
-	//start the socket server
-	go func() {
-		if err := server.Serve(); err != nil {
-			log.Fatalf("socketio listen error: %s\n", err)
-		}
-	}()
-
-	router := mux.NewRouter()
-	//messages comming in from socket front end get routed to socket server
-	router.HandleFunc("/socket.io/", func(w http.ResponseWriter, r *http.Request) {
-		server.ServeHTTP(w, r)
-	})
-
-	router.HandleFunc("/metrics-dashboard/log", handleEvent).Methods("POST") // Only keep the event handler route
-	router.HandleFunc("/metrics-dashboard/job", handleJobEvent).Methods("POST")
-	router.HandleFunc("/metrics-dashboard/status", handleStatusEvent).Methods("POST")
-	router.HandleFunc("/metrics-dashboard/matcher", handleMatcherEvent).Methods("POST")
-	router.HandleFunc("/metrics-dashboard/result", handleJobResult).Methods("POST")
-	router.HandleFunc("/log-updates", handleGetLogUpdates).Methods("GET")
-	router.HandleFunc("/job-updates", handleGetJobUpdates).Methods("GET")
-
-	router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
-	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("dashboard/build"))))
-	http.Handle("/", http.FileServer(http.Dir("dashboard/build")))
-	log.Fatal(http.ListenAndServe(":8000", router))
-}
 func runTask(msg string) bool {
 	log.Println("notice:", msg)
 	server.BroadcastToNamespace("/", "reply", msg, "data")
