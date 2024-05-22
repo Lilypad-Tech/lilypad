@@ -1,6 +1,7 @@
 package lilypad
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -8,12 +9,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
+	"github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/theckman/yacspin"
@@ -41,6 +43,8 @@ func newRunCmd() *cobra.Command {
 }
 
 func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
+	trace := lilymetrics.Trace(context.Background())
+	defer trace.End()
 	c := color.New(color.FgCyan).Add(color.Bold)
 	header := `
 ⠀⠀⠀⠀⠀⠀⣀⣤⣤⢠⣤⣀⠀⠀⠀⠀⠀
@@ -95,6 +99,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 	result, err := jobcreator.RunJob(commandCtx, options, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()
 		st := data.GetAgreementStateString(evOffer.State)
+		lilymetrics.LogJobStatus(evOffer.DealID, st, (evOffer).JobOffer.Module.Repo)
 		var desc string
 		var emoji string
 		switch st {

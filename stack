@@ -145,7 +145,7 @@ function go-binding() {
       "contracts/$name.sol" \
       -o artifacts
 
-  chown -R $USER hardhat/artifacts
+  sudo chown -R $USER:$USER hardhat/artifacts
   mkdir -p hardhat/artifacts/bindings/$pkg
 
   # generate the go bindings
@@ -158,7 +158,7 @@ function go-binding() {
       "--abi=artifacts/$name.abi" \
       "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
 
-  chown -R $USER hardhat/artifacts/bindings/$pkg
+  sudo chown -R $USER:$USER hardhat/artifacts/bindings/$pkg
   chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
   cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
 
@@ -348,6 +348,15 @@ function unit-tests() {
 function integration-tests() {
   cd test
   doppler run -p integration-tests -c dev -- go test -v -count 1 .
+}
+
+############################################################################
+# run
+############################################################################
+# 
+function run() {
+  #  go run . run "$@"
+  doppler run -p run -c dev_personal -- go run . run "$@"
 }
 
 eval "$@"
