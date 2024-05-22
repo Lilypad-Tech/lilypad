@@ -35,6 +35,10 @@ If, for whatever reason, the blockchain node needs to be reset, this can be done
 3. In the container shell execute the reset script (`./reset`). This will stop the node, clear the blockchain data, restart the node and fund the admin account.
 4. Execute `./stack chain-boot` to compile, deploy and fund the smart contracts, token and accounts respectively. Change the configuration in the Hardhat scripts (`/hardhat.config.ts` and `/scripts/print-contract-env.ts`) to make sure the URLs point to the node's exposed subdomains (at the time of this write-up `8545` -> `https://devnet-chain-http.lilypad.tech` and `8546` -> `wss://devnet-chain-ws.lilypad.tech`).
 
+### Faucet
+
+Checkout the [Lilypad faucet](https://github.com/Lilypad-Tech/eth-faucet) repository.
+
 ## Solver and Job creator
 
 When code changes reach the `main` branch, a GitHub workflow will trigger the flow that will first deploy and run the `solver` and then deploy and run the `job creator`. (*reminder*) The `solver` has to be up and running (and have registered its public URL to the blockchain) before the `job-creator` starts (the `job creator` will fail if it can't find the `solver`'s websocket server).
