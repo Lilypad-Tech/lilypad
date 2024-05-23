@@ -7,19 +7,25 @@ on:
 
 jobs:
   contracts:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           context: app
 
-      - name: Compile and deploy contracts
-        id: compile-and-deploy-contracts
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v1
+
+      # TODO Avoid re-deploying contracts that are already on chain
+      - name: Deploy contracts
+        id: deploy-contracts
         env:
-          WEB3_RPC_URL: ${{ secrets.WEB3_RPC_URL }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_CONTRACTS_DEPLOY_DEVNET }}
         run: |
-          echo "# TODO"
+          cd hardhat
+          npm ci
+          doppler run -- npx hardhat deploy --network geth
 
   solver-build-deploy:
     runs-on: ubuntu-latest
