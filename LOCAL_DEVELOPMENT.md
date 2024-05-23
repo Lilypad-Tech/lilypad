@@ -44,6 +44,15 @@ Then, the remaining processes can be executed with the command `./stack chain-bo
 >./stack chain-boot 
 ```
 
+#### Summary of command sequence
+```sh
+>./stack chain-docker-build
+>./stack chain-docker-run /path/to/my/data
+># then in another terminal
+>./stack chain-fund-admin
+>./stack chain-boot
+```
+
 ### 2. Solver service
 
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack solver`,`./stack solver-docker-build` and `./stack solver-docker-run` respectively. The `solver` service will output a log line that reads that "the solver has been registered successfully" or "the solver already exists". It is best to wait for this output before starting the services that will try to connect to the `solver`.
