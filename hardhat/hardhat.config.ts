@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv'
 
 import {
   ACCOUNT_ADDRESSES,
-  PRIVATE_KEYS,
+  getAccount,
 } from './utils/accounts'
 
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
@@ -27,11 +27,11 @@ const config: HardhatUserConfig = {
     geth: {
       url: 'http://localhost:8545',
       chainId: 1337,
-      accounts: PRIVATE_KEYS,
+      accounts: [getAccount('admin').privateKey]
     },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
-      accounts: PRIVATE_KEYS,
+      accounts: [getAccount('admin').privateKey],
     },
   },
   etherscan: {
