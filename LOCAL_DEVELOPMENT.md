@@ -23,7 +23,7 @@ Order matters because the `solver`, `job creator` and `resource provider` will r
 
 ### 1. Blockchain node
 
-This has been implemented in a docker container and two functions are already in place to build and run the container: `./stack chain-docker-build` and `./stack chain-docker-run`. The run command accepts an optional parameter for a local path where to store the blockchain data. This is handy to keep the current state of the blockchain around even after restarts on the container. The path defaults to `/data/chain` which won't work on every system but can be replaced with a directory of your choosing.
+This has been implemented in a docker container and two functions are already in place to build and run the container: `./stack chain-docker-build` and `./stack chain-docker-run <optional-path>`. The run command accepts an optional parameter for a local path where to store the blockchain data. This is handy to keep the current state of the blockchain around even after restarts on the container. The path defaults to `/data/chain`. On mac, the root directory is readonly, so you'll need to provide the optional path parameter when running the container.
 
 The first time these commands are executed the blockchain will be in its genesis state, several things need to happen:
 
@@ -31,7 +31,18 @@ The first time these commands are executed the blockchain will be in its genesis
 - Compile and deploy the smart contracts.
 - Create and fund the accounts with the native gas token and the Lilypad token.
 
-To do the first thing run the command `./stack chain-fund-admin`. Then, the remaining processes can be executed with the command `./stack chain-boot`. This last command executes via hardhat, so it will need the URL of the blockchain node where it will send the transactions (this is currently hardcoded to `http://localhost:8546`, which is ok for this setup but keep in mind in case you decide to configure things differently or if you want to run this command on a deployed blockchain node).
+To do the first thing run the command `./stack chain-fund-admin`. 
+
+Then, the remaining processes can be executed with the command `./stack chain-boot`. This last command executes via hardhat, so it will need the URL of the blockchain node where it will send the transactions (this is currently hardcoded to `http://localhost:8546`, which is ok for this setup but keep in mind in case you decide to configure things differently or if you want to run this command on a deployed blockchain node). This command sets up the environment with the correct addresses and private keys. 
+
+#### Summary of command sequence
+```sh
+>./stack chain-docker-build
+>./stack chain-docker-run /path/to/my/data
+># then in another terminal
+>./stack chain-fund-admin
+>./stack chain-boot 
+```
 
 ### 2. Solver service
 
