@@ -50,9 +50,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_CHAIN: ${{ secrets.ECR_REPOSITORY_CHAIN }}
         with:
-          host: ${{ secrets.EC2_HOST_CHAIN }}
-          username: ${{ secrets.EC2_USERNAME_CHAIN }}
-          key: ${{ secrets.EC2_PRIVATE_KEY_CHAIN }}
+          host: ${{ secrets.DEVNET_EC2_HOST_CHAIN }}
+          username: ${{ secrets.DEVNET_EC2_USERNAME_CHAIN }}
+          key: ${{ secrets.DEVNET_EC2_PRIVATE_KEY_CHAIN }}
           envs: ECR_REGISTRY, ECR_REPOSITORY_CHAIN
           script_stop: true
           script: |
@@ -60,10 +60,11 @@ jobs:
             docker rm chain || true
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
             docker system prune -af
+            docker system prune --volumes -f
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
             docker run \
               -d \
               --restart always \
+              --privileged \
               --name chain \
-              -v /data/chain:/data/chain \
               $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
