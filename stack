@@ -218,7 +218,7 @@ function run-cowsay-onchain() {
 
 function solver() {
   echo "- Reminder to do doppler setup to project->solver and config->dev"
-  doppler run -p solver -c dev -- go run . solver
+  doppler run --preserve-env -p solver -c dev -- go run . solver
 }
 
 function solver-docker-build() {
@@ -245,7 +245,7 @@ function solver-docker-run() {
 
 function job-creator() {
   echo "- Reminder to do doppler setup to project->job-creator and config->dev"
-  doppler run -p job-creator -c dev -- go run . jobcreator
+  doppler run --preserve-env -p job-creator -c dev -- go run . jobcreator
 }
 
 function job-creator-docker-build() {
@@ -270,7 +270,7 @@ function job-creator-docker-run() {
 
 function resource-provider() {
   echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run -p resource-provider -c dev -- go run . resource-provider "$@"
+  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@"
 }
 
 function resource-provider-docker-build() {
@@ -342,6 +342,13 @@ function unit-tests() {
 function integration-tests() {
   cd test
   doppler run -p integration-tests -c dev -- go test -v -count 1 .
+}
+
+############################################################################
+# run
+############################################################################
+function run() {
+  doppler run --preserve-env -p run -c dev -- go run . run "$@"
 }
 
 eval "$@"
