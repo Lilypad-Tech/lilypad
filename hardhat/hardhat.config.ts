@@ -31,6 +31,7 @@ const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
 
 const NETWORK = process.env.NETWORK || "geth";
+const NETWORK_URL = process.env.WEB3_HTTP_URL || 'http://localhost:8545';
 
 const INFURA_KEY = process.env.INFURA_KEY || "";
 
@@ -41,13 +42,13 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     geth: {
-      url: 'http://localhost:8545',
+      url: NETWORK_URL,
       chainId: 1337,
-      accounts: PRIVATE_KEYS,
+      accounts: [getAccount('admin').privateKey]
     },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
-      accounts: PRIVATE_KEYS,
+      accounts: [getAccount('admin').privateKey],
     },
     local_l2: {
       url: 'http://localhost:8547',

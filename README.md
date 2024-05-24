@@ -9,7 +9,7 @@ Visit the [Lilypad Docs](https://docs.lilypad.tech/) site for a more comprehensi
 Jobs (containers) can be run on Lilypad by utilising the [Installable CLI](https://lilypad.team/cli), also available for installation through the [Go toolchain](https://lilypad.team/cligo). After setting up the necessary pre-requisites, the CLI enables users to run jobs as described below:
 
 ```
-lilypad run cowsay:v0.0.3 -i Message="moo"
+lilypad run cowsay:v0.0.4 -i Message="moo"
 ```
 
 [![Watch the video](https://img.youtube.com/vi/Ep9ML9h8DTE/0.jpg)](https://www.youtube.com/watch?v=Ep9ML9h8DTE)
