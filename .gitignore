@@ -3,6 +3,7 @@ hardhat/artifacts
 hardhat/cache
 hardhat/deployments/hardhat
 hardhat/deployments/localhost
+hardhat/deployments/local_l2
 hardhat/deployments/geth
 hardhat/typechain-types
 node_modules/*

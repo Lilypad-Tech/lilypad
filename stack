@@ -343,5 +343,10 @@ function integration-tests() {
   cd test
   doppler run -p integration-tests -c dev -- go test -v -count 1 .
 }
+function chain-deploy() {
+  cd hardhat
+  echo $@
+  doppler run -p chain -c $@ -- yarn hardhat deploy
+}
 
 eval "$@"

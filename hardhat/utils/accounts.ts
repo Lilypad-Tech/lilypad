@@ -84,3 +84,22 @@ export const getAccount = (name: string) => {
   }
   return account
 }
+export const getAllAddresses = () => {
+  return ACCOUNTS.reduce<Record<string, string>>((all, acc) => {
+    all[acc.name] = acc.address
+    return all
+  }, {})
+}
+export const getAllKeys = () => ACCOUNTS.map(acc => acc.privateKey)
+export const setAccount = (acc: Account) => {
+  let foundAccount = ACCOUNTS.find((a) => a.name === acc.name);
+  if (foundAccount) {
+    console.log("account already exists, updating");
+    foundAccount.address = acc.address;
+    foundAccount.privateKey = acc.privateKey;
+    foundAccount.metadata = acc.metadata;
+    foundAccount.name = acc.name;
+  }
+  NAMED_ACCOUNTS[acc.name] = acc;
+  ACCOUNT_ADDRESSES[acc.name] = acc.address;
+};
