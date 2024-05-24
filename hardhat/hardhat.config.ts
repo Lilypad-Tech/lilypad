@@ -34,6 +34,27 @@ const config: HardhatUserConfig = {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: [getAccount('admin').privateKey],
     },
+    arbitrumOne: {
+      chainId: 42161,
+      url: 'https://arb1.arbitrum.io/rpc',
+      accounts: [getAccount('admin').privateKey],
+    },
+    arbitrumNova: {
+      chainId: 42170,
+      url: 'https://nova.arbitrum.io/rpc',
+      accounts: [getAccount('admin').privateKey],
+    },
+    arbitrumSepolia: {
+      url: 'https://sepolia-rollup.arbitrum.io/rpc',
+      chainId: 421614,
+      accounts: [getAccount('admin').privateKey],
+    },
+    local_l2: {
+      url: 'http://localhost:8547',
+      chainId: 412346,
+      accounts: [getAccount('admin').privateKey],
+    },
+
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

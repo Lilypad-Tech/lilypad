@@ -354,4 +354,37 @@ function run() {
   doppler run --preserve-env -p run -c dev -- go run . run "$@"
 }
 
+
+function dev_deploy() {
+  rm -rf $(pwd)/hardhat/deployments/local_l2
+  docker pull offchainlabs/nitro-node:v2.3.4-b4cc111
+  docker run --name local_l2 -p 0.0.0.0:8547:8547 -p 0.0.0.0:8548:8548 offchainlabs/nitro-node:v2.3.4-b4cc111 \
+    --init.dev-init \
+		--init.dev-init-address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
+		--node.dangerous.no-l1-listener\
+		--node.parent-chain-reader.enable=false\
+		--parent-chain.id=1337\
+		--chain.id=412346\
+		--persistent.chain /tmp/dev-test\
+		--node.sequencer\
+		--execution.sequencer.enable\
+		--node.dangerous.no-sequencer-coordinator\
+		--node.staker.enable=false\
+		--init.empty=false\
+		--http.port 8547 \
+		--http.addr 0.0.0.0\
+    --ws.port 8548 \
+		--ws.addr 0.0.0.0\
+    &
+
+  sleep 2
+  cd hardhat
+  npm install
+  npx hardhat deploy --network local_l2
+  npx hardhat run scripts/fund-services-ether.ts  --network local_l2
+  npx hardhat run scripts/fund-services-tokens.ts  --network local_l2 
+  npx hardhat run scripts/print-l2-config.ts  --network local_l2
+}
+
+
 eval "$@"
