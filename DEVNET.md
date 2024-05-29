@@ -49,21 +49,42 @@ These steps have been used for [AWS](https://aws.amazon.com/) so maybe some chan
 
 ### VM instance
 
-Create a virtual machine to execute the component. The VM should have a running Docker daemon and should be able to pull an image from the chosen container registry.
+The VM should have a running Docker daemon and should be able to pull an image from the chosen container registry. These instructions asssume an Ubuntu image.
 
-[`How to install docker`](https://serverfault.com/questions/836198/how-to-install-docker-on-aws-ec2-instance-with-ami-ce-ee-update)
+Create a virtual machine to execute the component. When creating the VM, attach an instance profile that gives it access to pull from an ECR registry. In our ops setup, we have a role named `LilypadService` that has the necessary permissions.
 
-#### tldr;
+#### Install AWS CLI
+
+Update the VM and install the AWS CLI:
 
 ```sh
-sudo yum update -y
-sudo yum install docker -y
-sudo service docker start
-sudo usermod -a -G docker <vm-user>
-sudo systemctl enable docker (restart docker when VM instance restarts)
+sudo apt update && sudo apt upgrade
+sudo snap install aws-cli --classic
 ```
 
-To grant access to the [ECR](https://aws.amazon.com/ecr/) registry from the VM execute `aws configure` with credentials that have `pull` permissions.
+#### Install Docker
+
+Install Docker:
+
+```sh
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+```
+
+Add your user to the `docker` group if you want to run without `sudo`:
+
+```sh
+sudo usermod -aG docker ubuntu
+newgrp docker
+```
+
+The `ubuntu` user assumes the default user on Ubuntu images. The `newgrrp` command adds your user to the group without logging out and back in.
+
+Check that Docker is running:
+
+```sh
+docker run hello-world
+```
 
 ### ECR repo
 
@@ -72,5 +93,3 @@ Make sure the repo has been created.
 ### Cloudflare tunnel
 
 Make sure the Cloudflare tunnel has been created and linked to the desired subdomain, and pass the token to the container in the build step.
-
-
