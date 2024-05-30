@@ -1,8 +1,6 @@
 FROM golang:latest as base
 WORKDIR /usr/src/app
 
-ARG doppler_config=dev
-
 COPY . .
 RUN go mod download && go mod verify
 RUN go build -v .
@@ -12,7 +10,7 @@ RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/insta
 
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-RUN echo "doppler run -p job-creator -c $doppler_config -- lilypad jobcreator" >> run
+RUN echo "doppler run -- lilypad jobcreator" >> run
 RUN chmod +x run
 
 CMD ["/bin/bash", "./run"]
