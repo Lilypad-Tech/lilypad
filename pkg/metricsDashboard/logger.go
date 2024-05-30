@@ -37,15 +37,14 @@ func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
 	}
 
 	data := map[string]interface{}{
-		"ID":         evOffer.ID,
-		"JobOfferID": evOffer.JobOffer.ID,
-		"CreatedAt":  evOffer.JobOffer.CreatedAt,
-		"JobCreator": evOffer.JobCreator,
-		"DealID":     evOffer.DealID,
-		"State":      evOffer.State,
-		"Module":     module,
-		"Timestamp":  time.Now().UnixMilli(),
-		"Event":      "JobOfferUpdate",
+		"ID":                evOffer.ID,
+		"JobOfferCreatedAt": evOffer.JobOffer.CreatedAt,
+		"JobCreator":        evOffer.JobCreator,
+		"DealID":            evOffer.DealID,
+		"State":             evOffer.State,
+		"Module":            module,
+		"Event":             "JobOfferUpdate",
+		"EventUpdatedAt":    time.Now().UnixMilli(),
 	}
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
