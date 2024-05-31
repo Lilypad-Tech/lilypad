@@ -18,8 +18,8 @@ jobs:
                 output_dir="build/${os}-${arch}"
                 output_name="lilypad-${os}-${arch}"
                 mkdir -p "${output_dir}"
-                GOOS=${os} GOARCH=${arch} go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' \
-                  -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+                GOOS=${os} GOARCH=${arch} go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/v2/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' \
+                  -X 'github.com/lilypad-tech/lilypad/v2/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
               done
             done
       - persist_to_workspace:
