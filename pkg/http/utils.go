@@ -12,8 +12,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 

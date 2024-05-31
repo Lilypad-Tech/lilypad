@@ -3,7 +3,7 @@ package web3
 import (
 	"context"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 )
 
 type Web3Options struct {

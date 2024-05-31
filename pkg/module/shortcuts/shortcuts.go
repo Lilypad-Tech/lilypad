@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 )
 
 // allow shortcode github.com/lukemarsden/lilypad-sdxl:v0.0.1 (tag),

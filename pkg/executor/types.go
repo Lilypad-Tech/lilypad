@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 )
 
 type ExecutorResults struct {

@@ -1,6 +1,6 @@
 package store
 
-import "github.com/lilypad-tech/lilypad/pkg/data"
+import "github.com/lilypad-tech/lilypad/v2/pkg/data"
 
 type GetJobOffersQuery struct {
 	JobCreator string `json:"job_creator"`

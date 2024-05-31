@@ -3,11 +3,11 @@ package web3
 import (
 	"context"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/token"
 	"github.com/rs/zerolog/log"
 )
 

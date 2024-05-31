@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
 )
 
