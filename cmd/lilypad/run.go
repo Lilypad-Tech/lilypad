@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
-	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/solver"
-	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/fatih/color"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/jobcreator"
+	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 	"github.com/spf13/cobra"
 
 	"github.com/theckman/yacspin"

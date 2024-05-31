@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/mediation"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
 )
 

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/http"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/http"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 	"github.com/rs/zerolog/log"
 )
 

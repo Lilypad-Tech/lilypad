@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 )
 
 var VERSION string

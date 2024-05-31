@@ -1,11 +1,11 @@
 package lilypad
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
-	"github.com/lilypad-tech/lilypad/pkg/mediator"
-	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/v2/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/v2/pkg/mediator"
+	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )

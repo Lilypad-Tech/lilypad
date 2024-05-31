@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 )
 
 var host = os.Getenv("API_HOST")
