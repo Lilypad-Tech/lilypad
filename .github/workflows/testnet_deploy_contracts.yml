@@ -1,0 +1,24 @@
+name: Deploy Testnet contracts
+
+on: workflow_dispatch
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v1
+
+      - name: Deploy contracts
+        id: deploy-contracts
+        env:
+          DOPPLER_TOKEN: ${{ secrets.TESTNET_DOPPLER_TOKEN_CONTRACTS_DEPLOY }}
+        run: |
+          cd hardhat
+          npm ci
+          doppler run -- npx hardhat deploy --network arbitrumSepolia

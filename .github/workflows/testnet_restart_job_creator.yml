@@ -1,0 +1,17 @@
+name: Restart Testnet job creator
+
+on: workflow_dispatch
+
+jobs:
+  job-creator-restart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restart job-creator container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TESTNET_EC2_HOST_JOB_CREATOR }}
+          username: ${{ secrets.TESTNET_EC2_USERNAME_JOB_CREATOR }}
+          key: ${{ secrets.TESTNET_EC2_PRIVATE_KEY_JOB_CREATOR }}
+          script_stop: true
+          script: |
+            docker restart job-creator || true

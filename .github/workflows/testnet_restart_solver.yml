@@ -1,0 +1,17 @@
+name: Restart Testnet solver
+
+on: workflow_dispatch
+
+jobs:
+  solver-restart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restart solver container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TESTNET_EC2_HOST_SOLVER }}
+          username: ${{ secrets.TESTNET_EC2_USERNAME_SOLVER }}
+          key: ${{ secrets.TESTNET_EC2_PRIVATE_KEY_SOLVER }}
+          script_stop: true
+          script: |
+            docker restart solver || true
