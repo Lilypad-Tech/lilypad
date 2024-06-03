@@ -25,7 +25,20 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 	)
 }
 
-func ProcessServicesOptions(options data.ServiceConfig) (data.ServiceConfig, error) {
+func ProcessServicesOptions(options data.ServiceConfig, network string) (data.ServiceConfig, error) {
+	config, err := getConfig(network)
+	if err != nil {
+		return options, err
+	}
+
+	// Apply configs when environment variables or command line options are not used
+	if options.Solver == "" {
+		options.Solver = config.ServiceConfig.Solver
+	}
+	if len(options.Mediator) == 0 {
+		options.Mediator = config.ServiceConfig.Mediator
+	}
+
 	return options, nil
 }
 

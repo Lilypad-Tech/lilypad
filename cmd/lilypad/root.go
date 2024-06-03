@@ -21,6 +21,10 @@ func NewRootCmd() *cobra.Command {
 		Short: "Lilypad",
 		Long:  fmt.Sprintf("Lilypad: %s \nCommit: %s \n", VERSION, COMMIT_SHA),
 	}
+
+	var network string
+	RootCmd.PersistentFlags().StringVarP(&network, "network", "n", "testnet", "Sets a target network configuration")
+
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())
 	RootCmd.AddCommand(newRunCmd())
