@@ -13,6 +13,7 @@ Environment="SERVICE_MEDIATORS=0xc66b9b74e307f30e7af79c03fee6ceb8b1ced997"
 Restart=always
 RestartSec=5s
 ExecStart=/usr/bin/lilypad resource-provider
+WatchdogSec=20s
 
 [Install]
 WantedBy=multi-user.target

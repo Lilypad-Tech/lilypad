@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/coreos/go-systemd/v22/daemon"
 )
 
 type ControlLoop struct {
@@ -72,6 +74,10 @@ func (loop *ControlLoop) run() {
 func (loop *ControlLoop) Start(runInitially bool) error {
 	ticker := time.NewTicker(loop.interval)
 
+	if err := notifyWatchdogReady(); err != nil {
+		Error(loop.service, "unable to notify watchdog: ready", err)
+	}
+
 	if runInitially {
 		err := loop.handler()
 		if err != nil {
@@ -85,10 +91,26 @@ func (loop *ControlLoop) Start(runInitially bool) error {
 			case <-loop.ctx.Done():
 				return
 			case <-ticker.C:
+				// Notify systemd watchdog that we are alive
+				if err := notifyWatchdogHeartbeat(); err != nil {
+					Error(loop.service, "unable to notify watchdog: heartbeat", err)
+				}
+
+				loop.Trigger()
 			}
-			loop.Trigger()
 		}
 	}()
 
 	return nil
+}
+
+func notifyWatchdogReady() error {
+	// Notify systemd that the service is ready
+	_, err := daemon.SdNotify(false, daemon.SdNotifyReady)
+	return err
+}
+
+func notifyWatchdogHeartbeat() error {
+	_, err := daemon.SdNotify(false, daemon.SdNotifyWatchdog)
+	return err
 }
