@@ -84,7 +84,7 @@ func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
 	return nil
 }
 
-func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
+func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string, network string) (jobcreator.JobCreatorOptions, error) {
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
@@ -99,20 +99,34 @@ func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []strin
 		return options, err
 	}
 	options.Offer.Module = moduleOptions
-	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+
+	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
 	}
 	options.Web3 = newWeb3Options
+
+	newServicesOptions, err := ProcessServicesOptions(options.Offer.Services, network)
+	if err != nil {
+		return options, err
+	}
+	options.Offer.Services = newServicesOptions
+
 	return options, CheckJobCreatorOptions(options)
 }
 
-func ProcessOnChainJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string) (jobcreator.JobCreatorOptions, error) {
-	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+func ProcessOnChainJobCreatorOptions(options jobcreator.JobCreatorOptions, args []string, network string) (jobcreator.JobCreatorOptions, error) {
+	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
 	}
 	options.Web3 = newWeb3Options
+
+	newServicesOptions, err := ProcessServicesOptions(options.Offer.Services, network)
+	if err != nil {
+		return options, err
+	}
+	options.Offer.Services = newServicesOptions
 
 	err = CheckWeb3Options(options.Web3)
 	if err != nil {

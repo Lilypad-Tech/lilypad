@@ -87,7 +87,41 @@ func CheckWeb3Options(options web3.Web3Options) error {
 	return nil
 }
 
-func ProcessWeb3Options(options web3.Web3Options) (web3.Web3Options, error) {
+func ProcessWeb3Options(options web3.Web3Options, network string) (web3.Web3Options, error) {
+	config, err := getConfig(network)
+	if err != nil {
+		return options, err
+	}
+
+	// Apply configs when environment variables or command line options are not used
+	if options.RpcURL == "" {
+		options.RpcURL = config.Web3.RpcURL
+	}
+	if options.ChainID == 0 {
+		options.ChainID = config.Web3.ChainID
+	}
+	if options.ControllerAddress == "" {
+		options.ControllerAddress = config.Web3.ControllerAddress
+	}
+	if options.PaymentsAddress == "" {
+		options.PaymentsAddress = config.Web3.PaymentsAddress
+	}
+	if options.StorageAddress == "" {
+		options.StorageAddress = config.Web3.StorageAddress
+	}
+	if options.UsersAddress == "" {
+		options.UsersAddress = config.Web3.UsersAddress
+	}
+	if options.MediationAddress == "" {
+		options.MediationAddress = config.Web3.MediationAddress
+	}
+	if options.JobCreatorAddress == "" {
+		options.JobCreatorAddress = config.Web3.JobCreatorAddress
+	}
+	if options.TokenAddress == "" {
+		options.TokenAddress = config.Web3.TokenAddress
+	}
+
 	if options.PrivateKey == "" {
 		options.PrivateKey = os.Getenv("WEB3_PRIVATE_KEY")
 	}

@@ -32,8 +32,8 @@ func CheckSolverOptions(options solver.SolverOptions) error {
 	return nil
 }
 
-func ProcessSolverOptions(options solver.SolverOptions) (solver.SolverOptions, error) {
-	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+func ProcessSolverOptions(options solver.SolverOptions, network string) (solver.SolverOptions, error) {
+	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
 	}

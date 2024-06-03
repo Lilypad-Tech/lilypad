@@ -18,7 +18,8 @@ func newSolverCmd() *cobra.Command {
 		Long:    "Start the lilypad solver service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			options, err := optionsfactory.ProcessSolverOptions(options)
+			network, _ := cmd.Flags().GetString("network")
+			options, err := optionsfactory.ProcessSolverOptions(options, network)
 			if err != nil {
 				return err
 			}
