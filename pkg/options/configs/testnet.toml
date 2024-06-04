@@ -1,0 +1,14 @@
+[services]
+solver = "0xe05e1b71955da4934938a6b16f97e1db9de6b764"
+mediator = ["0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"]
+
+[web3]
+rpc_url = "wss://arbitrum-sepolia.infura.io/ws/v3/07472a48382e4679ae818aad0c21cf90"
+chain_id = 421614
+controller_address = "0xF2fD1B9b262982F12446149A27d8901Ac68dcB59"
+payments_address = "0x6f982192B4D225D67ED52A31308a602438882D6b"
+storage_address = "0xEB383625D7837aD49C1909f74d05a2db247CE0ca"
+users_address = "0x8FBAC8549fe9cb0630f7E30929C8256b9b67E68f"
+token_address = "0x0AabEbf21Cc4591475bb64e105267b3d55C7e0f1"
+mediation_address = "0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"
+jobcreator_address = "0x691ddE4710baFA7D0d7c02da32FeFB513CC870fA"

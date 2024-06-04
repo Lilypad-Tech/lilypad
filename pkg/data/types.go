@@ -83,8 +83,8 @@ const (
 // by the RP and JC - the solver will find an intersection
 // of these and attach them to the deal
 type ServiceConfig struct {
-	Solver   string   `json:"solver"`
-	Mediator []string `json:"mediator"`
+	Solver   string   `json:"solver" toml:"solver"`
+	Mediator []string `json:"mediator" toml:"mediator"`
 }
 
 // posted to the solver by a job creator

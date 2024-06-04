@@ -3,6 +3,7 @@ module github.com/lilypad-tech/lilypad
 go 1.20
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
