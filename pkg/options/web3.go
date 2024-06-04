@@ -13,12 +13,12 @@ func GetDefaultWeb3Options() web3.Web3Options {
 	return web3.Web3Options{
 
 		// core settings
-		RpcURL:     GetDefaultServeOptionString("WEB3_RPC_URL", "ws://testnet.lilypad.tech:8546"),
+		RpcURL:     GetDefaultServeOptionString("WEB3_RPC_URL", ""),
 		PrivateKey: GetDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
-		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
+		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 0), //nolint:gomnd
 
 		// contract addresses
-		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", "0x8e136587e3e5266d5244f6aa896E5CAf8E969946"),
+		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", ""),
 		PaymentsAddress:   GetDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
