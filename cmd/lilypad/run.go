@@ -29,6 +29,10 @@ func newRunCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args, network)
+
+			fmt.Printf("%+v\n", options.Web3)
+			fmt.Printf("%+v", options.Offer.Services)
+
 			if err != nil {
 				return err
 			}

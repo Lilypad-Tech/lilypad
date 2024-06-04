@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
@@ -20,6 +22,10 @@ func newResourceProviderCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessResourceProviderOptions(options, network)
+
+			fmt.Printf("%+v\n", options.Web3)
+			fmt.Printf("%+v", options.Offers.Services)
+
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	"github.com/lilypad-tech/lilypad/pkg/mediator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
@@ -21,6 +23,10 @@ func newMediatorCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessMediatorOptions(options, network)
+
+			fmt.Printf("%+v\n", options.Web3)
+			fmt.Printf("%+v", options.Services)
+
 			if err != nil {
 				return err
 			}

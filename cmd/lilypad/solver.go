@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
@@ -20,6 +22,9 @@ func newSolverCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
+
+			fmt.Printf("%+v", options.Web3)
+
 			if err != nil {
 				return err
 			}

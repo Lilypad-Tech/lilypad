@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -19,6 +21,10 @@ func newJobCreatorCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessOnChainJobCreatorOptions(options, args, network)
+
+			fmt.Printf("%+v\n", options.Web3)
+			fmt.Printf("%+v", options.Offer.Services)
+
 			if err != nil {
 				return err
 			}
