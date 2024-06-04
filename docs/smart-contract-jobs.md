@@ -8,7 +8,7 @@ It works in tandem with the `lilypad jobcreator` on-chain which will watch the o
 
 You will need to know the contract address for the on-chain job creator so we can submit transactions to it.
 
-The production controller address is `0x8e136587e3e5266d5244f6aa896E5CAf8E969946` and you can ask it for the address of the on-chain job creator `getJobCreatorAddress()`
+The production controller address is `0xF2fD1B9b262982F12446149A27d8901Ac68dcB59` and you can ask it for the address of the on-chain job creator `getJobCreatorAddress()`
 
 Running a job involves 2 phases:
 
