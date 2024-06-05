@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor/noop"
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
@@ -16,7 +17,6 @@ import (
 	solvermemorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ func getResourceProvider(
 	if resourceProviderOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
 	}
-	resourceProviderOptions, err := optionsfactory.ProcessResourceProviderOptions(resourceProviderOptions)
+	resourceProviderOptions, err := optionsfactory.ProcessResourceProviderOptions(resourceProviderOptions, "dev")
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func getMediator(
 	if mediatorOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("MEDIATOR_PRIVATE_KEY is not defined")
 	}
-	mediatorOptions, err := optionsfactory.ProcessMediatorOptions(mediatorOptions)
+	mediatorOptions, err := optionsfactory.ProcessMediatorOptions(mediatorOptions, "dev")
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, er
 	ret, err := optionsfactory.ProcessJobCreatorOptions(jobCreatorOptions, []string{
 		// this should point to the shortcut
 		"cowsay:v0.0.2",
-	})
+	}, "dev")
 
 	if err != nil {
 		return ret, err

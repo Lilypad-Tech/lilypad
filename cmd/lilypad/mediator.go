@@ -19,7 +19,10 @@ func newMediatorCmd() *cobra.Command {
 		Long:    "Start the lilypad mediator service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			options, err := optionsfactory.ProcessMediatorOptions(options)
+			optionsfactory.CheckDeprecation(options.Services, options.Web3)
+
+			network, _ := cmd.Flags().GetString("network")
+			options, err := optionsfactory.ProcessMediatorOptions(options, network)
 			if err != nil {
 				return err
 			}

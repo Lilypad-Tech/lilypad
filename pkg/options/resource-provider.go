@@ -122,7 +122,13 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 	return nil
 }
 
-func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) (resourceprovider.ResourceProviderOfferOptions, error) {
+func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions, network string) (resourceprovider.ResourceProviderOfferOptions, error) {
+	newServicesOptions, err := ProcessServicesOptions(options.Services, network)
+	if err != nil {
+		return options, err
+	}
+	options.Services = newServicesOptions
+
 	// if there are no specs then populate with the single spec
 	if len(options.Specs) == 0 {
 		// loop the number of machines we want to offer
@@ -133,13 +139,13 @@ func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProvid
 	return options, nil
 }
 
-func ProcessResourceProviderOptions(options resourceprovider.ResourceProviderOptions) (resourceprovider.ResourceProviderOptions, error) {
-	newOfferOptions, err := ProcessResourceProviderOfferOptions(options.Offers)
+func ProcessResourceProviderOptions(options resourceprovider.ResourceProviderOptions, network string) (resourceprovider.ResourceProviderOptions, error) {
+	newOfferOptions, err := ProcessResourceProviderOfferOptions(options.Offers, network)
 	if err != nil {
 		return options, err
 	}
 	options.Offers = newOfferOptions
-	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
 	}

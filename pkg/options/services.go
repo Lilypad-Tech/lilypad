@@ -9,8 +9,8 @@ import (
 
 func GetDefaultServicesOptions() data.ServiceConfig {
 	return data.ServiceConfig{
-		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", "0x346d811cbb883548252418121f5bb0371eb07049"),
-		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{"0xc66b9b74e307f30e7af79c03fee6ceb8b1ced997"}),
+		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", ""),
+		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{}),
 	}
 }
 
@@ -25,7 +25,20 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 	)
 }
 
-func ProcessServicesOptions(options data.ServiceConfig) (data.ServiceConfig, error) {
+func ProcessServicesOptions(options data.ServiceConfig, network string) (data.ServiceConfig, error) {
+	config, err := getConfig(network)
+	if err != nil {
+		return options, err
+	}
+
+	// Apply configs when environment variables or command line options are not used
+	if options.Solver == "" {
+		options.Solver = config.ServiceConfig.Solver
+	}
+	if len(options.Mediator) == 0 {
+		options.Mediator = config.ServiceConfig.Mediator
+	}
+
 	return options, nil
 }
 

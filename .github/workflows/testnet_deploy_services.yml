@@ -34,6 +34,7 @@ jobs:
             -t $ECR_REPOSITORY_SOLVER \
             -f ./docker/solver/Dockerfile \
             --build-arg="expose_via=cloudflare" \
+            --build-arg="network=testnet" \
             .
           docker tag $ECR_REPOSITORY_SOLVER:latest $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
@@ -94,6 +95,7 @@ jobs:
           docker build \
             -t $ECR_REPOSITORY_JOB_CREATOR \
             -f ./docker/job-creator/Dockerfile \
+            --build-arg="network=testnet" \
             .
           docker tag $ECR_REPOSITORY_JOB_CREATOR:latest $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest

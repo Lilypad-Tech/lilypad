@@ -13,12 +13,12 @@ func GetDefaultWeb3Options() web3.Web3Options {
 	return web3.Web3Options{
 
 		// core settings
-		RpcURL:     GetDefaultServeOptionString("WEB3_RPC_URL", "ws://testnet.lilypad.tech:8546"),
+		RpcURL:     GetDefaultServeOptionString("WEB3_RPC_URL", ""),
 		PrivateKey: GetDefaultServeOptionString("WEB3_PRIVATE_KEY", ""),
-		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 1337), //nolint:gomnd
+		ChainID:    GetDefaultServeOptionInt("WEB3_CHAIN_ID", 0), //nolint:gomnd
 
 		// contract addresses
-		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", "0x8e136587e3e5266d5244f6aa896E5CAf8E969946"),
+		ControllerAddress: GetDefaultServeOptionString("WEB3_CONTROLLER_ADDRESS", ""),
 		PaymentsAddress:   GetDefaultServeOptionString("WEB3_PAYMENTS_ADDRESS", ""),
 		StorageAddress:    GetDefaultServeOptionString("WEB3_STORAGE_ADDRESS", ""),
 		UsersAddress:      GetDefaultServeOptionString("WEB3_USERS_ADDRESS", ""),
@@ -87,7 +87,41 @@ func CheckWeb3Options(options web3.Web3Options) error {
 	return nil
 }
 
-func ProcessWeb3Options(options web3.Web3Options) (web3.Web3Options, error) {
+func ProcessWeb3Options(options web3.Web3Options, network string) (web3.Web3Options, error) {
+	config, err := getConfig(network)
+	if err != nil {
+		return options, err
+	}
+
+	// Apply configs when environment variables or command line options are not used
+	if options.RpcURL == "" {
+		options.RpcURL = config.Web3.RpcURL
+	}
+	if options.ChainID == 0 {
+		options.ChainID = config.Web3.ChainID
+	}
+	if options.ControllerAddress == "" {
+		options.ControllerAddress = config.Web3.ControllerAddress
+	}
+	if options.PaymentsAddress == "" {
+		options.PaymentsAddress = config.Web3.PaymentsAddress
+	}
+	if options.StorageAddress == "" {
+		options.StorageAddress = config.Web3.StorageAddress
+	}
+	if options.UsersAddress == "" {
+		options.UsersAddress = config.Web3.UsersAddress
+	}
+	if options.MediationAddress == "" {
+		options.MediationAddress = config.Web3.MediationAddress
+	}
+	if options.JobCreatorAddress == "" {
+		options.JobCreatorAddress = config.Web3.JobCreatorAddress
+	}
+	if options.TokenAddress == "" {
+		options.TokenAddress = config.Web3.TokenAddress
+	}
+
 	if options.PrivateKey == "" {
 		options.PrivateKey = os.Getenv("WEB3_PRIVATE_KEY")
 	}

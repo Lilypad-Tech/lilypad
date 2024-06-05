@@ -6,7 +6,9 @@ hardhat/deployments/localhost
 hardhat/deployments/geth
 hardhat/typechain-types
 node_modules/*
+# Ignore the binary executable
 lilypad
+!cmd/lilypad
 .env
 *.env
 .env.*

@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/theckman/yacspin"
@@ -27,7 +27,10 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			options, err := optionsfactory.ProcessJobCreatorOptions(options, args)
+			optionsfactory.CheckDeprecation(options.Offer.Services, options.Web3)
+
+			network, _ := cmd.Flags().GetString("network")
+			options, err := optionsfactory.ProcessJobCreatorOptions(options, args, network)
 			if err != nil {
 				return err
 			}

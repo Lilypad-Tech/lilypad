@@ -40,11 +40,18 @@ func CheckMediatorOptions(options mediator.MediatorOptions) error {
 	return nil
 }
 
-func ProcessMediatorOptions(options mediator.MediatorOptions) (mediator.MediatorOptions, error) {
-	newWeb3Options, err := ProcessWeb3Options(options.Web3)
+func ProcessMediatorOptions(options mediator.MediatorOptions, network string) (mediator.MediatorOptions, error) {
+	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
 	}
 	options.Web3 = newWeb3Options
+
+	newServicesOptions, err := ProcessServicesOptions(options.Services, network)
+	if err != nil {
+		return options, err
+	}
+	options.Services = newServicesOptions
+
 	return options, CheckMediatorOptions(options)
 }
