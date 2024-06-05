@@ -218,7 +218,7 @@ function run-cowsay-onchain() {
 
 function solver() {
   echo "- Reminder to do doppler setup to project->solver and config->dev"
-  doppler run --preserve-env -p solver -c dev -- go run . solver
+  doppler run --preserve-env -p solver -c dev -- go run . solver --network dev
 }
 
 function solver-docker-build() {
@@ -226,6 +226,7 @@ function solver-docker-build() {
     -t solver \
     -f ./docker/solver/Dockerfile \
     --build-arg arch=${OS_ARCH} \
+    --build-arg network=dev \
     .
 }
 
@@ -245,13 +246,14 @@ function solver-docker-run() {
 
 function job-creator() {
   echo "- Reminder to do doppler setup to project->job-creator and config->dev"
-  doppler run --preserve-env -p job-creator -c dev -- go run . jobcreator
+  doppler run --preserve-env -p job-creator -c dev -- go run . jobcreator --network dev
 }
 
 function job-creator-docker-build() {
   docker build \
     -t job-creator \
     -f ./docker/job-creator/Dockerfile \
+    --build-arg network=dev \
     .
 }
 
@@ -270,7 +272,7 @@ function job-creator-docker-run() {
 
 function resource-provider() {
   echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@"
+  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@" --network dev
 }
 
 function resource-provider-docker-build() {
@@ -278,6 +280,7 @@ function resource-provider-docker-build() {
     -t resource-provider \
     -f ./docker/resource-provider/Dockerfile \
     --build-arg doppler_config=dev \
+    --build-arg network=dev \
     --build-arg DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --plain)" \
     .
 }

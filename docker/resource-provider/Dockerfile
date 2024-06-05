@@ -2,6 +2,7 @@ FROM golang:latest as base
 WORKDIR /usr/src/app
 
 ARG doppler_config=dev
+ARG network=dev
 ARG DOPPLER_TOKEN_BACALHAU
 ARG DOPPLER_TOKEN_RESOURCE_PROVIDER
 
@@ -21,7 +22,7 @@ RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/insta
 RUN touch run
 RUN echo "#!/bin/bash" >> run
 #RUN echo "doppler run --token=$DOPPLER_TOKEN_BACALHAU -p bacalhau -c $doppler_config -- ./stack bacalhau-serve &" >> run
-RUN echo "doppler run --token=$DOPPLER_TOKEN_RESOURCE_PROVIDER -p resource-provider -c $doppler_config -- lilypad resource-provider" >> run
+RUN echo "doppler run --token=$DOPPLER_TOKEN_RESOURCE_PROVIDER -p resource-provider -c $doppler_config -- lilypad resource-provider --network $network" >> run
 RUN chmod +x run
 
 CMD ["/bin/bash", "./run"]
