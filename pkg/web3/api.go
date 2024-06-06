@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/powtoken"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
 
@@ -237,4 +238,62 @@ func (sdk *Web3SDK) MediationRejectResult(
 		return "", err
 	}
 	return tx.Hash().String(), nil
+}
+
+func (sdk *Web3SDK) GetGenerateChallenge(
+	ctx context.Context,
+	nodeId string,
+) (string, *powtoken.PowtokenGenerateChallenge, error) {
+	tx, err := sdk.Contracts.PowToken.GenerateChallenge(
+		sdk.TransactOpts,
+		nodeId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting powtoken.GenerateChallenge", err)
+		return "", nil, err
+	} else {
+		system.Debug(sdk.Options.Service, "submitted powtoken.GenerateChallenge", tx.Hash().String())
+		system.DumpObjectDebug(tx)
+	}
+	receipt, err := sdk.WaitTx(context.Background(), tx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if receipt.Status != 0 {
+		return tx.Hash().String(), nil, fmt.Errorf("execute challenge fail")
+	}
+
+	challenge, err := sdk.Contracts.PowToken.ParseGenerateChallenge(*receipt.Logs[0])
+	if err != nil {
+		return "", nil, err
+	}
+	return tx.Hash().String(), challenge, nil
+}
+
+func (sdk *Web3SDK) SubmitWork(
+	ctx context.Context,
+	nonce *big.Int,
+	nodeId string,
+) (common.Hash, *powtoken.PowtokenValidPOWSubmitted, error) {
+	tx, err := sdk.Contracts.PowToken.SubmitWork(sdk.TransactOpts, nonce, nodeId)
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	receipt, err := sdk.WaitTx(ctx, tx)
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	if receipt.Status != 0 {
+		return tx.Hash(), nil, fmt.Errorf("excute transaction fail")
+	}
+
+	validPosSubmission, err := sdk.Contracts.PowToken.ParseValidPOWSubmitted(*receipt.Logs[0]) // todo need to check this result
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	return tx.Hash(), validPosSubmission, nil
 }

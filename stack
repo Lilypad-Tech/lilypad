@@ -122,6 +122,7 @@ function go-bindings() {
   go-binding LilypadMediationRandom mediation
   go-binding LilypadOnChainJobCreator jobcreator
   go-binding LilypadController controller
+  go-binding PoWToken powtoken
 
   echo "- Generated all go bindings pkg/contract/bindings/"
 }
