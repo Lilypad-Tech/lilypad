@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -20,6 +21,7 @@ type SolverEventType string
 const (
 	JobOfferAdded                       SolverEventType = "JobOfferAdded"
 	ResourceOfferAdded                  SolverEventType = "ResourceOfferAdded"
+	ResourceOfferRemoved                SolverEventType = "ResourceOfferRemoved"
 	DealAdded                           SolverEventType = "DealAdded"
 	JobOfferStateUpdated                SolverEventType = "JobOfferStateUpdated"
 	ResourceOfferStateUpdated           SolverEventType = "ResourceOfferStateUpdated"
@@ -321,15 +323,43 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	controller.log.Info("add resource offer", resourceOffer)
 
+	metricsDashboard.TrackNodeInfo(resourceOffer)
+
 	ret, err := controller.store.AddResourceOffer(data.GetResourceOfferContainer(resourceOffer))
 	if err != nil {
 		return nil, err
 	}
+
 	controller.writeEvent(SolverEvent{
 		EventType:     ResourceOfferAdded,
 		ResourceOffer: ret,
 	})
 	return ret, nil
+}
+
+func (controller *SolverController) removeResourceOfferBYResourceProvider(ID string) error {
+	controller.log.Info("remove resource offer", ID)
+	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(resourceOffers) == 0 {
+		return nil
+	}
+
+	err = controller.store.RemoveResourceOffer(resourceOffers[0].ID)
+	if err != nil {
+		return err
+	}
+
+	controller.writeEvent(SolverEvent{
+		EventType:     ResourceOfferRemoved,
+		ResourceOffer: nil,
+	})
+	return nil
 }
 
 func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer, error) {

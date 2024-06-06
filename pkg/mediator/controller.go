@@ -51,10 +51,13 @@ func NewMediatorController(
 		return nil, err
 	}
 
-	solverClient, err := solver.NewSolverClient(http.ClientOptions{
-		URL:        solverUrl,
-		PrivateKey: options.Web3.PrivateKey,
-	})
+	solverClient, err := solver.NewSolverClient(
+		http.ClientOptions{
+			URL:           solverUrl,
+			PrivateKey:    options.Web3.PrivateKey,
+			Type:          "Mediator",
+			PublicAddress: web3SDK.GetAddress().String(),
+		})
 	if err != nil {
 		log.Error().Msgf("error NewSolverClient")
 		return nil, err

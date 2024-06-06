@@ -11,11 +11,13 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
-var host = os.Getenv("API_HOST")
-var endpoint = "metrics-dashboard/logs"
-var url = host + endpoint
+const jobsEndpoint = "jobs"
+const nodeInfoEndpoint = "nodes"
+const nodeConnectionEndpoint = "uptimes"
 
-func TrackEvent(json string) {
+var host = os.Getenv("API_HOST") + "metrics-dashboard/"
+
+func TrackEvent(url string, json string) {
 	data := []byte(json)
 
 	client := &http.Client{Timeout: time.Second * 1}
@@ -31,6 +33,7 @@ func TrackEvent(json string) {
 }
 
 func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
+	var url = host + jobsEndpoint
 	var module = evOffer.JobOffer.Module.Name
 	if module == "" {
 		module = evOffer.JobOffer.Module.Repo + ":" + evOffer.JobOffer.Module.Hash
@@ -49,5 +52,34 @@ func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	TrackEvent(payload)
+	TrackEvent(url, payload)
+}
+
+func TrackNodeInfo(resourceOffer data.ResourceOffer) {
+	var url = host + nodeInfoEndpoint
+
+	data := map[string]interface{}{
+		"ID":      resourceOffer.ResourceProvider,
+		"GPU":     resourceOffer.Spec.GPU,
+		"CPU":     resourceOffer.Spec.CPU,
+		"RAM":     resourceOffer.Spec.RAM,
+		"Modules": resourceOffer.Modules,
+	}
+	byts, _ := json.Marshal(data)
+	payload := string(byts)
+
+	TrackEvent(url, payload)
+}
+
+func TrackNodeConnectionEvent(event string, ID string) {
+	var url = host + nodeConnectionEndpoint
+	data := map[string]interface{}{
+		"ID":    ID,
+		"Event": event,
+		"Time":  time.Now().UnixMilli(),
+	}
+	byts, _ := json.Marshal(data)
+	payload := string(byts)
+
+	TrackEvent(url, payload)
 }

@@ -11,11 +11,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -95,6 +96,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 		http.WEBSOCKET_SUB_PATH,
 		websocketEventChannel,
 		ctx,
+		solverServer.connectCB,
+		solverServer.disconnectCB,
 	)
 
 	srv := &corehttp.Server{
@@ -129,6 +132,20 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	}
 
 	return nil
+}
+
+// WS connect events
+func (solverServer *solverServer) connectCB(connParams http.WSConnectionParams) {
+	if connParams.Type == "ResourceProvider" {
+		metricsDashboard.TrackNodeConnectionEvent("Connect", connParams.ID)
+	}
+}
+
+func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParams) {
+	if connParams.Type == "ResourceProvider" {
+		metricsDashboard.TrackNodeConnectionEvent("Disconnect", connParams.ID)
+		solverServer.controller.removeResourceOfferBYResourceProvider(connParams.ID)
+	}
 }
 
 /*
