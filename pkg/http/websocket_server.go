@@ -21,12 +21,19 @@ type ConnectionWrapper struct {
 	mu   sync.Mutex
 }
 
+type WSConnectionParams struct {
+	ID   string
+	Type string
+}
+
 // StartWebSocketServer starts a WebSocket server
 func StartWebSocketServer(
 	r *mux.Router,
 	path string,
 	messageChan chan []byte,
 	ctx context.Context,
+	connectCB func(params WSConnectionParams),
+	disconnectCB func(params WSConnectionParams),
 ) {
 	var mutex = &sync.Mutex{}
 
@@ -88,7 +95,13 @@ func StartWebSocketServer(
 			log.Error().Msgf("Error upgrading websocket: %s", err.Error())
 			return
 		}
+		params := r.URL.Query()
+		connParams := WSConnectionParams{
+			ID:   params.Get("ID"),
+			Type: params.Get("Type"),
+		}
 		defer conn.Close()
+		connectCB(connParams)
 		addConnection(conn)
 
 		log.Debug().
@@ -98,10 +111,14 @@ func StartWebSocketServer(
 			messageType, _, err := conn.ReadMessage()
 			if err != nil {
 				log.Trace().Msgf("Client disconnected: %s", err.Error())
+				removeConnection(conn)
+				disconnectCB(connParams)
 				break
 			}
 			if messageType == websocket.CloseMessage {
 				log.Trace().Msgf("Received close frame from client.")
+				removeConnection(conn)
+				disconnectCB(connParams)
 				break
 			}
 		}
