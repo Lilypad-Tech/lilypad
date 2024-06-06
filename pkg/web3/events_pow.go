@@ -11,14 +11,14 @@ import (
 )
 
 type PowEventChannels struct {
-	newPowRoundChan chan *powtoken.PowtokenNewPostRound
-	newPowRoundSubs []func(powtoken.PowtokenNewPostRound)
+	newPowRoundChan chan *powtoken.PowtokenNewPowRound
+	newPowRoundSubs []func(powtoken.PowtokenNewPowRound)
 }
 
 func NewPowEventChannels() *PowEventChannels {
 	return &PowEventChannels{
-		newPowRoundChan: make(chan *powtoken.PowtokenNewPostRound),
-		newPowRoundSubs: []func(powtoken.PowtokenNewPostRound){},
+		newPowRoundChan: make(chan *powtoken.PowtokenNewPowRound),
+		newPowRoundSubs: []func(powtoken.PowtokenNewPowRound){},
 	}
 }
 
@@ -38,7 +38,7 @@ func (s *PowEventChannels) Start(
 		log.Debug().
 			Str("jobcreator->connect", "newPowRound").
 			Msgf("")
-		return sdk.Contracts.PowToken.WatchNewPostRound(
+		return sdk.Contracts.PowToken.WatchNewPowRound(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.newPowRoundChan,
 		)
@@ -58,7 +58,7 @@ func (s *PowEventChannels) Start(
 		select {
 		case event := <-s.newPowRoundChan:
 			log.Debug().
-				Str("storage->event", "DealStateChange").
+				Str("pow->event", "PowtokenNewPowRound").
 				Msgf("%+v", event)
 			for _, handler := range s.newPowRoundSubs {
 				go handler(*event)
@@ -73,6 +73,6 @@ func (s *PowEventChannels) Start(
 	}
 }
 
-func (t *PowEventChannels) SubscribenewPowRound(handler func(powtoken.PowtokenNewPostRound)) {
+func (t *PowEventChannels) SubscribenewPowRound(handler func(powtoken.PowtokenNewPowRound)) {
 	t.newPowRoundSubs = append(t.newPowRoundSubs, handler)
 }

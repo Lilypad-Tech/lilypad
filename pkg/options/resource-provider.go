@@ -14,9 +14,16 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 		Bacalhau: GetDefaultBacalhauOptions(),
 		Offers:   GetDefaultResourceProviderOfferOptions(),
 		Web3:     GetDefaultWeb3Options(),
+		Pow:      GetDefaultResourceProviderPowOptions(),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
+}
+
+func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPowOptions {
+	return resourceprovider.ResourceProviderPowOptions{
+		EnablePow: GetDefaultServeOptionBool("ENABLE_POW", false),
+	}
 }
 
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
@@ -72,10 +79,17 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	AddServicesCliFlags(cmd, &offerOptions.Services)
 }
 
+func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderPowOptions) {
+	cmd.PersistentFlags().BoolVar(
+		&options.EnablePow, "enable-pow", options.EnablePow,
+		`Start pow mining (ENABLE_POW)`,
+	)
+}
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
 	AddBacalhauCliFlags(cmd, &options.Bacalhau)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
+
 }
 
 func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions) error {

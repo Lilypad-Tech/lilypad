@@ -45,3 +45,14 @@ func GetDefaultServeOptionInt(envName string, defaultValue int) int {
 	}
 	return defaultValue
 }
+
+func GetDefaultServeOptionBool(envName string, defaultValue bool) bool {
+	envValue := os.Getenv(envName)
+	if envValue != "" {
+		i, err := strconv.ParseBool(envValue)
+		if err == nil {
+			return i
+		}
+	}
+	return defaultValue
+}
