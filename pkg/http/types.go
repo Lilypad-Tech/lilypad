@@ -7,6 +7,8 @@ type ServerOptions struct {
 }
 
 type ClientOptions struct {
-	URL        string
-	PrivateKey string
+	URL           string
+	PrivateKey    string
+	PublicAddress string
+	Type          string
 }

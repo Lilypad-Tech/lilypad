@@ -49,8 +49,9 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 			}
 		}
 	}()
+	websocketURL := fmt.Sprintf("%s%s%s%s%s", http.WEBSOCKET_SUB_PATH, "?&Type=", client.options.Type, "&ID=", client.options.PublicAddress)
 	http.ConnectWebSocket(
-		http.WebsocketURL(client.options, http.WEBSOCKET_SUB_PATH),
+		http.WebsocketURL(client.options, websocketURL),
 		websocketEventChannel,
 		ctx,
 	)

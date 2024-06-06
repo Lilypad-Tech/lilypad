@@ -42,10 +42,13 @@ func NewJobCreatorController(
 		return nil, err
 	}
 
-	solverClient, err := solver.NewSolverClient(http.ClientOptions{
-		URL:        solverUrl,
-		PrivateKey: options.Web3.PrivateKey,
-	})
+	solverClient, err := solver.NewSolverClient(
+		http.ClientOptions{
+			URL:           solverUrl,
+			PrivateKey:    options.Web3.PrivateKey,
+			Type:          "JobCreator",
+			PublicAddress: web3SDK.GetAddress().String(),
+		})
 	if err != nil {
 		return nil, err
 	}
