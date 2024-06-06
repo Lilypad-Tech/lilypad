@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 )
 
@@ -237,4 +238,62 @@ func (sdk *Web3SDK) MediationRejectResult(
 		return "", err
 	}
 	return tx.Hash().String(), nil
+}
+
+func (sdk *Web3SDK) GetGenerateChallenge(
+	ctx context.Context,
+	nodeId string,
+) (string, *pow.PowGenerateChallenge, error) {
+	tx, err := sdk.Contracts.Pow.GenerateChallenge(
+		sdk.TransactOpts,
+		nodeId,
+	)
+	if err != nil {
+		system.Error(sdk.Options.Service, "error submitting pow.GenerateChallenge", err)
+		return "", nil, err
+	} else {
+		system.Debug(sdk.Options.Service, "submitted pow.GenerateChallenge", tx.Hash().String())
+		system.DumpObjectDebug(tx)
+	}
+	receipt, err := sdk.WaitTx(context.Background(), tx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if receipt.Status == 0 {
+		return tx.Hash().String(), nil, fmt.Errorf("execute challenge fail")
+	}
+
+	challenge, err := sdk.Contracts.Pow.ParseGenerateChallenge(*receipt.Logs[0])
+	if err != nil {
+		return "", nil, err
+	}
+	return tx.Hash().String(), challenge, nil
+}
+
+func (sdk *Web3SDK) SubmitWork(
+	ctx context.Context,
+	nonce *big.Int,
+	nodeId string,
+) (common.Hash, *pow.PowValidPOWSubmitted, error) {
+	tx, err := sdk.Contracts.Pow.SubmitWork(sdk.TransactOpts, nonce, nodeId)
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	receipt, err := sdk.WaitTx(ctx, tx)
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	if receipt.Status == 0 {
+		return tx.Hash(), nil, fmt.Errorf("excute transaction fail")
+	}
+
+	validPosSubmission, err := sdk.Contracts.Pow.ParseValidPOWSubmitted(*receipt.Logs[0]) // todo need to check this result
+	if err != nil {
+		return common.Hash{}, nil, err
+	}
+
+	return tx.Hash(), validPosSubmission, nil
 }
