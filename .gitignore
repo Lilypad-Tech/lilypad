@@ -8,6 +8,7 @@ hardhat/typechain-types
 node_modules/*
 # Ignore the binary executable
 lilypad
+!/docker/lilypad
 !cmd/lilypad
 .env
 *.env

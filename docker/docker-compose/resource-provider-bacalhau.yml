@@ -1,0 +1,16 @@
+version: '3'
+services:
+  lilypad:
+    build: lilypad/
+    container_name: lilypad_compose
+    command: ["/usr/local/bin/lilypad","resource-provider"]
+    environment:
+      - WEB3_PRIVATE_KEY=<Your Private Key>
+      - LOG_TYPE=json
+      - LOG_LEVEL=debug
+      - HOME=/app/lilypad
+      - OFFER_GPU=1
+
+  bacalhau:
+    build: bacalhau/
+    container_name: bacalhau_compose
