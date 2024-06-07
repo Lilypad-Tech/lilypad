@@ -22,8 +22,10 @@ type ConnectionWrapper struct {
 }
 
 type WSConnectionParams struct {
-	ID   string
-	Type string
+	ID          string
+	Type        string
+	CountryCode string
+	IP          string
 }
 
 // StartWebSocketServer starts a WebSocket server
@@ -97,8 +99,10 @@ func StartWebSocketServer(
 		}
 		params := r.URL.Query()
 		connParams := WSConnectionParams{
-			ID:   params.Get("ID"),
-			Type: params.Get("Type"),
+			ID:          params.Get("ID"),
+			Type:        params.Get("Type"),
+			CountryCode: r.Header.Get("Cf-Ipcountry"),
+			IP:          r.Header.Get("Cf-Connecting-Ip"),
 		}
 		defer conn.Close()
 		connectCB(connParams)

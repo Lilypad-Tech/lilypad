@@ -71,12 +71,21 @@ func TrackNodeInfo(resourceOffer data.ResourceOffer) {
 	TrackEvent(url, payload)
 }
 
-func TrackNodeConnectionEvent(event string, ID string) {
+type NodeConnectionParams struct {
+	Event       string
+	ID          string
+	CountryCode string
+	IP          string
+}
+
+func TrackNodeConnectionEvent(params NodeConnectionParams) {
 	var url = host + nodeConnectionEndpoint
 	data := map[string]interface{}{
-		"ID":    ID,
-		"Event": event,
-		"Time":  time.Now().UnixMilli(),
+		"ID":          params.ID,
+		"Event":       params.Event,
+		"CountryCode": params.CountryCode,
+		"IP":          params.IP,
+		"Time":        time.Now().UnixMilli(),
 	}
 	byts, _ := json.Marshal(data)
 	payload := string(byts)

@@ -137,13 +137,23 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 // WS connect events
 func (solverServer *solverServer) connectCB(connParams http.WSConnectionParams) {
 	if connParams.Type == "ResourceProvider" {
-		metricsDashboard.TrackNodeConnectionEvent("Connect", connParams.ID)
+		metricsDashboard.TrackNodeConnectionEvent(metricsDashboard.NodeConnectionParams{
+			Event:       "Connect",
+			ID:          connParams.ID,
+			CountryCode: connParams.CountryCode,
+			IP:          connParams.IP,
+		})
 	}
 }
 
 func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParams) {
 	if connParams.Type == "ResourceProvider" {
-		metricsDashboard.TrackNodeConnectionEvent("Disconnect", connParams.ID)
+		metricsDashboard.TrackNodeConnectionEvent(metricsDashboard.NodeConnectionParams{
+			Event:       "Disconnect",
+			ID:          connParams.ID,
+			CountryCode: connParams.CountryCode,
+			IP:          connParams.IP,
+		})
 		solverServer.controller.removeResourceOfferBYResourceProvider(connParams.ID)
 	}
 }
