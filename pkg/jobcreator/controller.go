@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
