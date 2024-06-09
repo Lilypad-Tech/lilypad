@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	httpAlias "net/http"
 	"strings"
 	"time"
 
@@ -219,7 +220,7 @@ func (controller *JobCreatorController) UpdateModuleAllowlist() error {
 	allowlistUrl := "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/master/allowlist.txt"
 
 	// Create a new HTTP request with a context
-	req, err := http.NewRequest("GET", allowlistUrl, nil)
+	req, err := httpAlias.NewRequest("GET", allowlistUrl, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %s", err)
 	}
@@ -231,7 +232,7 @@ func (controller *JobCreatorController) UpdateModuleAllowlist() error {
 	req = req.WithContext(ctx)
 
 	// Perform the HTTP request using the default client
-	response, err := http.DefaultClient.Do(req)
+	response, err := httpAlias.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to fetch module allowlist: %s", err)
 	}
