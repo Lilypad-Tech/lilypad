@@ -3,10 +3,12 @@ package jobcreator
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -24,6 +26,7 @@ type JobCreatorController struct {
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
 	jobOfferSubscriptions []JobOfferSubscriber
+	moduleAllowlist       []string
 }
 
 // the background "even if we have not heard of an event" loop
@@ -145,8 +148,29 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 }
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+	// Initial fetch of the module allowlist
+	err := controller.UpdateModuleAllowlist()
+	if err != nil {
+		// handle error
+	}
+
+	// Periodic update logic here, possibly using a time.Ticker
+	ticker := time.NewTicker(1 * time.Hour)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				controller.UpdateModuleAllowlist()
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
 	errorChan := make(chan error)
-	err := controller.subscribeToSolver()
+
+	err = controller.subscribeToSolver()
 	if err != nil {
 		errorChan <- err
 		return errorChan
@@ -190,6 +214,39 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 
 	return errorChan
 }
+func (controller *JobCreatorController) UpdateModuleAllowlist() error {
+	// URL of the GitHub raw content of the allowlist
+	allowlistUrl := "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/master/allowlist.txt"
+
+	// Create a new HTTP request with a context
+	req, err := http.NewRequest("GET", allowlistUrl, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %s", err)
+	}
+
+	// Obtain context with cancellation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5 seconds timeout
+	defer cancel()
+
+	req = req.WithContext(ctx)
+
+	// Perform the HTTP request using the default client
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to fetch module allowlist: %s", err)
+	}
+	defer response.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read allowlist content: %s", err)
+	}
+
+	// Update the internal cache of the allowlist
+	controller.moduleAllowlist = strings.Split(strings.TrimSpace(string(body)), "\n")
+	return nil
+}
 
 /*
  *
@@ -228,6 +285,7 @@ func (controller *JobCreatorController) solve() error {
  *
 */
 
+// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 // list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *JobCreatorController) agreeToDeals() error {
 	// load the deals that are in DealNegotiating
@@ -275,9 +333,6 @@ func (controller *JobCreatorController) agreeToDeals() error {
 	return nil
 }
 
-// list the deals that have results posted but we have not yet checked
-// we do this synchronously to prevent us racing with large result sets
-// also we are the client so have a lower chance of there being a chunky backlog
 func (controller *JobCreatorController) checkResults() error {
 	// load all deals in ResultsSubmitted state and don't have either results checked or accepted txs
 	completedDeals, err := controller.solverClient.GetDealsWithFilter(
