@@ -14,6 +14,7 @@ import (
 const jobsEndpoint = "jobs"
 const nodeInfoEndpoint = "nodes"
 const nodeConnectionEndpoint = "uptimes"
+const dealsEndpoint = "deals"
 
 var host = os.Getenv("API_HOST") + "metrics-dashboard/"
 
@@ -88,6 +89,21 @@ func TrackNodeConnectionEvent(params NodeConnectionParams) {
 		"Time":        time.Now().UnixMilli(),
 	}
 	byts, _ := json.Marshal(data)
+	payload := string(byts)
+
+	TrackEvent(url, payload)
+}
+
+type DealPayload struct {
+	ID               string
+	JobCreator       string
+	ResourceProvider string
+	JobID            string
+}
+
+func TrackDeal(params DealPayload) {
+	var url = host + dealsEndpoint
+	byts, _ := json.Marshal(params)
 	payload := string(byts)
 
 	TrackEvent(url, payload)
