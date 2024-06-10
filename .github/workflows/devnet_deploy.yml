@@ -53,14 +53,11 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_SOLVER: ${{ secrets.ECR_REPOSITORY_SOLVER }}
-          CLOUDFLARE_TOKEN_SOLVER: ${{ secrets.CLOUDFLARE_TOKEN_SOLVER }}
         run: |
           docker build \
             -t $ECR_REPOSITORY_SOLVER \
             -f ./docker/solver/Dockerfile \
             --build-arg="expose_via=cloudflare" \
-            --build-arg="cloudflare_token=${CLOUDFLARE_TOKEN_SOLVER}"\
-            --build-arg="doppler_config=devnet" \
             --build-arg="network=devnet" \
             .
           docker tag $ECR_REPOSITORY_SOLVER:latest $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
@@ -122,7 +119,6 @@ jobs:
           docker build \
             -t $ECR_REPOSITORY_JOB_CREATOR \
             -f ./docker/job-creator/Dockerfile \
-            --build-arg doppler_config=devnet \
             --build-arg="network=devnet" \
             .
           docker tag $ECR_REPOSITORY_JOB_CREATOR:latest $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
