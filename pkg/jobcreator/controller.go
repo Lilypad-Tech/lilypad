@@ -181,6 +181,11 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		errorChan <- err
 		return errorChan
 	}
+	err = controller.allowlistApproved()
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
 
 	// this connects the websocket client
 	err = controller.solverClient.Start(ctx, cm)
@@ -246,6 +251,23 @@ func (controller *JobCreatorController) UpdateModuleAllowlist() error {
 
 	// Update the internal cache of the allowlist
 	controller.moduleAllowlist = strings.Split(strings.TrimSpace(string(body)), "\n")
+	return nil
+}
+
+func (controller *JobCreatorController) allowlistApproved() error {
+	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		deal, err := controller.solverClient.GetDeal(ev.DealId)
+		if err != nil {
+			controller.log.Error("module allolist error", err)
+			return
+		}
+		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
+			return
+		}
+		controller.log.Debug("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		system.DumpObjectDebug(ev)
+		controller.loop.Trigger()
+	})
 	return nil
 }
 
