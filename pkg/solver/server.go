@@ -154,7 +154,7 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 			CountryCode: connParams.CountryCode,
 			IP:          connParams.IP,
 		})
-		solverServer.controller.removeResourceOfferBYResourceProvider(connParams.ID)
+		solverServer.controller.removeResourceOfferByResourceProvider(connParams.ID)
 	}
 }
 
