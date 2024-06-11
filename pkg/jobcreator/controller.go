@@ -8,6 +8,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -104,6 +105,14 @@ func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferS
 */
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		if ev.EventType == "DealStateUpdated" {
+			metricsDashboard.TrackDeal(metricsDashboard.DealPayload{
+				ID:               ev.Deal.ID,
+				JobID:            ev.Deal.JobOffer,
+				JobCreator:       ev.Deal.JobCreator,
+				ResourceProvider: ev.Deal.ResourceProvider,
+			})
+		}
 		switch ev.EventType {
 		case solver.DealAdded:
 			if ev.Deal == nil {
