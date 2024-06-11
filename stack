@@ -9,102 +9,49 @@ OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 
 # chain
 ############################################################################
 
-function chain-docker-build() {
-  docker build \
-    -t chain \
-    -f ./docker/chain/Dockerfile \
-    --build-arg arch=${OS_ARCH} \
-    --build-arg admin_address=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
-    .
-}
-
-function chain-docker-run() {
-  DATA_DIR=${@:-/data/chain}
+function chain() {
+  ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
 
   docker run \
     --rm \
     --name chain \
-    --add-host localhost:host-gateway \
-    -p 8545:8545 \
-    -p 8546:8546 \
-    -v ${DATA_DIR}:/data/chain \
-    chain
+    -p 0.0.0.0:8547:8547 \
+    -p 0.0.0.0:8548:8548 \
+    offchainlabs/nitro-node:v2.3.4-b4cc111 \
+      --init.dev-init \
+      --init.dev-init-address $ADMIN_ADDRESS \
+      --node.dangerous.no-l1-listener \
+      --node.parent-chain-reader.enable=false \
+      --parent-chain.id=1337 \
+      --chain.id=412346 \
+      --persistent.chain /tmp/dev-test \
+      --node.sequencer \
+      --execution.sequencer.enable \
+      --node.dangerous.no-sequencer-coordinator \
+      --node.staker.enable=false \
+      --init.empty=false \
+      --http.port 8547 \
+      --http.addr 0.0.0.0 \
+      --ws.port 8548 \
+      --ws.addr 0.0.0.0
 }
+
 
 function chain-boot() {
   echo "- Install local dependencies"
-  cd hardhat && npm install && cd ..
-  echo "- Funding services with ether"
-  fund-services-ether
-  echo "- Funding services with ether"
-  deploy
-}
-
-function deploy() {
-  clean-deploy
-  echo "- Compiling contracts"
-  compile-contracts
-  echo "- Deploying contracts"
-  deploy-contracts
-  echo "- Funding services with tokens"
-  fund-services-tokens
-  echo "- Printing balances"
-  balances
-}
-
-
-function chain-fund-admin() {
-  docker exec -i chain geth --exec "eth.sendTransaction({from: eth.coinbase, to: \"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })" attach /data/chain/geth.ipc
-}
-
-function clean() {
-  DATA_DIR=${@:-/data/chain}
-
-  docker rm -f $(docker ps -aq) || true
-  rm -rf ${DATA_DIR}/*
-  clean-deploy
-}
-
-function clean-deploy() {
-  rm -rf $(pwd)/hardhat/artifacts
-  rm -rf $(pwd)/hardhat/cache
-  rm -rf $(pwd)/hardhat/deployments/geth
-}
-
-############################################################################
-# faucet
-############################################################################
-
-# TODO
-function faucet() {
-  source .env
-  eval $(./stack print-contract-env)
-  local privateKey=$(echo -n "$ADMIN_PRIVATE_KEY" | sed 's/^0x//')
-  local tokenAddress=$(echo -n "$WEB3_TOKEN_ADDRESS" | sed 's/^0x//')
-  docker run -d \
-    --name faucet \
-    -p 8080:8080 \
-    -e WEB3_PROVIDER=http://geth:8545 \
-    -e PRIVATE_KEY=$privateKey \
-    -e TOKEN_ADDRESS=$WEB3_TOKEN_ADDRESS \
-    faucet \
-      --faucet.amount=100 \
-      --faucet.tokenamount=100 \
-      --faucet.minutes=1
-}
-
-
-############################################################################
-# hardhat
-############################################################################
-
-function compile-contracts() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat compile
-  )
+  cd hardhat && npm install -y
+  echo "- Fund services with ether"
+  npx hardhat run scripts/fund-services-ether.ts --network local_l2
+  echo "- Compile contracts"
+  npx hardhat compile --network local_l2
+  cd ..
   go-bindings
+  echo "- Deploy contracts"
+  cd hardhat
+  npx hardhat deploy --network local_l2
+  echo "- Fund services with tokens"
+  npx hardhat run scripts/fund-services-tokens.ts --network local_l2
+  echo "- Done"
 }
 
 function go-bindings() {
@@ -163,12 +110,11 @@ function go-binding() {
   echo "- Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
 }
 
-function deploy-contracts() {
-  (
-    set -euo pipefail
-    cd hardhat
-    npx hardhat deploy --network geth
-  )
+function chain-clean(){
+  rm -rf $(pwd)/hardhat/artifacts
+  rm -rf $(pwd)/hardhat/cache
+  rm -rf $(pwd)/hardhat/deployments/geth
+  rm -rf $(pwd)/hardhat/deployments/local_l2
 }
 
 ############################################################################
@@ -195,21 +141,9 @@ function print-local-dev-env() {
   print-contract-env
 }
 
-function fund-services-ether() {
-  hardhat-script scripts/fund-services-ether.ts
-}
-
-function fund-services-tokens() {
-  hardhat-script scripts/fund-services-tokens.ts
-}
-
-function balances() {
-  hardhat-script scripts/balances.ts
-}
-
 function run-cowsay-onchain() {
   cd hardhat
-  doppler run -p run-cowsay-onchain -c dev -- npx hardhat run scripts/run-cowsay-onchain.ts
+  doppler run --preserve-env -p run-cowsay-onchain -c dev -- npx hardhat run scripts/run-cowsay-onchain.ts
 }
 
 ############################################################################
@@ -344,7 +278,7 @@ function unit-tests() {
 # and chain-boot
 function integration-tests() {
   cd test
-  doppler run -p integration-tests -c dev -- go test -v -count 1 .
+  doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .
 }
 
 ############################################################################
@@ -353,38 +287,5 @@ function integration-tests() {
 function run() {
   doppler run --preserve-env -p run -c dev -- go run . run "$@"
 }
-
-
-function dev_deploy() {
-  rm -rf $(pwd)/hardhat/deployments/local_l2
-  docker pull offchainlabs/nitro-node:v2.3.4-b4cc111
-  docker run --name local_l2 -p 0.0.0.0:8547:8547 -p 0.0.0.0:8548:8548 offchainlabs/nitro-node:v2.3.4-b4cc111 \
-    --init.dev-init \
-		--init.dev-init-address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
-		--node.dangerous.no-l1-listener\
-		--node.parent-chain-reader.enable=false\
-		--parent-chain.id=1337\
-		--chain.id=412346\
-		--persistent.chain /tmp/dev-test\
-		--node.sequencer\
-		--execution.sequencer.enable\
-		--node.dangerous.no-sequencer-coordinator\
-		--node.staker.enable=false\
-		--init.empty=false\
-		--http.port 8547 \
-		--http.addr 0.0.0.0\
-    --ws.port 8548 \
-		--ws.addr 0.0.0.0\
-    &
-
-  sleep 2
-  cd hardhat
-  npm install
-  npx hardhat deploy --network local_l2
-  npx hardhat run scripts/fund-services-ether.ts  --network local_l2
-  npx hardhat run scripts/fund-services-tokens.ts  --network local_l2 
-  npx hardhat run scripts/print-l2-config.ts  --network local_l2
-}
-
 
 eval "$@"
