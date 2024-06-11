@@ -4,6 +4,7 @@ hardhat/cache
 hardhat/deployments/hardhat
 hardhat/deployments/localhost
 hardhat/deployments/geth
+hardhat/deployments
 hardhat/typechain-types
 node_modules/*
 # Ignore the binary executable

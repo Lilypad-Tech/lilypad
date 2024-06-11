@@ -14,9 +14,9 @@ import {
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
 
-const NETWORK = process.env.NETWORK || "geth";
-const NETWORK_URL = process.env.WEB3_HTTP_URL || 'http://localhost:8545';
-
+const NETWORK = process.env.NETWORK || "local_l2";
+const NETWORK_URL = process.env.WEB3_HTTP_URL || 'http://localhost:8547';
+const CHAIN_ID = Number(process.env.CHAIN_ID) || 412346;
 const INFURA_KEY = process.env.INFURA_KEY || "";
 
 const config: HardhatUserConfig = {
@@ -25,15 +25,16 @@ const config: HardhatUserConfig = {
   namedAccounts: ACCOUNT_ADDRESSES,
   networks: {
     hardhat: {},
-    geth: {
-      url: NETWORK_URL,
-      chainId: 1337,
-      accounts: [getAccount('admin').privateKey]
-    },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: [getAccount('admin').privateKey],
     },
+    local_l2: {
+      url: NETWORK_URL,
+      chainId: CHAIN_ID,
+      accounts: [getAccount('admin').privateKey],
+    },
+
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
