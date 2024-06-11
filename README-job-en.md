@@ -1,4 +1,4 @@
-# Lilypad 🍃
+# Getting started running container jobs on Lilypad 🍃
 <p align="left">
   <a href="https://lilypad.team/discord">
     <img src="https://img.shields.io/badge/chat-Discord-7289DA?logo=discord" alt="GaiaNet Discord">
@@ -11,16 +11,7 @@
   </a>
 </p>
 
-Lilypad enables users to run containerised AI workloads easily in a decentralized GPU network, where anyone can get paid to connect their compute nodes to the network and run container jobs. Users have access to easily run jobs such as Stable Diffusion XL and cutting edge open source LLMs both on chain, from CLI and via [Lilypad AI Studio](https://app.lilypad.tech) on the web.
-
-Visit the [Lilypad Docs](https://docs.lilypad.tech/) site for a more comprehensive overview to getting up and running including a [Quick Start Guide](https://lilypad.team/quickstart)
-
-Like this project? ⭐ Star us!
-
-## Getting started running container jobs on Lilypad
-
-[Japanese(日本語)](README-ja.md) | [Chinese(中文)](README-job-cn) | [Turkish (Türkçe)](README-tr.md) | We need your help to translate this README into your native language.
-
+[English(Native)](README-node-en.md) | [Japanese(日本語)](README-node-ja.md) | [Chinese(中文)](README-node-cn) | [Turkish (Türkçe)](README-node-tr.md) | We need your help to translate this README into your native language.
 
 Jobs (containers) can be run on Lilypad by utilising the [Installable CLI](https://lilypad.team/cli), also available for installation through the [Go toolchain](https://lilypad.team/cligo). After setting up the necessary pre-requisites, the CLI enables users to run jobs as described below:
 
@@ -30,7 +21,7 @@ lilypad run cowsay:v0.0.4 -i Message="moo"
 
 [![Watch the video](https://img.youtube.com/vi/Ep9ML9h8DTE/0.jpg)](https://www.youtube.com/watch?v=Ep9ML9h8DTE)
 
-The current list of modules can be found in the following repositories: 
+The current list of modules can be found in the following repositories:
 
 
 * [lilysay](https://github.com/Lilypad-Tech/lilypad-module-lilysay)
@@ -40,18 +31,3 @@ The current list of modules can be found in the following repositories:
 * [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
 
 Containerised job modules can be built and added to the available module list; for more details visit the [building a job](https://lilypad.team/building) documentation. If you would like to contribute, open a pull request on this repository to add your link to the list above.
-
-## Getting started running a Node on Lilypad Network
-
-As a distributed network Lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
-
-## The Lilypad Community 
-
-[Read our Blog](https://lilypad.team/blog)
-
-[Join the Discord](https://lilypad.team/discord)
-
-[Follow us on Twitter/X](https://lilypad.team/x)
-
-[Check out our videos on YouTube](https://lilypad.team/youtube)
-
