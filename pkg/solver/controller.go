@@ -337,7 +337,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	return ret, nil
 }
 
-func (controller *SolverController) removeResourceOfferBYResourceProvider(ID string) error {
+func (controller *SolverController) removeResourceOfferByResourceProvider(ID string) error {
 	controller.log.Info("remove resource offer", ID)
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: ID,
