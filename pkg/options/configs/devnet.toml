@@ -4,7 +4,7 @@ mediator = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
 
 [web3]
 rpc_url = "wss://devnet-chain-ws.lilypad.tech"
-chain_id = 421614
+chain_id = 412346
 controller_address = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
 payments_address = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
 storage_address = "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
