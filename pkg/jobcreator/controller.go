@@ -152,10 +152,11 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	// Initial fetch of the module allowlist
 	err := controller.UpdateModuleAllowlist()
 	if err != nil {
-		// handle error
+		controller.log.Error("failed to fetch module allowlist", err)
+
 	}
 
-	// Periodic update logic here, possibly using a time.Ticker
+	// Periodic update logic here using a time.Ticker
 	ticker := time.NewTicker(1 * time.Hour)
 	go func() {
 		for {
@@ -258,7 +259,7 @@ func (controller *JobCreatorController) allowlistApproved() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
-			controller.log.Error("module allowlist error", err)
+			controller.log.Error("module allolist error", err)
 			return
 		}
 		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
