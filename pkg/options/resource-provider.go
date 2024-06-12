@@ -5,7 +5,6 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
-	"github.com/lilypad-tech/lilypad/pkg/resourceprovider/powsignal"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
@@ -94,7 +93,7 @@ func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.R
 	AddResourceProviderPowCliFlags(cmd, &options.Pow)
 }
 
-func AddPowSignalCliFlags(cmd *cobra.Command, options *powsignal.PowSignalOptions) {
+func AddPowSignalCliFlags(cmd *cobra.Command, options *PowSignalOptions) {
 	AddWeb3CliFlags(cmd, &options.Web3)
 }
 
