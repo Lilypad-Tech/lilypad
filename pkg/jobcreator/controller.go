@@ -3,8 +3,6 @@ package jobcreator
 import (
 	"context"
 	"fmt"
-	"io"
-	httpAlias "net/http"
 	"strings"
 	"time"
 
@@ -225,30 +223,12 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 
 	return errorChan
 }
+
 func (controller *JobCreatorController) UpdateModuleAllowlist() error {
-	// Create a new HTTP request with a context
-	req, err := httpAlias.NewRequest("GET", allowlistURL, nil) // Use the constant defined at the package level
-	if err != nil {
-		return fmt.Errorf("failed to create request: %s", err)
-	}
-
-	// Obtain context with cancellation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5 seconds timeout
-	defer cancel()
-
-	req = req.WithContext(ctx)
-
-	// Perform the HTTP request using the default client
-	response, err := httpAlias.DefaultClient.Do(req)
+	// Call the new helper function with a 5-second timeout!
+	body, err := http.GetRequestWithTimeout(allowlistURL, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to fetch module allowlist: %s", err)
-	}
-	defer response.Body.Close()
-
-	// Read the response body
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read allowlist content: %s", err)
 	}
 
 	// Update the internal cache of the allowlist
