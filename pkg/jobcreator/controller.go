@@ -36,6 +36,10 @@ type JobCreatorController struct {
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
 
+const (
+	allowlistURL = "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/main/allowlist.txt"
+)
+
 func NewJobCreatorController(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
@@ -222,11 +226,8 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	return errorChan
 }
 func (controller *JobCreatorController) UpdateModuleAllowlist() error {
-	// URL of the GitHub raw content of the allowlist
-	allowlistUrl := "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/master/allowlist.txt"
-
 	// Create a new HTTP request with a context
-	req, err := httpAlias.NewRequest("GET", allowlistUrl, nil)
+	req, err := httpAlias.NewRequest("GET", allowlistURL, nil) // Use the constant defined at the package level
 	if err != nil {
 		return fmt.Errorf("failed to create request: %s", err)
 	}
