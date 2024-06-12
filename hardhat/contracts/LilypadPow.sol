@@ -22,6 +22,10 @@ contract LilypadPow is Ownable, Initializable {
         uint256 timestamp;
     }
 
+    // todo  difficulty may need to adjust in test
+    // this difficulty was calculate with this tool https://github.com/hunjixin/pow-tool/tree/main/difficulty
+    // Theoretically  A machine with a hash rate of 2M has a probability of no more than 0.01% of not finding a nonce that meets the difficulty within 20 blocks.
+    // However, this issue has not been well validated in practice. it can solve nonce within one minute most of the time.
     uint256 public immutable TARGET_DIFFICULTY =
         2221842798488549893930113429797694032668256326301844165995655665287168;
     mapping(address => POWSubmission[]) public powSubmissions;
