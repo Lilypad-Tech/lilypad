@@ -1,17 +1,21 @@
 package options
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/resourceprovider/powsignal"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
 
-func NewPowSignalOptions() powsignal.PowSignalOptions {
-	options := powsignal.PowSignalOptions{
+type PowSignalOptions struct {
+	Web3 web3.Web3Options
+}
+
+func NewPowSignalOptions() PowSignalOptions {
+	options := PowSignalOptions{
 		Web3: GetDefaultWeb3Options(),
 	}
 	return options
 }
 
-func ProcessPowSignalrOptions(options powsignal.PowSignalOptions, network string) (powsignal.PowSignalOptions, error) {
+func ProcessPowSignalrOptions(options PowSignalOptions, network string) (PowSignalOptions, error) {
 	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
@@ -20,6 +24,6 @@ func ProcessPowSignalrOptions(options powsignal.PowSignalOptions, network string
 	return options, CheckPowSignalOptions(options)
 }
 
-func CheckPowSignalOptions(options powsignal.PowSignalOptions) error {
+func CheckPowSignalOptions(options PowSignalOptions) error {
 	return CheckWeb3Options(options.Web3)
 }

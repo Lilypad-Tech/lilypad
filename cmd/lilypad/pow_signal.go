@@ -1,8 +1,8 @@
 package lilypad
 
 import (
+	"github.com/lilypad-tech/lilypad/pkg/options"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/resourceprovider/powsignal"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
@@ -33,7 +33,7 @@ func newPowSignalCmd() *cobra.Command {
 	return powSignalCmd
 }
 
-func runPowSignal(cmd *cobra.Command, options powsignal.PowSignalOptions) error {
+func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -42,7 +42,7 @@ func runPowSignal(cmd *cobra.Command, options powsignal.PowSignalOptions) error 
 		return err
 	}
 
-	_, err = powsignal.SendPowSignal(commandCtx.Ctx, web3SDK, options)
+	_, err = web3SDK.SendPowSignal(commandCtx.Ctx)
 	if err != nil {
 		return err
 	}

@@ -297,3 +297,69 @@ func (sdk *Web3SDK) SubmitWork(
 
 	return tx.Hash(), validPosSubmission, nil
 }
+
+type PowValidPOWSubmission struct {
+	WalletAddress    common.Address
+	NodeId           string
+	Nonce            *big.Int
+	StartTimestap    *big.Int
+	CompleteTimestap *big.Int
+	Challenge        [32]byte
+	Difficulty       *big.Int
+}
+
+func (sdk *Web3SDK) GetPowSubmission(ctx context.Context) (map[common.Address][]PowValidPOWSubmission, error) {
+	miners, err := sdk.Contracts.Pow.GetMiners(sdk.CallOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[common.Address][]PowValidPOWSubmission)
+	for _, minerAddr := range miners {
+		validProofCount, err := sdk.Contracts.Pow.MinerSubmissionCount(sdk.CallOpts, minerAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		var powSubmissions []PowValidPOWSubmission
+		for i := uint64(0); i < validProofCount.Uint64(); i++ { //enough large
+			submission, err := sdk.Contracts.Pow.PowSubmissions(sdk.CallOpts, minerAddr, new(big.Int).SetUint64(i))
+			if err != nil {
+				return nil, err
+			}
+			powSubmissions = append(powSubmissions, PowValidPOWSubmission{
+				WalletAddress:    submission.WalletAddress,
+				NodeId:           submission.NodeId,
+				Nonce:            submission.Nonce,
+				StartTimestap:    submission.StartTimestap,
+				CompleteTimestap: submission.CompleteTimestap,
+				Challenge:        submission.Challenge,
+				Difficulty:       submission.Difficulty,
+			})
+		}
+		results[minerAddr] = powSubmissions
+	}
+	return results, nil
+}
+
+func (sdk *Web3SDK) SendPowSignal(ctx context.Context) (*pow.PowNewPowRound, error) {
+	tx, err := sdk.Contracts.Pow.TriggerNewPowRound(sdk.TransactOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	receipt, err := sdk.WaitTx(ctx, tx)
+	if err != nil {
+		return nil, fmt.Errorf("wait new pow siganl tx(%s) %w", tx.Hash(), err)
+	}
+
+	if receipt.Status == 0 {
+		return nil, fmt.Errorf("send new pow signal successfully but execute fail status(%d) tx(%s)", receipt.Status, tx.Hash())
+	}
+
+	newPowRoundEvent, err := sdk.Contracts.Pow.ParseNewPowRound(*receipt.Logs[0])
+	if err != nil {
+		return nil, fmt.Errorf("parse new pow round event fail tx(%s) %w", tx.Hash(), err)
+	}
+	return newPowRoundEvent, nil
+}
