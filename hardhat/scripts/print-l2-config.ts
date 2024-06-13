@@ -10,7 +10,7 @@ import {
     getStorageAddress,
     getUsersAddress
   } from '../utils/web3'
-  
+
   async function main() {
     const controllerAddress = await getControllerAddress()
     const tokenAddress = await getTokenAddress()
@@ -19,7 +19,7 @@ import {
     const paymentsAddress = await getPaymentsAddress()
     const storageAddress = await getStorageAddress()
     const usersAddress = await getUsersAddress()
-    
+
     // console.log(`export WEB3_RPC_URL=ws://localhost:8548`)
     console.log('#################################################################################################')
     console.log(`export WEB3_CONTROLLER_ADDRESS=${controllerAddress}`)
@@ -29,7 +29,7 @@ import {
     console.log(`export WEB3_PAYMENTS_ADDRESS=${paymentsAddress}`)
     console.log(`export WEB3_STORAGE_ADDRESS=${storageAddress}`)
     console.log(`export WEB3_USERS_ADDRESS=${usersAddress}`)
-  
+
 
     // loop over accounts and print env for address and private key
     ACCOUNTS.forEach((account) => {
@@ -42,14 +42,14 @@ import {
     console.log('export API_HOST=http://localhost:8002/')
     console.log('export INFURA_KEY=')
     console.log('export LOG_LEVEL=debug')
-    console.log('export NETWORK=local_l2')
+    console.log('export NETWORK=dev')
     console.log('export WEB3_RPC_URL=ws://localhost:8548')
     console.log('export WEB3_CHAIN_ID=412346')
     console.log('#################################################################################################')
     console.log("Optional: append the exports above to ~/.bashrc or ~/.bash_profile and run 'source ~/.bashrc' or 'source ~/.bash_profile' to set the environment variables.")
     // console.log("Example: code ~/.bashrc")
   }
-  
+
   main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
