@@ -71,7 +71,7 @@ func NewSolverController(
 }
 
 func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error)
+	errorChan := make(chan error, 1)
 	// get the local subscriptions setup
 	err := controller.subscribeToWeb3()
 	if err != nil {
