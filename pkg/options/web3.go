@@ -25,6 +25,7 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		TokenAddress:      GetDefaultServeOptionString("WEB3_TOKEN_ADDRESS", ""),
 		MediationAddress:  GetDefaultServeOptionString("WEB3_MEDIATION_ADDRESS", ""),
 		JobCreatorAddress: GetDefaultServeOptionString("WEB3_JOBCREATOR_ADDRESS", ""),
+		PowAddress:        GetDefaultServeOptionString("WEB3_POW_ADDRESS", ""),
 
 		// misc
 		Service: system.DefaultService,
@@ -66,6 +67,10 @@ func AddWeb3CliFlags(cmd *cobra.Command, web3Options *web3.Web3Options) {
 	cmd.PersistentFlags().StringVar(
 		&web3Options.TokenAddress, "web3-token-address", web3Options.TokenAddress,
 		`The address of the token contract (WEB3_TOKEN_ADDRESS).`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&web3Options.PowAddress, "web3-pow-address", web3Options.PowAddress,
+		`The address of the pow contract (WEB3_POW_ADDRESS).`,
 	)
 }
 
