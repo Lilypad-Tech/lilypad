@@ -2,19 +2,12 @@ package resourceprovider
 
 import (
 	"context"
-	"encoding/hex"
-	"math/big"
-	"runtime"
 
-	"github.com/google/uuid"
-	"github.com/holiman/uint256"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
-	"github.com/rs/zerolog/log"
 )
 
 // this configures the resource offers we will keep track of
@@ -50,16 +43,10 @@ type ResourceProviderOfferOptions struct {
 	Services data.ServiceConfig
 }
 
-// this configures the pow we will keep track of
-type ResourceProviderPowOptions struct {
-	EnablePow bool
-}
-
 type ResourceProviderOptions struct {
 	Bacalhau bacalhau.BacalhauExecutorOptions
 	Offers   ResourceProviderOfferOptions
 	Web3     web3.Web3Options
-	Pow      ResourceProviderPowOptions
 }
 
 type ResourceProvider struct {
@@ -86,55 +73,5 @@ func NewResourceProvider(
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	if resourceProvider.options.Pow.EnablePow {
-		go resourceProvider.StartMineLoop(ctx)
-	}
 	return resourceProvider.controller.Start(ctx, cm)
-}
-
-func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) error {
-	walletAddress := resourceProvider.web3SDK.GetAddress()
-	nodeId, err := resourceProvider.controller.executor.Id()
-	if err != nil {
-		return err
-	}
-	log.Info().Msgf("Wallet %s node id %s is ready for mine", walletAddress, nodeId)
-
-	taskCh := make(chan Task)
-	resourceProvider.controller.web3Events.Pow.SubscribenewPowRound(func(newPowRound pow.PowNewPowRound) {
-		_, challenge, err := resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
-		if err != nil {
-			log.Err(err).Msgf("Unable to fetch challenge")
-			return
-		}
-
-		log.Info().Msgf("Receive a new pow signal challenge hex %s, difficulty %s", "0x"+hex.EncodeToString(challenge.Challenge[:]), challenge.Difficulty.String())
-
-		difficulty, _ := uint256.FromBig(challenge.Difficulty)
-		taskCh <- Task{
-			Id:         uuid.New(),
-			Challenge:  challenge.Challenge,
-			Difficulty: difficulty,
-		}
-	})
-
-	numWorkers := runtime.NumCPU() * 2
-	log.Info().Msgf("Listen to new pow round signal, %d workers read to work", numWorkers)
-
-	submitWork := func(nonce *big.Int) {
-		txId, submission, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
-		if err != nil {
-			log.Err(err).Msgf("Submit work fail")
-			return
-		}
-		log.Info().Str("address", submission.WalletAddress.String()).
-			Str("nodeid", submission.NodeId).
-			Str("Nonce", submission.Nonce.String()).
-			Str("txid", txId.String()).
-			Msgf("Mine and submit successfully")
-	}
-
-	miner := NewCpuMiner(nodeId, numWorkers, taskCh, submitWork)
-	go miner.Start(ctx)
-	return nil
 }

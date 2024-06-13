@@ -5,8 +5,7 @@ import {
   getJobManagerAddress,
   getPaymentsAddress,
   getStorageAddress,
-  getUsersAddress,
-  getPoWAddress
+  getUsersAddress
 } from '../utils/web3'
 
 async function main() {
@@ -17,8 +16,7 @@ async function main() {
   const paymentsAddress = await getPaymentsAddress()
   const storageAddress = await getStorageAddress()
   const usersAddress = await getUsersAddress()
-  const powAddress = await getPoWAddress()
-
+  
   console.log(`export WEB3_RPC_URL=ws://localhost:8546`)
   console.log(`export WEB3_CONTROLLER_ADDRESS=${controllerAddress}`)
   console.log(`export WEB3_TOKEN_ADDRESS=${tokenAddress}`)
@@ -27,7 +25,6 @@ async function main() {
   console.log(`export WEB3_PAYMENTS_ADDRESS=${paymentsAddress}`)
   console.log(`export WEB3_STORAGE_ADDRESS=${storageAddress}`)
   console.log(`export WEB3_USERS_ADDRESS=${usersAddress}`)
-  console.log(`export WEB3_POW_ADDRESS=${powAddress}`)
 }
 
 main().catch((error) => {

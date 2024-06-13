@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/google/uuid"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -13,7 +12,6 @@ import (
 const RESULTS_DIR = "noop-results"
 
 type NoopExecutorOptions struct {
-	Id               string
 	BadActor         bool
 	ResultsCID       string
 	Stdout           string
@@ -28,7 +26,6 @@ type NoopExecutor struct {
 
 func NewNoopExecutorOptions() NoopExecutorOptions {
 	return NoopExecutorOptions{
-		Id:               uuid.NewString(),
 		BadActor:         false,
 		ResultsCID:       "123",
 		Stdout:           "Hello World!",
@@ -42,10 +39,6 @@ func NewNoopExecutor(options NoopExecutorOptions) (*NoopExecutor, error) {
 	return &NoopExecutor{
 		Options: options,
 	}, nil
-}
-
-func (executor *NoopExecutor) Id() (string, error) {
-	return executor.Options.Id, nil
 }
 
 func (executor *NoopExecutor) RunJob(
