@@ -41,16 +41,16 @@ function chain-boot() {
   echo "- Install local dependencies"
   cd hardhat && npm install -y
   echo "- Fund services with ether"
-  npx hardhat run scripts/fund-services-ether.ts --network local_l2
+  npx hardhat run scripts/fund-services-ether.ts --network dev
   echo "- Compile contracts"
-  npx hardhat compile --network local_l2
+  npx hardhat compile --network dev
   cd ..
   go-bindings
   echo "- Deploy contracts"
   cd hardhat
-  npx hardhat deploy --network local_l2
+  npx hardhat deploy --network dev
   echo "- Fund services with tokens"
-  npx hardhat run scripts/fund-services-tokens.ts --network local_l2
+  npx hardhat run scripts/fund-services-tokens.ts --network dev
   echo "- Done"
 }
 
@@ -114,7 +114,7 @@ function chain-clean(){
   rm -rf $(pwd)/hardhat/artifacts
   rm -rf $(pwd)/hardhat/cache
   rm -rf $(pwd)/hardhat/deployments/geth
-  rm -rf $(pwd)/hardhat/deployments/local_l2
+  rm -rf $(pwd)/hardhat/deployments/dev
 }
 
 ############################################################################
