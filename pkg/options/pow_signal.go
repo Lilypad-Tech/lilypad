@@ -15,7 +15,7 @@ func NewPowSignalOptions() PowSignalOptions {
 	return options
 }
 
-func ProcessPowSignalrOptions(options PowSignalOptions, network string) (PowSignalOptions, error) {
+func ProcessPowSignalOptions(options PowSignalOptions, network string) (PowSignalOptions, error) {
 	newWeb3Options, err := ProcessWeb3Options(options.Web3, network)
 	if err != nil {
 		return options, err
