@@ -38,6 +38,30 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 	}, nil
 }
 
+func (executor *BacalhauExecutor) Id() (string, error) {
+	nodeIdCmd := exec.Command(
+		"bacalhau",
+		"id",
+	)
+	nodeIdCmd.Env = executor.bacalhauEnv
+
+	output, err := nodeIdCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("error calling get id results %s", err.Error())
+	}
+
+	var idResult struct {
+		ID       string
+		ClientID string
+	}
+	err = json.Unmarshal(output, &idResult)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshalling job JSON %s", err.Error())
+	}
+
+	return idResult.ID, nil
+}
+
 func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
