@@ -1,63 +1,75 @@
 ARG expose_via=local
-
-FROM golang:1.22.3 AS base
-
 ARG arch=amd64
-ARG cloudflare_token_http="not-a-token"
-ARG cloudflare_token_ws="not-a-token"
-ARG geth_version=v1.13.5
 
-WORKDIR /geth
+FROM docker:24.0.5-dind AS base
+ARG admin_address="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 
-RUN git clone --quiet --branch ${geth_version} --depth 1 https://github.com/ethereum/go-ethereum .
-RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go run build/ci.go install -static ./cmd/geth
 
-RUN /geth/build/bin/geth version
-RUN mv /geth/build/bin/geth /usr/local/bin/
+RUN apk update
+RUN apk add bash
+RUN apk add nodejs
+RUN apk add npm
 
-ARG admin_address="0x0"
-
-RUN touch fund-admin
-RUN echo "#!/bin/bash" >> fund-admin
-RUN echo "geth --exec \"eth.sendTransaction({from: eth.coinbase, to: \\\"${admin_address}\\\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \\\"ether\\\"))  })\" attach /data/chain/geth.ipc" >> fund-admin
-RUN chmod +x fund-admin
-
-RUN touch run-node
-RUN echo "#!/bin/bash" >> run-node
-RUN echo "geth --datadir /data/chain --dev --ws --ws.api web3,eth,net --ws.addr 0.0.0.0 --ws.port 8546 --ws.origins '*' --http --http.api web3,eth,net --http.addr 0.0.0.0 --http.corsdomain '*' --http.port 8545 --http.vhosts '*' &" >> run-node
-RUN chmod +x run-node
-
-RUN touch reset
-RUN echo "#!/bin/bash" >> reset
-RUN echo "echo '- Kill geth'" >> reset
-RUN echo "pkill -INT geth" >> reset
-RUN echo "sleep 5" >> reset
-RUN echo "echo '- Clear data'" >> reset
-RUN echo "rm -rf /data/chain/*" >> reset
-RUN echo "echo '- Restart geth'" >> reset
-RUN echo "./run-node" >> reset
-RUN echo "sleep 5" >> reset
-RUN echo "echo '- Fund admin'" >> reset
-RUN echo "./fund-admin" >> reset
-RUN echo "echo '- Done'" >> reset
-RUN chmod +x reset
-
+WORKDIR /l2chain
+COPY . .
 RUN touch run
 RUN echo "#!/bin/bash" >> run
+RUN echo "dockerd-entrypoint.sh & " >> run
+RUN echo "until docker info >/dev/null 2>&1; do " >> run
+RUN echo "   echo 'Waiting for Docker to start...'" >> run
+RUN echo "   sleep 1" >> run
+RUN echo "done" >> run
+
+RUN echo "docker pull offchainlabs/nitro-node:v2.3.4-b4cc111 " >> run
+
+RUN echo "docker run -d --name devnet -p 0.0.0.0:8547:8547 -p 0.0.0.0:8548:8548 offchainlabs/nitro-node:v2.3.4-b4cc111  "\
+"   --init.dev-init " \
+"   --init.dev-init-address $admin_address "\
+"   --node.dangerous.no-l1-listener "\
+"   --node.parent-chain-reader.enable=false "\
+"   --parent-chain.id=1337 "\
+"   --chain.id=412346 "\
+"   --persistent.chain /tmp/dev-test "\
+"   --node.sequencer "\
+"   --execution.sequencer.enable "\
+"   --node.dangerous.no-sequencer-coordinator "\
+"   --node.staker.enable=false "\
+"   --init.empty=false "\
+"   --http.port 8547  "\
+"   --http.addr 0.0.0.0 "\
+"   --ws.port 8548  "\
+"   --ws.addr 0.0.0.0 "\
+"   --http.corsdomain=* "\
+"   --http.vhosts=* "\
+"   --ws.origins=* "\
+"    " >> run
+
+RUN echo "until wget -qO- http://0.0.0.0:8547 >/dev/null 2>&1; do " >> run
+RUN echo "   echo 'Waiting for Nitro to start...'" >> run
+RUN echo "   sleep 1" >> run
+RUN echo "done" >> run
+
+RUN echo "cd hardhat" >> run
+RUN echo "npm install" >> run
+RUN echo "npx hardhat deploy --network devnet" >> run
+RUN echo "npx hardhat run scripts/fund-services-ether.ts  --network devnet" >> run
+RUN echo "npx hardhat run scripts/fund-services-tokens.ts  --network devnet " >> run
+RUN echo "npx hardhat run scripts/print-l2-config.ts  --network devnet" >> run
 
 FROM base AS expose-cloudflare
-RUN curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${arch}.deb
-RUN dpkg -i cloudflared.deb
-RUN echo "cloudflared tunnel --metrics 0.0.0.0:11111 run --token $cloudflare_token_http --url http://localhost:8545 &" >> run
-RUN echo "cloudflared tunnel --metrics 0.0.0.0:11112 run --token $cloudflare_token_ws --url http://localhost:8546 &" >> run
+ARG cloudflare_token_http="not-a-token"
+ARG cloudflare_token_ws="not-a-token"
+
+RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+RUN echo "cd .." >> run
+RUN echo "./cloudflared-linux-amd64 tunnel run --token $cloudflare_token_http  &" >> run
+RUN echo "./cloudflared-linux-amd64 tunnel run --token $cloudflare_token_ws &" >> run
+RUN chmod +x cloudflared-linux-amd64
 
 FROM base AS expose-local
-EXPOSE 8545
-EXPOSE 8546
+RUN echo "cd .." >> run
 
-FROM expose-$expose_via AS final
-RUN echo "./run-node" >> run
-RUN echo "sleep infinity" >> run
+FROM expose-$expose_via AS FINAL
 RUN chmod +x run
-
-CMD ["/bin/bash", "./run"]
+RUN echo "wait -n" >> run
+ENTRYPOINT ["bash", "./run"]  

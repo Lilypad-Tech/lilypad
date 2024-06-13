@@ -34,7 +34,11 @@ const config: HardhatUserConfig = {
       chainId: CHAIN_ID,
       accounts: [getAccount('admin').privateKey],
     },
-
+    devnet: {
+      url: 'http://0.0.0.0:8547',
+      chainId: 412346,
+      accounts: [getAccount('admin').privateKey],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
