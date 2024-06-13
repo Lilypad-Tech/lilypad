@@ -18,10 +18,10 @@ RUN apt-get update && apt-get install -y \
 
 # Installing Bacalhau
 RUN cd /tmp && \
-    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.0/bacalhau_v1.3.0_linux_amd64.tar.gz && \
-    tar xfv bacalhau_v1.3.0_linux_amd64.tar.gz && \
+    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
+    tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
     mv bacalhau /usr/bin/bacalhau && \
-    rm bacalhau_v1.3.0_linux_amd64.tar.gz
+    rm bacalhau_v1.3.2_linux_amd64.tar.gz
 # COPY bacalhau /usr/bin/bacalhau
 # RUN  mkdir -p /app/data/ipfs
 
