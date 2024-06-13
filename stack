@@ -285,7 +285,7 @@ function integration-tests() {
 # run
 ############################################################################
 function run() {
-  doppler run --preserve-env -p run -c dev -- go run . run "$@"
+  doppler run --preserve-env -p run -c dev -- go run . run --network dev "$@"
 }
 
 eval "$@"
