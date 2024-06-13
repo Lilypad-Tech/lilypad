@@ -19,7 +19,6 @@ import {
   LilypadOnChainJobCreator,
   LilypadUsers,
   ExampleClient,
-  LilypadPow,
 } from '../typechain-types'
 
 /*
@@ -247,17 +246,4 @@ export async function connectController() {
 
 export async function getControllerAddress() {
   return getContractAddress('LilypadController')
-}
-
-/*
-
-  pow
-
-*/
-export async function connectPow() {
-  return connectContract<LilypadPow>('LilypadPow')
-}
-
-export async function getPoWAddress() {
-  return getContractAddress('LilypadPow')
 }

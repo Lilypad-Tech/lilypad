@@ -13,7 +13,6 @@ type EventChannels struct {
 	Storage     *StorageEventChannels
 	JobCreator  *JobCreatorEventChannels
 	Mediation   *MediationEventChannels
-	Pow         *PowEventChannels
 	collections []EventChannelCollection
 }
 
@@ -23,14 +22,12 @@ func NewEventChannels() *EventChannels {
 	storageChannels := NewStorageEventChannels()
 	jobCreatorChannels := NewJobCreatorEventChannels()
 	mediationChannels := NewMediationEventChannels()
-	powChannels := NewPowEventChannels()
 	collections := []EventChannelCollection{
 		tokenChannels,
 		paymentChannels,
 		storageChannels,
 		jobCreatorChannels,
 		mediationChannels,
-		powChannels,
 	}
 	return &EventChannels{
 		Token:       tokenChannels,
@@ -38,7 +35,6 @@ func NewEventChannels() *EventChannels {
 		Storage:     storageChannels,
 		JobCreator:  jobCreatorChannels,
 		Mediation:   mediationChannels,
-		Pow:         powChannels,
 		collections: collections,
 	}
 }
