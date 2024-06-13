@@ -20,7 +20,7 @@ func newPowSignalCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
 
-			options, err := optionsfactory.ProcessPowSignalrOptions(options, network)
+			options, err := optionsfactory.ProcessPowSignalOptions(options, network)
 			if err != nil {
 				return err
 			}
