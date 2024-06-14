@@ -126,6 +126,9 @@ func ProcessWeb3Options(options web3.Web3Options, network string) (web3.Web3Opti
 	if options.TokenAddress == "" {
 		options.TokenAddress = config.Web3.TokenAddress
 	}
+	if options.PowAddress == "" {
+		options.PowAddress = config.Web3.PowAddress
+	}
 
 	if options.PrivateKey == "" {
 		options.PrivateKey = os.Getenv("WEB3_PRIVATE_KEY")
