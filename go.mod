@@ -8,9 +8,12 @@ require (
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
 	github.com/go-git/go-git/v5 v5.10.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
+	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/holiman/uint256 v1.2.4
 	github.com/ipfs/go-merkledag v0.11.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.7.0
@@ -45,10 +48,8 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.0.3 // indirect

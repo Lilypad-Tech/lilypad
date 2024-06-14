@@ -7,18 +7,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/controller"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/payments"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/controller"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/payments"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,6 +32,7 @@ type Contracts struct {
 	JobCreator *jobcreator.Jobcreator
 	Mediation  *mediation.Mediation
 	Controller *controller.Controller
+	Pow        *pow.Pow
 }
 
 type Web3SDK struct {
@@ -65,6 +67,24 @@ func NewContracts(
 			Msgf("")
 	}
 	payments, err := payments.NewPayments(common.HexToAddress(paymentsAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	powAddress := options.PowAddress
+	log.Debug().Msgf("PowAddress: %s", powAddress)
+	if powAddress == "" {
+		loadedPowAddress, err := controller.GetPowAddress(callOpts)
+		if err != nil {
+			return nil, err
+		}
+		powAddress = loadedPowAddress.String()
+		log.Debug().
+			Str("load pow address", powAddress).
+			Msgf("")
+	}
+
+	pow, err := pow.NewPow(common.HexToAddress(powAddress), client)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +187,7 @@ func NewContracts(
 		JobCreator: jobCreator,
 		Mediation:  mediation,
 		Controller: controller,
+		Pow:        pow,
 	}, nil
 }
 
