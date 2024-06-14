@@ -39,6 +39,11 @@ const config: HardhatUserConfig = {
       chainId: 412346,
       accounts: [getAccount('admin').privateKey],
     },
+    testnet:{
+      url: 'https://sepolia-rollup.arbitrum.io/rpc',
+      chainId: 421614,
+      accounts: [getAccount('admin').privateKey],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

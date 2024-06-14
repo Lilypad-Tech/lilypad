@@ -20,6 +20,7 @@ contract LilypadController is ILilypadController, Ownable, Initializable {
   address private paymentsAddress;
   address private mediationAddress;
   address private jobCreatorAddress;
+  address private powAddress;
 
   ILilypadStorage private storageContract;
   ILilypadPayments private paymentsContract;
@@ -35,13 +36,15 @@ contract LilypadController is ILilypadController, Ownable, Initializable {
     address _usersAddress,
     address _paymentsAddress,
     address _mediationAddress,
-    address _jobCreatorAddress
+    address _jobCreatorAddress,
+    address _powAddress
   ) public initializer {
     setStorageAddress(_storageAddress);
     setUsersAddress(_usersAddress);
     setPaymentsAddress(_paymentsAddress);
     setMediationAddress(_mediationAddress);
     setJobCreatorAddress(_jobCreatorAddress);
+    setPowAddress(_powAddress);
   }
 
   function setStorageAddress(address _storageAddress) public onlyOwner {
@@ -91,6 +94,16 @@ contract LilypadController is ILilypadController, Ownable, Initializable {
   function getJobCreatorAddress() public view returns(address) {
     return jobCreatorAddress;
   }
+
+  function setPowAddress(address _powAddress) public onlyOwner {
+    require(_powAddress != address(0), "Users address");
+    powAddress = _powAddress;
+  }
+
+  function getPowAddress() public view returns(address) {
+    return powAddress;
+  }
+
 
   /**
    * Agreements

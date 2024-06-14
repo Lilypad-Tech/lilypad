@@ -21,7 +21,7 @@ type Web3Options struct {
 	TokenAddress      string `json:"token_address" toml:"token_address"`
 	MediationAddress  string `json:"mediation_address" toml:"mediation_address"`
 	JobCreatorAddress string `json:"jobcreator_address" toml:"jobcreator_address"`
-
+	PowAddress        string `json:"pow_address" toml:"pow_address"`
 	// this is injected by whatever service we are running
 	// it's used for logging tx's
 	Service system.Service `json:"-" toml:"-"`
