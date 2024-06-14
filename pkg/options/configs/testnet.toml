@@ -5,7 +5,7 @@ mediator = ["0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"]
 [web3]
 rpc_url = "wss://arbitrum-sepolia.infura.io/ws/v3/07472a48382e4679ae818aad0c21cf90"
 chain_id = 421614
-controller_address = "0xF2fD1B9b262982F12446149A27d8901Ac68dcB59"
+controller_address = "0x4a83270045FB4BCd1bdFe1bD6B00762A9D8bbF4E"
 payments_address = "0x6f982192B4D225D67ED52A31308a602438882D6b"
 storage_address = "0xEB383625D7837aD49C1909f74d05a2db247CE0ca"
 users_address = "0x8FBAC8549fe9cb0630f7E30929C8256b9b67E68f"
