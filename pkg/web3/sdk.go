@@ -72,7 +72,7 @@ func NewContracts(
 	}
 
 	powAddress := options.PowAddress
-	log.Debug().Msgf("TokenAddress: %s", powAddress)
+	log.Debug().Msgf("PowAddress: %s", powAddress)
 	if powAddress == "" {
 		loadedPowAddress, err := controller.GetPowAddress(callOpts)
 		if err != nil {
@@ -80,7 +80,7 @@ func NewContracts(
 		}
 		powAddress = loadedPowAddress.String()
 		log.Debug().
-			Str("load token address", powAddress).
+			Str("load pow address", powAddress).
 			Msgf("")
 	}
 
