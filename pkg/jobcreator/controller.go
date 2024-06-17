@@ -249,7 +249,7 @@ func (controller *JobCreatorController) allowlistApproved() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
-			controller.log.Error("module allolist error", err)
+			controller.log.Error("module allowlist error", err)
 			return
 		}
 		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
@@ -346,6 +346,10 @@ func (controller *JobCreatorController) agreeToDeals() error {
 
 	return nil
 }
+
+// list the deals that have results posted but we have not yet checked
+// we do this synchronously to prevent us racing with large result sets
+// also we are the client so have a lower chance of there being a chunky backlog
 
 func (controller *JobCreatorController) checkResults() error {
 	// load all deals in ResultsSubmitted state and don't have either results checked or accepted txs
