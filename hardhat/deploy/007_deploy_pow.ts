@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-const deployUsers: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployPow: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre
   const { deploy, execute } = deployments
   const {
@@ -23,6 +23,6 @@ const deployUsers: DeployFunction = async function (hre: HardhatRuntimeEnvironme
   return true
 }
 
-deployUsers.id = 'deployPow'
+deployPow.id = 'deployPow'
 
-export default deployUsers
+export default deployPow
