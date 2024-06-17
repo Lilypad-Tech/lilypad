@@ -106,7 +106,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) err
 	log.Info().Msgf("Wallet %s node id %s is ready for mine", walletAddress, nodeId)
 
 	taskCh := make(chan Task)
-	resourceProvider.controller.web3Events.Pow.SubscribenewPowRound(func(newPowRound pow.PowNewPowRound) {
+	resourceProvider.controller.web3Events.Pow.SubscribeNewPowRound(func(newPowRound pow.PowNewPowRound) {
 		_, challenge, err := resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch challenge")

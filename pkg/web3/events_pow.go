@@ -36,7 +36,7 @@ func (s *PowEventChannels) Start(
 
 	connectnewPowRoundSub := func() (event.Subscription, error) {
 		log.Debug().
-			Str("jobcreator->connect", "newPowRound").
+			Str("pow->connect", "newPowRound").
 			Msgf("")
 		return sdk.Contracts.Pow.WatchNewPowRound(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
@@ -73,6 +73,6 @@ func (s *PowEventChannels) Start(
 	}
 }
 
-func (t *PowEventChannels) SubscribenewPowRound(handler func(pow.PowNewPowRound)) {
+func (t *PowEventChannels) SubscribeNewPowRound(handler func(pow.PowNewPowRound)) {
 	t.newPowRoundSubs = append(t.newPowRoundSubs, handler)
 }

@@ -298,45 +298,19 @@ func (sdk *Web3SDK) SubmitWork(
 	return tx.Hash(), validPosSubmission, nil
 }
 
-type PowValidPOWSubmission struct {
-	WalletAddress    common.Address
-	NodeId           string
-	Nonce            *big.Int
-	StartTimestap    *big.Int
-	CompleteTimestap *big.Int
-	Challenge        [32]byte
-	Difficulty       *big.Int
-}
-
-func (sdk *Web3SDK) GetPowSubmission(ctx context.Context) (map[common.Address][]PowValidPOWSubmission, error) {
+func (sdk *Web3SDK) GetPowSubmission(ctx context.Context) (map[common.Address][]pow.LilypadPowPOWSubmission, error) {
 	miners, err := sdk.Contracts.Pow.GetMiners(sdk.CallOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	results := make(map[common.Address][]PowValidPOWSubmission)
+	results := make(map[common.Address][]pow.LilypadPowPOWSubmission)
 	for _, minerAddr := range miners {
-		validProofCount, err := sdk.Contracts.Pow.MinerSubmissionCount(sdk.CallOpts, minerAddr)
+		powSubmissions, err := sdk.Contracts.Pow.GetMinerPosSubmissions(sdk.CallOpts, minerAddr)
 		if err != nil {
 			return nil, err
 		}
 
-		var powSubmissions []PowValidPOWSubmission
-		for i := uint64(0); i < validProofCount.Uint64(); i++ { //enough large
-			submission, err := sdk.Contracts.Pow.PowSubmissions(sdk.CallOpts, minerAddr, new(big.Int).SetUint64(i))
-			if err != nil {
-				return nil, err
-			}
-			powSubmissions = append(powSubmissions, PowValidPOWSubmission{
-				WalletAddress:    submission.WalletAddress,
-				NodeId:           submission.NodeId,
-				Nonce:            submission.Nonce,
-				StartTimestap:    submission.StartTimestap,
-				CompleteTimestap: submission.CompleteTimestap,
-				Challenge:        submission.Challenge,
-				Difficulty:       submission.Difficulty,
-			})
-		}
 		results[minerAddr] = powSubmissions
 	}
 	return results, nil
