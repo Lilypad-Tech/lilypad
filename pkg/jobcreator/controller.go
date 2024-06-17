@@ -29,14 +29,14 @@ type JobCreatorController struct {
 	moduleAllowlist       []string
 }
 
-// the background "even if we have not heard of an event" loop
-// i.e. things will not wait 10 seconds - the control loop
-// reacts to events in the system - this 10 second background
-// loop is just for in case we miss any events
-const CONTROL_LOOP_INTERVAL = 10 * time.Second
-
 const (
 	allowlistURL = "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/main/allowlist.txt"
+
+	// the background "even if we have not heard of an event" loop
+	// i.e. things will not wait 10 seconds - the control loop
+	// reacts to events in the system - this 10 second background
+	// loop is just for in case we miss any events
+	CONTROL_LOOP_INTERVAL = 10 * time.Second
 )
 
 func NewJobCreatorController(
@@ -164,7 +164,6 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	err := controller.UpdateModuleAllowlist()
 	if err != nil {
 		controller.log.Error("failed to fetch module allowlist", err)
-
 	}
 
 	// Periodic update logic here using a time.Ticker
