@@ -23,26 +23,20 @@ Order matters because the `solver`, `job creator` and `resource provider` will r
 
 ### 1. Blockchain node
 
-This has been implemented in a docker container and two functions are already in place to build and run the container: `./stack chain-docker-build` and `./stack chain-docker-run <optional-path>`. The run command accepts an optional parameter for a local path where to store the blockchain data. This is handy to keep the current state of the blockchain around even after restarts on the container. The path defaults to `/data/chain`. On mac, the root directory is readonly, so you'll need to provide the optional path parameter when running the container.
+The node can can run directly from an existing docker image, it will initialize itself to a blank state with the admin address holding the funds to deploy the smart contracts (including the Lilypad token) and fund the accounts used by the different services. The blockchain is ephemeral, meaning every time you restart the node the state will be reset, you can work around this by keeping the node active if needed.
 
-The first time these commands are executed the blockchain will be in its genesis state, several things need to happen:
+These are the commands to run the node and boot the network: `./stack chain-clean` (the first time this won't do anything, but I find it better to get in the habit of resetting artifacts everytime), `./stack chain` to run the node and `./stack chain-boot` to fund the accounts with ETH (for gas fees), compile the contracts, add Golang bindings to use the contracts directly in go code, deploy the contracts and fund the accounts with Lilypad tokens.
 
-- Fund the admin account, which will be used to deploy the smart contracts and token.
-- Compile and deploy the smart contracts.
-- Create and fund the accounts with the native gas token and the Lilypad token.
-
-To do the first thing run the command `./stack chain-fund-admin`. 
-
-Then, the remaining processes can be executed with the command `./stack chain-boot`. This last command executes via hardhat, so it will need the URL of the blockchain node where it will send the transactions (this is currently hardcoded to `http://localhost:8546`, which is ok for this setup but keep in mind in case you decide to configure things differently or if you want to run this command on a deployed blockchain node). This command sets up the environment with the correct addresses and private keys. 
 
 #### Summary of command sequence
 ```sh
->./stack chain-docker-build
->./stack chain-docker-run /path/to/my/data
-># then in another terminal
->./stack chain-fund-admin
->./stack chain-boot 
+./stack chain-clean
+./stack chain
+# then in another terminal
+./stack chain-boot
 ```
+
+A helper script is in place to verify balances on the accounts: `cd hardhat && npx hardhat run scripts/balances.ts --network dev`
 
 ### 2. Solver service
 
@@ -57,10 +51,10 @@ This process can be executed directly if Golang has been installed or in a docke
 For the time being this process has to be executed directly. This means following the instructions to download their cli tool and expose it as a bin that can be used. Here's how to install the `bacalhau` tool:
 
 ```sh
-# install the latest (at the time of this write-up it was 1.3.0)
-wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.0/bacalhau_v1.3.0_linux_amd64.tar.gz
+# install the latest
+wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz
 # extract the downloaded archive and move the `bacalhau` binary to `/usr/local/bin`
-tar xfv bacalhau_v1.3.0_linux_amd64.tar.gz
+tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz
 mv bacalhau /usr/local/bin
 ```
 
