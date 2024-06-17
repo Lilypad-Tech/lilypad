@@ -11,9 +11,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -396,4 +397,32 @@ func newRetryClient() *retryablehttp.Client {
 		}
 	}
 	return retryClient
+}
+
+func GetRequestWithTimeout(url string, timeout time.Duration) ([]byte, error) {
+	// A HTTP client with the specified timeout
+	client := &http.Client{
+		Timeout: timeout,
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating module-allowlist request failed: %s", err)
+	}
+
+	// Perform the HTTP request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing module-allowlist request failed: %s", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading module-allowlist response body failed: %s", err)
+	}
+
+	return body, nil
 }
