@@ -15,12 +15,16 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/holiman/uint256 v1.2.4
 	github.com/ipfs/go-merkledag v0.11.0
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/theckman/yacspin v0.13.12
+	gorgonia.org/cu v0.9.6
 	k8s.io/apimachinery v0.28.3
 )
+
+replace gorgonia.org/cu => github.com/hunjixin/cu v0.0.0-20240618140529-d11ba74b75b6
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
