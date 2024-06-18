@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"math/big"
+	"os"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -24,16 +25,27 @@ type GpuWorker struct {
 	cfg     *WorkerConfig
 	state   atomic.Int32
 	entryFn cu.Function
+	cuCtx   *cu.Ctx
 	quit    chan chan struct{}
 }
 
 func NewGpuWorker(cfg *WorkerConfig) (*GpuWorker, error) {
 	//TODO use first gpu for now, plan to support multiple gpu in future
-	_, _, err := setupGPU()
+	cuCtx, err := setupGPU()
 	if err != nil {
 		return nil, err
 	}
-	module, err := cu.LoadData(keccakPtx)
+	fs, err := os.CreateTemp(os.TempDir(), "*")
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO no LoadData for Cuda Ctx, maybe cu author forget or just not supprot
+	_, err = fs.WriteString(keccakPtx)
+	if err != nil {
+		return nil, err
+	}
+	module, err := cuCtx.Load(fs.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +54,10 @@ func NewGpuWorker(cfg *WorkerConfig) (*GpuWorker, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &GpuWorker{
 		cfg:     cfg,
+		cuCtx:   cuCtx,
 		entryFn: entryFn,
 		quit:    make(chan chan struct{}, 1),
 	}, nil
@@ -104,11 +118,20 @@ OUT:
 			nonce.Add(nonce, bigOne)
 		}
 
-		results, err := cuda_batch_keccak(w.entryFn, inputs)
+		results, err := cuda_batch_keccak(w.cuCtx, w.entryFn, inputs)
 		if err != nil {
 			log.Err(err).Msg("InvokeGpu fail")
 			continue
 		}
+
+		/*
+			for index, result := range results {
+				hash := crypto.Keccak256Hash(inputs[index][:])
+				if !bytes.Equal(hash[:], result[:]) {
+					panic("hash not match")
+				}
+			}
+		*/
 		hashesCompleted += batch_size
 		for _, result := range results {
 			hashNumber := new(uint256.Int).SetBytes(result[:])
@@ -137,30 +160,26 @@ func GetGpuNumber() int {
 	return devices
 }
 
-func setupGPU() (dev cu.Device, ctx cu.CUContext, err error) {
+func setupGPU() (*cu.Ctx, error) {
 	devices, _ := cu.NumDevices()
 
 	if devices == 0 {
-		err = errors.Errorf("NoDevice")
-		return
+		return nil, errors.Errorf("NoDevice")
 	}
 
-	dev = cu.Device(0) //todo support multiple gpu
-	if ctx, err = dev.MakeContext(cu.SchedAuto); err != nil {
-		return
-	}
-	return
+	dev := cu.Device(0)
+	return cu.NewContext(dev, cu.SchedAuto), nil
 }
 
-func cuda_batch_keccak(fn cu.Function, hIn [][64]byte) ([][32]byte, error) {
+func cuda_batch_keccak(cuCtx *cu.Ctx, fn cu.Function, hIn [][64]byte) ([][32]byte, error) {
 	inNum := int64(len(hIn))
 
-	dIn, err := cu.MemAlloc(64 * inNum)
+	dIn, err := cuCtx.MemAllocManaged(64*inNum, cu.AttachGlobal)
 	if err != nil {
 		return nil, err
 	}
 
-	dOut, err := cu.MemAlloc(32 * inNum)
+	dOut, err := cuCtx.MemAllocManaged(32*inNum, cu.AttachGlobal)
 	if err != nil {
 		return nil, err
 	}
@@ -177,22 +196,16 @@ func cuda_batch_keccak(fn cu.Function, hIn [][64]byte) ([][32]byte, error) {
 		unsafe.Pointer(&block_size),
 	}
 
-	if err = cu.MemcpyHtoD(dIn, unsafe.Pointer(&hIn[0]), 64*inNum); err != nil {
-		return nil, err
-	}
+	cuCtx.MemcpyHtoD(dIn, unsafe.Pointer(&hIn[0]), 64*inNum)
 
 	thread := 256
-	block := (int(inNum) + thread - 1) / thread
-	if err = fn.LaunchAndSync(thread, 1, 1, block, 1, 1, 1, cu.Stream{}, args); err != nil {
-		return nil, err
-	}
-
+	block := (int(inNum) + thread - 1) / thread //todo this argument maybe need to change
+	cuCtx.LaunchKernel(fn, thread, 1, 1, block, 1, 1, 1, cu.Stream{}, args)
+	cuCtx.Synchronize()
 	hOut := make([][32]byte, inNum)
-	if err = cu.MemcpyDtoH(unsafe.Pointer(&hOut[0]), dOut, 32*inNum); err != nil {
-		return nil, err
-	}
+	cuCtx.MemcpyDtoH(unsafe.Pointer(&hOut[0]), dOut, 32*inNum)
 
-	cu.MemFree(dIn)
-	cu.MemFree(dOut)
+	cuCtx.MemFree(dIn)
+	cuCtx.MemFree(dOut)
 	return hOut, nil
 }
