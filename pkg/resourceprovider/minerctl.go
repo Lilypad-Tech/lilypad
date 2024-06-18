@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/holiman/uint256"
@@ -26,35 +27,51 @@ const (
 
 type SubmitWork func(nonce *big.Int)
 
-type CPUMiner struct {
+type Task struct {
+	Id         uuid.UUID
+	Challenge  [32]byte
+	Difficulty *uint256.Int
+	From       *uint256.Int
+	End        *uint256.Int
+}
+
+type TaskResult struct {
+	Id    uuid.UUID
+	Nonce *uint256.Int
+}
+
+type MinerController struct {
 	submit SubmitWork
 
-	runningWorkers []*Worker
+	runningWorkers []*CpuWorker
 
 	numWorkers int
 
 	task chan Task
 
 	updateHashes chan uint64
+
+	useCpu bool
 }
 
-func NewCpuMiner(nodeId string, numWorkers int, task chan Task, submit SubmitWork) *CPUMiner {
-	return &CPUMiner{
+func NewMinerController(nodeId string, numWorkers int, useCpu bool, task chan Task, submit SubmitWork) *MinerController {
+	return &MinerController{
 		numWorkers:   numWorkers,
 		task:         task,
 		updateHashes: make(chan uint64),
 		submit:       submit,
+		useCpu:       useCpu,
 	}
 }
 
-func (m *CPUMiner) Start(ctx context.Context) {
+func (m *MinerController) Start(ctx context.Context) {
 	go m.miningWorkerController(ctx)
 	go m.speedMonitor(ctx)
 }
 
 // speedMonitor handles tracking the number of hashes per second the mining
 // process is performing.  It must be run as a goroutine.
-func (m *CPUMiner) speedMonitor(ctx context.Context) {
+func (m *MinerController) speedMonitor(ctx context.Context) {
 	log.Debug().Msg("CPU miner speed monitor started")
 	var hashesPerSec float64
 	var totalHashes uint64
@@ -89,11 +106,11 @@ out:
 	log.Debug().Msgf("CPU miner speed monitor done")
 }
 
-func (m *CPUMiner) miningWorkerController(ctx context.Context) {
+func (m *MinerController) miningWorkerController(ctx context.Context) {
 	resultCh := make(chan TaskResult)
 	launchWorkers := func(numWorkers int) {
 		for i := 0; i < numWorkers; i++ {
-			w := NewWorker(i, m.updateHashes, resultCh)
+			w := NewCpuWorker(i, m.updateHashes, resultCh)
 			m.runningWorkers = append(m.runningWorkers, w)
 		}
 	}
@@ -115,7 +132,7 @@ func (m *CPUMiner) miningWorkerController(ctx context.Context) {
 			w.Stop()
 			from := new(uint256.Int).Mul(noncePerWorker, uint256.NewInt(uint64(i)))
 			end := new(uint256.Int).Mul(noncePerWorker, uint256.NewInt(uint64(i+1)))
-			go w.Solve(ctx, &Task{
+			go w.FindSolution(ctx, &Task{
 				Id:         allTask.Id,
 				Challenge:  allTask.Challenge,
 				Difficulty: allTask.Difficulty,
@@ -146,4 +163,30 @@ out:
 			spawNewWork(&allTask)
 		}
 	}
+}
+
+func formatMinerArgs(challenge [32]byte, nonce *big.Int) ([]byte, error) {
+	//todo use nonce in replace instead of building from scratch for better performance
+	// keccak256(abi.encodePacked(lastChallenge, msg.sender, nodeId));
+	bytes32Ty, _ := abi.NewType("bytes32", "", nil)
+	uint256Ty, _ := abi.NewType("uint256", "", nil)
+
+	arguments := abi.Arguments{
+		{
+			Type: bytes32Ty,
+		},
+		{
+			Type: uint256Ty,
+		},
+	}
+
+	bytes, err := arguments.Pack(
+		challenge,
+		nonce,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
 }

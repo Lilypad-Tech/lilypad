@@ -3,9 +3,11 @@ package resourceprovider
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"runtime"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/holiman/uint256"
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -53,6 +55,7 @@ type ResourceProviderOfferOptions struct {
 // this configures the pow we will keep track of
 type ResourceProviderPowOptions struct {
 	EnablePow bool
+	UseCpu    bool //for dev
 }
 
 type ResourceProviderOptions struct {
@@ -134,7 +137,24 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) err
 			Msgf("Mine and submit successfully")
 	}
 
-	miner := NewCpuMiner(nodeId, numWorkers, taskCh, submitWork)
+	miner := NewMinerController(nodeId, numWorkers, resourceProvider.options.Pow.UseCpu, taskCh, submitWork)
 	go miner.Start(ctx)
 	return nil
+}
+
+func TriggerNewPowRound(ctx context.Context, web3SDK *web3.Web3SDK) (common.Hash, error) {
+	tx, err := web3SDK.Contracts.Pow.TriggerNewPowRound(web3SDK.TransactOpts)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	receipt, err := web3SDK.WaitTx(ctx, tx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	if receipt.Status != 1 {
+		return tx.Hash(), fmt.Errorf("trigger new pow round")
+	}
+	return tx.Hash(), nil
 }

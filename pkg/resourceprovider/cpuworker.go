@@ -2,17 +2,12 @@ package resourceprovider
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/google/uuid"
 	"github.com/holiman/uint256"
-	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,20 +15,7 @@ var (
 	bigOne = uint256.NewInt(1)
 )
 
-type Task struct {
-	Id         uuid.UUID
-	Challenge  [32]byte
-	Difficulty *uint256.Int
-	From       *uint256.Int
-	End        *uint256.Int
-}
-
-type TaskResult struct {
-	Id    uuid.UUID
-	Nonce *uint256.Int
-}
-
-type Worker struct {
+type CpuWorker struct {
 	id    int
 	state atomic.Int32
 
@@ -43,15 +25,15 @@ type Worker struct {
 	quit     chan chan struct{}
 }
 
-func NewWorker(id int, updateHashes chan uint64, resultCh chan TaskResult) *Worker {
-	return &Worker{
+func NewCpuWorker(id int, updateHashes chan uint64, resultCh chan TaskResult) *CpuWorker {
+	return &CpuWorker{
 		id:           id,
 		updateHashes: updateHashes,
 		resultCh:     resultCh,
 		quit:         make(chan chan struct{}, 1),
 	}
 }
-func (w *Worker) Stop() {
+func (w *CpuWorker) Stop() {
 	if w.state.Load() == 0 {
 		return
 	}
@@ -65,7 +47,7 @@ func (w *Worker) Stop() {
 	}
 }
 
-func (w *Worker) Solve(ctx context.Context, task *Task) {
+func (w *CpuWorker) FindSolution(ctx context.Context, task *Task) {
 	w.state.Store(1)
 	defer w.state.Store(0)
 
@@ -128,47 +110,4 @@ func calculateHashNumber(challenge [32]byte, nonce *big.Int) (*uint256.Int, erro
 	hashResult := crypto.Keccak256(data)
 
 	return new(uint256.Int).SetBytes(hashResult), nil
-}
-
-func formatMinerArgs(challenge [32]byte, nonce *big.Int) ([]byte, error) {
-	//todo use nonce in replace instead of building from scratch for better performance
-	// keccak256(abi.encodePacked(lastChallenge, msg.sender, nodeId));
-	bytes32Ty, _ := abi.NewType("bytes32", "", nil)
-	uint256Ty, _ := abi.NewType("uint256", "", nil)
-
-	arguments := abi.Arguments{
-		{
-			Type: bytes32Ty,
-		},
-		{
-			Type: uint256Ty,
-		},
-	}
-
-	bytes, err := arguments.Pack(
-		challenge,
-		nonce,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
-}
-
-func TriggerNewPowRound(ctx context.Context, web3SDK *web3.Web3SDK) (common.Hash, error) {
-	tx, err := web3SDK.Contracts.Pow.TriggerNewPowRound(web3SDK.TransactOpts)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	receipt, err := web3SDK.WaitTx(ctx, tx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	if receipt.Status != 1 {
-		return tx.Hash(), fmt.Errorf("trigger new pow round")
-	}
-	return tx.Hash(), nil
 }
