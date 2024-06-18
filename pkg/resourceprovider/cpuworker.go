@@ -16,23 +16,19 @@ var (
 )
 
 type CpuWorker struct {
-	id    int
+	cfg *WorkerConfig
+
 	state atomic.Int32
-
-	updateHashes chan uint64
-
-	resultCh chan TaskResult
-	quit     chan chan struct{}
+	quit  chan chan struct{}
 }
 
-func NewCpuWorker(id int, updateHashes chan uint64, resultCh chan TaskResult) *CpuWorker {
+func NewCpuWorker(cfg *WorkerConfig) (*CpuWorker, error) {
 	return &CpuWorker{
-		id:           id,
-		updateHashes: updateHashes,
-		resultCh:     resultCh,
-		quit:         make(chan chan struct{}, 1),
-	}
+		cfg:  cfg,
+		quit: make(chan chan struct{}, 1),
+	}, nil
 }
+
 func (w *CpuWorker) Stop() {
 	if w.state.Load() == 0 {
 		return
@@ -67,7 +63,7 @@ OUT:
 			respCh <- struct{}{}
 			return
 		case <-ticker.C:
-			w.updateHashes <- hashesCompleted
+			w.cfg.updateHashes <- hashesCompleted
 			hashesCompleted = 0
 		default:
 			// Non-blocking select to fall through
@@ -90,7 +86,7 @@ OUT:
 				Str("Nonce", nonce.String()).
 				Str("HashNumber", hashNumber.String()).
 				Msg("Success!")
-			w.resultCh <- TaskResult{
+			w.cfg.resultCh <- TaskResult{
 				Id:    task.Id,
 				Nonce: nonce.Clone(),
 			}

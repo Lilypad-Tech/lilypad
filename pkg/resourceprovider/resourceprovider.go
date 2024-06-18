@@ -55,7 +55,6 @@ type ResourceProviderOfferOptions struct {
 // this configures the pow we will keep track of
 type ResourceProviderPowOptions struct {
 	EnablePow bool
-	UseCpu    bool //for dev
 }
 
 type ResourceProviderOptions struct {
@@ -137,7 +136,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) err
 			Msgf("Mine and submit successfully")
 	}
 
-	miner := NewMinerController(nodeId, numWorkers, resourceProvider.options.Pow.UseCpu, taskCh, submitWork)
+	miner := NewMinerController(nodeId, numWorkers, taskCh, submitWork)
 	go miner.Start(ctx)
 	return nil
 }

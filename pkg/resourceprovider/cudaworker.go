@@ -21,18 +21,14 @@ const entry_point = "kernel_keccak_hash"
 const batch_size = 1000
 
 type GpuWorker struct {
-	id    int
-	state atomic.Int32
-
-	updateHashes chan uint64
-
-	resultCh chan TaskResult
-
+	cfg     *WorkerConfig
+	state   atomic.Int32
 	entryFn cu.Function
 	quit    chan chan struct{}
 }
 
-func NewGpuWorker(id int, updateHashes chan uint64, resultCh chan TaskResult) (*GpuWorker, error) {
+func NewGpuWorker(cfg *WorkerConfig) (*GpuWorker, error) {
+	//TODO use first gpu for now, plan to support multiple gpu in future
 	_, _, err := setupGPU()
 	if err != nil {
 		return nil, err
@@ -47,11 +43,9 @@ func NewGpuWorker(id int, updateHashes chan uint64, resultCh chan TaskResult) (*
 		return nil, err
 	}
 	return &GpuWorker{
-		entryFn:      entryFn,
-		id:           id,
-		updateHashes: updateHashes,
-		resultCh:     resultCh,
-		quit:         make(chan chan struct{}, 1),
+		cfg:     cfg,
+		entryFn: entryFn,
+		quit:    make(chan chan struct{}, 1),
 	}, nil
 }
 func (w *GpuWorker) Stop() {
@@ -88,7 +82,7 @@ OUT:
 			respCh <- struct{}{}
 			return
 		case <-ticker.C:
-			w.updateHashes <- hashesCompleted
+			w.cfg.updateHashes <- hashesCompleted
 			hashesCompleted = 0
 		default:
 			// Non-blocking select to fall through
@@ -125,13 +119,22 @@ OUT:
 					Str("Nonce", nonce.String()).
 					Str("HashNumber", hashNumber.String()).
 					Msg("Success!")
-				w.resultCh <- TaskResult{
+				w.cfg.resultCh <- TaskResult{
 					Id:    task.Id,
 					Nonce: nonce.Clone(),
 				}
 			}
 		}
 	}
+}
+
+func GetGpuNumber() int {
+	devices, err := cu.NumDevices()
+	if err != nil {
+		log.Warn().Msgf("Cannot detect gpu numbers %v", err)
+		return 0
+	}
+	return devices
 }
 
 func setupGPU() (dev cu.Device, ctx cu.CUContext, err error) {

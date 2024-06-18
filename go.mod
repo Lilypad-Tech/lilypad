@@ -24,6 +24,8 @@ require (
 	k8s.io/apimachinery v0.28.3
 )
 
+replace gorgonia.org/cu => github.com/hunjixin/cu v0.0.0-20240618140529-d11ba74b75b6
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect

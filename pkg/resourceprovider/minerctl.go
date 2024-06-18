@@ -26,6 +26,16 @@ const (
 )
 
 type SubmitWork func(nonce *big.Int)
+type Worker interface {
+	FindSolution(ctx context.Context, task *Task)
+	Stop()
+}
+
+type WorkerConfig struct {
+	id           int
+	updateHashes chan uint64
+	resultCh     chan TaskResult
+}
 
 type Task struct {
 	Id         uuid.UUID
@@ -43,24 +53,21 @@ type TaskResult struct {
 type MinerController struct {
 	submit SubmitWork
 
-	runningWorkers []*CpuWorker
+	runningWorkers []Worker
 
 	numWorkers int
 
 	task chan Task
 
 	updateHashes chan uint64
-
-	useCpu bool
 }
 
-func NewMinerController(nodeId string, numWorkers int, useCpu bool, task chan Task, submit SubmitWork) *MinerController {
+func NewMinerController(nodeId string, numWorkers int, task chan Task, submit SubmitWork) *MinerController {
 	return &MinerController{
 		numWorkers:   numWorkers,
 		task:         task,
 		updateHashes: make(chan uint64),
 		submit:       submit,
-		useCpu:       useCpu,
 	}
 }
 
@@ -108,18 +115,39 @@ out:
 
 func (m *MinerController) miningWorkerController(ctx context.Context) {
 	resultCh := make(chan TaskResult)
-	launchWorkers := func(numWorkers int) {
+	launchWorkers := func(numWorkers int) error {
 		for i := 0; i < numWorkers; i++ {
-			w := NewCpuWorker(i, m.updateHashes, resultCh)
+			wCfg := &WorkerConfig{
+				id:           i,
+				updateHashes: m.updateHashes,
+				resultCh:     resultCh,
+			}
+			var w Worker
+			var err error
+			//Todo think more
+			//This make build require cuda environment or we can use build tag to condition build cpu cuda or others
+			if GetGpuNumber() > 0 {
+				w, err = NewGpuWorker(wCfg)
+			} else {
+				w, err = NewCpuWorker(wCfg)
+			}
+			if err != nil {
+				return err
+			}
+
 			m.runningWorkers = append(m.runningWorkers, w)
 		}
+		return nil
 	}
 
 	maxUint256 := new(uint256.Int).Sub(uint256.NewInt(0), uint256.NewInt(1))
 	noncePerWorker := new(uint256.Int).Div(maxUint256, uint256.NewInt(uint64(m.numWorkers)))
 
 	// Launch the current number of workers by default.
-	launchWorkers(m.numWorkers)
+	err := launchWorkers(m.numWorkers)
+	if err != nil {
+		log.Err(err).Msg("Cannt create worker")
+	}
 
 	stopWrokers := func() {
 		for _, w := range m.runningWorkers {
