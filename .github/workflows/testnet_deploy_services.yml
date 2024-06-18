@@ -1,6 +1,9 @@
 name: Deploy Testnet services
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   solver-build-deploy:
