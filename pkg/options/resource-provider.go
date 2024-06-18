@@ -22,7 +22,8 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 
 func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPowOptions {
 	return resourceprovider.ResourceProviderPowOptions{
-		EnablePow: GetDefaultServeOptionBool("ENABLE_POW", false),
+		EnablePow:  GetDefaultServeOptionBool("ENABLE_POW", false),
+		NumWorkers: GetDefaultServeOptionInt("NUM_WORKER", 1), //todo worker numbers?
 	}
 }
 
@@ -83,6 +84,10 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 	cmd.PersistentFlags().BoolVar(
 		&options.EnablePow, "enable-pow", options.EnablePow,
 		`Start pow mining (ENABLE_POW)`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&options.NumWorkers, "num-worker", options.NumWorkers,
+		`Start pow mining (NUM_WORKER)`,
 	)
 }
 
