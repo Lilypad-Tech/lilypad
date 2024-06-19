@@ -214,18 +214,18 @@ function resource-provider-docker-build() {
   docker build \
     -t resource-provider \
     -f ./docker/resource-provider/Dockerfile \
-    --build-arg doppler_config=dev \
-    --build-arg network=dev \
-    --build-arg DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --plain)" \
+    --build-arg NETWORK=dev \
     .
 }
 
 function resource-provider-docker-run() {
   docker run \
     --rm \
+    --privileged \
     --name resource-provider \
     --add-host localhost:host-gateway \
-    -e DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev resource_provider_docker --max-age 1m --plain)" \
+    --env-file <(doppler -p resource-provider -c dev secrets download --no-file --format docker) \
+    -e OFFER_GPU=0 \
     resource-provider
 }
 
