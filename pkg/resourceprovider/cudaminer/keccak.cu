@@ -10,7 +10,7 @@
  
 extern "C"
 {
-#include "keccak.cuh"
+    #include "keccak.cuh"
 }
 
 #define KECCAK_ROUND 24
@@ -319,32 +319,94 @@ __device__ void cuda_keccak_final(cuda_keccak_ctx_t *ctx, BYTE *out)
     }
 }
 
-extern "C" __global__ void kernel_keccak_hash(BYTE* indata, WORD inlen, BYTE* outdata, WORD n_batch, WORD KECCAK_BLOCK_SIZE)
+
+
+__device__ __forceinline__ static bool hashbelowtarget(const uint64_t *const __restrict__ hash, const uint64_t *const __restrict__ target)
+{
+    if (hash[3] > target[3])
+        return false;
+    if (hash[3] < target[3])
+        return true;
+    if (hash[2] > target[2])
+        return false;
+    if (hash[2] < target[2])
+        return true;
+
+    if (hash[1] > target[1])
+        return false;
+    if (hash[1] < target[1])
+        return true;
+    if (hash[0] > target[0])
+        return false;
+
+    return true;
+}
+
+__device__ uint64_t *addUint256(const uint64_t *a, const uint64_t b)
+{
+    uint64_t *result = new uint64_t[4];
+    uint64_t sum = a[0] + b;
+    result[0] = sum;
+
+    uint64_t carry = (sum < a[0]) ? 1 : 0;
+    for (int i = 1; i < 4; i++)
+    {
+        sum = a[i] + carry;
+        result[i] = sum;
+        carry = (sum < a[i]) ? 1 : 0;
+    }
+
+    return result;
+}
+__device__ void reverse32BytesInPlace(uint8_t *data)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        uint8_t temp = data[i];
+        data[i] = data[31 - i];
+        data[31 - i] = temp;
+    }
+}
+
+void kernel_keccak_hash(BYTE *indata, WORD inlen, BYTE *outdata, WORD n_batch, WORD KECCAK_BLOCK_SIZE)
 {
     WORD thread = blockIdx.x * blockDim.x + threadIdx.x;
     if (thread >= n_batch)
     {
         return;
     }
-    BYTE* in = indata  + thread * inlen;
-    BYTE* out = outdata  + thread * KECCAK_BLOCK_SIZE;
+    BYTE *in = indata + thread * inlen;
+    BYTE *out = outdata + thread * KECCAK_BLOCK_SIZE;
     CUDA_KECCAK_CTX ctx;
     cuda_keccak_init(&ctx, KECCAK_BLOCK_SIZE << 3);
     cuda_keccak_update(&ctx, in, inlen);
     cuda_keccak_final(&ctx, out);
 }
 
-extern "C" __global__ void kernel_lilypad_pow(BYTE* indata, WORD inlen, BYTE* outdata, WORD n_batch, WORD KECCAK_BLOCK_SIZE)
+extern "C" __global__  void kernel_lilypad_pow(BYTE* chanllenge, uint64_t* startNonce,  uint64_t* target,  WORD n_batch, BYTE* resNonce)
 {
     WORD thread = blockIdx.x * blockDim.x + threadIdx.x;
-    if (thread >= n_batch)
-    {
+    if (thread >= n_batch) {
         return;
     }
-    BYTE* in = indata  + thread * inlen;
-    BYTE* out = outdata  + thread * KECCAK_BLOCK_SIZE;
+
+    //pack input
+    BYTE in[64];
+    memcpy(in, chanllenge, 32);
+    //increase nonce
+    BYTE* nonce = (BYTE*)addUint256(startNonce, thread);
+    reverse32BytesInPlace(nonce);
+    memcpy(in+32, nonce, 32);
+
+    BYTE out[32];
     CUDA_KECCAK_CTX ctx;
-    cuda_keccak_init(&ctx, KECCAK_BLOCK_SIZE << 3);
-    cuda_keccak_update(&ctx, in, inlen);
+    cuda_keccak_init(&ctx, 256);
+    cuda_keccak_update(&ctx, in, 64);
     cuda_keccak_final(&ctx, out);
+
+    reverse32BytesInPlace(out);
+    if (hashbelowtarget((uint64_t*)out, target)) {
+        memcpy(resNonce, nonce, 32);
+    } 
+    delete nonce;
 }

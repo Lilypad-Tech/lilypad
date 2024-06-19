@@ -79,7 +79,6 @@ func (w *GpuWorker) Stop() {
 	default:
 	}
 }
-
 func (w *GpuWorker) FindSolution(ctx context.Context, task *Task) {
 	w.state.Store(1)
 	defer w.state.Store(0)
@@ -90,8 +89,8 @@ func (w *GpuWorker) FindSolution(ctx context.Context, task *Task) {
 	hashesCompleted := uint64(0)
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
-	const thread = 1024
-	const block = 512
+	const thread = 2048 //todo make it configurable
+	const block = 512   //todo confuse why limit at 512
 	const batch_size = thread * block
 OUT:
 	for {
@@ -111,7 +110,6 @@ OUT:
 		if nonce.Cmp(task.End) >= 0 {
 			return
 		}
-		//3080 68sm * 128sp
 
 		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), thread, block)
 		if err != nil {
@@ -120,6 +118,7 @@ OUT:
 		}
 		hashesCompleted += batch_size
 		nonce = nonce.Add(nonce, uint256.NewInt(batch_size))
+
 		if maybeNonce.Int64() == 0 {
 			continue
 		}
@@ -144,7 +143,7 @@ OUT:
 				Nonce: uint256.MustFromBig(maybeNonce),
 			}
 		} else {
-			panic("xx")
+			panic("cuda algo may have error")
 		}
 	}
 }
