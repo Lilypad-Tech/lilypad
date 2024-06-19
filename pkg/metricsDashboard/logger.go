@@ -16,9 +16,14 @@ const nodeInfoEndpoint = "nodes"
 const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
 
-var host = os.Getenv("API_HOST") + "metrics-dashboard/"
+func trackEvent(path string, json string) {
+	var host = os.Getenv("API_HOST")
+	if host == "" {
+		return
+	}
 
-func TrackEvent(url string, json string) {
+	var url = host + "metrics-dashboard/" + path
+
 	data := []byte(json)
 
 	client := &http.Client{Timeout: time.Second * 1}
@@ -34,7 +39,6 @@ func TrackEvent(url string, json string) {
 }
 
 func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
-	var url = host + jobsEndpoint
 	var module = evOffer.JobOffer.Module.Name
 	if module == "" {
 		module = evOffer.JobOffer.Module.Repo + ":" + evOffer.JobOffer.Module.Hash
@@ -53,12 +57,10 @@ func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	TrackEvent(url, payload)
+	trackEvent(jobsEndpoint, payload)
 }
 
 func TrackNodeInfo(resourceOffer data.ResourceOffer) {
-	var url = host + nodeInfoEndpoint
-
 	data := map[string]interface{}{
 		"ID":      resourceOffer.ResourceProvider,
 		"GPU":     resourceOffer.Spec.GPU,
@@ -69,7 +71,7 @@ func TrackNodeInfo(resourceOffer data.ResourceOffer) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	TrackEvent(url, payload)
+	trackEvent(nodeInfoEndpoint, payload)
 }
 
 type NodeConnectionParams struct {
@@ -80,7 +82,6 @@ type NodeConnectionParams struct {
 }
 
 func TrackNodeConnectionEvent(params NodeConnectionParams) {
-	var url = host + nodeConnectionEndpoint
 	data := map[string]interface{}{
 		"ID":          params.ID,
 		"Event":       params.Event,
@@ -91,7 +92,7 @@ func TrackNodeConnectionEvent(params NodeConnectionParams) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	TrackEvent(url, payload)
+	trackEvent(nodeConnectionEndpoint, payload)
 }
 
 type DealPayload struct {
@@ -102,9 +103,8 @@ type DealPayload struct {
 }
 
 func TrackDeal(params DealPayload) {
-	var url = host + dealsEndpoint
 	byts, _ := json.Marshal(params)
 	payload := string(byts)
 
-	TrackEvent(url, payload)
+	trackEvent(dealsEndpoint, payload)
 }
