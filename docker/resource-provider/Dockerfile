@@ -7,6 +7,7 @@ ARG NETWORK=testnet
 # Default environment variables
 ENV LOG_LEVEL=info
 ENV OFFER_GPU=1
+ENV BACALHAU_API_HOST="localhost"
 
 # Install necessary dependencies
 RUN apk update
