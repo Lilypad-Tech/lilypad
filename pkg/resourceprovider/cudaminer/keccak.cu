@@ -333,3 +333,18 @@ extern "C" __global__ void kernel_keccak_hash(BYTE* indata, WORD inlen, BYTE* ou
     cuda_keccak_update(&ctx, in, inlen);
     cuda_keccak_final(&ctx, out);
 }
+
+extern "C" __global__ void kernel_lilypad_pow(BYTE* indata, WORD inlen, BYTE* outdata, WORD n_batch, WORD KECCAK_BLOCK_SIZE)
+{
+    WORD thread = blockIdx.x * blockDim.x + threadIdx.x;
+    if (thread >= n_batch)
+    {
+        return;
+    }
+    BYTE* in = indata  + thread * inlen;
+    BYTE* out = outdata  + thread * KECCAK_BLOCK_SIZE;
+    CUDA_KECCAK_CTX ctx;
+    cuda_keccak_init(&ctx, KECCAK_BLOCK_SIZE << 3);
+    cuda_keccak_update(&ctx, in, inlen);
+    cuda_keccak_final(&ctx, out);
+}
