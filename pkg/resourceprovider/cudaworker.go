@@ -102,9 +102,7 @@ func (w *GpuWorker) FindSolution(ctx context.Context, task *Task) {
 	hashesCompleted := uint64(0)
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
-	const grid = 2048 //todo make it configurable
-	const block = 512 //todo confuse why limit at 512
-	const batch_size = grid * block
+	batch_size := uint64(w.cfg.gridSize * w.cfg.blockSize)
 OUT:
 	for {
 		select {
@@ -124,7 +122,7 @@ OUT:
 			return
 		}
 
-		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), grid, block)
+		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), w.cfg.gridSize, w.cfg.blockSize)
 		if err != nil {
 			log.Err(err).Msg("InvokeGpu fail")
 			continue
