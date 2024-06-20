@@ -55,6 +55,9 @@ type ResourceProviderOfferOptions struct {
 type ResourceProviderPowOptions struct {
 	EnablePow  bool
 	NumWorkers int
+
+	CudaGridSize  int
+	CudaBlockSize int
 }
 
 type ResourceProviderOptions struct {
@@ -134,7 +137,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) err
 	}
 
 	log.Info().Msgf("Listen to new pow round signal, %d workers read to work", resourceProvider.options.Pow.NumWorkers)
-	miner := NewMinerController(nodeId, resourceProvider.options.Pow.NumWorkers, taskCh, submitWork)
+	miner := NewMinerController(nodeId, resourceProvider.options.Pow, taskCh, submitWork)
 	go miner.Start(ctx)
 	return nil
 }

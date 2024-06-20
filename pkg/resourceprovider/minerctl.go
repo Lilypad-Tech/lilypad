@@ -36,6 +36,10 @@ type WorkerConfig struct {
 	id           int
 	updateHashes chan uint64
 	resultCh     chan TaskResult
+
+	//cuda
+	gridSize  int
+	blockSize int
 }
 
 type Task struct {
@@ -56,16 +60,16 @@ type MinerController struct {
 
 	runningWorkers []Worker
 
-	numWorkers int
+	powCfg ResourceProviderPowOptions
 
 	task chan Task
 
 	updateHashes chan uint64
 }
 
-func NewMinerController(nodeId string, numWorkers int, task chan Task, submit SubmitWork) *MinerController {
+func NewMinerController(nodeId string, powCfg ResourceProviderPowOptions, task chan Task, submit SubmitWork) *MinerController {
 	return &MinerController{
-		numWorkers:   numWorkers,
+		powCfg:       powCfg,
 		task:         task,
 		updateHashes: make(chan uint64),
 		submit:       submit,
@@ -115,13 +119,21 @@ out:
 }
 
 func (m *MinerController) miningWorkerController(ctx context.Context) {
-	resultCh := make(chan TaskResult, m.numWorkers*2) //avoid lock if have much work to submit
-	launchWorkers := func(numWorkers int) error {
-		for i := 0; i < numWorkers; i++ {
+	numworkers := m.powCfg.NumWorkers
+	if numworkers == 0 {
+		numworkers = DefaultWorkerNum()
+	}
+
+	resultCh := make(chan TaskResult, numworkers*2) //avoid lock worker if have much work to submit
+	launchWorkers := func(powCfg ResourceProviderPowOptions) error {
+		for i := 0; i < numworkers; i++ {
 			wCfg := &WorkerConfig{
 				id:           i,
 				updateHashes: m.updateHashes,
 				resultCh:     resultCh,
+
+				gridSize:  powCfg.CudaGridSize,
+				blockSize: powCfg.CudaBlockSize,
 			}
 
 			w, err := MaybeCudaOrCpu(wCfg)
@@ -135,10 +147,10 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 	}
 
 	maxUint256 := new(uint256.Int).Sub(uint256.NewInt(0), uint256.NewInt(1))
-	noncePerWorker := new(uint256.Int).Div(maxUint256, uint256.NewInt(uint64(m.numWorkers)))
+	noncePerWorker := new(uint256.Int).Div(maxUint256, uint256.NewInt(uint64(numworkers)))
 
 	// Launch the current number of workers by default.
-	err := launchWorkers(m.numWorkers)
+	err := launchWorkers(m.powCfg)
 	if err != nil {
 		log.Err(err).Msg("Cannt create worker")
 	}

@@ -28,6 +28,10 @@ const entry_point = "kernel_lilypad_pow"
 
 var MaybeCudaOrCpu = NewGpuWorker
 
+func DefaultWorkerNum() int {
+	return 20 // different on different device
+}
+
 type GpuWorker struct {
 	cfg     *WorkerConfig
 	state   atomic.Int32
