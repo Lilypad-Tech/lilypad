@@ -40,7 +40,7 @@ type GpuWorker struct {
 func NewGpuWorker(cfg *WorkerConfig) (Worker, error) {
 	if GetGpuNumber() == 0 {
 		log.Warn().Msg("No gpu found and fallback to cpu")
-		return NewCpuWorker()
+		return NewCpuWorker(cfg)
 	}
 	//TODO use first gpu for now, plan to support multiple gpu in future
 	cuCtx, err := setupGPU()
