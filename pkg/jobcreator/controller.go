@@ -146,6 +146,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
+			err = fmt.Errorf("module allowlist error: %s", err)
 			controller.log.Error("error getting deal", err)
 			return
 		}
@@ -248,9 +249,12 @@ func (controller *JobCreatorController) allowlistApproved() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
+
 			controller.log.Error("module allowlist error", err)
 			return
 		}
+
+		// error handling out of the allowlist function- this is a critical error!!
 		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
 			return
 		}
