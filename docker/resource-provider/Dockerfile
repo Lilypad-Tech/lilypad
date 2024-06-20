@@ -1,54 +1,48 @@
-FROM ubuntu:latest
+FROM docker:dind
 WORKDIR /usr/src/app
 
+# Build args
+ARG NETWORK=testnet
+
 # Default environment variables
-ENV LOG_TYPE=json
-ENV LOG_LEVEL=debug
-ENV HOME=/app/lilypad
-ENV BACALHAU_SERVE_IPFS_PATH=/data/ipfs
+ENV LOG_LEVEL=info
 ENV OFFER_GPU=1
+ENV BACALHAU_API_HOST="localhost"
 
 # Install necessary dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    git \
-    curl \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update
+RUN apk add wget
+RUN apk add bash
 
-# Installing Bacalhau
+# Install Bacalhau
 RUN cd /tmp && \
     wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
     tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
-    mv bacalhau /usr/bin/bacalhau && \
+    mv bacalhau /usr/local/bin/bacalhau && \
     rm bacalhau_v1.3.2_linux_amd64.tar.gz
-# COPY bacalhau /usr/bin/bacalhau
-# RUN  mkdir -p /app/data/ipfs
 
-# Installing Lilypad
-RUN OSARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}') && \
-    OSNAME=$(uname -s | awk '{if ($1 == "Darwin") print "darwin"; else if ($1 == "Linux") print "linux"; else print "unsupported_os"}') && \
-    curl https://api.github.com/repos/lilypad-tech/lilypad/releases/latest | \
-    grep "browser_download_url.*lilypad-$OSNAME-$OSARCH" | \
-    cut -d : -f 2,3 | tr -d \" | wget -qi - -O lilypad && \
-    chmod +x lilypad && \
-    mv lilypad /usr/local/bin/lilypad
+# Build and install Lilypad
+COPY --from=golang:1.22.4-alpine /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
 
-# COPY lilypad lilypad
-# RUN chmod +x lilypad && \
-#     mv lilypad /usr/local/bin/lilypad
+COPY . .
+RUN go build -v .
+RUN mv lilypad /usr/local/bin
 
 # Add both lilypad and bacalhau executables to PATH
-ENV PATH="/usr/local/bin:/usr/bin:${PATH}"
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Create a startup script to run both services simultaneously
 RUN touch run
-
 RUN echo "#!/bin/bash" >> run
+RUN echo "cat run" >> run
+# Launch docker daemon
+RUN echo "dockerd &" >> run
+RUN echo "while ! docker -v; do sleep 1; done" >> run
 # Launch Bacalhau
-RUN echo "/usr/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false &" >> run
+RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider &" >> run
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK}" >> run
 RUN echo "wait -n" >> run
 RUN chmod +x run
 
