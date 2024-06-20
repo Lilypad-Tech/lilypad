@@ -10,9 +10,9 @@ async function main() {
   })
   console.log('export INFURA_KEY=')
   console.log('export LOG_LEVEL=info')
-  console.log('export NETWORK=geth')
-  console.log('export WEB3_RPC_URL=ws://localhost:8546')
-  console.log('export WEB3_CHAIN_ID=1337')
+  console.log('export NETWORK=dev')
+  console.log('export WEB3_RPC_URL=ws://localhost:8548')
+  console.log('export WEB3_CHAIN_ID=412346')
 }
 
 main().catch((error) => {

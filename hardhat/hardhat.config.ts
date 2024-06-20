@@ -14,7 +14,7 @@ import {
 const ENV_FILE = process.env.DOTENV_CONFIG_PATH || '../.env'
 dotenv.config({ path: ENV_FILE })
 
-const NETWORK = process.env.NETWORK || "local_l2";
+const NETWORK = process.env.NETWORK || "dev";
 const NETWORK_URL = process.env.WEB3_HTTP_URL || 'http://localhost:8547';
 const CHAIN_ID = Number(process.env.CHAIN_ID) || 412346;
 const INFURA_KEY = process.env.INFURA_KEY || "";
@@ -52,6 +52,11 @@ const config: HardhatUserConfig = {
     devnet: {
       url: 'http://0.0.0.0:8547',
       chainId: 412346,
+      accounts: [getAccount('admin').privateKey],
+    },
+    testnet:{
+      url: 'https://sepolia-rollup.arbitrum.io/rpc',
+      chainId: 421614,
       accounts: [getAccount('admin').privateKey],
     },
   },

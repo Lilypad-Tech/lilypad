@@ -6,27 +6,6 @@ on:
       - main
 
 jobs:
-  contracts:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          context: app
-
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v1
-
-      # TODO Avoid re-deploying contracts that are already on chain
-      - name: Deploy contracts
-        id: deploy-contracts
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_CONTRACTS_DEPLOY_DEVNET }}
-        run: |
-          cd hardhat
-          npm ci
-          doppler run -- npx hardhat deploy --network geth
-
   solver-build-deploy:
     runs-on: ubuntu-latest
     steps:
@@ -53,14 +32,11 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_SOLVER: ${{ secrets.ECR_REPOSITORY_SOLVER }}
-          CLOUDFLARE_TOKEN_SOLVER: ${{ secrets.CLOUDFLARE_TOKEN_SOLVER }}
         run: |
           docker build \
             -t $ECR_REPOSITORY_SOLVER \
             -f ./docker/solver/Dockerfile \
             --build-arg="expose_via=cloudflare" \
-            --build-arg="cloudflare_token=${CLOUDFLARE_TOKEN_SOLVER}"\
-            --build-arg="doppler_config=devnet" \
             --build-arg="network=devnet" \
             .
           docker tag $ECR_REPOSITORY_SOLVER:latest $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
@@ -71,12 +47,12 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_SOLVER: ${{ secrets.ECR_REPOSITORY_SOLVER }}
-          DOPPLER_TOKEN_SOLVER: ${{ secrets.DOPPLER_TOKEN_SOLVER }}
+          DEVNET_DOPPLER_TOKEN_SOLVER: ${{ secrets.DEVNET_DOPPLER_TOKEN_SOLVER }}
         with:
-          host: ${{ secrets.EC2_HOST_SOLVER }}
-          username: ${{ secrets.EC2_USERNAME_SOLVER }}
-          key: ${{ secrets.EC2_PRIVATE_KEY_SOLVER }}
-          envs: ECR_REGISTRY, ECR_REPOSITORY_SOLVER, DOPPLER_TOKEN_SOLVER
+          host: ${{ secrets.DEVNET_EC2_HOST_SOLVER }}
+          username: ${{ secrets.DEVNET_EC2_USERNAME_SOLVER }}
+          key: ${{ secrets.DEVNET_EC2_PRIVATE_KEY_SOLVER }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY_SOLVER, DEVNET_DOPPLER_TOKEN_SOLVER
           script_stop: true
           script: |
             docker stop solver || true
@@ -88,7 +64,7 @@ jobs:
               -d \
               --restart always \
               --name solver \
-              -e DOPPLER_TOKEN=$DOPPLER_TOKEN_SOLVER \
+              -e DOPPLER_TOKEN=$DEVNET_DOPPLER_TOKEN_SOLVER \
               $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
 
   job-creator-build-deploy:
@@ -122,7 +98,6 @@ jobs:
           docker build \
             -t $ECR_REPOSITORY_JOB_CREATOR \
             -f ./docker/job-creator/Dockerfile \
-            --build-arg doppler_config=devnet \
             --build-arg="network=devnet" \
             .
           docker tag $ECR_REPOSITORY_JOB_CREATOR:latest $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
@@ -133,12 +108,12 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_JOB_CREATOR: ${{ secrets.ECR_REPOSITORY_JOB_CREATOR }}
-          DOPPLER_TOKEN_JOB_CREATOR: ${{ secrets.DOPPLER_TOKEN_JOB_CREATOR }}
+          DEVNET_DOPPLER_TOKEN_JOB_CREATOR: ${{ secrets.DEVNET_DOPPLER_TOKEN_JOB_CREATOR }}
         with:
-          host: ${{ secrets.EC2_HOST_JOB_CREATOR }}
-          username: ${{ secrets.EC2_USERNAME_JOB_CREATOR }}
-          key: ${{ secrets.EC2_PRIVATE_KEY_JOB_CREATOR }}
-          envs: ECR_REGISTRY, ECR_REPOSITORY_JOB_CREATOR, DOPPLER_TOKEN_JOB_CREATOR
+          host: ${{ secrets.DEVNET_EC2_HOST_JOB_CREATOR }}
+          username: ${{ secrets.DEVNET_EC2_USERNAME_JOB_CREATOR }}
+          key: ${{ secrets.DEVNET_EC2_PRIVATE_KEY_JOB_CREATOR }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY_JOB_CREATOR, DEVNET_DOPPLER_TOKEN_JOB_CREATOR
           script_stop: true
           script: |
             docker stop job-creator || true
@@ -150,5 +125,5 @@ jobs:
               -d \
               --restart always \
               --name job-creator \
-              -e DOPPLER_TOKEN=$DOPPLER_TOKEN_JOB_CREATOR \
+              -e DOPPLER_TOKEN=$DEVNET_DOPPLER_TOKEN_JOB_CREATOR \
               $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest

@@ -27,6 +27,7 @@ func NewRootCmd() *cobra.Command {
 
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())
+	RootCmd.AddCommand(newPowSignalCmd())
 	RootCmd.AddCommand(newRunCmd())
 	RootCmd.AddCommand(newMediatorCmd())
 	RootCmd.AddCommand(newJobCreatorCmd())
