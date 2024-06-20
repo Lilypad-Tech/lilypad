@@ -1,28 +1,50 @@
-FROM golang:latest as base
+FROM docker:dind
 WORKDIR /usr/src/app
 
-ARG doppler_config=dev
-ARG network=dev
-ARG DOPPLER_TOKEN_BACALHAU
-ARG DOPPLER_TOKEN_RESOURCE_PROVIDER
+# Build args
+ARG NETWORK=testnet
+
+# Default environment variables
+ENV LOG_LEVEL=info
+ENV OFFER_GPU=1
+ENV BACALHAU_API_HOST="localhost"
+
+# Install necessary dependencies
+RUN apk update
+RUN apk add wget
+RUN apk add bash
+
+# Install Bacalhau
+RUN cd /tmp && \
+    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
+    tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
+    mv bacalhau /usr/local/bin/bacalhau && \
+    rm bacalhau_v1.3.2_linux_amd64.tar.gz
+
+# Build and install Lilypad
+COPY --from=golang:1.22.4-alpine /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . .
-RUN go mod download && go mod verify
 RUN go build -v .
-RUN go install
+RUN mv lilypad /usr/local/bin
 
-RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
+# Add both lilypad and bacalhau executables to PATH
+ENV PATH="/usr/local/bin:${PATH}"
 
-# RUN wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz
-# RUN tar xfv bacalhau_v1.0.3_linux_amd64.tar.gz
-# RUN mv bacalhau /usr/local/bin
-# # RUN sysctl -w net.core.rmem_max=7500000
-# # RUN sysctl -w net.core.wmem_max=7500000
-
+# Create a startup script to run both services simultaneously
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-#RUN echo "doppler run --token=$DOPPLER_TOKEN_BACALHAU -p bacalhau -c $doppler_config -- ./stack bacalhau-serve &" >> run
-RUN echo "doppler run --token=$DOPPLER_TOKEN_RESOURCE_PROVIDER -p resource-provider -c $doppler_config -- lilypad resource-provider --network $network" >> run
+RUN echo "cat run" >> run
+# Launch docker daemon
+RUN echo "dockerd &" >> run
+RUN echo "while ! docker -v; do sleep 1; done" >> run
+# Launch Bacalhau
+RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
+# Launch Lilypad
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK}" >> run
+RUN echo "wait -n" >> run
 RUN chmod +x run
 
+# Run startup script when container starts
 CMD ["/bin/bash", "./run"]
