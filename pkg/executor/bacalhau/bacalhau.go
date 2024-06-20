@@ -27,8 +27,12 @@ type BacalhauExecutor struct {
 }
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
+	apiHost := ""
+	if options.ApiHost != "DO_NOT_SET" {
+		apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
+	}
 	bacalhauEnv := []string{
-		fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost),
+		apiHost,
 		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
 	}
 	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
