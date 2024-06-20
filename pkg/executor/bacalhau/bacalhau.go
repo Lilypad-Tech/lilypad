@@ -128,9 +128,16 @@ func (executor *BacalhauExecutor) getJobID(
 	)
 	runCmd.Env = executor.bacalhauEnv
 
-	runOutput, err := runCmd.CombinedOutput()
+	runOutputRaw, err := runCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, err.Error(), runOutput)
+		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, err.Error(), runOutputRaw)
+	}
+	splitOutputs := strings.Split(string(runOutputRaw), "\n")
+	runOutput := splitOutputs[0]
+	outputError := strings.Join(strings.Fields(strings.Join(splitOutputs[1:], " ")), " ")
+
+	if outputError != "" {
+		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, outputError, runOutput)
 	}
 
 	id := strings.TrimSpace(string(runOutput))
