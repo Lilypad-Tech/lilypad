@@ -3,6 +3,7 @@ package resourceprovider
 import (
 	"context"
 	"math/big"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -114,7 +115,7 @@ out:
 }
 
 func (m *MinerController) miningWorkerController(ctx context.Context) {
-	resultCh := make(chan TaskResult)
+	resultCh := make(chan TaskResult, m.numWorkers*2) //avoid lock if have much work to submit
 	launchWorkers := func(numWorkers int) error {
 		for i := 0; i < numWorkers; i++ {
 			wCfg := &WorkerConfig{
@@ -122,15 +123,8 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 				updateHashes: m.updateHashes,
 				resultCh:     resultCh,
 			}
-			var w Worker
-			var err error
-			//Todo think more
-			//This make build require cuda environment or we can use build tag to condition build cpu cuda or others
-			if GetGpuNumber() > 0 {
-				w, err = NewGpuWorker(wCfg)
-			} else {
-				w, err = NewCpuWorker(wCfg)
-			}
+
+			w, err := MaybeCudaOrCpu(wCfg)
 			if err != nil {
 				return err
 			}
@@ -150,9 +144,15 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 	}
 
 	stopWrokers := func() {
-		for _, w := range m.runningWorkers {
-			w.Stop()
+		var wg sync.WaitGroup
+		for _, worker := range m.runningWorkers {
+			wg.Add(1)
+			go func(w Worker) {
+				defer wg.Done()
+				w.Stop()
+			}(worker)
 		}
+		wg.Wait()
 	}
 
 	spawNewWork := func(allTask *Task) {

@@ -1,3 +1,6 @@
+//go:build linux
+// +build linux
+
 package resourceprovider
 
 import (
@@ -23,6 +26,8 @@ var keccakPtx string
 
 const entry_point = "kernel_lilypad_pow"
 
+var MaybeCudaOrCpu = NewGpuWorker
+
 type GpuWorker struct {
 	cfg     *WorkerConfig
 	state   atomic.Int32
@@ -32,7 +37,11 @@ type GpuWorker struct {
 	quit chan chan struct{}
 }
 
-func NewGpuWorker(cfg *WorkerConfig) (*GpuWorker, error) {
+func NewGpuWorker(cfg *WorkerConfig) (Worker, error) {
+	if GetGpuNumber() == 0 {
+		log.Warn().Msg("No gpu found and fallback to cpu")
+		return NewCpuWorker()
+	}
 	//TODO use first gpu for now, plan to support multiple gpu in future
 	cuCtx, err := setupGPU()
 	if err != nil {
@@ -89,9 +98,9 @@ func (w *GpuWorker) FindSolution(ctx context.Context, task *Task) {
 	hashesCompleted := uint64(0)
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
-	const thread = 2048 //todo make it configurable
-	const block = 512   //todo confuse why limit at 512
-	const batch_size = thread * block
+	const grid = 2048 //todo make it configurable
+	const block = 512 //todo confuse why limit at 512
+	const batch_size = grid * block
 OUT:
 	for {
 		select {
@@ -111,7 +120,7 @@ OUT:
 			return
 		}
 
-		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), thread, block)
+		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), grid, block)
 		if err != nil {
 			log.Err(err).Msg("InvokeGpu fail")
 			continue
@@ -133,17 +142,20 @@ OUT:
 		hashNumber := new(uint256.Int).SetBytes(result[:])
 		// Check if the hash is below the target difficulty
 		if hashNumber.Cmp(task.Difficulty) == -1 {
-			log.Info().Str("Elapsed Time", time.Since(startTime).String()).
+			log.Info().Int("WorkerID", w.cfg.id).Str("Elapsed Time", time.Since(startTime).String()).
 				Str("challenge", new(big.Int).SetBytes(task.Challenge[:]).String()).
 				Str("Nonce", maybeNonce.String()).
 				Str("HashNumber", hashNumber.String()).
 				Msg("Success!")
-			w.cfg.resultCh <- TaskResult{
+			select {
+			case w.cfg.resultCh <- TaskResult{
 				Id:    task.Id,
 				Nonce: uint256.MustFromBig(maybeNonce),
+			}:
+			default: //avoid deadlock
 			}
 		} else {
-			panic("cuda algo may have error")
+			log.Error().Msg("This branch should never happen, only when cuda algo may have error")
 		}
 	}
 }
@@ -168,7 +180,7 @@ func setupGPU() (*cu.Ctx, error) {
 	return cu.NewContext(dev, cu.SchedAuto), nil
 }
 
-func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]byte, startNonce *big.Int, difficulty *big.Int, thread, block int) (*big.Int, error) {
+func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]byte, startNonce *big.Int, difficulty *big.Int, grid, block int) (*big.Int, error) {
 	dIn1, err := cuCtx.MemAllocManaged(32, cu.AttachGlobal)
 	if err != nil {
 		return nil, err
@@ -199,7 +211,7 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 	slices.Reverse(difficutyBytes) //to big
 	cuCtx.MemcpyHtoD(dIn3, unsafe.Pointer(&difficutyBytes[0]), 32)
 
-	batch_size := int64(thread * block)
+	batch_size := int64(grid * block)
 	args := []unsafe.Pointer{
 		unsafe.Pointer(&dIn1),
 		unsafe.Pointer(&dIn2),
@@ -208,7 +220,7 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 		unsafe.Pointer(&dOut),
 	}
 
-	cuCtx.LaunchKernel(fn, thread, 1, 1, block, 1, 1, 1, cu.Stream{}, args)
+	cuCtx.LaunchKernel(fn, grid, 1, 1, block, 1, 1, 1, cu.Stream{}, args)
 	cuCtx.Synchronize()
 
 	hOut := make([]byte, 32)

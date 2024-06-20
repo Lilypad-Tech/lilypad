@@ -22,7 +22,7 @@ type CpuWorker struct {
 	quit  chan chan struct{}
 }
 
-func NewCpuWorker(cfg *WorkerConfig) (*CpuWorker, error) {
+func NewCpuWorker(cfg *WorkerConfig) (Worker, error) {
 	return &CpuWorker{
 		cfg:  cfg,
 		quit: make(chan chan struct{}, 1),
