@@ -3,7 +3,7 @@ name: Build darwin-arm64 binary (no gpu)
 on:
   push:
     branches:
-      - feat/cuda_binary
+      - main
 
 jobs:
   build:
