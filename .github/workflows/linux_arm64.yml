@@ -1,0 +1,66 @@
+name: Build linux-arm64 binary (GPU)
+
+on:
+  push:
+    branches:
+      - feat/cuda_binary
+
+jobs:
+
+  build:
+    runs-on: linux-arm64
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Add NVIDIA package repository
+      run: |
+        sudo apt-get install -y gnupg2 curl
+        sudo mkdir -p /usr/share/keyrings
+        curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-drivers.gpg
+        echo "deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
+
+    - name: Update package lists
+      run: sudo apt-get update || true  # Ignore errors from this command
+
+    - name: Install NVIDIA CUDA Toolkit
+      run: |
+        sudo apt-get install -y nvidia-cuda-toolkit
+        export PATH=/usr/local/cuda/bin:$PATH
+
+    - name: Build for linux/arm64
+      env:
+        GOOS: linux
+        GOARCH: arm64
+        CGO_ENABLED: 1
+        CUDA_HOME: /usr/local/cuda
+        LD_LIBRARY_PATH: /usr/local/cuda/lib64:$LD_LIBRARY_PATH
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+        echo "CUDA_HOME: $CUDA_HOME"
+        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+        go build -o "${output_dir}/${output_name}" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-arm64-binary
+        path: build/linux-arm64/lilypad-linux-arm64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/linux-arm64
+        echo "Build complete"
