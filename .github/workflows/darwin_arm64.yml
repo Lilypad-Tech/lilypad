@@ -1,4 +1,4 @@
-name: Build darwin-arm64 binary
+name: Build darwin-arm64 binary (no gpu)
 
 on:
   push:
@@ -33,6 +33,8 @@ jobs:
 
         # Debug: Print environment variables for the build
         echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+
+        echo "excluding CUDA. specify 'cuda' build tag to include it."
 
         go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
 
