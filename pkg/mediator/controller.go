@@ -124,7 +124,7 @@ func (controller *MediatorController) subscribeToSolver() error {
 }
 
 func (controller *MediatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error)
+	errorChan := make(chan error, 1)
 	// get the local subscriptions setup
 	err := controller.subscribeToSolver()
 	if err != nil {
