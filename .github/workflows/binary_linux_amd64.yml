@@ -1,6 +1,9 @@
 name: Build linux-amd64 binary
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - feat/cuda_binary
 
 jobs:
 
