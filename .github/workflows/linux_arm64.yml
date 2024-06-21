@@ -32,7 +32,7 @@ jobs:
         sudo apt-get install -y nvidia-cuda-toolkit
         export PATH=/usr/local/cuda/bin:$PATH
 
-    - name: Build for linux/amd64
+    - name: Build for linux/arm64
       env:
         GOOS: linux
         GOARCH: arm64
@@ -56,5 +56,5 @@ jobs:
 
     - name: Verify Build Output
       run: |
-        ls -la build/linux-amd64
+        ls -la build/linux-arm64
         echo "Build complete"
