@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - gorka/ci-trigger-release
 
 jobs:
   build:
