@@ -32,9 +32,6 @@ jobs:
         sudo apt-get install -y nvidia-cuda-toolkit
         export PATH=/usr/local/cuda/bin:$PATH
 
-    - name: Install NVIDIA CUDA Toolkit
-      run: sudo apt-get install -y nvidia-cuda-toolkit
-  
     - name: Build for linux/amd64
       env:
         GOOS: linux
