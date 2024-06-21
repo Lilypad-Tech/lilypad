@@ -1,4 +1,4 @@
-name: Build linux-amd64 binary
+name: Build linux-arm64 binary
 
 on:
   push:
