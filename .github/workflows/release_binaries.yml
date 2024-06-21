@@ -1,18 +1,224 @@
 name: Release binaries
 
 on:
-  workflow_run:
-    workflows:
-      - linux_amd64.yml
-      - linux_arm64.yml
-      - darwin_amd64.yml
-      - darwin_arm64.yml
-    types:
-      - completed
+  # workflow_run:
+    # workflows:
+      # - Build darwin-amd64 binary (no gpu)
+      # - Build darwin-arm64 binary (no gpu)
+      # - Build linux-amd64 binary (GPU)
+      # - Build linux-arm64 binary (GPU)
+    # types:
+      # - completed
+  push:
+    branches:
+      - gorka/ci-trigger-release
 
 jobs:
+  build_linux_arm64:
+    runs-on: linux-arm64
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Add NVIDIA package repository
+      run: |
+        sudo apt-get install -y gnupg2 curl
+        sudo mkdir -p /usr/share/keyrings
+        curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-drivers.gpg
+        echo "deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
+
+    - name: Update package lists
+      run: sudo apt-get update || true  # Ignore errors from this command
+
+    - name: Install NVIDIA CUDA Toolkit
+      run: |
+        sudo apt-get install -y nvidia-cuda-toolkit
+        export PATH=/usr/local/cuda/bin:$PATH
+
+    - name: Build for linux/arm64
+      env:
+        GOOS: linux
+        GOARCH: arm64
+        CGO_ENABLED: 1
+        CUDA_HOME: /usr/local/cuda
+        LD_LIBRARY_PATH: /usr/local/cuda/lib64:$LD_LIBRARY_PATH
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+        echo "CUDA_HOME: $CUDA_HOME"
+        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+        go build -o "${output_dir}/${output_name}" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-arm64-binary
+        path: build/linux-arm64/lilypad-linux-arm64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/linux-arm64
+        echo "Build complete"
+  build_linux_amd64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Add NVIDIA package repository
+      run: |
+        sudo apt-get install -y gnupg2 curl
+        sudo mkdir -p /usr/share/keyrings
+        curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-drivers.gpg
+        echo "deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
+
+    - name: Update package lists
+      run: sudo apt-get update || true  # Ignore errors from this command
+
+    - name: Install NVIDIA CUDA Toolkit
+      run: |
+        sudo apt-get install -y nvidia-cuda-toolkit
+        export PATH=/usr/local/cuda/bin:$PATH
+
+    - name: Build for linux/amd64
+      env:
+        GOOS: linux
+        GOARCH: amd64
+        CGO_ENABLED: 1
+        CUDA_HOME: /usr/local/cuda
+        LD_LIBRARY_PATH: /usr/local/cuda/lib64:$LD_LIBRARY_PATH
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+        echo "CUDA_HOME: $CUDA_HOME"
+        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+        go build -o "${output_dir}/${output_name}" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-amd64-binary
+        path: build/linux-amd64/lilypad-linux-amd64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/linux-amd64
+        echo "Build complete"
+  build_darwin_arm64:
+    runs-on: macos-latest #uses M1
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Check architecture
+      run: uname -m
+
+    - name: Build for darwin/arm64
+      env:
+        GOOS: darwin
+        GOARCH: arm64
+        CGO_ENABLED: 1
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+
+        echo "excluding CUDA. specify 'cuda' build tag to include it."
+
+        go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: darwin-arm64-binary
+        path: build/darwin-arm64/lilypad-darwin-arm64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/darwin-arm64
+        echo "Build complete"
+  build_darwin_amd64:
+    runs-on: macos-13 #uses amd64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Check architecture
+      run: uname -m
+
+    - name: Build for darwin/amd64
+      env:
+        GOOS: darwin
+        GOARCH: amd64
+        CGO_ENABLED: 1
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+
+        echo "excluding CUDA. specify 'cuda' build tag to include it."
+
+        go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: darwin-amd64-binary
+        path: build/darwin-amd64/lilypad-darwin-amd64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/darwin-amd64
+        echo "Build complete"
   release:
-    if: ${{ github.event.workflow_run.head_branch == 'main' }}  # Only run this job on the main branch
+    needs: [build_darwin_amd64, build_darwin_arm64, build_linux_amd64, build_linux_arm64]
+    #    if: ${{ github.event.workflow_run.head_branch == 'main' }}  # Only run this job on the main branch
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -34,7 +240,7 @@ jobs:
       with:
         name: linux-arm64-binary
         path: /tmp/build/lilypad-linux-arm64
-  
+
     - name: Download darwin-amd64 binary
       uses: actions/download-artifact@v3
       with:
