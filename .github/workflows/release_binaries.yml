@@ -12,7 +12,7 @@ on:
 
 jobs:
   release:
-    if: github.ref == 'refs/heads/main'  # Only run this job on the main branch
+    if: ${{ github.event.workflow_run.head_branch == 'main' }}  # Only run this job on the main branch
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
