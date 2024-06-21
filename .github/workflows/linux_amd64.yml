@@ -3,7 +3,7 @@ name: Build linux-amd64 binary (GPU)
 on:
   push:
     branches:
-      - feat/cuda_binary
+      - main
 
 jobs:
 
