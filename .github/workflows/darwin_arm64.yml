@@ -1,0 +1,44 @@
+name: Build darwin-arm64 binary
+
+on:
+  push:
+    branches:
+      - feat/cuda_binary
+
+jobs:
+  build:
+    runs-on: macos-latest #uses M1
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Check architecture
+      run: uname -m
+
+    - name: Build for darwin/arm64
+      env:
+        GOOS: darwin
+        GOARCH: arm64
+        CGO_ENABLED: 1
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+
+        go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/darwin-arm64
+        echo "Build complete"
