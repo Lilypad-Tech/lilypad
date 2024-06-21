@@ -1,0 +1,101 @@
+name: Release binaries
+
+on:
+  workflow_run:
+    workflows:
+      - linux_amd64.yml
+      - linux_arm64.yml
+      - darwin_amd64.yml
+      - darwin_arm64.yml
+    types:
+      - completed
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'  # Only run this job on the main branch
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Git
+      run: |
+        git fetch --tags
+        SHORTSHA=$(git rev-parse --short HEAD)
+        echo "SHORTSHA=${SHORTSHA}" >> $GITHUB_ENV
+
+    - name: Download linux-amd64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: linux-amd64-binary
+        path: /tmp/build/lilypad-linux-amd64
+
+    - name: Download linux-arm64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: linux-arm64-binary
+        path: /tmp/build/lilypad-linux-arm64
+  
+    - name: Download darwin-amd64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: darwin-amd64-binary
+        path: /tmp/build/lilypad-darwin-amd64
+
+    - name: Download darwin-arm64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: darwin-arm64-binary
+        path: /tmp/build/lilypad-darwin-arm64
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v2.0.0-${{ env.SHORTSHA }}
+        release_name: "Release v2.0.0-${{ env.SHORTSHA }}"
+        body: "Release v2.0.0-${{ env.SHORTSHA }}"
+        draft: false
+        prerelease: false
+
+
+    - name: Upload Release Asset - linux-amd64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /tmp/build/lilypad-linux-amd64
+        asset_name: lilypad-linux-amd64
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset - linux-arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /tmp/build/lilypad-linux-arm64
+        asset_name: lilypad-linux-arm64
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset - darwin-arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /tmp/build/lilypad-darwin-arm64
+        asset_name: lilypad-darwin-arm64
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset - darwin-amd64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /tmp/build/lilypad-darwin-amd64
+        asset_name: lilypad-darwin-amd64
+        asset_content_type: application/octet-stream
