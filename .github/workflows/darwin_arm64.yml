@@ -40,6 +40,12 @@ jobs:
 
         echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
 
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: darwin-arm64-binary
+        path: build/darwin-arm64/lilypad-darwin-arm64
+
     - name: Verify Build Output
       run: |
         ls -la build/darwin-arm64

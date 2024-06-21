@@ -54,6 +54,12 @@ jobs:
 
         echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
 
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-arm64-binary
+        path: build/linux-arm64/lilypad-linux-arm64
+
     - name: Verify Build Output
       run: |
         ls -la build/linux-arm64
