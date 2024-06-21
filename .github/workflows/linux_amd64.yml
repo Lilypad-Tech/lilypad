@@ -1,4 +1,4 @@
-name: Build linux-amd64 binary
+name: Build linux-amd64 binary (GPU)
 
 on:
   push:
