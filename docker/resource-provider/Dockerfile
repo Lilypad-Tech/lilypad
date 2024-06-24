@@ -8,6 +8,7 @@ ARG NETWORK=testnet
 ENV LOG_LEVEL=info
 ENV OFFER_GPU=1
 ENV BACALHAU_API_HOST="localhost"
+ENV WEB3_PRIVATE_KEY=""
 
 # Install necessary dependencies
 RUN apk update
@@ -35,14 +36,14 @@ ENV PATH="/usr/local/bin:${PATH}"
 # Create a startup script to run both services simultaneously
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-RUN echo "cat run" >> run
 # Launch docker daemon
 RUN echo "dockerd &" >> run
 RUN echo "while ! docker -v; do sleep 1; done" >> run
+RUN echo "sleep 3" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK}" >> run
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} &" >> run
 RUN echo "wait -n" >> run
 RUN chmod +x run
 
