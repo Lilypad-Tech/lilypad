@@ -24,10 +24,10 @@ contract LilypadPow is Ownable, Initializable {
 
     // todo  difficulty may need to adjust in test
     // this difficulty was calculate with this tool https://github.com/hunjixin/pow-tool/tree/main/difficulty
-    // Theoretically  A machine with a hash rate of 2M has a probability of no more than 0.01% of not finding a nonce that meets the difficulty within 20 blocks.
+    // Theoretically  A machine with a hash rate of 8M has a probability of no more than 0.01% of not finding a nonce that meets the difficulty within 20 blocks.
     // However, this issue has not been well validated in practice. it can solve nonce within one minute most of the time.
-    uint256 public immutable TARGET_DIFFICULTY =
-        2221842798488549893930113429797694032668256326301844165995655665287168;
+    uint256 public targetDifficulty =
+        555460709263765739036470010701196062214039696708679004195670928130048;
     mapping(address => POWSubmission[]) public powSubmissions;
     mapping(address => uint256) public minerSubmissionCount; //used for loop powsubmission
     address[] public miners;
@@ -67,9 +67,13 @@ contract LilypadPow is Ownable, Initializable {
         emit GenerateChallenge(challenge, difficulty);
     }
 
+    function change_difficulty(uint256 difficulty) public onlyOwner {
+        targetDifficulty  = difficulty;
+    }
+
     function calculate_difficulty() public view returns (uint256) {
         uint256 percentChange = 90 + (block.prevrandao % 21);
-        return (TARGET_DIFFICULTY * percentChange) / 100;
+        return (targetDifficulty * percentChange) / 100;
     }
 
     // submitWork miner submint a nonce value, sc check the difficulty and emit a valid pow event when success

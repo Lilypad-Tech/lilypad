@@ -6,6 +6,7 @@ package resourceprovider
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"math/big"
 	"os"
 	"slices"
@@ -203,26 +204,28 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 		return nil, err
 	}
 
+	batch := int64(grid * block)
+	args := []unsafe.Pointer{
+		unsafe.Pointer(&dIn1),
+		unsafe.Pointer(&dIn2),
+		unsafe.Pointer(&dIn3),
+		unsafe.Pointer(&batch),
+		unsafe.Pointer(&dOut),
+	}
+
 	cuCtx.MemcpyHtoD(dIn1, unsafe.Pointer(&challenge[0]), 32)
 
 	startNonceBytes := math.U256Bytes(startNonce)
-	slices.Reverse(startNonceBytes)
 	cuCtx.MemcpyHtoD(dIn2, unsafe.Pointer(&startNonceBytes[0]), 32)
 
 	difficutyBytes := math.U256Bytes(difficulty)
 	slices.Reverse(difficutyBytes) //to big
 	cuCtx.MemcpyHtoD(dIn3, unsafe.Pointer(&difficutyBytes[0]), 32)
 
-	batch_size := int64(grid * block)
-	args := []unsafe.Pointer{
-		unsafe.Pointer(&dIn1),
-		unsafe.Pointer(&dIn2),
-		unsafe.Pointer(&dIn3),
-		unsafe.Pointer(&batch_size),
-		unsafe.Pointer(&dOut),
-	}
-
 	cuCtx.LaunchKernel(fn, grid, 1, 1, block, 1, 1, 1, cu.Stream{}, args)
+	if err = cuCtx.Error(); err != nil {
+		return nil, fmt.Errorf("launch kernel fail maybe decrease threads help (%w)", err)
+	}
 	cuCtx.Synchronize()
 
 	hOut := make([]byte, 32)
@@ -231,7 +234,7 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 	cuCtx.MemFree(dIn1)
 	cuCtx.MemFree(dIn2)
 	cuCtx.MemFree(dIn3)
-	cuCtx.MemFree(dIn2)
 	cuCtx.MemFree(dOut)
+
 	return new(big.Int).SetBytes(hOut), nil
 }
