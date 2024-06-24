@@ -27,6 +27,7 @@ type JobCreatorController struct {
 	log                   *system.ServiceLogger
 	jobOfferSubscriptions []JobOfferSubscriber
 	moduleAllowlist       []string
+	enableAllowlist       bool
 }
 
 const (
@@ -161,29 +162,36 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 }
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	// Initial fetch of the module allowlist
-	err := controller.UpdateModuleAllowlist()
-	if err != nil {
-		controller.log.Error("failed to fetch module allowlist", err)
-	}
-
-	// Periodic update logic here using a time.Ticker
-	ticker := time.NewTicker(1 * time.Hour)
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				controller.UpdateModuleAllowlist()
-			case <-ctx.Done():
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-
 	errorChan := make(chan error)
 
-	err = controller.subscribeToSolver()
+	// Check the enableAllowlist flag to determine whether to manage the module allowlist
+	if enableAllowlist {
+		// Initial fetch of the module allowlist
+		err := controller.UpdateModuleAllowlist()
+		if err != nil {
+			controller.log.Error("failed to fetch module allowlist", err)
+		}
+
+		// Periodic update logic here using a time.Ticker
+		ticker := time.NewTicker(1 * time.Hour)
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					err := controller.UpdateModuleAllowlist()
+					if err != nil {
+						controller.log.Error("periodic module allowlist update failed", err)
+					}
+				case <-ctx.Done():
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+	}
+
+	// Setup subscriptions and other initialization tasks
+	err := controller.subscribeToSolver()
 	if err != nil {
 		errorChan <- err
 		return errorChan
