@@ -20,11 +20,9 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/theckman/yacspin v0.13.12
-	gorgonia.org/cu v0.9.6
+	gorgonia.org/cu v0.9.7-0.20240623234718-3cd40db700e9
 	k8s.io/apimachinery v0.28.3
 )
-
-replace gorgonia.org/cu => github.com/hunjixin/cu v0.0.0-20240618140529-d11ba74b75b6
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
