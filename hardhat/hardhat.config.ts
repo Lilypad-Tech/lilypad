@@ -29,21 +29,6 @@ const config: HardhatUserConfig = {
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       accounts: [getAccount('admin').privateKey],
     },
-    arbitrumOne: {
-      chainId: 42161,
-      url: 'https://arb1.arbitrum.io/rpc',
-      accounts: [getAccount('admin').privateKey],
-    },
-    arbitrumNova: {
-      chainId: 42170,
-      url: 'https://nova.arbitrum.io/rpc',
-      accounts: [getAccount('admin').privateKey],
-    },
-    arbitrumSepolia: {
-      url: 'https://sepolia-rollup.arbitrum.io/rpc',
-      chainId: 421614,
-      accounts: [getAccount('admin').privateKey],
-    },
     dev: {
       url: NETWORK_URL,
       chainId: CHAIN_ID,
