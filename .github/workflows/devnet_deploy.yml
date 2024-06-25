@@ -1,9 +1,6 @@
 name: Deploy Devnet
 
-on:
-  push:
-    branches:
-      - main
+on: workflow_dispatch
 
 jobs:
   solver-build-deploy:
