@@ -165,7 +165,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	errorChan := make(chan error)
 
 	// Check the enableAllowlist flag to determine whether to manage the module allowlist
-	if enableAllowlist {
+	if controller.enableAllowlist {
 		// Initial fetch of the module allowlist
 		err := controller.UpdateModuleAllowlist()
 		if err != nil {
