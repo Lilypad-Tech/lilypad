@@ -311,7 +311,6 @@ func (controller *JobCreatorController) solve() error {
 */
 
 // list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
-// list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *JobCreatorController) agreeToDeals() error {
 	// load the deals that are in DealNegotiating
 	// and do not have a TransactionsResourceProvider.Agree tx
