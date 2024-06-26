@@ -2,11 +2,10 @@ name: Publish Docker Image
 
 on:
   push:
-    # TODO: uncomment this before merge!
-    # branches:
-    #   - "main"
-    # tags:
-    #   - "v*"
+    branches:
+      - "main"
+    tags:
+      - "v*"
 
 jobs:
   docker:
