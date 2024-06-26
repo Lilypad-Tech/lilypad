@@ -5,13 +5,15 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"errors"
+	"math/big"
+	"time"
 
 	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -43,52 +45,26 @@ func StartCollectPowSubmission(ctx context.Context, we3Sdk *web3.Web3SDK, pgConn
 		return err
 	}
 
-	log.Info().Msg("Start to fix missing pow submission event, this may take some time")
-	err = fixMissingPowSubmissionEvent(ctx, we3Sdk, db)
-	if err != nil {
-		return err
-	}
-	log.Info().Msg("Finish fix missing pow submission event")
-
-	channel := web3.NewValidPOWSubmittedEventChannels()
-	go channel.Start(we3Sdk, ctx, cm)
-
-	channel.SubscribePowValidPOWSubmitted(func(pvp pow.PowValidPOWSubmitted) {
-		id := submissionId(pvp.WalletAddress, pvp.Challenge, pvp.NodeId)
-		dbModel := PowValidPOWSubmitted{
-			Id:                id,
-			WalletAddress:     pvp.WalletAddress.String(),
-			NodeId:            pvp.NodeId,
-			Nonce:             pvp.Nonce.String(),
-			StartTimestamp:    pvp.StartTimestamp.Int64(),
-			CompleteTimestamp: pvp.CompleteTimestamp.Int64(),
-			Challenge:         hex.EncodeToString(pvp.Challenge[:]),
-			Difficulty:        pvp.Difficulty.String(),
-		}
-
-		//todo 1 write log to efs?
-		//todo 2 need another command to check no event missing
-		_, err = db.NewInsert().Model(&dbModel).Ignore().Exec(ctx)
+	tk := time.NewTicker(time.Hour)
+	for {
+		log.Info().Msg("Start to fetch and check pow submission event, this may take some time")
+		err = fetchPowSubmissionEvent(ctx, we3Sdk, db)
 		if err != nil {
-			log.Err(err).Msgf("Unable to insert data to database")
-			return
+			return err
 		}
-		log.Info().
-			Str("address", dbModel.WalletAddress).
-			Str("nodeId", dbModel.NodeId).
-			Str("nonce", dbModel.Nonce).
-			Int64("start_timestamp", dbModel.StartTimestamp).
-			Int64("complete_timestamp", dbModel.CompleteTimestamp).
-			Str("challenge", dbModel.Challenge).
-			Str("difficulty", dbModel.Difficulty).
-			Msgf("Receive a valid pow submission")
-	})
+		log.Info().Msg("Finish fetch pow submission event")
 
-	<-ctx.Done()
+		select {
+		case <-ctx.Done():
+			return errors.New("cancel by context")
+		case <-tk.C:
+		}
+	}
+	//listen event not provider enough message
 	return nil
 }
 
-func fixMissingPowSubmissionEvent(ctx context.Context, we3Sdk *web3.Web3SDK, db *bun.DB) error {
+func fetchPowSubmissionEvent(ctx context.Context, we3Sdk *web3.Web3SDK, db *bun.DB) error {
 	bf := bloom.NewWithEstimates(1000000, 0.0001) //arbitary parameter, need to update if not enough
 	pageSize := 100
 	offset := 0
@@ -121,11 +97,17 @@ func fixMissingPowSubmissionEvent(ctx context.Context, we3Sdk *web3.Web3SDK, db 
 		return err
 	}
 	for _, addr := range addrs {
-		submissions, err := we3Sdk.Contracts.Pow.GetMinerPosSubmissions(we3Sdk.CallOpts, addr)
+		number, err := we3Sdk.Contracts.Pow.MinerSubmissionCount(we3Sdk.CallOpts, addr)
 		if err != nil {
 			return err
 		}
-		for _, submission := range submissions {
+
+		for i := int64(0); i < int64(number.Int64()); i++ {
+
+			submission, err := we3Sdk.Contracts.Pow.PowSubmissions(we3Sdk.CallOpts, addr, big.NewInt(i))
+			if err != nil {
+				return err
+			}
 			id := submissionId(submission.WalletAddress, submission.Challenge, submission.NodeId)
 			count, err := db.NewSelect().Model((*PowValidPOWSubmitted)(nil)).Where("id = ?", id).Count(ctx)
 			if err != nil {
@@ -138,29 +120,32 @@ func fixMissingPowSubmissionEvent(ctx context.Context, we3Sdk *web3.Web3SDK, db 
 					WalletAddress:     submission.WalletAddress.String(),
 					NodeId:            submission.NodeId,
 					Nonce:             submission.Nonce.String(),
-					StartTimestamp:    submission.StartTimestamp.Int64(),
-					CompleteTimestamp: submission.CompleteTimestamp.Int64(),
+					StartTimestamp:    submission.StartTimestap.Int64(),
+					CompleteTimestamp: submission.CompleteTimestap.Int64(),
 					Challenge:         hex.EncodeToString(submission.Challenge[:]),
 					Difficulty:        submission.Difficulty.String(),
 				}
 				_, err = db.NewInsert().Model(&dbModel).Ignore().Exec(ctx)
 				if err != nil {
-					return nil
+					return err
 				}
 				bf.Add(submission.Challenge[:])
+				duration := time.Duration(dbModel.CompleteTimestamp-dbModel.StartTimestamp) * time.Second
 				log.Info().
 					Str("address", dbModel.WalletAddress).
 					Str("nodeId", dbModel.NodeId).
 					Str("nonce", dbModel.Nonce).
 					Int64("start_timestamp", dbModel.StartTimestamp).
 					Int64("complete_timestamp", dbModel.CompleteTimestamp).
+					Str("duration", duration.String()).
 					Str("challenge", dbModel.Challenge).
 					Str("difficulty", dbModel.Difficulty).
-					Msgf("Fix a missing value")
+					Msgf("Record a new value")
 			} else {
 				log.Debug().Msg("A value missed in bloomfilter, consider to increase bloomfilter argument")
 			}
 		}
+
 	}
 	return nil
 }

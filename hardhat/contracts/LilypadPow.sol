@@ -9,8 +9,8 @@ contract LilypadPow is Ownable, Initializable {
         address walletAddress;
         string nodeId;
         uint256 nonce;
-        uint256 start_timestamp;
-        uint256 complete_timestamp; //used to estimate hashrate of this submission
+        uint256 start_timestap;
+        uint256 complete_timestap; //used to estimate hashrate of this submission
         bytes32 challenge; //record this to provent user never change challenge
         uint256 difficulty;
     }
@@ -29,6 +29,7 @@ contract LilypadPow is Ownable, Initializable {
     uint256 public targetDifficulty =
         555460709263765739036470010701196062214039696708679004195670928130048;
     mapping(address => POWSubmission[]) public powSubmissions;
+    mapping(address => uint256) public minerSubmissionCount; //used for loop powsubmission
     address[] public miners;
 
     mapping(address => Challenge) public lastChallenges;
@@ -44,13 +45,9 @@ contract LilypadPow is Ownable, Initializable {
     // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
     function initialize() public initializer {}
 
-    function getMiners() public view returns (address[] memory) {
+    function getMiners() external view returns (address[] memory) {
         return miners;
     }
-
-   function getMinerPosSubmissions(address addr) public view returns (POWSubmission[] memory) {
-        return powSubmissions[addr];
-   }
 
     // generateChallenge gen a byte32 value as challenge value, Sc store this one for verify
     function generateChallenge(string calldata nodeId) external {
@@ -106,10 +103,13 @@ contract LilypadPow is Ownable, Initializable {
 
         validProofs++;
 
-        POWSubmission[] storage posSubmissions = powSubmissions[msg.sender];
-        if (posSubmissions.length == 0) {
+        if (minerSubmissionCount[msg.sender] == 0) {
+            //first submit, append to miners
             miners.push(msg.sender);
         }
+
+        minerSubmissionCount[msg.sender]++; //increase miner's valid proofs
+        POWSubmission[] storage posSubmissions = powSubmissions[msg.sender];
         posSubmissions.push(
             POWSubmission(
                 msg.sender,
@@ -128,7 +128,6 @@ contract LilypadPow is Ownable, Initializable {
             msg.sender,
             nodeId,
             nonce,
-            lastChallenge.timestamp,
             block.timestamp,
             lastChallenge.challenge,
             lastChallenge.difficulty
@@ -146,11 +145,10 @@ contract LilypadPow is Ownable, Initializable {
     }
 
     event ValidPOWSubmitted(
-        address walletAddress,
+        address indexed walletAddress,
         string nodeId,
         uint256 nonce,
-        uint256 start_timestamp,
-        uint256 complete_timestamp,
+        uint256 timestamp,
         bytes32 challenge,
         uint256 difficulty
     );

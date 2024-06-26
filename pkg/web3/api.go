@@ -298,24 +298,6 @@ func (sdk *Web3SDK) SubmitWork(
 	return tx.Hash(), validPosSubmission, nil
 }
 
-func (sdk *Web3SDK) GetPowSubmission(ctx context.Context) (map[common.Address][]pow.LilypadPowPOWSubmission, error) {
-	miners, err := sdk.Contracts.Pow.GetMiners(sdk.CallOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	results := make(map[common.Address][]pow.LilypadPowPOWSubmission)
-	for _, minerAddr := range miners {
-		powSubmissions, err := sdk.Contracts.Pow.GetMinerPosSubmissions(sdk.CallOpts, minerAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		results[minerAddr] = powSubmissions
-	}
-	return results, nil
-}
-
 func (sdk *Web3SDK) SendPowSignal(ctx context.Context) (*pow.PowNewPowRound, error) {
 	tx, err := sdk.Contracts.Pow.TriggerNewPowRound(sdk.TransactOpts)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
@@ -41,8 +42,9 @@ func (s *ValidPOWSubmittedEventChannels) Start(
 		return sdk.Contracts.Pow.WatchValidPOWSubmitted(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.powValidPOWSubmittedChan,
+			[]common.Address{},
 		)
-	}
+	} //todo change in future
 
 	powValidPOWSubmittedSub, err = connectPowValidPOWSubmittedSub()
 	if err != nil {
