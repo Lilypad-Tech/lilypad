@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -35,6 +36,7 @@ func StartCollectPowSubmission(ctx context.Context, we3Sdk *web3.Web3SDK, pgConn
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(pgConnectionString)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 
+	fmt.Println(we3Sdk.Options.PowAddress)
 	_, err := db.NewCreateTable().IfNotExists().Model((*PowValidPOWSubmitted)(nil)).Exec(ctx)
 	if err != nil {
 		return err
@@ -135,6 +137,7 @@ func fetchPowSubmissionEvent(ctx context.Context, we3Sdk *web3.Web3SDK, db *bun.
 					Str("address", dbModel.WalletAddress).
 					Str("nodeId", dbModel.NodeId).
 					Str("nonce", dbModel.Nonce).
+					Str("readabletime", time.Unix(dbModel.StartTimestamp, 0).String()).
 					Int64("start_timestamp", dbModel.StartTimestamp).
 					Int64("complete_timestamp", dbModel.CompleteTimestamp).
 					Str("duration", duration.String()).
