@@ -1,0 +1,15 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "go",
+      "bootstrap-sha": "27b906f3c4cef0e2e57a5e058dd1f93dc2049980"
+    }
+  },
+  "pull-request-header": ":frog: I have created a release _ribbit ribbit_",
+  "pull-request-footer": "Lilypad: Unleash Idle Compute Power",
+  "plugins": [
+    {
+      "type": "sentence-case"
+    }
+  ]
+}
