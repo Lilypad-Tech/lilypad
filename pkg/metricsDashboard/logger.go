@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
@@ -16,13 +17,24 @@ const nodeInfoEndpoint = "nodes"
 const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
 
+var host = os.Getenv("API_HOST")
+
 func trackEvent(path string, json string) {
-	var host = os.Getenv("API_HOST")
+	fmt.Println("===========<<")
+	fmt.Println()
+	fmt.Println(host, json)
+	fmt.Println()
+	fmt.Println("===========<<")
 	if host == "" {
 		return
 	}
 
+	fmt.Println("===========>>")
+	fmt.Println()
 	var url = host + "metrics-dashboard/" + path
+	fmt.Println()
+	fmt.Println("===========>>")
+	fmt.Println(url)
 
 	data := []byte(json)
 
@@ -39,6 +51,13 @@ func trackEvent(path string, json string) {
 }
 
 func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
+	fmt.Println("===========")
+	fmt.Println()
+	fmt.Println("TrackJobOfferUpdate")
+	fmt.Println(evOffer)
+	spew.Dump(evOffer)
+	fmt.Println()
+	fmt.Println("===========")
 	var module = evOffer.JobOffer.Module.Name
 	if module == "" {
 		module = evOffer.JobOffer.Module.Repo + ":" + evOffer.JobOffer.Module.Hash

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - gorka/debug-job-creator
 
 jobs:
   solver-build-deploy:

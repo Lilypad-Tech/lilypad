@@ -64,9 +64,17 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 		return errorChan
 	}
 
-	jobCreator.SubscribeToJobOfferUpdates(metricsDashboard.TrackJobOfferUpdate)
+	//jobCreator.SubscribeToJobOfferUpdates(metricsDashboard.TrackJobOfferUpdate)
 
 	jobCreator.controller.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
+
+		fmt.Printf(" --------------------------------------\n")
+		fmt.Printf(" --------------------------------------\n")
+		spew.Dump(evOffer)
+		fmt.Printf(" --------------------------------------\n")
+		fmt.Printf(" --------------------------------------\n")
+		metricsDashboard.TrackJobOfferUpdate(evOffer)
+
 		if evOffer.State != data.GetAgreementStateIndex("ResultsAccepted") {
 			return
 		}
