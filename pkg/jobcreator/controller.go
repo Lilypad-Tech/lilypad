@@ -31,7 +31,7 @@ type JobCreatorController struct {
 }
 
 const (
-	allowlistURL = "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/main/allowlist.txt"
+	ALLOWLIST_URL = "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/main/allowlist.txt"
 
 	// the background "even if we have not heard of an event" loop
 	// i.e. things will not wait 10 seconds - the control loop
@@ -243,7 +243,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 
 func (controller *JobCreatorController) UpdateModuleAllowlist() error {
 	// Call the new helper function with a 5-second timeout!
-	body, err := http.GetRequestWithTimeout(allowlistURL, 5*time.Second)
+	body, err := http.GetRequestWithTimeout(ALLOWLIST_URL, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to fetch module allowlist: %s", err)
 	}
