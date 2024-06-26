@@ -128,6 +128,7 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 				controller.log.Error("solver event", fmt.Errorf("RP received nil job offer"))
 				return
 			}
+			metricsDashboard.TrackJobOfferUpdate(*ev.JobOffer)
 			for _, sub := range controller.jobOfferSubscriptions {
 				go sub(*ev.JobOffer)
 			}
