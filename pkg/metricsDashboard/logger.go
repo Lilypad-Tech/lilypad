@@ -28,12 +28,16 @@ func trackEvent(path string, json string) {
 	data := []byte(json)
 
 	client := &http.Client{Timeout: time.Second * 1}
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		fmt.Printf("error setting up the request: %s", err)
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error sending the request: %s", err)
 		return
 	}
 	resp.Body.Close()
