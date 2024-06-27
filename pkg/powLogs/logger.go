@@ -1,12 +1,10 @@
 package powLogs
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"os"
-	"time"
+
+	"github.com/lilypad-tech/lilypad/pkg/http"
 )
 
 type PowLog struct {
@@ -24,34 +22,14 @@ const eventsEndpoint = "events"
 
 var host = os.Getenv("API_HOST")
 
-func trackEvent(path string, json string) {
+func TrackEvent(data PowLog) {
 	if host == "" {
 		return
 	}
 
-	var url = host + namespace + "/" + path
-
-	data := []byte(json)
-
-	client := &http.Client{Timeout: time.Second * 1}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		fmt.Printf("error setting up the request: %s", err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("error sending the request: %s", err)
-		return
-	}
-	resp.Body.Close()
-}
-
-func TrackEvent(data PowLog) {
+	var url = host + namespace + "/" + eventsEndpoint
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	trackEvent(eventsEndpoint, payload)
+	http.GenericJSONPostClient(url, payload)
 }
