@@ -1,49 +1,33 @@
 package metricsDashboard
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/http"
 )
 
 const jobsEndpoint = "jobs"
 const nodeInfoEndpoint = "nodes"
 const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
+const namespace = "metrics-dashboard"
 
 var host = os.Getenv("API_HOST")
 
-func trackEvent(path string, json string) {
-	if host == "" {
-		return
-	}
-
-	var url = host + "metrics-dashboard/" + path
-
-	data := []byte(json)
-
-	client := &http.Client{Timeout: time.Second * 1}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		fmt.Printf("error setting up the request: %s", err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("error sending the request: %s", err)
-		return
-	}
-	resp.Body.Close()
+type DealPayload struct {
+	ID               string
+	JobCreator       string
+	ResourceProvider string
+	JobID            string
 }
 
 func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
+	if host == "" {
+		return
+	}
 	var module = evOffer.JobOffer.Module.Name
 	if module == "" {
 		module = evOffer.JobOffer.Module.Repo + ":" + evOffer.JobOffer.Module.Hash
@@ -62,10 +46,14 @@ func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	trackEvent(jobsEndpoint, payload)
+	url := host + namespace + "/" + jobsEndpoint
+	http.GenericJSONPostClient(url, payload)
 }
 
 func TrackNodeInfo(resourceOffer data.ResourceOffer) {
+	if host == "" {
+		return
+	}
 	data := map[string]interface{}{
 		"ID":      resourceOffer.ResourceProvider,
 		"GPU":     resourceOffer.Spec.GPU,
@@ -76,7 +64,8 @@ func TrackNodeInfo(resourceOffer data.ResourceOffer) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	trackEvent(nodeInfoEndpoint, payload)
+	url := host + namespace + "/" + nodeInfoEndpoint
+	http.GenericJSONPostClient(url, payload)
 }
 
 type NodeConnectionParams struct {
@@ -87,6 +76,9 @@ type NodeConnectionParams struct {
 }
 
 func TrackNodeConnectionEvent(params NodeConnectionParams) {
+	if host == "" {
+		return
+	}
 	data := map[string]interface{}{
 		"ID":          params.ID,
 		"Event":       params.Event,
@@ -97,19 +89,17 @@ func TrackNodeConnectionEvent(params NodeConnectionParams) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	trackEvent(nodeConnectionEndpoint, payload)
-}
-
-type DealPayload struct {
-	ID               string
-	JobCreator       string
-	ResourceProvider string
-	JobID            string
+	url := host + namespace + "/" + nodeConnectionEndpoint
+	http.GenericJSONPostClient(url, payload)
 }
 
 func TrackDeal(params DealPayload) {
+	if host == "" {
+		return
+	}
 	byts, _ := json.Marshal(params)
 	payload := string(byts)
 
-	trackEvent(dealsEndpoint, payload)
+	url := host + namespace + "/" + dealsEndpoint
+	http.GenericJSONPostClient(url, payload)
 }
