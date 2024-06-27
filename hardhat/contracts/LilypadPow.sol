@@ -48,7 +48,7 @@ contract LilypadPow is Ownable, Initializable {
         return miners;
     }
 
-   function getMinerPosSubmissions(address addr) public view returns (POWSubmission[] memory) {
+   function getMinerPowSubmissions(address addr) public view returns (POWSubmission[] memory) {
         return powSubmissions[addr];
    }
 
