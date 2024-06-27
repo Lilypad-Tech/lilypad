@@ -159,6 +159,7 @@ jobs:
             -t $ECR_REPOSITORY_RESOURCE_PROVIDER \
             -f ./docker/resource-provider/Dockerfile \
             --build-arg="network=testnet" \
+            --build-arg="disable_pow=true" \
             .
           docker tag $ECR_REPOSITORY_RESOURCE_PROVIDER:latest $ECR_REGISTRY/$ECR_REPOSITORY_RESOURCE_PROVIDER:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_RESOURCE_PROVIDER:latest
