@@ -49,18 +49,20 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 	)
 	nodeIdCmd.Env = executor.bacalhauEnv
 
-	output, err := nodeIdCmd.CombinedOutput()
+	runOutputRaw, err := nodeIdCmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("error calling get id results %s", err.Error())
 	}
 
+	splitOutputs := strings.Split(strings.Trim(string(runOutputRaw), " \t\n"), "\n")
+	runOutput := splitOutputs[len(splitOutputs)-1]
 	var idResult struct {
 		ID       string
 		ClientID string
 	}
-	err = json.Unmarshal(output, &idResult)
+	err = json.Unmarshal([]byte(runOutput), &idResult)
 	if err != nil {
-		return "", fmt.Errorf("error unmarshalling job JSON %s", err.Error())
+		return "", fmt.Errorf("error unmarshalling job JSON %s %s", err.Error(), runOutputRaw)
 	}
 
 	return idResult.ID, nil
