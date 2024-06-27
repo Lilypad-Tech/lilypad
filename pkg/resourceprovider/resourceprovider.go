@@ -136,7 +136,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) err
 			Msgf("Mine and submit successfully")
 	}
 
-	log.Info().Msgf("Listen to new pow round signal, %d workers read to work", resourceProvider.options.Pow.NumWorkers)
+	log.Info().Msgf("Listen to new pow round signal")
 	miner := NewMinerController(nodeId, resourceProvider.options.Pow, taskCh, submitWork)
 	go miner.Start(ctx)
 	return nil
