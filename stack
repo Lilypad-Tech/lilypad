@@ -215,6 +215,7 @@ function resource-provider-docker-build() {
     -t resource-provider \
     -f ./docker/resource-provider/Dockerfile \
     --build-arg NETWORK=dev \
+    --build-arg DISABLE_POW=true \
     .
 }
 
