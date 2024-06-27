@@ -106,11 +106,11 @@ contract LilypadPow is Ownable, Initializable {
 
         validProofs++;
 
-        POWSubmission[] storage posSubmissions = powSubmissions[msg.sender];
-        if (posSubmissions.length == 0) {
+        POWSubmission[] storage onwMinerPowSubmissions = powSubmissions[msg.sender];
+        if (onwMinerPowSubmissions.length == 0) {
             miners.push(msg.sender);
         }
-        posSubmissions.push(
+        onwMinerPowSubmissions.push(
             POWSubmission(
                 msg.sender,
                 nodeId,
