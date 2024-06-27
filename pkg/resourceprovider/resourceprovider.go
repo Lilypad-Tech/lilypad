@@ -53,7 +53,7 @@ type ResourceProviderOfferOptions struct {
 
 // this configures the pow we will keep track of
 type ResourceProviderPowOptions struct {
-	EnablePow  bool
+	DisablePow bool
 	NumWorkers int
 
 	CudaGridSize  int
@@ -91,7 +91,7 @@ func NewResourceProvider(
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	if resourceProvider.options.Pow.EnablePow {
+	if !resourceProvider.options.Pow.DisablePow {
 		go resourceProvider.StartMineLoop(ctx)
 	}
 	return resourceProvider.controller.Start(ctx, cm)

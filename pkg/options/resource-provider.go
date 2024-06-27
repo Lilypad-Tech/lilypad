@@ -22,7 +22,7 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 
 func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPowOptions {
 	return resourceprovider.ResourceProviderPowOptions{
-		EnablePow:  GetDefaultServeOptionBool("ENABLE_POW", false),
+		DisablePow: GetDefaultServeOptionBool("DISABLE_POW", false),
 		NumWorkers: GetDefaultServeOptionInt("NUM_WORKER", 0),
 
 		CudaGridSize:  GetDefaultServeOptionInt("CUDA_GRID_SIZE", 256),
@@ -85,12 +85,12 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 
 func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderPowOptions) {
 	cmd.PersistentFlags().BoolVar(
-		&options.EnablePow, "enable-pow", options.EnablePow,
-		`Start pow mining (ENABLE_POW)`,
+		&options.DisablePow, "disable-pow", options.DisablePow,
+		`Disable pow mining (DISABLE_POW)`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&options.NumWorkers, "num-worker", options.NumWorkers,
-		`Start pow mining (NUM_WORKER)`,
+		`Pow worker number (NUM_WORKER)`,
 	)
 
 	cmd.PersistentFlags().IntVar(
