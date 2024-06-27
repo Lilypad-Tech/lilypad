@@ -11,9 +11,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -321,6 +322,26 @@ func GetRequestBuffer(
 	return &buf, nil
 }
 
+func GenericJSONPostClient(url string, json string) (*http.Response, error) {
+	data := []byte(json)
+	client := &http.Client{Timeout: time.Second * 1}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		fmt.Printf("error setting up the request: %s", err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("error sending the request: %s", err)
+		return nil, err
+	}
+	resp.Body.Close()
+
+	return resp, nil
+}
+
 func PostRequest[RequestType any, ResultType any](
 	options ClientOptions,
 	path string,
@@ -329,7 +350,7 @@ func PostRequest[RequestType any, ResultType any](
 	var result ResultType
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return result, fmt.Errorf("THIS IS A JOSN ERROR: %s", err.Error())
+		return result, fmt.Errorf("THIS IS A JSON ERROR: %s", err.Error())
 	}
 	return PostRequestBuffer[ResultType](
 		options,
