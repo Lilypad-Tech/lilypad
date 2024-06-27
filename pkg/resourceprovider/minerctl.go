@@ -124,6 +124,8 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 		numworkers = DefaultWorkerNum()
 	}
 
+	log.Info().Int("workernum", numworkers).Msg("Worker ready for mining")
+
 	resultCh := make(chan TaskResult, numworkers*2) //avoid lock worker if have much work to submit
 	launchWorkers := func(powCfg ResourceProviderPowOptions) error {
 		for i := 0; i < numworkers; i++ {
