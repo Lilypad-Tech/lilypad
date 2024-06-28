@@ -17,10 +17,10 @@ jobs:
       - name: Deploy contracts
         id: deploy-contracts
         env:
-          DOPPLER_TOKEN: ${{ secrets.TESTNET_DOPPLER_TOKEN_CONTRACTS_DEPLOY }}
+          DOPPLER_TOKEN: ${{ secrets.DEVNET_DOPPLER_TOKEN_CONTRACTS_DEPLOY }}
         run: |
           cd hardhat
           npm ci
-          doppler run -- npx hardhat deploy --network testnet
+          doppler run -- npx hardhat deploy --network devnet
           git commit -m "Contract Migration Updated"
           git push 

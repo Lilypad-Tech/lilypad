@@ -45,10 +45,11 @@ contract LilypadPow is Ownable, Initializable {
     function initialize() public initializer {}
 
     function getMiners() public view returns (address[] memory) {
+    function getMiners() public view returns (address[] memory) {
         return miners;
     }
 
-   function getMinerPowSubmissions(address addr) public view returns (POWSubmission[] memory) {
+   function getMinerPosSubmissions(address addr) public view returns (POWSubmission[] memory) {
         return powSubmissions[addr];
    }
 
@@ -106,11 +107,11 @@ contract LilypadPow is Ownable, Initializable {
 
         validProofs++;
 
-        POWSubmission[] storage onwMinerPowSubmissions = powSubmissions[msg.sender];
-        if (onwMinerPowSubmissions.length == 0) {
+        POWSubmission[] storage posSubmissions = powSubmissions[msg.sender];
+        if (posSubmissions.length == 0) {
             miners.push(msg.sender);
         }
-        onwMinerPowSubmissions.push(
+        posSubmissions.push(
             POWSubmission(
                 msg.sender,
                 nodeId,
@@ -128,6 +129,7 @@ contract LilypadPow is Ownable, Initializable {
             msg.sender,
             nodeId,
             nonce,
+            lastChallenge.timestamp,
             lastChallenge.timestamp,
             block.timestamp,
             lastChallenge.challenge,
@@ -147,8 +149,11 @@ contract LilypadPow is Ownable, Initializable {
 
     event ValidPOWSubmitted(
         address walletAddress,
+        address walletAddress,
         string nodeId,
         uint256 nonce,
+        uint256 start_timestamp,
+        uint256 complete_timestamp,
         uint256 start_timestamp,
         uint256 complete_timestamp,
         bytes32 challenge,
