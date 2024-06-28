@@ -184,7 +184,7 @@ func (controller *ResourceProviderController) solve() error {
 	controller.log.Debug("solving", "")
 
 	// if the solver does not know about resource offers
-	// that we have - we should post them to the solver
+	// that we have - we should post them to the solvre
 	err := controller.ensureResourceOffers()
 	if err != nil {
 		return err
@@ -342,6 +342,8 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 		}
 		controller.log.Info("updated deal with agree tx", txHash)
 	}
+
+	//
 
 	return err
 

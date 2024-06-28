@@ -10,10 +10,11 @@ import (
 	stdlog "log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -396,4 +397,45 @@ func newRetryClient() *retryablehttp.Client {
 		}
 	}
 	return retryClient
+}
+
+func DownloadAndSaveJSON(url, filePath string) error {
+	// Create an HTTP GET request
+	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create HTTP request for downloading JSON")
+		return err
+	}
+
+	// Use the retryable HTTP client to send the request
+	client := newRetryClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to download the JSON file")
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check HTTP response status code
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download file: server returned status code %d", resp.StatusCode)
+	}
+
+	// Create or truncate the file at filePath
+	file, err := os.Create(filePath)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create file for saving JSON")
+		return err
+	}
+	defer file.Close()
+
+	// Copy the response body to the file
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to write the JSON file")
+		return err
+	}
+
+	log.Info().Msgf("Successfully downloaded and saved JSON file to %s", filePath)
+	return nil
 }
