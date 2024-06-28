@@ -79,3 +79,5 @@ There are two commands that can be used to run existing tests: `./stack unit-tes
 ## Notes on tooling
 
 Things should work right out-of-the-box, no extra configuration should be needed as Doppler provides the environment variables that are required with the current setup.
+
+Yeah its being implemented to help protect RP's. Notshipped yet- All of the requested features(allowlist enable flag, allowlist checker) are in my PR after Gorka and I did some code review, it was decided to put the checker it into the solver- That is what I was working on. 

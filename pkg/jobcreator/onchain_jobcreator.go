@@ -8,7 +8,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	jobcreatorweb3 "github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
@@ -63,8 +62,6 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 		errorChan <- err
 		return errorChan
 	}
-
-	jobCreator.SubscribeToJobOfferUpdates(metricsDashboard.TrackJobOfferUpdate)
 
 	jobCreator.controller.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
 		if evOffer.State != data.GetAgreementStateIndex("ResultsAccepted") {

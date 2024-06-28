@@ -22,7 +22,11 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 
 func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPowOptions {
 	return resourceprovider.ResourceProviderPowOptions{
-		EnablePow: GetDefaultServeOptionBool("ENABLE_POW", false),
+		EnablePow:  GetDefaultServeOptionBool("ENABLE_POW", false),
+		NumWorkers: GetDefaultServeOptionInt("NUM_WORKER", 0),
+
+		CudaGridSize:  GetDefaultServeOptionInt("CUDA_GRID_SIZE", 256),
+		CudaBlockSize: GetDefaultServeOptionInt("CUDA_BLOCK_SIZE", 512),
 	}
 }
 
@@ -39,7 +43,11 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		Specs: []data.MachineSpec{},
 		// if an RP wants to only run certain modules they list them here
 		// XXX SECURITY: enforce that they are specified with specific git hashes!
-		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+
+		// Define the default
+
+		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []data.EnabledModules{}),
+
 		// this is the default pricing mode for an RP
 		Mode: GetDefaultPricingMode(data.FixedPrice),
 		// this is the default pricing for a module unless it has a specific price
@@ -84,8 +92,24 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 		&options.EnablePow, "enable-pow", options.EnablePow,
 		`Start pow mining (ENABLE_POW)`,
 	)
+	cmd.PersistentFlags().IntVar(
+		&options.NumWorkers, "num-worker", options.NumWorkers,
+		`Start pow mining (NUM_WORKER)`,
+	)
+
+	cmd.PersistentFlags().IntVar(
+		&options.CudaGridSize, "cuda-grid-size", options.CudaGridSize,
+		`Cuda grid size (CUDA_GRID_SIZE)`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&options.CudaBlockSize, "cuda-block-size", options.CudaBlockSize,
+		`Cuda block size (CUDA_BLOCK_SIZE)`,
+	)
 }
 
+// add the enable module allowlist flag- Grab the path- check if the file exists, check the execution
+
+// If err, throw error at user, and if all that works all to the rp offers
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
 	AddBacalhauCliFlags(cmd, &options.Bacalhau)
 	AddWeb3CliFlags(cmd, &options.Web3)
@@ -140,6 +164,8 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 	}
 	return nil
 }
+
+// Add another check here
 
 func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions, network string) (resourceprovider.ResourceProviderOfferOptions, error) {
 	newServicesOptions, err := ProcessServicesOptions(options.Services, network)

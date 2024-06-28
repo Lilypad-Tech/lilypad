@@ -1,0 +1,52 @@
+name: Build darwin-amd64 binary (no gpu)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-13 #uses amd64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Check architecture
+      run: uname -m
+
+    - name: Build for darwin/amd64
+      env:
+        GOOS: darwin
+        GOARCH: amd64
+        CGO_ENABLED: 1
+      run: |
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+        output_dir="build/${GOOS}-${GOARCH}"
+        output_name="lilypad-${GOOS}-${GOARCH}"
+        mkdir -p "${output_dir}"
+
+        # Debug: Print environment variables for the build
+        echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+
+        echo "excluding CUDA. specify 'cuda' build tag to include it."
+
+        go build -o "${output_dir}/${output_name}" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=$(git describe --tags --abbrev=0)' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=$(git rev-parse HEAD)'"
+
+        echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: darwin-amd64-binary
+        path: build/darwin-amd64/lilypad-darwin-amd64
+
+    - name: Verify Build Output
+      run: |
+        ls -la build/darwin-amd64
+        echo "Build complete"

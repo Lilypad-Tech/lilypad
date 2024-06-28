@@ -3,7 +3,7 @@ solver = "0xe05e1b71955da4934938a6b16f97e1db9de6b764"
 mediator = ["0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"]
 
 [web3]
-rpc_url = "wss://arbitrum-sepolia.infura.io/ws/v3/07472a48382e4679ae818aad0c21cf90"
+rpc_url = "wss://arb-sepolia.g.alchemy.com/v2/s3GmLBx18VARhhoD5qwFcKR1sGcjiK8H"
 chain_id = 421614
 controller_address = "0x4a83270045FB4BCd1bdFe1bD6B00762A9D8bbF4E"
 payments_address = "0xdE7CEa09A23e7Aa4980B95F69B8912F39A0e323A"

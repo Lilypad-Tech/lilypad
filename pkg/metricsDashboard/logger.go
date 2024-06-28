@@ -16,8 +16,9 @@ const nodeInfoEndpoint = "nodes"
 const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
 
+var host = os.Getenv("API_HOST")
+
 func trackEvent(path string, json string) {
-	var host = os.Getenv("API_HOST")
 	if host == "" {
 		return
 	}
