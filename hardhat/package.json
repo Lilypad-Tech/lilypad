@@ -11,6 +11,7 @@
     "@nomicfoundation/hardhat-verify": "^1.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/hardhat-upgrades": "2.5",
     "@typechain/ethers-v6": "^0.4.0",
     "@typechain/hardhat": "^8.0.0",
     "@types/bluebird": "^3.5.38",
