@@ -128,14 +128,14 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 	})
 
 	submitWork := func(nonce *big.Int) {
-		txId, submission, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
+		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
 		if err != nil {
 			log.Err(err).Msgf("Submit work fail")
 			return
 		}
-		log.Info().Str("address", submission.WalletAddress.String()).
-			Str("nodeid", submission.NodeId).
-			Str("Nonce", submission.Nonce.String()).
+		log.Info().Str("address", walletAddress.Hex()).
+			Str("nodeid", nodeId).
+			Str("Nonce", nonce.String()).
 			Str("txid", txId.String()).
 			Msgf("Mine and submit successfully")
 	}
