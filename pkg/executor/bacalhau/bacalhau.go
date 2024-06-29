@@ -55,12 +55,10 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 	}
 
 	splitOutputs := strings.Split(string(runOutputRaw), "\n")
-	runOutput := splitOutputs[len(splitOutputs)-1]
-	outputError := strings.Join(strings.Fields(strings.Join(splitOutputs[:len(splitOutputs)-1], " ")), " ")
-	if outputError != "" {
-		// TODO: we need to figure out if errors here are fatal or not
-		log.Warn().Msgf("error calling bacalhau id: %s", outputError)
+	if len(splitOutputs) == 0 {
+		log.Fatalf("error calling get id results %s, %s", err.Error(), runOutputRaw)
 	}
+	runOutput := splitOutputs[0]
 
 	var idResult struct {
 		ID       string
