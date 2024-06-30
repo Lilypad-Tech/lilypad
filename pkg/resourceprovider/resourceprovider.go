@@ -92,16 +92,20 @@ func NewResourceProvider(
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	if !resourceProvider.options.Pow.DisablePow {
-		go resourceProvider.StartMineLoop(ctx)
+		if errCh := resourceProvider.StartMineLoop(ctx); errCh != nil {
+			return errCh
+		}
 	}
 	return resourceProvider.controller.Start(ctx, cm)
 }
 
-func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) error {
+func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) chan error {
+	errorChan := make(chan error, 1)
 	walletAddress := resourceProvider.web3SDK.GetAddress()
 	nodeId, err := resourceProvider.controller.executor.Id()
 	if err != nil {
-		return err
+		errorChan <- err
+		return errorChan
 	}
 	log.Info().Msgf("Wallet %s node id %s is ready for mine", walletAddress, nodeId)
 

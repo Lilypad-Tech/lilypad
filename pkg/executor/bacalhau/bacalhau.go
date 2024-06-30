@@ -49,18 +49,26 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 	)
 	nodeIdCmd.Env = executor.bacalhauEnv
 
-	output, err := nodeIdCmd.CombinedOutput()
+	runOutputRaw, err := nodeIdCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error calling get id results %s", err.Error())
+		return "", fmt.Errorf("error calling get id results %s, %s", err.Error(), runOutputRaw)
+	}
+
+	splitOutputs := strings.Split(string(runOutputRaw), "\n")
+	runOutput := splitOutputs[len(splitOutputs)-1]
+	outputError := strings.Join(strings.Fields(strings.Join(splitOutputs[:len(splitOutputs)-1], " ")), " ")
+	if outputError != "" {
+		// TODO: we need to figure out if errors here are fatal or not
+		log.Warn().Msgf("error calling bacalhau id: %s", outputError)
 	}
 
 	var idResult struct {
 		ID       string
 		ClientID string
 	}
-	err = json.Unmarshal(output, &idResult)
+	err = json.Unmarshal([]byte(runOutput), &idResult)
 	if err != nil {
-		return "", fmt.Errorf("error unmarshalling job JSON %s", err.Error())
+		return "", fmt.Errorf("error unmarshalling job JSON %s %s", err.Error(), runOutputRaw)
 	}
 
 	return idResult.ID, nil
