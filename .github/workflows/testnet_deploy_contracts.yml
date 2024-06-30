@@ -21,4 +21,6 @@ jobs:
         run: |
           cd hardhat
           npm ci
-          doppler run -- npx hardhat deploy --network arbitrumSepolia
+          doppler run -- npx hardhat deploy --network testnet
+          git commit -m "Contract Migration Updated"
+          git push

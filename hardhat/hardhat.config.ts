@@ -4,6 +4,8 @@ import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-chai-matchers'
 import 'hardhat-deploy'
+import '@openzeppelin/hardhat-upgrades'
+
 import * as dotenv from 'dotenv'
 
 import {

@@ -1,0 +1,269 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xdbC43Ba45381e02825b14322cDdd15eC4B3164E6",
+    "txHash": "0x64394da5e3c9d6006b71c946cc64357cb2b0df1813186e5123236dc41c36bfe6"
+  },
+  "proxies": [
+    {
+      "address": "0x04C89607413713Ec9775E14b954286519d836FEf",
+      "txHash": "0x04d98211034df470f6fba98a4d167ea8bc0a557a3e540f55603592816a874934",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x4C4a2f8c81640e47606d3fd77B353E87Ba015584",
+      "txHash": "0x59ddf8567f65f9ff91e6af0fe56e34f7cadd6466bf83b2883129a91dbdaf3441",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x21dF544947ba3E8b3c32561399E88B52Dc8b2823",
+      "txHash": "0xfa6443c60eb49bd7f0758c09e5844fd8c37b4c3433d2300f3f797c348900aa02",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "b72a8f0f1d7c34ed0fff57355af290961c35fc0962d5577598be935e46ab56cd": {
+      "address": "0x1fA02b2d6A771842690194Cf62D91bdd92BfE28d",
+      "txHash": "0x324639087429deb8756658e65c14e1d66ce14dab382a5677e9478287c832fa24",
+      "layout": {
+        "solcVersion": "0.8.21",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "targetDifficulty",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:29"
+          },
+          {
+            "label": "powSubmissions",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_mapping(t_address,t_array(t_struct(POWSubmission)695_storage)dyn_storage)",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:31"
+          },
+          {
+            "label": "miners",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:32"
+          },
+          {
+            "label": "lastChallenges",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_struct(Challenge)704_storage)",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:34"
+          },
+          {
+            "label": "validProofs",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_uint256",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:35"
+          },
+          {
+            "label": "startTime",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_uint256",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:36"
+          },
+          {
+            "label": "window_start",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_uint256",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:38"
+          },
+          {
+            "label": "window_end",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_uint256",
+            "contract": "LilypadPow",
+            "src": "contracts/LilypadPow.sol:39"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(POWSubmission)695_storage)dyn_storage": {
+            "label": "struct LilypadPow.POWSubmission[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_struct(POWSubmission)695_storage)dyn_storage)": {
+            "label": "mapping(address => struct LilypadPow.POWSubmission[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Challenge)704_storage)": {
+            "label": "mapping(address => struct LilypadPow.Challenge)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Challenge)704_storage": {
+            "label": "struct LilypadPow.Challenge",
+            "members": [
+              {
+                "label": "challenge",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "difficulty",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "nodeId",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(POWSubmission)695_storage": {
+            "label": "struct LilypadPow.POWSubmission",
+            "members": [
+              {
+                "label": "walletAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "nodeId",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "nonce",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "start_timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "complete_timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "challenge",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "difficulty",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}
