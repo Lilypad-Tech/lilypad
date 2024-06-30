@@ -275,27 +275,22 @@ func (sdk *Web3SDK) SubmitWork(
 	ctx context.Context,
 	nonce *big.Int,
 	nodeId string,
-) (common.Hash, *pow.PowValidPOWSubmitted, error) {
+) (common.Hash, error) {
 	tx, err := sdk.Contracts.Pow.SubmitWork(sdk.TransactOpts, nonce, nodeId)
 	if err != nil {
-		return common.Hash{}, nil, err
+		return common.Hash{}, err
 	}
 
 	receipt, err := sdk.WaitTx(ctx, tx)
 	if err != nil {
-		return common.Hash{}, nil, err
+		return common.Hash{}, err
 	}
 
 	if receipt.Status == 0 {
-		return tx.Hash(), nil, fmt.Errorf("excute transaction fail")
+		return tx.Hash(), fmt.Errorf("excute transaction fail")
 	}
 
-	validPosSubmission, err := sdk.Contracts.Pow.ParseValidPOWSubmitted(*receipt.Logs[0]) // todo need to check this result
-	if err != nil {
-		return common.Hash{}, nil, err
-	}
-
-	return tx.Hash(), validPosSubmission, nil
+	return tx.Hash(), nil
 }
 
 type PowValidPOWSubmission struct {
