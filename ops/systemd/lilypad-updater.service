@@ -1,0 +1,8 @@
+[Unit]
+Description=Check and update Lilypad binary
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lilypad-updater.sh
