@@ -75,7 +75,7 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
 
     return true
 }
-	// if the resource provider has specified modules then check them
+	// if the resource provider has specified to to run allowlist checker on modules then check them
 	if len(resourceOffer.Modules) > 0 { 
 
 		// Need to check against the new schema for allowlist aka "resourceOffer.Modules" 
@@ -111,7 +111,7 @@ if allowlist.Every(item=>item.enabled==false) {
 }
 */
 
-ffunc getMatchingDeals(db store.SolverStore) ([]data.Deal, error) {
+func getMatchingDeals(db store.SolverStore) ([]data.Deal, error) {
     resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{NotMatched: true})
     if err != nil {
         return nil, err

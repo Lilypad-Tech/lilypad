@@ -184,7 +184,7 @@ func (controller *ResourceProviderController) solve() error {
 	controller.log.Debug("solving", "")
 
 	// if the solver does not know about resource offers
-	// that we have - we should post them to the solvre
+	// that we have - we should post them to the solver
 	err := controller.ensureResourceOffers()
 	if err != nil {
 		return err
