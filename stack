@@ -116,6 +116,7 @@ function chain-clean(){
   rm -rf $(pwd)/hardhat/cache
   rm -rf $(pwd)/hardhat/deployments/geth
   rm -rf $(pwd)/hardhat/deployments/dev
+  rm -rf $(pwd)/hardhat/.openzeppelin
 }
 
 ############################################################################
