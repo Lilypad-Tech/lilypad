@@ -124,6 +124,11 @@ type JobOfferContainer struct {
 	State      uint8    `json:"state"`
 	JobOffer   JobOffer `json:"job_offer"`
 }
+type EnabledModules struct {
+	ModuleID string
+	Version  string
+	Enabled  bool
+}
 
 // posted to the solver by a resource provider
 type ResourceOffer struct {
@@ -140,7 +145,8 @@ type ResourceOffer struct {
 	Spec MachineSpec `json:"spec"`
 	// the module ID's that this resource provider can run
 	// an empty list means ALL modules
-	Modules []string `json:"modules"`
+	Modules []EnabledModules `json:"modules"`
+
 	// tells the solver how to match these prices
 	// for RP this will normally be FixedPrice
 	// we expect the default pricing to be filled in

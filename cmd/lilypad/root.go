@@ -8,7 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Fatal = FatalErrorHandler
+var (
+	Fatal           = FatalErrorHandler
+	enableAllowlist bool // global variable for the allowlist flag
+)
 
 //FIXME: why @Kai?
 //func init() { //nolint:gochecknoinits
@@ -24,6 +27,7 @@ func NewRootCmd() *cobra.Command {
 
 	var network string
 	RootCmd.PersistentFlags().StringVarP(&network, "network", "n", "testnet", "Sets a target network configuration")
+	RootCmd.PersistentFlags().BoolVarP(&enableAllowlist, "enable-allowlist", "a", false, "Enable module allowlist functionality")
 
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())

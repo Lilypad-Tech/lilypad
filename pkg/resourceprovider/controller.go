@@ -343,6 +343,8 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 		controller.log.Info("updated deal with agree tx", txHash)
 	}
 
+	//
+
 	return err
 
 }

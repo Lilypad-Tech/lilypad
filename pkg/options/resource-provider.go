@@ -43,7 +43,11 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		Specs: []data.MachineSpec{},
 		// if an RP wants to only run certain modules they list them here
 		// XXX SECURITY: enforce that they are specified with specific git hashes!
-		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
+
+		// Define the default
+
+		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []data.EnabledModules{}),
+
 		// this is the default pricing mode for an RP
 		Mode: GetDefaultPricingMode(data.FixedPrice),
 		// this is the default pricing for a module unless it has a specific price
@@ -103,6 +107,9 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 	)
 }
 
+// add the enable module allowlist flag- Grab the path- check if the file exists, check the execution
+
+// If err, throw error at user, and if all that works all to the rp offers
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
 	AddBacalhauCliFlags(cmd, &options.Bacalhau)
 	AddWeb3CliFlags(cmd, &options.Web3)
@@ -157,6 +164,8 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 	}
 	return nil
 }
+
+// Add another check here
 
 func ProcessResourceProviderOfferOptions(options resourceprovider.ResourceProviderOfferOptions, network string) (resourceprovider.ResourceProviderOfferOptions, error) {
 	newServicesOptions, err := ProcessServicesOptions(options.Services, network)
