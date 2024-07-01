@@ -4,7 +4,7 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract LilypadPow is  Initializable, OwnableUpgradeable {
+contract LilypadPow is Initializable, OwnableUpgradeable {
     struct POWSubmission {
         address walletAddress;
         string nodeId;
@@ -26,8 +26,8 @@ contract LilypadPow is  Initializable, OwnableUpgradeable {
     // this difficulty was calculate with this tool https://github.com/hunjixin/pow-tool/tree/main/difficulty
     // Theoretically  A machine with a hash rate of 8M has a probability of no more than 0.01% of not finding a nonce that meets the difficulty within 20 blocks.
     // However, this issue has not been well validated in practice. it can solve nonce within one minute most of the time.
-    uint256 public targetDifficulty;// =
-        //555460709263765739036470010701196062214039696708679004195670928130048;
+    uint256 public targetDifficulty; // =
+    //555460709263765739036470010701196062214039696708679004195670928130048;
     mapping(address => POWSubmission[]) public powSubmissions;
     address[] public miners;
 
@@ -47,13 +47,25 @@ contract LilypadPow is  Initializable, OwnableUpgradeable {
         targetDifficulty = 555460709263765739036470010701196062214039696708679004195670928130048;
     }
 
+    function getMinerCount() public view returns (uint256) {
+        return miners.length;
+    }
+
     function getMiners() public view returns (address[] memory) {
         return miners;
     }
 
-   function getMinerPowSubmissions(address addr) public view returns (POWSubmission[] memory) {
+    function getMinerPowSubmissionCount(
+        address addr
+    ) public view returns (uint256) {
+        return powSubmissions[addr].length;
+    }
+
+    function getMinerPowSubmissions(
+        address addr
+    ) public view returns (POWSubmission[] memory) {
         return powSubmissions[addr];
-   }
+    }
 
     // generateChallenge gen a byte32 value as challenge value, Sc store this one for verify
     function generateChallenge(string calldata nodeId) external {
@@ -74,7 +86,7 @@ contract LilypadPow is  Initializable, OwnableUpgradeable {
     }
 
     function change_difficulty(uint256 difficulty) public onlyOwner {
-        targetDifficulty  = difficulty;
+        targetDifficulty = difficulty;
     }
 
     function calculate_difficulty() public view returns (uint256) {
@@ -109,7 +121,9 @@ contract LilypadPow is  Initializable, OwnableUpgradeable {
 
         validProofs++;
 
-        POWSubmission[] storage onwMinerPowSubmissions = powSubmissions[msg.sender];
+        POWSubmission[] storage onwMinerPowSubmissions = powSubmissions[
+            msg.sender
+        ];
         if (onwMinerPowSubmissions.length == 0) {
             miners.push(msg.sender);
         }
