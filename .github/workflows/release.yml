@@ -170,7 +170,7 @@ jobs:
           echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
           echo "Excluding CUDA. Use the 'cuda' build tag to include it."
 
-          go build -o "build/lilypad-${GOOS}-${GOARCH}-cpu" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=${{ needs.release.outputs.sha }}'"
+          go build -o "build/lilypad-${GOOS}-${GOARCH}-cpu" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.version=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.commitSHA=${{ needs.release.outputs.sha }}'"
 
           echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
 
@@ -206,7 +206,7 @@ jobs:
           echo "CUDA_HOME: $CUDA_HOME"
           echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-          go build -o "build/lilypad-${GOOS}-${GOARCH}-gpu" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.VERSION=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.COMMIT_SHA=${{ needs.release.outputs.sha }}'"
+          go build -o "build/lilypad-${GOOS}-${GOARCH}-gpu" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.version=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.commitSHA=${{ needs.release.outputs.sha }}'"
 
           echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
 
