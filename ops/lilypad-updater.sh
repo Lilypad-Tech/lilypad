@@ -13,12 +13,17 @@ LATEST_URL=$(curl -s https://api.github.com/repos/lilypad-tech/lilypad/releases/
 
 # Extract the latest version (including short SHA) from the URL
 LATEST_VERSION=$(echo $LATEST_URL | sed -n 's#.*/download/\([^/]*\)/.*#\1#p')
+echo "Latest version: $LATEST_VERSION"
 
 # Get the current version
 CURRENT_VERSION=$(/usr/local/bin/lilypad version | grep "Lilypad:" | awk '{print $2}')
-
 echo "Current version: $CURRENT_VERSION"
-echo "Latest version: $LATEST_VERSION"
+
+# Check if CURRENT_VERSION has a value
+if [ -z "$CURRENT_VERSION" ]; then
+    echo "Error: Unable to determin CURRENT_VERSION."
+    exit 1
+fi
 
 if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
   echo "Updating lilypad binary from version $CURRENT_VERSION to $LATEST_VERSION"
