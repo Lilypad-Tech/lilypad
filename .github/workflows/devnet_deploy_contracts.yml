@@ -1,7 +1,10 @@
-name: Deploy devnet contracts
+name: Deploy Devnet contracts
 
-on: workflow_dispatch
-
+# on: workflow_dispatch
+on:
+  push:
+    branches:
+      - arsen/fix-pow-proxy-update-2
 jobs:
   contracts:
     runs-on: ubuntu-latest
@@ -22,9 +25,17 @@ jobs:
           cd hardhat
           npm ci
           doppler run -- npx hardhat deploy --network devnet
-        
+          cd ..
+
+      - name: Generate Go bindings
+        run: |
+          ./stack go-bindings
+
       - name: Commit and push
         run: |
-          git add .
+          git checkout -b devnet/chore-updates-after-deploying-contracts
+          git add pkg/web3/bindings
+          git add hardhat/deployments
+          git add hardhat/.openzeppelin
           git commit -m "chore: Contract Migration Updated"
-          git push
+          git push -u origin devnet/chore-updates-after-deploying-contracts
