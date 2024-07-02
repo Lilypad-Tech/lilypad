@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -11,69 +12,66 @@ import (
 // ConnectWebSocket establishes a new WebSocket connection
 func ConnectWebSocket(
 	url string,
-	messageChan chan []byte,
 	ctx context.Context,
-) *websocket.Conn {
-	closed := false
+) chan []byte {
+	connectFactory := func() *websocket.Conn {
+		for {
+			log.Debug().Msgf("WebSocket connection connecting: %s", url)
+			conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+			if err != nil {
+				log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			conn.SetPongHandler(nil)
+			return conn
+		}
+	}
 
-	var conn *websocket.Conn
+	pingInterval := time.NewTicker(time.Second * 5)
+	connLk := &sync.Mutex{}
+	responseCh := make(chan []byte)
+	errCh := make(chan error)
 
-	// if we ever get a cancellation from the context, try to close the connection
+	readMessage := func(conn *websocket.Conn) {
+		for {
+			messageType, p, err := conn.ReadMessage()
+			if err != nil {
+				errCh <- err
+				return
+			}
+			if messageType == websocket.TextMessage {
+				log.Debug().
+					Str("action", "ws READ").
+					Str("payload", string(p)).
+					Msgf("")
+				responseCh <- p
+			}
+		}
+	}
+
+	conn := connectFactory()
+	go readMessage(conn)
 	go func() {
-		<-ctx.Done()
-		closed = true
-		if conn != nil {
-			conn.Close()
+		for {
+			select {
+			case <-pingInterval.C:
+				connLk.Lock()
+				log.Trace().Msg("send ping message")
+				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					log.Err(err).Msg("sending ping message")
+					connLk.Unlock()
+					continue
+				}
+				connLk.Unlock()
+			case err := <-errCh:
+				log.Err(err).Msg("websocket error")
+				connLk.Lock()
+				conn = connectFactory()
+				connLk.Unlock()
+				go readMessage(conn)
+			}
 		}
 	}()
-
-	// retry connecting until we get a connection
-	for {
-		var err error
-		log.Debug().Msgf("WebSocket connection connecting: %s", url)
-		conn, _, err = websocket.DefaultDialer.Dial(url, nil)
-		if err != nil {
-			log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in 2 seconds...", err)
-			if closed {
-				break
-			}
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		break
-	}
-
-	// now that we have a connection, if we haven't been closed yet, forever
-	// read from the connection and send messages down the channel, unless we
-	// fail a read in which case we try to reconnect
-	if !closed {
-		go func() {
-			for {
-				messageType, p, err := conn.ReadMessage()
-				if err != nil {
-					if closed {
-						return
-					}
-					log.Error().Msgf("Read error: %s\nReconnecting in 2 seconds...", err)
-					time.Sleep(2 * time.Second)
-					conn = ConnectWebSocket(url, messageChan, ctx)
-					// exit this goroutine now, another one will be spawned if
-					// the recursive call to ConnectWebSocket succeeds. Not
-					// exiting this goroutine here will cause goroutines to pile
-					// up forever concurrently calling conn.ReadMessage(), which
-					// is not thread-safe.
-					return
-				}
-				if messageType == websocket.TextMessage {
-					log.Debug().
-						Str("action", "ws READ").
-						Str("payload", string(p)).
-						Msgf("")
-					messageChan <- p
-				}
-			}
-		}()
-	}
-
-	return conn
+	return responseCh
 }
