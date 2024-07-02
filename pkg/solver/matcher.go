@@ -18,6 +18,42 @@ func (a ListOfResourceOffers) Less(i, j int) bool {
 }
 func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
+type AllowlistItem struct {
+	Enabled  bool
+	ModuleID string
+	Version  string
+}
+
+func loadAllowlist(filepath string) ([]AllowlistItem, error) {
+		file, err := os.Open(filepath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+	
+		bytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+	
+		var allowlist []AllowlistItem
+		if err := json.Unmarshal(bytes, &allowlist); err != nil {
+			return nil, err
+		}
+	
+		return allowlist, nil
+	}
+	func moduleMatch(moduleID, allowlistModuleID string) bool {
+		return moduleID == allowlistModuleID
+	}
+	
+	func versionMatch(version, allowlistVersion string) bool {
+		if strings.Contains(allowlistVersion, "*") {
+			prefix := strings.TrimSuffix(allowlistVersion, "*")
+			return strings.HasPrefix(version, prefix)
+		}
+		return version == allowlistVersion
+	}
 // the most basic of matchers
 // basically just check if the resource offer >= job offer cpu, gpu & ram
 
@@ -26,54 +62,59 @@ func doOffersMatch(
 	resourceOffer data.ResourceOffer,
 	jobOffer data.JobOffer,
 ) bool */
-func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, allowlist []data.AllowlistEntry, allowlistEnabled bool) bool {
-    if !allowlistEnabled {
-        log.Info().Msg("Allowlist is disabled. Skipping allowlist checks.")
-        return true // Assuming that other checks will still be processed if needed
-    }
+func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, allowlist []AllowlistItem, allowlistEnabled bool) bool {
+	if !allowlistEnabled {
+		log.Info().Msg("Allowlist is disabled. Skipping allowlist checks.")
+		return true // Assuming that other checks will still be processed if needed
+	}
 
-	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
+	// Initial resource checks
+	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU || resourceOffer.Spec.GPU < jobOffer.Spec.GPU || resourceOffer.Spec.RAM < jobOffer.Spec.RAM {
 		log.Trace().
 			Str("resource offer", resourceOffer.ID).
 			Str("job offer", jobOffer.ID).
-			Int("resource CPU", resourceOffer.Spec.CPU).
-			Int("job CPU", jobOffer.Spec.CPU).
-			Msgf("did not match CPU")
-		return false
-	}
-	if resourceOffer.Spec.GPU < jobOffer.Spec.GPU {
-		log.Trace().
-			Str("resource offer", resourceOffer.ID).
-			Str("job offer", jobOffer.ID).
-			Int("resource GPU", resourceOffer.Spec.GPU).
-			Int("job GPU", jobOffer.Spec.GPU).
-			Msgf("did not match GPU")
-		return false
-	}
-	if resourceOffer.Spec.RAM < jobOffer.Spec.RAM {
-		log.Trace().
-			Str("resource offer", resourceOffer.ID).
-			Str("job offer", jobOffer.ID).
-			Int("resource RAM", resourceOffer.Spec.RAM).
-			Int("job RAM", jobOffer.Spec.RAM).
-			Msgf("did not match RAM")
+			Msg("Resource does not meet job specifications")
 		return false
 	}
 
-	foundMatch := false
-    for _, item := range allowlist {
-        if item.ModuleID == jobOffer.Module && item.Enabled {
-            foundMatch = true
-            break
-        }
-    }
+	// Check against the allowlist
+	var allDisabled, allEnabled, foundMatch bool
+	allDisabled, allEnabled = true, true
+	for _, item := range allowlist {
+		if item.Enabled {
+			allDisabled = false
+		} else {
+			allEnabled = false
+		}
+		if moduleMatch(jobOffer.Module, item.ModuleID) && versionMatch(jobOffer.Version, item.Version) && item.Enabled {
+			foundMatch = true
+		}
+	}
 
-    if !foundMatch {
-        log.Info().Str("module", jobOffer.Module).Msg("No matching module in allowlist or module is disabled")
-        return false
-    }
+	// Evaluate allowlist conditions
+	if allDisabled && foundMatch {
+		log.Info().Msg("All items are disabled, but found a match.")
+		return false
+	}
+	if allEnabled && !foundMatch {
+		log.Info().Msg("All items are enabled, but no match was found.")
+		return false
+	}
+	if !foundMatch { // General case for mixed list or no match found
+		log.Info().Msg("No match found in mixed allowlist condition.")
+		return false
+	}
 
-    return true
+	// Additional checks for pricing, mediators, and solvers
+	if resourceOffer.Mode == data.MarketPrice || (resourceOffer.Mode == data.FixedPrice && jobOffer.Mode == data.FixedPrice && resourceOffer.DefaultPricing.InstructionPrice > jobOffer.Pricing.InstructionPrice) {
+		return false
+	}
+	mutualMediators := data.GetMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
+	if len(mutualMediators) == 0 || resourceOffer.Services.Solver != jobOffer.Services.Solver {
+		return false
+	}
+
+	return true
 }
 	// if the resource provider has specified to to run allowlist checker on modules then check them
 	if len(resourceOffer.Modules) > 0 { 
@@ -95,7 +136,7 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
 			hasModule = true
 			break
 		}
-		}
+		
 	*/
 		// We need to check if the ModuleID matches but also if the version matches the module id and the job offer and make sure we have a match
 		// If enabled false, match everything 
@@ -110,40 +151,44 @@ if allowlist.Every(item=>item.enabled==false) {
 	// if you have reached this point, there is a match
 }
 */
+func getMatchingDeals(db store.SolverStore, allowlistFilePath string, allowlistEnabled bool) ([]data.Deal, error) {
+	allowlist, err := loadAllowlist(allowlistFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load allowlist: %w", err)
+	}
 
-func getMatchingDeals(db store.SolverStore) ([]data.Deal, error) {
-    resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{NotMatched: true})
-    if err != nil {
-        return nil, err
-    }
+	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{NotMatched: true})
+	if err != nil {
+		return nil, err
+	}
 
-    jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{NotMatched: true})
-    if err != nil {
-        return nil, err
-    }
+	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{NotMatched: true})
+	if err != nil {
+		return nil, err
+	}
 
-    var deals []data.Deal
-    for _, jobOffer := range jobOffers {
-        var matchingResourceOffers []data.ResourceOffer
-        for _, resourceOffer := range resourceOffers {
-            if doOffersMatch(resourceOffer, jobOffer, nil /* Replace nil with actual allowlist if available */, true /* Adjust based on runtime conditions */) {
-                matchingResourceOffers = append(matchingResourceOffers, resourceOffer)
-            }
-        }
+	var deals []data.Deal
+	for _, jobOffer := range jobOffers {
+		var matchingResourceOffers []data.ResourceOffer
+		for _, resourceOffer := range resourceOffers {
+			if doOffersMatch(resourceOffer, jobOffer, allowlist, allowlistEnabled) {
+				matchingResourceOffers = append(matchingResourceOffers, resourceOffer)
+			}
+		}
 
-        if len(matchingResourceOffers) > 0 {
-            sort.Sort(ListOfResourceOffers(matchingResourceOffers))
-            cheapestOffer := matchingResourceOffers[0]
-            deal, err := data.GetDeal(jobOffer, cheapestOffer)
-            if err != nil {
-                return nil, err
-            }
-            deals = append(deals, deal)
-        }
-    }
+		if len(matchingResourceOffers) > 0 {
+			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
+			cheapestOffer := matchingResourceOffers[0]
+			deal, err := data.GetDeal(jobOffer, cheapestOffer)
+			if err != nil {
+				return nil, err
+			}
+			deals = append(deals, deal)
+		}
+	}
 
-    log.Debug().Int("jobOffers", len(jobOffers)).Int("resourceOffers", len(resourceOffers)).Int("deals", len(deals)).Msg("Deals processed.")
-    return deals, nil
+	log.Debug().Int("jobOffers", len(jobOffers)).Int("resourceOffers", len(resourceOffers)).Int("deals", len(deals)).Msg("Deals processed.")
+	return deals, nil
 }
 
 /*
