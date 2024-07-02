@@ -1,15 +1,6 @@
-/*
- * keccak.cu  Implementation of Keccak/SHA3 digest
- *
- * Date: 12 June 2019
- * Revision: 1
- *
- * This file is released into the Public Domain.
- */
-
 extern "C"
 {
-#include "keccak.cuh"
+    #include "keccak.cuh"
 }
 
 #define KECCAK_ROUND 24
