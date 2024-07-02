@@ -38,8 +38,9 @@ type WorkerConfig struct {
 	resultCh     chan TaskResult
 
 	//cuda
-	gridSize  int
-	blockSize int
+	gridSize       int
+	blockSize      int
+	hashsPerThread int
 }
 
 type Task struct {
@@ -134,8 +135,9 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 				updateHashes: m.updateHashes,
 				resultCh:     resultCh,
 
-				gridSize:  powCfg.CudaGridSize,
-				blockSize: powCfg.CudaBlockSize,
+				gridSize:       powCfg.CudaGridSize,
+				blockSize:      powCfg.CudaBlockSize,
+				hashsPerThread: powCfg.CudaHashsPerThread,
 			}
 
 			w, err := MaybeCudaOrCpu(wCfg)
@@ -148,6 +150,8 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 		return nil
 	}
 
+	// Todo this split u256 max value to multiple part, and send each part to different worker to find solution
+	// But we don't need so much big range in practice, uint64 range is enough to find solution, this also benefit to optimise hardware
 	maxUint256 := new(uint256.Int).Sub(uint256.NewInt(0), uint256.NewInt(1))
 	noncePerWorker := new(uint256.Int).Div(maxUint256, uint256.NewInt(uint64(numworkers)))
 

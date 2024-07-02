@@ -56,8 +56,9 @@ type ResourceProviderPowOptions struct {
 	DisablePow bool
 	NumWorkers int
 
-	CudaGridSize  int
-	CudaBlockSize int
+	CudaGridSize       int
+	CudaBlockSize      int
+	CudaHashsPerThread int
 }
 
 type ResourceProviderOptions struct {
