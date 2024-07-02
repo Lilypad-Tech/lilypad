@@ -1,0 +1,12 @@
+{
+  "deployToken": 1719960417,
+  "deployPayments": 1719960418,
+  "deployStorage": 1719960418,
+  "deployUsers": 1719960419,
+  "deployMediation": 1719960419,
+  "deployJobCreator": 1719960421,
+  "deployPow": 1719960422,
+  "deployController": 1719960423,
+  "upgradePowV2": 1719960424,
+  "updatePowV2": 1719960425
+}

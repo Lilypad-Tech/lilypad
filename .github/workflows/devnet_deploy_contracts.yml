@@ -39,5 +39,12 @@ jobs:
           git add pkg/web3/bindings
           git add hardhat/deployments
           git add hardhat/.openzeppelin
-          git commit -m "chore: Contract Migration Updated"
-          git push -u origin devnet/chore-updates-after-deploying-contracts
+          # git commit -m "chore: Contract Migration Updated"
+          # git push -u origin devnet/chore-updates-after-deploying-contracts-v2
+          if ! git diff-index --quiet HEAD --; then
+              git pull
+              git commit -m "chore: Contract Migration Updated"
+              git push -u origin devnet/chore-updates-after-deploying-contracts
+          else
+              echo "No changes to commit"
+          fi
