@@ -37,7 +37,7 @@ const config: HardhatUserConfig = {
       accounts: [getAccount('admin').privateKey],
     },
     devnet: {
-      url: 'http://0.0.0.0:8547',
+      url: 'https://devnet-chain-http.lilypad.tech',
       chainId: 412346,
       accounts: [getAccount('admin').privateKey],
     },

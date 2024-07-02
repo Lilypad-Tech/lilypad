@@ -82,6 +82,7 @@ function go-binding() {
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint solc \
     lilypad-solc \
        --base-path . \
@@ -98,6 +99,7 @@ function go-binding() {
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint abigen \
     lilypad-solc \
       "--bin=artifacts/$name.bin" \
@@ -116,6 +118,7 @@ function chain-clean(){
   rm -rf $(pwd)/hardhat/cache
   rm -rf $(pwd)/hardhat/deployments/geth
   rm -rf $(pwd)/hardhat/deployments/dev
+  rm -rf $(pwd)/hardhat/.openzeppelin
 }
 
 ############################################################################

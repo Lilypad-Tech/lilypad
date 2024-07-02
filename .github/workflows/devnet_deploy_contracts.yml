@@ -1,0 +1,43 @@
+name: Deploy Devnet contracts
+
+# on: workflow_dispatch
+on:
+  push:
+    branches:
+      - arsen/fix-pow-proxy-update-2
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v1
+
+      - name: Deploy contracts
+        id: deploy-contracts
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DEVNET_DOPPLER_TOKEN_CONTRACTS_DEPLOY }}
+        run: |
+          cd hardhat
+          npm ci
+          doppler run -- npx hardhat deploy --network devnet
+          cd ..
+
+      - name: Generate Go bindings
+        run: |
+          ./stack go-bindings
+
+      - name: Commit and push
+        run: |
+          git config --global user.email "arsen@lilypad.tech"
+          git config --global user.name "Arsen"
+          git checkout -b devnet/chore-updates-after-deploying-contracts
+          git add pkg/web3/bindings
+          git add hardhat/deployments
+          git add hardhat/.openzeppelin
+          git commit -m "chore: Contract Migration Updated"
+          git push -u origin devnet/chore-updates-after-deploying-contracts

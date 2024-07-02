@@ -1,7 +1,7 @@
 hardhat/node_modules
 hardhat/artifacts
 hardhat/cache
-hardhat/deployments/*
+hardhat/deployments/dev
 hardhat/typechain-types
 node_modules/*
 # Ignore the binary executable
