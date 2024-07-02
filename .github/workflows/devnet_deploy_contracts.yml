@@ -26,5 +26,5 @@ jobs:
       - name: Commit and push
         run: |
           git add .
-          git commit -m "Contract Migration Updated"
+          git commit -m "chore: Contract Migration Updated"
           git push
