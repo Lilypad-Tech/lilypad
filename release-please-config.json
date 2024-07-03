@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "bootstrap-sha": "27b906f3c4cef0e2e57a5e058dd1f93dc2049980"
+      "bootstrap-sha": "eb8d9db5531f4ba768a32abf4c5f703a914fd3f2"
     }
   },
   "pull-request-header": ":frog: I have created a release _ribbit ribbit_",
