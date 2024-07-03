@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-	"slices"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -30,7 +29,7 @@ const entry_point = "kernel_lilypad_pow"
 var MaybeCudaOrCpu = NewGpuWorker
 
 func DefaultWorkerNum() int {
-	return 20 // different on different device
+	return 1
 }
 
 type GpuWorker struct {
@@ -123,7 +122,7 @@ OUT:
 			return
 		}
 
-		maybeNonce, err := kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), w.cfg.gridSize, w.cfg.blockSize)
+		maybeNonce, err := Kernel_lilypad_pow_with_ctx(w.cuCtx, w.entryFn, task.Challenge, nonce.ToBig(), task.Difficulty.ToBig(), w.cfg.gridSize, w.cfg.blockSize, w.cfg.hashsPerThread)
 		if err != nil {
 			log.Err(err).Msg("InvokeGpu fail")
 			continue
@@ -183,7 +182,7 @@ func setupGPU() (*cu.Ctx, error) {
 	return cu.NewContext(dev, cu.SchedAuto), nil
 }
 
-func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]byte, startNonce *big.Int, difficulty *big.Int, grid, block int) (*big.Int, error) {
+func Kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]byte, startNonce *big.Int, difficulty *big.Int, grid, block int, hashPerThread int) (*big.Int, error) {
 	dIn1, err := cuCtx.MemAllocManaged(32, cu.AttachGlobal)
 	if err != nil {
 		return nil, err
@@ -205,11 +204,13 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 	}
 
 	batch := int64(grid * block)
+	//(BYTE* indata,	 WORD inlen,	 BYTE* outdata,	 WORD n_batch,	 WORD KECCAK_BLOCK_SIZE)
 	args := []unsafe.Pointer{
 		unsafe.Pointer(&dIn1),
 		unsafe.Pointer(&dIn2),
 		unsafe.Pointer(&dIn3),
 		unsafe.Pointer(&batch),
+		unsafe.Pointer(&hashPerThread),
 		unsafe.Pointer(&dOut),
 	}
 
@@ -219,12 +220,11 @@ func kernel_lilypad_pow_with_ctx(cuCtx *cu.Ctx, fn cu.Function, challenge [32]by
 	cuCtx.MemcpyHtoD(dIn2, unsafe.Pointer(&startNonceBytes[0]), 32)
 
 	difficutyBytes := math.U256Bytes(difficulty)
-	slices.Reverse(difficutyBytes) //to big
 	cuCtx.MemcpyHtoD(dIn3, unsafe.Pointer(&difficutyBytes[0]), 32)
 
 	cuCtx.LaunchKernel(fn, grid, 1, 1, block, 1, 1, 1, cu.Stream{}, args)
 	if err = cuCtx.Error(); err != nil {
-		return nil, fmt.Errorf("launch kernel fail maybe decrease threads help (%w)", err)
+		return nil, fmt.Errorf("launch kernel fail maybe decrease threads help %w", err)
 	}
 	cuCtx.Synchronize()
 
