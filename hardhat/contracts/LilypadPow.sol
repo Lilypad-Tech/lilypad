@@ -22,10 +22,6 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
         uint256 timestamp;
     }
 
-    // todo  difficulty may need to adjust in test
-    // this difficulty was calculate with this tool https://github.com/hunjixin/pow-tool/tree/main/difficulty
-    // Theoretically  A machine with a hash rate of 8M has a probability of no more than 0.01% of not finding a nonce that meets the difficulty within 20 blocks.
-    // However, this issue has not been well validated in practice. it can solve nonce within one minute most of the time.
     uint256 public targetDifficulty; // =
     //555460709263765739036470010701196062214039696708679004195670928130048;
     mapping(address => POWSubmission[]) public powSubmissions;
@@ -44,7 +40,9 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
     // https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable
     function initialize() public initializer {
         __Ownable_init();
-        targetDifficulty = 555460709263765739036470010701196062214039696708679004195670928130048;
+        // this difficulty was calculate with this tool https://github.com/hunjixin/pow-tool/tree/main/difficulty
+        // Theoretically  A machine with a hash rate of 40M has a probability of no more than 0.00001 of not finding a nonce that meets the difficulty within 30 blocks.
+        targetDifficulty = 92576780592126171815437600338300430792573009392238517278497593884672;
     }
 
     function getMinerCount() public view returns (uint256) {
@@ -154,7 +152,7 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
 
     function triggerNewPowRound() external onlyOwner {
         window_start = block.number;
-        window_end = block.number + 30; //todo arbitary value , need to discuss
+        window_end = block.number + 36; // give 6 block time to confirm challenge, 30 block time used to calculate proof
         emit NewPowRound();
     }
 
