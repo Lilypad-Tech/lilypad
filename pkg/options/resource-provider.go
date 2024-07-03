@@ -46,7 +46,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 
 		// Define the default
 
-		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []data.EnabledModules{}),
+		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
 
 		// this is the default pricing mode for an RP
 		Mode: GetDefaultPricingMode(data.FixedPrice),
@@ -108,6 +108,12 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 }
 
 // add the enable module allowlist flag- Grab the path- check if the file exists, check the execution
+func AddResourceProviderAllowlistCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderEnabledModules) {
+	cmd.PersistentFlags().BoolVar(
+		&options.EnableAllowlist, "enable-allowlist", options.EnableAllowlist,
+		`Enable the module allowlist (ENABLE_ALLOWLIST)`,
+	)
+}
 
 // If err, throw error at user, and if all that works all to the rp offers
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {

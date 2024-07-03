@@ -60,7 +60,9 @@ type ResourceProviderPowOptions struct {
 	CudaBlockSize int
 }
 
-type ResourceProviderAllowlistOptions struct {
+// Enabled Modules
+
+type ResourceProviderEnabledModules struct {
 	EnableAllowlist bool
 }
 

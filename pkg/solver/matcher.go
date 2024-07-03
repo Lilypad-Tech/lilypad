@@ -43,6 +43,10 @@ func loadAllowlist(filepath string) ([]AllowlistItem, error) {
 	
 		return allowlist, nil
 	}
+
+	// strip out https- keep the org and module in place
+	// https://lilypad.tech/cowsay -> lilypad.tech/cowsay
+	// Assume module ID has the shape of the org/repo(eg lilypad-tech/cowsay) if string
 	func moduleMatch(moduleID, allowlistModuleID string) bool {
 		return moduleID == allowlistModuleID
 	}
@@ -54,6 +58,8 @@ func loadAllowlist(filepath string) ([]AllowlistItem, error) {
 		}
 		return version == allowlistVersion
 	}
+
+	
 // the most basic of matchers
 // basically just check if the resource offer >= job offer cpu, gpu & ram
 
@@ -113,10 +119,6 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
 	if len(mutualMediators) == 0 || resourceOffer.Services.Solver != jobOffer.Services.Solver {
 		return false
 	}
-
-	return true
-}
-	// if the resource provider has specified to to run allowlist checker on modules then check them
 	if len(resourceOffer.Modules) > 0 { 
 
 		// Need to check against the new schema for allowlist aka "resourceOffer.Modules" 
@@ -128,6 +130,10 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
 				Msgf("error getting module ID")
 			return false
 		}
+	return true
+}
+	// if the resource provider has specified to to run allowlist checker on modules then check them
+	
 	/*
 		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
 		hasModule := false
@@ -203,10 +209,10 @@ if allowlist.Every(item=>item.enabled==true) {
 }
 */
 
-func versionMatch(version, allowedVersion string) bool {
+//func versionMatch(version, allowedVersion string) bool {
     
-    return version == allowedVersion
-}
+//    return version == allowedVersion
+//}
 
 
 
@@ -229,6 +235,7 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
         return false
     }
 
+		// 
     // Check against the allowlist
     var allDisabled, allEnabled, foundMatch bool
     allDisabled, allEnabled = true, true

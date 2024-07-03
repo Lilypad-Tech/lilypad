@@ -262,11 +262,18 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 	// map over the specs we have in the config
 	for index, spec := range controller.options.Offers.Specs {
-
+	
 		// check if the resource offer already exists
 		// if it does then we need to update it
 		// if it doesn't then we need to add it
-		_, ok := existingResourceOffersMap[index]
+		modules := make([]data.EnabledModules, len(controller.options.Offers.Modules))
+		for i, module := range controller.options.Offers.Modules {
+			modules[i] = data.EnabledModules(module)
+		}
+		resourceOffer.Modules = modules
+		
+	}
+	 existingResourceOffersMap[index]
 		if !ok {
 			addResourceOffers = append(addResourceOffers, controller.getResourceOffer(index, spec))
 		}
@@ -278,8 +285,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 		_, err := controller.solverClient.AddResourceOffer(resourceOffer)
 		if err != nil {
 			return err
-		}
-	}
+		{}
 
 	return err
 }
