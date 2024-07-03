@@ -3,6 +3,7 @@ package solver
 import (
 	"sort"
 	"strings"
+	"fmt"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -131,7 +132,7 @@ func doOffersMatch(resourceOffer data.ResourceOffer, jobOffer data.JobOffer, all
 			return false
 		}
 	return true
-}
+}}
 	// if the resource provider has specified to to run allowlist checker on modules then check them
 	
 	/*
@@ -317,8 +318,8 @@ func getMatchingDeals(db store.SolverStore) ([]data.Deal, error) {
 		// the way we want to run this is lilypad resource-provider --offer-gpu=0 --enabled-modules=./modules.json
 		/* 
 		{ ModuleID: lilypad.tech/cowsay, version: 0.0.4, enabled: true }
-		{ ModuleID: lilypad.tech/cowsay, version: 0.0.4, enabled: false }
-		{ ModuleID: lilypad.tech/cowsay, version: 0.0.*, enabled: false }
+		{ ModuleID: lilypad.tech/sdxl, version: 0.0.4, enabled: false }
+		{ ModuleID: lilypad.tech/sdv, version: 0.0.*, enabled: false }
 		
 		
 		*/
