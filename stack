@@ -6,6 +6,25 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
 
 ############################################################################
+# docker compose 
+############################################################################
+function compose-init() {
+  chain-clean
+  rm -Rf ./data/chain
+  ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"} \
+  docker compose -f ./docker/docker-compose.dev.yml up chain -d
+  chain-boot
+}
+
+function compose-up() {
+  ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"} \
+  DOPPLER_TOKEN_SOLVER="$(doppler configs tokens create -p solver -c dev docker --max-age 1m --plain)" \
+  DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 1m --plain)" \
+  DOPPLER_TOKEN_RESOURCE_PROVIDER="$(doppler configs tokens create -p resource-provider -c dev docker --max-age 1m --plain)" \
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
+}
+
+############################################################################
 # chain
 ############################################################################
 

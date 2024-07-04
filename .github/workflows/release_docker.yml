@@ -11,6 +11,17 @@ jobs:
   docker:
     name: Push Docker image
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: ghcr.io/Lilypad-Tech/bacalhau
+            dockerfile: ./docker/bacalhau/Dockerfile
+          - image: ghcr.io/Lilypad-Tech/job-creator
+            dockerfile: ./docker/job-creator/Dockerfile
+          - image: ghcr.io/Lilypad-Tech/resource-provider
+            dockerfile: ./docker/resource-provider/Dockerfile
+          - image: ghcr.io/Lilypad-Tech/solver
+            dockerfile: ./docker/solver/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,12 +35,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/Lilypad-Tech/resource-provider
+          images: ${{ matrix.image}}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/resource-provider/Dockerfile
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
