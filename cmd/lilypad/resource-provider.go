@@ -21,6 +21,7 @@ func newResourceProviderCmd() *cobra.Command {
 			optionsfactory.CheckDeprecation(options.Offers.Services, options.Web3)
 
 			network, _ := cmd.Flags().GetString("network")
+			//	EnableAllowlist, _ := cmd.Flags().GetBool("enable-allowlist")
 			options, err := optionsfactory.ProcessResourceProviderOptions(options, network)
 			if err != nil {
 				return err
@@ -52,6 +53,11 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	if err != nil {
 		return err
 	}
+
+	// resourceProviderAllowlistService, err := resourceprovider.NewResourceAllowlistProvider(options, web3SDK, executor)
+	//if err != nil {
+	//		return err
+	//
 
 	resourecProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {

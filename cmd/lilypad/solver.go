@@ -22,6 +22,7 @@ func newSolverCmd() *cobra.Command {
 			optionsfactory.CheckDeprecation(data.ServiceConfig{}, options.Web3)
 
 			network, _ := cmd.Flags().GetString("network")
+			//	EnableAllowlist, _ := cmd.Flags().GetBool("enable-allowlist")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
 			if err != nil {
 				return err
@@ -48,13 +49,6 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	if err != nil {
 		return err
 	}
-	
-	enableAllowlist, _ := cmd.Flags().GetBool("enable-allowlist")
-	if enableAllowlist {
-		err = solverStore.EnableAllowlist()
-		if err != nil {
-			return err
-		}
 
 	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
 	if err != nil {

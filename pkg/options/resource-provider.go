@@ -11,10 +11,11 @@ import (
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	options := resourceprovider.ResourceProviderOptions{
-		Bacalhau: GetDefaultBacalhauOptions(),
-		Offers:   GetDefaultResourceProviderOfferOptions(),
-		Web3:     GetDefaultWeb3Options(),
-		Pow:      GetDefaultResourceProviderPowOptions(),
+		Bacalhau:  GetDefaultBacalhauOptions(),
+		Offers:    GetDefaultResourceProviderOfferOptions(),
+		Web3:      GetDefaultWeb3Options(),
+		Pow:       GetDefaultResourceProviderPowOptions(),
+		Allowlist: GetDefaultResourceProviderAllowlistOptions(),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
@@ -115,8 +116,8 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 }
 func AddResourceProviderAllowlistCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderAllowlistOptions) {
 	cmd.PersistentFlags().BoolVar(
-		&options.DisableAllowlist, "disable-pow", options.DisableAllowlist,
-		`Disable pow mining (DISABLE_ALLOWLIST)`,
+		&options.DisableAllowlist, "disable-allowlist", options.DisableAllowlist,
+		`Disable Module Allowlist (DISABLE_ALLOWLIST)`,
 	)
 
 }
