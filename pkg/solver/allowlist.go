@@ -60,6 +60,31 @@ func fetchAllowlistFromGitHub(repo, path string) ([]AllowlistItem, error) {
 	return loadAllowlist(url)
 }
 
+func saveAllowlistToFile(repo, path, localPath string) error {
+	url := fmt.Sprintf("https://raw.githubusercontent.com/%s/main/%s", repo, path)
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to fetch allowlist: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to fetch allowlist from URL: %s", resp.Status)
+	}
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	err = ioutil.WriteFile(localPath, bytes, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
 func allowlistPull() {
 	allowlist, err := fetchAllowlistFromGitHub("lilypad-tech/module-allowlist", "allowlist.json")
 	if err != nil {
@@ -72,5 +97,13 @@ func allowlistPull() {
 }
 
 func main() {
+	err := saveAllowlistToFile("lilypad-tech/module-allowlist", "allowlist.json", "local_allowlist.json")
+	if err != nil {
+		fmt.Printf("Error saving allowlist: %v\n", err)
+		return
+	}
+
+	fmt.Println("Allowlist successfully downloaded to local_allowlist.json")
+
 	allowlistPull()
 }

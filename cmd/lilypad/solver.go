@@ -48,6 +48,13 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	if err != nil {
 		return err
 	}
+	
+	enableAllowlist, _ := cmd.Flags().GetBool("enable-allowlist")
+	if enableAllowlist {
+		err = solverStore.EnableAllowlist()
+		if err != nil {
+			return err
+		}
 
 	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
 	if err != nil {
