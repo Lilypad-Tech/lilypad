@@ -27,6 +27,7 @@ func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
 	web3SDK *web3.Web3SDK,
+
 ) (*Solver, error) {
 	controller, err := NewSolverController(web3SDK, store, options)
 	if err != nil {

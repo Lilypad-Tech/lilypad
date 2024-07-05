@@ -30,6 +30,11 @@ func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPow
 		CudaHashsPerThread: GetDefaultServeOptionInt("CUDA_HASH_PER_THREAD", 1000),
 	}
 }
+func GetDefaultResourceProviderAllowlistOptions() resourceprovider.ResourceProviderAllowlistOptions {
+	return resourceprovider.ResourceProviderAllowlistOptions{
+		DisableAllowlist: GetDefaultServeOptionBool("DISABLE_ALLOWLIST", true),
+	}
+}
 
 func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderOfferOptions {
 	return resourceprovider.ResourceProviderOfferOptions{
@@ -105,6 +110,13 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 	cmd.PersistentFlags().IntVar(
 		&options.CudaHashsPerThread, "cuda-hash-per-thread", options.CudaHashsPerThread,
 		`Cuda hash per threads (CUDA_HASH_PER_THREAD)`,
+	)
+
+}
+func AddResourceProviderAllowlistCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderAllowlistOptions) {
+	cmd.PersistentFlags().BoolVar(
+		&options.DisableAllowlist, "disable-pow", options.DisableAllowlist,
+		`Disable pow mining (DISABLE_ALLOWLIST)`,
 	)
 
 }
