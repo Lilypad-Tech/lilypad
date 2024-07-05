@@ -144,6 +144,8 @@ OUT:
 		hashNumber := new(uint256.Int).SetBytes(result[:])
 		// Check if the hash is below the target difficulty
 		if hashNumber.Cmp(task.Difficulty) == -1 {
+			w.cfg.updateHashes <- hashesCompleted // report hash to avoid too fast
+			hashesCompleted = 0
 			log.Info().Int("WorkerID", w.cfg.id).Str("Elapsed Time", time.Since(startTime).String()).
 				Str("challenge", new(big.Int).SetBytes(task.Challenge[:]).String()).
 				Str("Nonce", maybeNonce.String()).

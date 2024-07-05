@@ -11,7 +11,7 @@ import (
 
 const jobsEndpoint = "jobs"
 const nodeInfoEndpoint = "nodes"
-const hashrateEndpoint = "hashrate"
+const hashrateEndpoint = "pow-logs/hashrates"
 const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
 const namespace = "metrics-dashboard"
@@ -110,13 +110,13 @@ func TrackHashrate(hashrate data.MinerHashRate) {
 		return
 	}
 	data := map[string]interface{}{
-		"MinerAddress": hashrate.MinerAddress,
-		"HashRate":     hashrate.HashRate,
-		"NodeID":       hashrate.NodeID,
+		"Address":  hashrate.Address,
+		"Date":     hashrate.Date,
+		"Hashrate": hashrate.Hashrate,
 	}
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
-	url := host + namespace + "/" + hashrateEndpoint
+	url := host + hashrateEndpoint
 	http.GenericJSONPostClient(url, payload)
 }

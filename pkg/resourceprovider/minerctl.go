@@ -26,7 +26,7 @@ const (
 	hashUpdateSecs = 15
 )
 
-type SubmitWork func(nonce *big.Int)
+type SubmitWork func(nonce *big.Int, hashrate int)
 type Worker interface {
 	FindSolution(ctx context.Context, task *Task)
 	Stop()
@@ -66,6 +66,7 @@ type MinerController struct {
 	task chan Task
 
 	updateHashes chan uint64
+	totalHash    uint64
 }
 
 func NewMinerController(nodeId string, powCfg ResourceProviderPowOptions, task chan Task, submit SubmitWork) *MinerController {
@@ -87,7 +88,7 @@ func (m *MinerController) Start(ctx context.Context) {
 func (m *MinerController) speedMonitor(ctx context.Context) {
 	log.Debug().Msg("CPU miner speed monitor started")
 	var hashesPerSec float64
-	var totalHashes uint64
+	var latestTotalHash uint64
 	ticker := time.NewTicker(time.Second * hpsUpdateSecs)
 	defer ticker.Stop()
 
@@ -97,20 +98,21 @@ out:
 		// Periodic updates from the workers with how many hashes they
 		// have performed.
 		case numHashes := <-m.updateHashes:
-			totalHashes += numHashes
+			latestTotalHash += numHashes
+			m.totalHash += numHashes
 
 		// Time to update the hashes per second.
 		case <-ticker.C:
-			curHashesPerSec := float64(totalHashes) / hpsUpdateSecs
+			curHashesPerSec := float64(latestTotalHash) / hpsUpdateSecs
 			if hashesPerSec == 0 {
 				hashesPerSec = curHashesPerSec
 			}
 			hashesPerSec = (hashesPerSec + curHashesPerSec) / 2
-			if totalHashes != 0 && hashesPerSec != 0 {
+			if latestTotalHash != 0 && hashesPerSec != 0 {
 				log.Info().Msgf("Hash speed: %6.0f kilohashes/s",
 					hashesPerSec/1000)
 			}
-			totalHashes = 0
+			latestTotalHash = 0
 		case <-ctx.Done():
 			break out
 		}
@@ -189,6 +191,7 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 	}
 
 	cache, _ := lru.New[uuid.UUID, *uint256.Int](2048) //prevent submint multiple times, consider power multiple cpu, use a little bigger value
+	workStartTime := time.Now()
 out:
 	for {
 		select {
@@ -201,11 +204,15 @@ out:
 				log.Warn().Msg("This work has been submit before")
 				continue
 			}
-			m.submit(result.Nonce.ToBig())
+
+			hashrate := float64(m.totalHash) / float64(time.Since(workStartTime).Microseconds()) / 1000.0
+			m.submit(result.Nonce.ToBig(), int(hashrate))
 			stopWrokers()
 			cache.Add(result.Id, new(uint256.Int))
 		case allTask := <-m.task:
 			stopWrokers()
+			m.totalHash = 0
+			workStartTime = time.Now()
 			spawNewWork(&allTask)
 		}
 	}
