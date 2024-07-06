@@ -119,7 +119,10 @@ func AddResourceProviderAllowlistCliFlags(cmd *cobra.Command, options *resourcep
 		&options.DisableAllowlist, "disable-allowlist", options.DisableAllowlist,
 		`Disable Module Allowlist (DISABLE_ALLOWLIST)`,
 	)
-
+	cmd.PersistentFlags().BoolVar(
+		&options.DisableAllowlist, "enable-allowlist", !options.DisableAllowlist,
+		`Enable Module Allowlist (ENABLE_ALLOWLIST)`,
+	)
 }
 
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {

@@ -72,8 +72,16 @@ func NewSolverController(
 
 func (controller *SolverController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error, 1)
+
+	// Process allowlist options
+	err := controller.processAllowlistOptions()
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
+
 	// get the local subscriptions setup
-	err := controller.subscribeToWeb3()
+	err = controller.subscribeToWeb3()
 	if err != nil {
 		errorChan <- err
 		return errorChan
@@ -116,6 +124,17 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	}
 
 	return errorChan
+}
+
+func (controller *SolverController) processAllowlistOptions() error {
+	if controller.options.Allowlist.DisableAllowlist {
+		fmt.Println("Allowlist checker is disabled.")
+		DisableAllowlistChecker()
+	} else {
+		fmt.Println("Allowlist checker is enabled.")
+		EnableAllowlistChecker()
+	}
+	return nil
 }
 
 /*
@@ -225,7 +244,7 @@ func (controller *SolverController) registerAsSolver() error {
 			return err
 		}
 	} else {
-		controller.log.Info("url same", fmt.Sprintf("solver url already correct: %s %s", selfAddress.String(), controller.options.Server.URL))
+		controller.log.Info("url same", fmt.Sprintf("solver url already correct: %s %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
 	}
 
 	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
@@ -267,6 +286,12 @@ func (controller *SolverController) registerAsSolver() error {
 */
 
 func (controller *SolverController) solve() error {
+	// Process allowlist options again if needed, to ensure the state is correct
+	err := controller.processAllowlistOptions()
+	if err != nil {
+		return err
+	}
+
 	// find out which deals we can make from matching the offers
 	deals, err := getMatchingDeals(controller.store)
 	if err != nil {

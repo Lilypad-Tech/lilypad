@@ -36,6 +36,7 @@ func NewRootCmd() *cobra.Command {
 	RootCmd.AddCommand(newMediatorCmd())
 	RootCmd.AddCommand(newJobCreatorCmd())
 	RootCmd.AddCommand(newVersionCmd())
+	RootCmd.AddCommand(newAllowlistCmd())
 	return RootCmd
 }
 
