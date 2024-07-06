@@ -55,11 +55,6 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	// resourceProviderAllowlistService, err := resourceprovider.NewResourceAllowlistProvider(options, web3SDK, executor)
-	//if err != nil {
-	//		return err
-	//
-
 	resourecProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {
 		select {

@@ -14,24 +14,29 @@ type AllowlistOptions struct {
 func newAllowlistCmd() *cobra.Command {
 	options := optionsfactory.NewResourceProviderOptions()
 
-	resourceProviderCmd := &cobra.Command{
-		Use: "resource-provider",
+	newAllowlistCmd := &cobra.Command{
+		Use:   "resource-provider",
+		Short: "Allowlist checker",
+		Long:  "Allowlist checker to limit the containers that can be executed",
+		// This RunE function is where the command is exectued
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			optionsfactory.CheckDeprecation(options.Offers.Services, options.Web3)
 
-			//	allowlist, _ := cmd.Flags().GetBool("enable-allowlist")
+			// Now you need to retrieve the allowlist flag value
 
-			options, err := optionsfactory.NewAllowlistOptions().AllowlistCmd(options, allowlist)
-			if err != nil {
-				return err
-			}
+			allowlist, _ := cmd.Flags().GetBool("enable-allowlist")
+
+			//options, err := optionsfactory.NewAllowlistOptions().AllowlistCmd(options, allowlist)
+			//if err != nil {
+			//		return err
+			//	}
 			return runResourceProvider(cmd, options)
 		},
 	}
 
-	optionsfactory.AddResourceProviderCliFlags(resourceProviderCmd, &options)
+	optionsfactory.AddResourceProviderCliFlags(newAllowlistCmd, &options)
 
-	return resourceProviderCmd
+	return newAllowlistCmd
 }
 
 func AllowlistToggle(cmd *cobra.Command, options AllowlistOptions) error {
