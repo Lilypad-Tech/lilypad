@@ -1,8 +1,9 @@
 {
+  "bootstrap-sha": "20ad59c4025d5bd2b1a735144eb664c876cbe8f4",
+  "last-release-sha": "20ad59c4025d5bd2b1a735144eb664c876cbe8f4",
   "packages": {
     ".": {
-      "release-type": "go",
-      "bootstrap-sha": "eb8d9db5531f4ba768a32abf4c5f703a914fd3f2"
+      "release-type": "go"
     }
   },
   "pull-request-header": ":frog: I have created a release _ribbit ribbit_",
