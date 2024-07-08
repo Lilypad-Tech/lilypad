@@ -26,7 +26,7 @@ const (
 	hashUpdateSecs = 15
 )
 
-type SubmitWork func(nonce *big.Int, hashrate int)
+type SubmitWork func(nonce *big.Int, hashrate float64)
 type Worker interface {
 	FindSolution(ctx context.Context, task *Task)
 	Stop()
@@ -66,7 +66,7 @@ type MinerController struct {
 	task chan Task
 
 	updateHashes chan uint64
-	totalHash    uint64
+	totalHash    int64
 }
 
 func NewMinerController(nodeId string, powCfg ResourceProviderPowOptions, task chan Task, submit SubmitWork) *MinerController {
@@ -99,7 +99,7 @@ out:
 		// have performed.
 		case numHashes := <-m.updateHashes:
 			latestTotalHash += numHashes
-			m.totalHash += numHashes
+			m.totalHash += int64(numHashes)
 
 		// Time to update the hashes per second.
 		case <-ticker.C:
@@ -205,8 +205,8 @@ out:
 				continue
 			}
 
-			hashrate := float64(m.totalHash) / float64(time.Since(workStartTime).Microseconds()) / 1000.0
-			m.submit(result.Nonce.ToBig(), int(hashrate))
+			hashrate := float64(m.totalHash/1000/1000) / (float64(time.Since(workStartTime).Milliseconds()) / 1000.0)
+			m.submit(result.Nonce.ToBig(), hashrate)
 			stopWrokers()
 			cache.Add(result.Id, new(uint256.Int))
 		case allTask := <-m.task:

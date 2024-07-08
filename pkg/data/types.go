@@ -264,7 +264,7 @@ type DealContainer struct {
 }
 
 type MinerHashRate struct {
-	Address  string `json:"maddress"`
-	Date     int64  `json:"date"`
-	Hashrate int    `json:"hashrate"`
+	Address  string  `json:"maddress"`
+	Date     int64   `json:"date"`
+	Hashrate float64 `json:"hashrate"`
 }

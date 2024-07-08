@@ -130,7 +130,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 		}
 	})
 
-	submitWork := func(nonce *big.Int, hashrate int) {
+	submitWork := func(nonce *big.Int, hashrate float64) {
 		metricsDashboard.TrackHashrate(data.MinerHashRate{
 			Address:  walletAddress.String(),
 			Date:     time.Now().Unix(),
