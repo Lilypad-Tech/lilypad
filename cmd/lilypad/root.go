@@ -19,7 +19,7 @@ func NewRootCmd() *cobra.Command {
 	RootCmd := &cobra.Command{
 		Use:   getCommandLineExecutable(),
 		Short: "Lilypad",
-		Long:  fmt.Sprintf("Lilypad: %s \nCommit: %s \n", VERSION, COMMIT_SHA),
+		Long:  fmt.Sprintf("Lilypad: %s \nCommit: %s \n", version, commitSHA),
 	}
 
 	var network string
