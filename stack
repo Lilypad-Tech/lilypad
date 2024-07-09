@@ -82,6 +82,7 @@ function go-binding() {
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint solc \
     lilypad-solc \
        --base-path . \
@@ -91,21 +92,19 @@ function go-binding() {
       "contracts/$name.sol" \
       -o artifacts
 
-  chown -R $USER hardhat/artifacts
   mkdir -p hardhat/artifacts/bindings/$pkg
 
   # generate the go bindings
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint abigen \
     lilypad-solc \
       "--bin=artifacts/$name.bin" \
       "--abi=artifacts/$name.abi" \
       "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
 
-  chown -R $USER hardhat/artifacts/bindings/$pkg
-  chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
   cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
 
   echo "- Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
