@@ -2,6 +2,8 @@ package resourceprovider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -131,9 +133,27 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 	})
 
 	submitWork := func(nonce *big.Int, hashrate float64) {
+		finishTime := time.Now().Unix()
+		hasher := sha256.New()
+		_, err := hasher.Write(walletAddress[:])
+		if err != nil {
+			log.Err(err).Msgf("Write wallet address")
+			return
+		}
+
+		buf := make([]byte, 8)
+		_ = binary.PutVarint(buf, finishTime)
+		_, err = hasher.Write(buf)
+		if err != nil {
+			log.Err(err).Msgf("Write finish time")
+			return
+		}
+
+		id := hex.EncodeToString(hasher.Sum(nil))
 		metricsDashboard.TrackHashrate(data.MinerHashRate{
+			ID:       id,
 			Address:  walletAddress.String(),
-			Date:     time.Now().Unix(),
+			Date:     finishTime,
 			Hashrate: hashrate,
 		})
 		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
