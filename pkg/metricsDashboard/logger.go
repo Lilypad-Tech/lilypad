@@ -109,12 +109,7 @@ func TrackHashrate(hashrate data.MinerHashRate) {
 	if host == "" {
 		return
 	}
-	data := map[string]interface{}{
-		"Address":  hashrate.Address,
-		"Date":     hashrate.Date,
-		"Hashrate": hashrate.Hashrate,
-	}
-	byts, _ := json.Marshal(data)
+	byts, _ := json.Marshal([]data.MinerHashRate{hashrate})
 	payload := string(byts)
 
 	url := host + hashrateEndpoint
