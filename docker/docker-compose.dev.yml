@@ -64,9 +64,9 @@ services:
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider
     container_name: resource-provider
-    privileged: true
     depends_on:
       - chain
+      - solver
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
@@ -74,6 +74,8 @@ services:
         - NETWORK=dev
     extra_hosts:
       - "localhost:host-gateway"
+    volumes:
+      - ../data/bacalhau:/root/.bacalhau
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      # - DOPPLER_TOKEN=${DOPPLER_TOKEN_RESOURCE_PROVIDER}
       - WEB3_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a

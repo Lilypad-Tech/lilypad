@@ -245,6 +245,7 @@ function resource-provider-docker-run() {
     --name resource-provider \
     --add-host localhost:host-gateway \
     --env-file <(doppler -p resource-provider -c dev secrets download --no-file --format docker) \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     -e OFFER_GPU=0 \
     -e BACALHAU_API_HOST="DO_NOT_SET" \
     resource-provider
