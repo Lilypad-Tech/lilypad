@@ -89,7 +89,9 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
-      - ../data/bacalhau:/root/.bacalhau
+      - ../data/bacalhau:/tmp/lilypad
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WEB3_PRIVATE_KEY
+      - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+      - LOG_LEVEL=debug
