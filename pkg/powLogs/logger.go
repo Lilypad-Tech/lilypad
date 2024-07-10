@@ -30,8 +30,8 @@ func TrackEvent(data PowLog) {
 	}
 
 	var url = host + namespace + "/" + eventsEndpoint
-	byts, _ := json.Marshal(data)
-	payload := string(byts)
+	bytes, _ := json.Marshal(data)
+	payload := string(bytes)
 
 	http.GenericJSONPostClient(url, payload)
 }
@@ -40,8 +40,8 @@ func TrackHashrate(hashrate data.MinerHashRate) {
 	if host == "" {
 		return
 	}
-	byts, _ := json.Marshal([]data.MinerHashRate{hashrate})
-	payload := string(byts)
+	bytes, _ := json.Marshal([]data.MinerHashRate{hashrate})
+	payload := string(bytes)
 
 	url := host + namespace + "/" + hashrateEndpoint
 	http.GenericJSONPostClient(url, payload)
