@@ -262,3 +262,10 @@ type DealContainer struct {
 	Transactions     DealTransactions `json:"transactions"`
 	Mediator         string           `json:"mediator"`
 }
+
+type MinerHashRate struct {
+	ID       string  `json:"id"`
+	Address  string  `json:"address"`
+	Date     int64   `json:"date"`
+	Hashrate float64 `json:"hashrate"`
+}

@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
@@ -12,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/powLogs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
@@ -128,7 +131,15 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 		}
 	})
 
-	submitWork := func(nonce *big.Int) {
+	submitWork := func(nonce *big.Int, hashrate float64) {
+		finishTime := time.Now().Unix()
+		id := walletAddress.String() + strconv.FormatInt(finishTime, 10)
+		powLogs.TrackHashrate(data.MinerHashRate{
+			ID:       id,
+			Address:  walletAddress.String(),
+			Date:     finishTime,
+			Hashrate: hashrate,
+		})
 		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
 		if err != nil {
 			log.Err(err).Msgf("Submit work fail")
