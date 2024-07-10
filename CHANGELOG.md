@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.1.1...v2.2.0) (2024-07-10)
+
+
+### Features
+
+* Metrics hashrate ([#237](https://github.com/Lilypad-Tech/lilypad/issues/237)) ([50d439e](https://github.com/Lilypad-Tech/lilypad/commit/50d439e45113c92f0c1aa695be1e45b50ebba0f3))
+
 ## [2.1.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.1.0...v2.1.1) (2024-07-08)
 
 
