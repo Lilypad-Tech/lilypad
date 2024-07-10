@@ -1,4 +1,4 @@
-FROM docker:dind as base
+FROM docker:dind AS base
 
 RUN apk update
 RUN apk add wget

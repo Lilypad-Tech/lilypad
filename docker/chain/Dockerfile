@@ -23,26 +23,26 @@ RUN echo "done" >> run
 RUN echo "docker pull offchainlabs/nitro-node:v2.3.4-b4cc111 " >> run
 
 RUN echo "docker run -d --name devnet -p 0.0.0.0:8547:8547 -p 0.0.0.0:8548:8548 offchainlabs/nitro-node:v2.3.4-b4cc111  "\
-"   --init.dev-init " \
-"   --init.dev-init-address $admin_address "\
-"   --node.dangerous.no-l1-listener "\
-"   --node.parent-chain-reader.enable=false "\
-"   --parent-chain.id=1337 "\
-"   --chain.id=412346 "\
-"   --persistent.chain /tmp/dev-test "\
-"   --node.sequencer "\
-"   --execution.sequencer.enable "\
-"   --node.dangerous.no-sequencer-coordinator "\
-"   --node.staker.enable=false "\
-"   --init.empty=false "\
-"   --http.port 8547  "\
-"   --http.addr 0.0.0.0 "\
-"   --ws.port 8548  "\
-"   --ws.addr 0.0.0.0 "\
-"   --http.corsdomain=* "\
-"   --http.vhosts=* "\
-"   --ws.origins=* "\
-"    " >> run
+  "   --init.dev-init " \
+  "   --init.dev-init-address $admin_address "\
+  "   --node.dangerous.no-l1-listener "\
+  "   --node.parent-chain-reader.enable=false "\
+  "   --parent-chain.id=1337 "\
+  "   --chain.id=412346 "\
+  "   --persistent.chain /tmp/dev-test "\
+  "   --node.sequencer "\
+  "   --execution.sequencer.enable "\
+  "   --node.dangerous.no-sequencer-coordinator "\
+  "   --node.staker.enable=false "\
+  "   --init.empty=false "\
+  "   --http.port 8547  "\
+  "   --http.addr 0.0.0.0 "\
+  "   --ws.port 8548  "\
+  "   --ws.addr 0.0.0.0 "\
+  "   --http.corsdomain=* "\
+  "   --http.vhosts=* "\
+  "   --ws.origins=* "\
+  "    " >> run
 
 RUN echo "until wget -qO- http://0.0.0.0:8547 >/dev/null 2>&1; do " >> run
 RUN echo "   echo 'Waiting for Nitro to start...'" >> run
@@ -71,7 +71,7 @@ RUN chmod +x cloudflared-linux-amd64
 
 FROM base AS expose-local
 
-FROM expose-$expose_via AS FINAL
+FROM expose-$expose_via AS final
 RUN chmod +x run
 RUN echo "wait -n" >> run
 ENTRYPOINT ["bash", "./run"]  
