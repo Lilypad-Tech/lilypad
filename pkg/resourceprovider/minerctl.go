@@ -163,7 +163,7 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 		log.Err(err).Msg("Cannt create worker")
 	}
 
-	stopWrokers := func() {
+	stopWorkers := func() {
 		var wg sync.WaitGroup
 		for _, worker := range m.runningWorkers {
 			wg.Add(1)
@@ -196,7 +196,7 @@ out:
 	for {
 		select {
 		case <-ctx.Done():
-			stopWrokers()
+			stopWorkers()
 			break out
 		case result := <-resultCh:
 			_, ok := cache.Get(result.Id)
@@ -207,10 +207,10 @@ out:
 
 			hashrate := float64(m.totalHash/1000/1000) / (float64(time.Since(workStartTime).Milliseconds()) / 1000.0)
 			m.submit(result.Nonce.ToBig(), hashrate)
-			stopWrokers()
+			stopWorkers()
 			cache.Add(result.Id, new(uint256.Int))
 		case allTask := <-m.task:
-			stopWrokers()
+			stopWorkers()
 			m.totalHash = 0
 			workStartTime = time.Now()
 			spawNewWork(&allTask)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 )
 
@@ -19,6 +20,7 @@ type PowLog struct {
 
 const namespace = "pow-logs"
 const eventsEndpoint = "events"
+const hashrateEndpoint = "hashrates"
 
 var host = os.Getenv("API_HOST")
 
@@ -31,5 +33,16 @@ func TrackEvent(data PowLog) {
 	byts, _ := json.Marshal(data)
 	payload := string(byts)
 
+	http.GenericJSONPostClient(url, payload)
+}
+
+func TrackHashrate(hashrate data.MinerHashRate) {
+	if host == "" {
+		return
+	}
+	byts, _ := json.Marshal([]data.MinerHashRate{hashrate})
+	payload := string(byts)
+
+	url := host + namespace + "/" + hashrateEndpoint
 	http.GenericJSONPostClient(url, payload)
 }
