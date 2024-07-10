@@ -89,7 +89,7 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
-      - ../data/bacalhau:/tmp/lilypad
+      - ../data/bacalhau:/tmp/lilypad/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WEB3_PRIVATE_KEY
