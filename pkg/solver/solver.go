@@ -3,6 +3,7 @@ package solver
 import (
 	"context"
 
+	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -11,8 +12,9 @@ import (
 )
 
 type SolverOptions struct {
-	Web3   web3.Web3Options
-	Server http.ServerOptions
+	Web3     web3.Web3Options
+	Server   http.ServerOptions
+	Services data.ServiceConfig
 }
 
 type Solver struct {
@@ -32,7 +34,7 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server, controller, store)
+	server, err := NewSolverServer(options.Server, controller, store, options.Services)
 	if err != nil {
 		return nil, err
 	}
