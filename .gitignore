@@ -17,5 +17,5 @@ ops/testnet/.terraform/providers
 .run/
 bin/
 vendor/
-./data/
+/data/
 .DS_Store
