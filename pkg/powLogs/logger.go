@@ -2,7 +2,6 @@ package powLogs
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
@@ -22,7 +21,11 @@ const namespace = "pow-logs"
 const eventsEndpoint = "events"
 const hashrateEndpoint = "hashrates"
 
-var host = os.Getenv("API_HOST")
+var host string
+
+func Init(h string) {
+	host = h
+}
 
 func TrackEvent(data PowLog) {
 	if host == "" {
