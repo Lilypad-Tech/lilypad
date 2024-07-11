@@ -54,6 +54,8 @@ func NewJobCreatorController(
 		return nil, err
 	}
 
+	metricsDashboard.Init(options.Offer.Services.APIHost)
+
 	controller := &JobCreatorController{
 		solverClient:          solverClient,
 		options:               options,

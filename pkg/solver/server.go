@@ -24,18 +24,23 @@ type solverServer struct {
 	options    http.ServerOptions
 	controller *SolverController
 	store      store.SolverStore
+	services   data.ServiceConfig
 }
 
 func NewSolverServer(
 	options http.ServerOptions,
 	controller *SolverController,
 	store store.SolverStore,
+	services data.ServiceConfig,
 ) (*solverServer, error) {
 	server := &solverServer{
 		options:    options,
 		controller: controller,
 		store:      store,
 	}
+
+	metricsDashboard.Init(services.APIHost)
+
 	return server, nil
 }
 

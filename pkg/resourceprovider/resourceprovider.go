@@ -91,6 +91,7 @@ func NewResourceProvider(
 		options:    options,
 		web3SDK:    web3SDK,
 	}
+	powLogs.Init(options.Offers.Services.APIHost)
 	return solver, nil
 }
 
