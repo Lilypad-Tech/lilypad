@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.0...v2.2.1) (2024-07-11)
+
+
+### Bug Fixes
+
+* Set api host on embedded configs ([#253](https://github.com/Lilypad-Tech/lilypad/issues/253)) ([0aa29f3](https://github.com/Lilypad-Tech/lilypad/commit/0aa29f37b037d51bfcf86fe47562f2249a1ebecf))
+
 ## [2.2.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.1.1...v2.2.0) (2024-07-10)
 
 
