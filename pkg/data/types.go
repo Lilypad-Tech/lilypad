@@ -85,6 +85,7 @@ const (
 type ServiceConfig struct {
 	Solver   string   `json:"solver" toml:"solver"`
 	Mediator []string `json:"mediator" toml:"mediator"`
+	APIHost  string   `json:"api_host" toml:"api_host"`
 }
 
 // posted to the solver by a job creator
