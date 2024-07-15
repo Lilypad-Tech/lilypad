@@ -29,7 +29,9 @@ func NewSolverClient(
 
 // connect the websocket to the solver server
 func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager) error {
-	websocketEventChannel := make(chan []byte)
+
+	websocketURL := fmt.Sprintf("%s%s%s%s%s", http.WEBSOCKET_SUB_PATH, "?&Type=", client.options.Type, "&ID=", client.options.PublicAddress)
+	websocketEventChannel := http.ConnectWebSocket(http.WebsocketURL(client.options, websocketURL), ctx)
 	go func() {
 		for {
 			select {
@@ -49,12 +51,7 @@ func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager
 			}
 		}
 	}()
-	websocketURL := fmt.Sprintf("%s%s%s%s%s", http.WEBSOCKET_SUB_PATH, "?&Type=", client.options.Type, "&ID=", client.options.PublicAddress)
-	http.ConnectWebSocket(
-		http.WebsocketURL(client.options, websocketURL),
-		websocketEventChannel,
-		ctx,
-	)
+
 	return nil
 }
 
