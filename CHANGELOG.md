@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.2](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.1...v2.2.2) (2024-07-15)
+
+
+### Bug Fixes
+
+* Websocket disconnect and goroutine leak ([#220](https://github.com/Lilypad-Tech/lilypad/issues/220)) ([cca7510](https://github.com/Lilypad-Tech/lilypad/commit/cca75105df1dbb4523750338493b240902c01988))
+
 ## [2.2.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.0...v2.2.1) (2024-07-11)
 
 
