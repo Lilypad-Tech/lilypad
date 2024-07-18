@@ -27,8 +27,8 @@ The node can can run directly from an existing docker image, it will initialize 
 
 These are the commands to run the node and boot the network: `./stack chain-clean` (the first time this won't do anything, but I find it better to get in the habit of resetting artifacts everytime), `./stack chain` to run the node and `./stack chain-boot` to fund the accounts with ETH (for gas fees), compile the contracts, add Golang bindings to use the contracts directly in go code, deploy the contracts and fund the accounts with Lilypad tokens.
 
-
 #### Summary of command sequence
+
 ```sh
 ./stack chain-clean
 ./stack chain
@@ -67,6 +67,34 @@ For the time being this process has to be executed directly and needs Golang to 
 #### Bacalhau and Resource provider as one component
 
 There is ongoing work to pack together the `bacalhau` node and `resource provider` service in a docker container as these two are highly coupled and can be abstracted into one component.
+
+## Using Docker Compose
+
+An alternative to the above for running the local stack is to use [Docker Compose](https://docs.docker.com/compose/).
+
+Benefits of using Docker Compose include:
+
+- Start/stop the full stack with a single command.
+- Runs the docker images for all services (i.e. "closer to prod")
+- Chain and Bacalhau state are maintained between runs (in the `./data` directory).
+
+The main drawback is, for development, you'll need to re-build the images after changes for testing.
+
+All of the docker commands have been wrapped by `./stack` - to simplify doppler configuration, etc.
+
+### Running the stack
+
+_First run_: run `./stack compose-init`. This essentially runs `./stack chain-clean` and `./stack chain-boot`.
+
+Run `./stack compose-up` to start the stack.
+
+### Re-building images
+
+The first time you run docker compose, it will pull / build the images for all services. If you're making code changes, you'll want to re-build the docker images with your local changes. This can be done with `./stack compose-build`.
+
+### Stopping / shutting down
+
+Run `./stack compose-down`.
 
 ## Running a job
 
