@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
@@ -106,7 +107,8 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 		&options.CudaHashsPerThread, "cuda-hash-per-thread", options.CudaHashsPerThread,
 		`Cuda hash per threads (CUDA_HASH_PER_THREAD)`,
 	)
-
+	// Explicitly parse flags for the CLI options
+	cmd.ParseFlags(os.Args)
 }
 
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {
