@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.2...v2.2.3) (2024-07-23)
+
+
+### Bug Fixes
+
+* Correct pow flag handling in Cobra ([#261](https://github.com/Lilypad-Tech/lilypad/issues/261)) ([8b1f44f](https://github.com/Lilypad-Tech/lilypad/commit/8b1f44ff9d08c289e04bb53ca83b4f87e9041e6b))
+
 ## [2.2.2](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.1...v2.2.2) (2024-07-15)
 
 
