@@ -21,7 +21,7 @@ echo "Current version: $CURRENT_VERSION"
 
 # Check if CURRENT_VERSION has a value
 if [ -z "$CURRENT_VERSION" ]; then
-    echo "Error: Unable to determin CURRENT_VERSION."
+    echo "Error: Unable to determine CURRENT_VERSION."
     exit 1
 fi
 
