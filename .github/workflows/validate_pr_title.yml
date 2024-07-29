@@ -3,6 +3,8 @@ name: Validate PR Conventional Commit
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited]
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   validate-pr-title:
