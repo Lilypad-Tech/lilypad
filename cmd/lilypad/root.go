@@ -25,9 +25,6 @@ func NewRootCmd() *cobra.Command {
 	var network string
 	RootCmd.PersistentFlags().StringVarP(&network, "network", "n", "testnet", "Sets a target network configuration")
 
-	var powSignalCmd bool
-	RootCmd.PersistentFlags().BoolVarP(&powSignalCmd, "pow-signal", "", false, "Send a pow signal to smart contract")
-
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())
 	RootCmd.AddCommand(newPowSignalCmd())
