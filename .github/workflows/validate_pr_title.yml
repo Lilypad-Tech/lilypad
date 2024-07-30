@@ -1,8 +1,6 @@
 name: Validate PR Conventional Commit
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
   pull_request_target:
     types: [opened, synchronize, reopened, edited]
 
@@ -14,4 +12,16 @@ jobs:
         uses: ytanikin/PRConventionalCommits@1.2.0
         with:
           task_types: '["fix","feat","refactor","perf","spike","hotfix","revert","chore","docs","test","build"]'
-          add_label: false
+          custom_labels: >-
+            { "fix": "fix",
+              "feat": "feature",
+              "refactor": "refactor",
+              "perf": "performance",
+              "spike": "spike",
+              "hotfix": "hotfix",
+              "revert": "revert",
+              "chore": "chore",
+              "docs": "documentation",
+              "test": "test",
+              "build": "build"
+            }
