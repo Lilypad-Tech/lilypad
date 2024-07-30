@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.5](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.4...v2.2.5) (2024-07-30)
+
+
+### Bug Fixes
+
+* Remove auto-updater script ([#270](https://github.com/Lilypad-Tech/lilypad/issues/270)) ([605bfd2](https://github.com/Lilypad-Tech/lilypad/commit/605bfd2fdb407538a39f36955b32428f6623c2d3))
+
 ## [2.2.4](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.3...v2.2.4) (2024-07-30)
 
 
