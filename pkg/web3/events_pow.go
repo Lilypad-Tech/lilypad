@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
@@ -36,7 +37,7 @@ func (s *PowEventChannels) Start(
 
 	connectnewPowRoundSub := func() (event.Subscription, error) {
 		log.Debug().
-			Str("jobcreator->connect", "newPowRound").
+			Str("pow->connect", "newPowRound").
 			Msgf("")
 		return sdk.Contracts.Pow.WatchNewPowRound(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
@@ -49,13 +50,16 @@ func (s *PowEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		newPowRoundSub.Unsubscribe()
+	defer func() {
+		if newPowRoundSub != nil {
+			newPowRoundSub.Unsubscribe()
+		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-s.newPowRoundChan:
 			log.Debug().
 				Str("pow->event", "PowNewPowRound").
@@ -63,12 +67,8 @@ func (s *PowEventChannels) Start(
 			for _, handler := range s.newPowRoundSubs {
 				go handler(*event)
 			}
-		case <-newPowRoundSub.Err():
-			newPowRoundSub.Unsubscribe()
-			newPowRoundSub, err = connectnewPowRoundSub()
-			if err != nil {
-				return err
-			}
+		case err := <-newPowRoundSub.Err():
+			return fmt.Errorf("cancel by pow newPowRound event subscribe error %w", err)
 		}
 	}
 }

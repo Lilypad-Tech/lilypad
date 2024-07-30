@@ -2,11 +2,12 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,13 +50,16 @@ func (m *MediationEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		mediationRequestedSub.Unsubscribe()
+	defer func() {
+		if mediationRequestedSub != nil {
+			mediationRequestedSub.Unsubscribe()
+		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-m.mediationRequestedChan:
 			log.Debug().
 				Str("mediation->event", "MediationRequested").
@@ -64,11 +68,7 @@ func (m *MediationEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-mediationRequestedSub.Err():
-			mediationRequestedSub.Unsubscribe()
-			mediationRequestedSub, err = connectMediationRequestedSub()
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
 		}
 	}
 }

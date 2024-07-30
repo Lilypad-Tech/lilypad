@@ -2,12 +2,13 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/rs/zerolog/log"
 )
 
@@ -52,13 +53,16 @@ func (t *TokenEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		transferSub.Unsubscribe()
+	defer func() {
+		if transferSub != nil {
+			transferSub.Unsubscribe()
+		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-t.transferChan:
 			log.Debug().
 				Str("token->event", "Transfer").
@@ -67,11 +71,7 @@ func (t *TokenEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-transferSub.Err():
-			transferSub.Unsubscribe()
-			transferSub, err = connectTransferSub()
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("cancel by token Transfer event subscribe error %w", err)
 		}
 	}
 }
