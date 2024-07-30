@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.2.4](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.3...v2.2.4) (2024-07-30)
+
+
+### Bug Fixes
+
+* Remove DisablePow from PersistentFlags ([69e8e03](https://github.com/Lilypad-Tech/lilypad/commit/69e8e039323def5a21b532e931af45dd3dfcf867))
+
+
+### Reverts
+
+* "chore: Remove PR title labeling ([#267](https://github.com/Lilypad-Tech/lilypad/issues/267))" ([#268](https://github.com/Lilypad-Tech/lilypad/issues/268)) ([ca76faf](https://github.com/Lilypad-Tech/lilypad/commit/ca76fafef3f4085bf24a913babedd9678b6dad33))
+
 ## [2.2.3](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.2...v2.2.3) (2024-07-23)
 
 
