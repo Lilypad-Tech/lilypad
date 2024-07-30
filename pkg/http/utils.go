@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -324,8 +323,8 @@ func GetRequestBuffer(
 
 func GenericJSONPostClient(url string, json string) (*http.Response, error) {
 	data := []byte(json)
-	client := &http.Client{Timeout: time.Second * 1}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	client := newRetryClient()
+	req, err := retryablehttp.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		fmt.Printf("error setting up the request: %s", err)
 		return nil, err
