@@ -56,8 +56,8 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 ⠀⠀⠀⠀⠀⠈⠙⠛⠛⠘⠛⠋⠁⠀ ⠀⠀⠀   Decentralized Compute Network  https://lilypad.tech
 
 `
-	if version != "" {
-		header = strings.Replace(header, "v2", version, 1)
+	if system.Version != "" {
+		header = strings.Replace(header, "v2", system.Version, 1)
 	}
 	c.Print(header)
 
