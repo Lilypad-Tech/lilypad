@@ -38,7 +38,7 @@ func (s *PowEventChannels) Start(
 	connectnewPowRoundSub := func() (event.Subscription, error) {
 		log.Debug().
 			Str("pow->connect", "newPowRound").
-			Msgf("")
+			Msgf("start to watch new pow round")
 		return sdk.Contracts.Pow.WatchNewPowRound(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.newPowRoundChan,
