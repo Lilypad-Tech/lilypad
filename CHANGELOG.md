@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.6](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.5...v2.2.6) (2024-08-05)
+
+
+### Bug Fixes
+
+* Reconnect sc event loop ([#266](https://github.com/Lilypad-Tech/lilypad/issues/266)) ([436363c](https://github.com/Lilypad-Tech/lilypad/commit/436363cbd4a938cc5a45e1c21e0418624975f2f0))
+
 ## [2.2.5](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.4...v2.2.5) (2024-07-30)
 
 
