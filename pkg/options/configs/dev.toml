@@ -2,7 +2,7 @@
 solver = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 mediator = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
 api_host = "http://localhost:8002/"
-telemetry_url = "http://localhost:4137"
+telemetry_url = "http://localhost:4138"
 
 [web3]
 rpc_url = "ws://localhost:8548"
