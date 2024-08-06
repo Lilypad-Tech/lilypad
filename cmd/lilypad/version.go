@@ -30,7 +30,8 @@ func newVersionCmd() *cobra.Command {
 }
 
 func runVersion(cmd *cobra.Command) error {
-	commandCtx := system.NewCommandContext(cmd)
+	tc := system.TelemetryConfig{Service: system.DefaultService, CollectorURL: "", Enabled: false}
+	commandCtx := system.NewCommandContext(cmd, tc)
 	defer commandCtx.Cleanup()
 
 	if system.Version == "" {

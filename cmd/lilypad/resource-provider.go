@@ -34,7 +34,8 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
-	commandCtx := system.NewCommandContext(cmd)
+	tc := system.TelemetryConfig{Service: system.ResourceProviderService, CollectorURL: options.Offers.Services.TelemetryURL, Enabled: true}
+	commandCtx := system.NewCommandContext(cmd, tc)
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)

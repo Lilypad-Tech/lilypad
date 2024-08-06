@@ -33,7 +33,8 @@ func newJobCreatorCmd() *cobra.Command {
 }
 
 func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
-	commandCtx := system.NewCommandContext(cmd)
+	tc := system.TelemetryConfig{Service: system.JobCreatorService, CollectorURL: options.Offer.Services.TelemetryURL, Enabled: false}
+	commandCtx := system.NewCommandContext(cmd, tc)
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
