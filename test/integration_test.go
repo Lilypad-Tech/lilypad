@@ -12,9 +12,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	"github.com/lilypad-tech/lilypad/pkg/mediator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
-	solvermemorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/stretchr/testify/assert"
@@ -23,58 +21,6 @@ import (
 type testOptions struct {
 	moderationChance int
 	executor         noop.NoopExecutorOptions
-}
-
-func getSolver(t *testing.T, options testOptions) (*solver.Solver, error) {
-	solverOptions := optionsfactory.NewSolverOptions()
-	solverOptions.Web3.PrivateKey = os.Getenv("SOLVER_PRIVATE_KEY")
-	solverOptions.Server.Port = 8080
-	solverOptions.Server.URL = "http://localhost:8080"
-
-	// test that the solver private key is defined
-	if solverOptions.Web3.PrivateKey == "" {
-		return nil, fmt.Errorf("SOLVER_PRIVATE_KEY is not defined")
-	}
-
-	web3SDK, err := web3.NewContractSDK(solverOptions.Web3)
-	if err != nil {
-		return nil, err
-	}
-
-	solverStore, err := solvermemorystore.NewSolverStoreMemory()
-	if err != nil {
-		return nil, err
-	}
-
-	return solver.NewSolver(solverOptions, solverStore, web3SDK)
-}
-
-func getResourceProvider(
-	t *testing.T,
-	systemContext *system.CommandContext,
-	options testOptions,
-) (*resourceprovider.ResourceProvider, error) {
-	resourceProviderOptions := optionsfactory.NewResourceProviderOptions()
-	resourceProviderOptions.Web3.PrivateKey = os.Getenv("RESOURCE_PROVIDER_PRIVATE_KEY")
-	if resourceProviderOptions.Web3.PrivateKey == "" {
-		return nil, fmt.Errorf("RESOURCE_PROVIDER_PRIVATE_KEY is not defined")
-	}
-	resourceProviderOptions, err := optionsfactory.ProcessResourceProviderOptions(resourceProviderOptions, "dev")
-	if err != nil {
-		return nil, err
-	}
-
-	web3SDK, err := web3.NewContractSDK(resourceProviderOptions.Web3)
-	if err != nil {
-		return nil, err
-	}
-
-	executor, err := noop.NewNoopExecutor(options.executor)
-	if err != nil {
-		return nil, err
-	}
-
-	return resourceprovider.NewResourceProvider(resourceProviderOptions, web3SDK, executor)
 }
 
 func getMediator(
@@ -131,24 +77,9 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-
-	solver, err := getSolver(t, options)
-	if err != nil {
-		return nil, err
-	}
-
-	solver.Start(commandCtx.Ctx, commandCtx.Cm)
-
 	// give the solver server a chance to boot before we get all the websockets
 	// up and trying to connect to it
 	time.Sleep(100 * time.Millisecond)
-
-	resourceProvider, err := getResourceProvider(t, commandCtx, options)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceProvider.Start(commandCtx.Ctx, commandCtx.Cm)
 
 	mediator, err := getMediator(t, commandCtx, options)
 	if err != nil {
@@ -187,7 +118,7 @@ func TestNoModeration(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "there was an error running the job")
-	assert.Equal(t, "123", result.Result.DataID, "the data ID was correct")
+	assert.Equal(t, "QmbCi3yoKzckff24rUJML1ZesVb35cd2LUNMiMYksEGkWv", result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
 

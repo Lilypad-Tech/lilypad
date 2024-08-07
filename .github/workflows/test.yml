@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v1
+
+      - name: Install golang
+        uses: actions/setup-go@v5
+
+      - name: Install node
+        uses: actions/setup-node@v4
+
+      - name: Build Docker Images
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_INTEGRATION_TESTS }}
+        run: docker-compose -f docker/docker-compose.dev.yml build
+
+      - name: Initialize chain
+        run: |
+          docker compose -f ./docker/docker-compose.dev.yml up chain -d
+          ./stack chain-boot
+
+      - name: Run stack
+        run: |
+          docker compose -f ./docker/docker-compose.dev.yml up -d
+
+      - name: Run tests
+        run: ./stack integration-tests
