@@ -15,6 +15,9 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ResourceProviderController struct {
@@ -151,7 +154,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve()
+			err := controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -180,7 +183,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
  *
 */
 
-func (controller *ResourceProviderController) solve() error {
+func (controller *ResourceProviderController) solve(ctx context.Context) error {
 	controller.log.Debug("solving", "")
 
 	// if the solver does not know about resource offers
@@ -198,7 +201,7 @@ func (controller *ResourceProviderController) solve() error {
 	}
 
 	// if there are jobs that have had both sides agree then we should run the job
-	err = controller.runJobs()
+	err = controller.runJobs(ctx)
 	if err != nil {
 		return err
 	}
@@ -359,7 +362,7 @@ func (controller *ResourceProviderController) agreeToDeals() error {
  *
 */
 
-func (controller *ResourceProviderController) runJobs() error {
+func (controller *ResourceProviderController) runJobs(ctx context.Context) error {
 	agreedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -395,7 +398,7 @@ func (controller *ResourceProviderController) runJobs() error {
 			controller.runningJobs[dealContainer.ID] = true
 		}()
 
-		go controller.runJob(dealContainer)
+		go controller.runJob(ctx, dealContainer)
 	}
 
 	return err
@@ -404,8 +407,31 @@ func (controller *ResourceProviderController) runJobs() error {
 // this is run in it's own go-routine
 // we've already updated controller.runningJobs so we know this will only
 // run once
-func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
+func (controller *ResourceProviderController) runJob(ctx context.Context, deal data.DealContainer) {
 	controller.log.Info("run job", deal)
+
+	provider := otel.GetTracerProvider()
+	if provider != nil {
+		fmt.Printf("*** tracer provider set in run jobs: %+v ***\n", provider)
+	}
+
+	// Start run job trace
+	ctx, span := otel.Tracer(string(system.ResourceProviderService)).Start(ctx, "run job",
+		trace.WithAttributes(attribute.String("Deal ID", deal.ID)),
+	)
+	defer span.End()
+
+	fmt.Printf("*** Span is recording: %v ***\n", span.IsRecording())
+	fmt.Printf("*** Span has trace ID: %v ***\n", span.SpanContext().HasTraceID())
+	fmt.Printf("*** Span has span ID: %v ***\n", span.SpanContext().HasSpanID())
+
+	// TODO Add more config info
+	span.AddEvent("*** starting job with configuration ***", trace.WithAttributes(attribute.String("version", system.Version)))
+
+	// TODO remove
+	val := ctx.Value("hello")
+	fmt.Printf("*** key: hello, value: %s ***\n", val)
+
 	result := data.Result{
 		DealID: deal.ID,
 		Error:  "",
@@ -414,17 +440,23 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		controller.log.Info("loading module", "")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
+			// TODO span event with error message
+			// Mark span as erred (ERR?)
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
 		controller.log.Info("module loaded", module)
+		// TODO span event module loaded
 		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
 			controller.log.Error("error running job", err)
+			// TODO span event with error message
+			// Mark span as erred (ERR?)
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
 		result.InstructionCount = uint64(executorResult.InstructionCount)
 		result.DataID = executorResult.ResultsCID
 		controller.log.Info("got result", result)
+		// TODO span event job completed
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
 
@@ -433,8 +465,12 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		if err != nil {
 			// Log the response body in debug mode
 			controller.log.Debug("[debug] error uploading results. response was ", response)
+			// TODO span event with response status code and body
+			// Mark span as erred (ERR?)
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
+
+		// TODO span event results uploaded
 
 		return nil
 	}()
