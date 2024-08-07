@@ -1,7 +1,6 @@
 package lilypad
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/data"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
@@ -19,7 +18,6 @@ func newSolverCmd() *cobra.Command {
 		Long:    "Start the lilypad solver service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			optionsfactory.CheckDeprecation(data.ServiceConfig{}, options.Web3)
 
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
