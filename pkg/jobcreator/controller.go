@@ -3,6 +3,7 @@ package jobcreator
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -25,13 +26,19 @@ type JobCreatorController struct {
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
 	jobOfferSubscriptions []JobOfferSubscriber
+	moduleAllowlist       []string
+	enableAllowlist       bool
 }
 
-// the background "even if we have not heard of an event" loop
-// i.e. things will not wait 10 seconds - the control loop
-// reacts to events in the system - this 10 second background
-// loop is just for in case we miss any events
-const CONTROL_LOOP_INTERVAL = 10 * time.Second
+const (
+	ALLOWLIST_URL = "https://raw.githubusercontent.com/lilypad-tech/module-allowlist/main/allowlist.txt"
+
+	// the background "even if we have not heard of an event" loop
+	// i.e. things will not wait 10 seconds - the control loop
+	// reacts to events in the system - this 10 second background
+	// loop is just for in case we miss any events
+	CONTROL_LOOP_INTERVAL = 10 * time.Second
+)
 
 func NewJobCreatorController(
 	options JobCreatorOptions,
@@ -143,6 +150,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		deal, err := controller.solverClient.GetDeal(ev.DealId)
 		if err != nil {
+			err = fmt.Errorf("module allowlist error: %s", err)
 			controller.log.Error("error getting deal", err)
 			return
 		}
@@ -158,12 +166,45 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error)
+
+	// Check the enableAllowlist flag to determine whether to manage the module allowlist
+	if controller.enableAllowlist {
+		// Initial fetch of the module allowlist
+		err := controller.UpdateModuleAllowlist()
+		if err != nil {
+			controller.log.Error("failed to fetch module allowlist", err)
+		}
+
+		// Periodic update logic here using a time.Ticker
+		ticker := time.NewTicker(1 * time.Hour)
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					err := controller.UpdateModuleAllowlist()
+					if err != nil {
+						controller.log.Error("periodic module allowlist update failed", err)
+					}
+				case <-ctx.Done():
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+	}
+
+	// Setup subscriptions and other initialization tasks
 	err := controller.subscribeToSolver()
 	if err != nil {
 		errorChan <- err
 		return errorChan
 	}
 	err = controller.subscribeToWeb3()
+	if err != nil {
+		errorChan <- err
+		return errorChan
+	}
+	err = controller.allowlistApproved()
 	if err != nil {
 		errorChan <- err
 		return errorChan
@@ -201,6 +242,38 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 	}
 
 	return errorChan
+}
+
+func (controller *JobCreatorController) UpdateModuleAllowlist() error {
+	// Call the new helper function with a 5-second timeout!
+	body, err := http.GetRequestWithTimeout(ALLOWLIST_URL, 5*time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to fetch module allowlist: %s", err)
+	}
+
+	// Update the internal cache of the allowlist
+	controller.moduleAllowlist = strings.Split(strings.TrimSpace(string(body)), "\n")
+	return nil
+}
+
+func (controller *JobCreatorController) allowlistApproved() error {
+	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
+		deal, err := controller.solverClient.GetDeal(ev.DealId)
+		if err != nil {
+
+			controller.log.Error("module allowlist error", err)
+			return
+		}
+
+		// error handling out of the allowlist function- this is a critical error!!
+		if deal.JobCreator != controller.web3SDK.GetAddress().String() {
+			return
+		}
+		controller.log.Debug("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		system.DumpObjectDebug(ev)
+		controller.loop.Trigger()
+	})
+	return nil
 }
 
 /*
@@ -290,6 +363,7 @@ func (controller *JobCreatorController) agreeToDeals() error {
 // list the deals that have results posted but we have not yet checked
 // we do this synchronously to prevent us racing with large result sets
 // also we are the client so have a lower chance of there being a chunky backlog
+
 func (controller *JobCreatorController) checkResults() error {
 	// load all deals in ResultsSubmitted state and don't have either results checked or accepted txs
 	completedDeals, err := controller.solverClient.GetDealsWithFilter(

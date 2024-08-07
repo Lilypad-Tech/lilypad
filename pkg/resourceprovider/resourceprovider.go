@@ -64,11 +64,18 @@ type ResourceProviderPowOptions struct {
 	CudaHashsPerThread int
 }
 
+// Enabled Modules
+
+type ResourceProviderEnabledModules struct {
+	EnableAllowlist bool
+}
+
 type ResourceProviderOptions struct {
-	Bacalhau bacalhau.BacalhauExecutorOptions
-	Offers   ResourceProviderOfferOptions
-	Web3     web3.Web3Options
-	Pow      ResourceProviderPowOptions
+	Bacalhau  bacalhau.BacalhauExecutorOptions
+	Offers    ResourceProviderOfferOptions
+	Web3      web3.Web3Options
+	Pow       ResourceProviderPowOptions
+	Allowlist ResourceProviderAllowlistOptions
 }
 
 type ResourceProvider struct {

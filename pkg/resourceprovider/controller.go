@@ -266,6 +266,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 		// check if the resource offer already exists
 		// if it does then we need to update it
 		// if it doesn't then we need to add it
+
 		_, ok := existingResourceOffersMap[index]
 		if !ok {
 			addResourceOffers = append(addResourceOffers, controller.getResourceOffer(index, spec))
@@ -342,6 +343,8 @@ func (controller *ResourceProviderController) agreeToDeals() error {
 		}
 		controller.log.Info("updated deal with agree tx", txHash)
 	}
+
+	//
 
 	return err
 

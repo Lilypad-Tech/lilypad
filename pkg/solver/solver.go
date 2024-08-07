@@ -59,3 +59,7 @@ func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager) chan
 	}()
 	return errorChan
 }
+
+type ResourceProviderEnabledModules struct {
+	EnableAllowlist bool
+}
