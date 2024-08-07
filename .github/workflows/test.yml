@@ -23,7 +23,7 @@ jobs:
       - name: Build Docker Images
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_INTEGRATION_TESTS }}
-        run: docker-compose -f docker/docker-compose.dev.yml build
+        run: docker compose -f docker/docker-compose.dev.yml build
 
       - name: Initialize chain
         run: |
