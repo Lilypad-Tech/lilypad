@@ -27,6 +27,7 @@ jobs:
         env:
           ADMIN_ADDRESS: ${{ secrets.INTEGRATION_TEST_ADMIN_ADDRESS }}
         run: |
+          ./stack chain-clean
           docker compose -f ./docker/docker-compose.dev.yml up chain -d
           ./stack chain-boot
 
