@@ -15,19 +15,19 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type ResourceProviderController struct {
-	solverClient *solver.SolverClient
-	options      ResourceProviderOptions
-	web3SDK      *web3.Web3SDK
-	web3Events   *web3.EventChannels
-	loop         *system.ControlLoop
-	log          *system.ServiceLogger
-	executor     executor.Executor
+	solverClient   *solver.SolverClient
+	options        ResourceProviderOptions
+	web3SDK        *web3.Web3SDK
+	web3Events     *web3.EventChannels
+	loop           *system.ControlLoop
+	log            *system.ServiceLogger
+	tracerProvider trace.TracerProvider
+	executor       executor.Executor
 	// keep track of which jobs are running
 	// this is because no remote state will change
 	// whilst we are actually running a job
@@ -45,6 +45,7 @@ func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
+	telemetry system.Telemetry,
 ) (*ResourceProviderController, error) {
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Offers.Services.Solver)
@@ -64,13 +65,14 @@ func NewResourceProviderController(
 	}
 
 	controller := &ResourceProviderController{
-		solverClient: solverClient,
-		options:      options,
-		web3SDK:      web3SDK,
-		web3Events:   web3.NewEventChannels(),
-		log:          system.NewServiceLogger(system.ResourceProviderService),
-		executor:     executor,
-		runningJobs:  map[string]bool{},
+		solverClient:   solverClient,
+		options:        options,
+		web3SDK:        web3SDK,
+		web3Events:     web3.NewEventChannels(),
+		log:            system.NewServiceLogger(system.ResourceProviderService),
+		tracerProvider: telemetry.TracerProvider,
+		executor:       executor,
+		runningJobs:    map[string]bool{},
 	}
 	return controller, nil
 }
@@ -410,27 +412,14 @@ func (controller *ResourceProviderController) runJobs(ctx context.Context) error
 func (controller *ResourceProviderController) runJob(ctx context.Context, deal data.DealContainer) {
 	controller.log.Info("run job", deal)
 
-	provider := otel.GetTracerProvider()
-	if provider != nil {
-		fmt.Printf("*** tracer provider set in run jobs: %+v ***\n", provider)
-	}
-
 	// Start run job trace
-	ctx, span := otel.Tracer(string(system.ResourceProviderService)).Start(ctx, "run job",
+	ctx, span := controller.tracerProvider.Tracer(string(system.ResourceProviderService)).Start(ctx, "run job",
 		trace.WithAttributes(attribute.String("Deal ID", deal.ID)),
 	)
 	defer span.End()
 
-	fmt.Printf("*** Span is recording: %v ***\n", span.IsRecording())
-	fmt.Printf("*** Span has trace ID: %v ***\n", span.SpanContext().HasTraceID())
-	fmt.Printf("*** Span has span ID: %v ***\n", span.SpanContext().HasSpanID())
-
 	// TODO Add more config info
-	span.AddEvent("*** starting job with configuration ***", trace.WithAttributes(attribute.String("version", system.Version)))
-
-	// TODO remove
-	val := ctx.Value("hello")
-	fmt.Printf("*** key: hello, value: %s ***\n", val)
+	span.AddEvent("starting job with configuration", trace.WithAttributes(attribute.String("version", system.Version)))
 
 	result := data.Result{
 		DealID: deal.ID,

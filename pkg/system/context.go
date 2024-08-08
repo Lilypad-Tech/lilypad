@@ -2,7 +2,6 @@ package system
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,17 +18,8 @@ type CommandContext struct {
 	CancelFunc     context.CancelFunc
 }
 
-func NewSystemContext(ctx context.Context, tc TelemetryConfig) *CommandContext {
+func NewSystemContext(ctx context.Context) *CommandContext {
 	SetupLogging()
-
-	otelShutdown, err := setupOTelSDK(ctx, tc)
-	if err != nil {
-		fmt.Printf("failed to setup opentelemetry: %s", err)
-	}
-	defer func() { err = errors.Join(err, otelShutdown(context.Background())) }()
-
-	// TODO remove this context test
-	ctx = context.WithValue(ctx, "hello", "rp")
 
 	cm := NewCleanupManager()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
@@ -64,11 +54,11 @@ func NewTestingContext() *CommandContext {
 		os.Exit(0)
 	}()
 
-	return NewSystemContext(context.Background(), TelemetryConfig{Service: DefaultService, CollectorURL: "", Enabled: false})
+	return NewSystemContext(context.Background())
 }
 
-func NewCommandContext(cmd *cobra.Command, tc TelemetryConfig) *CommandContext {
-	return NewSystemContext(cmd.Context(), tc)
+func NewCommandContext(cmd *cobra.Command) *CommandContext {
+	return NewSystemContext(cmd.Context())
 }
 
 func (cmdContext *CommandContext) Cleanup() {

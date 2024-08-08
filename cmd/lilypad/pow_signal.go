@@ -39,8 +39,7 @@ func newPowSignalCmd() *cobra.Command {
 }
 
 func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
-	tc := system.TelemetryConfig{Service: system.DefaultService, CollectorURL: "", Enabled: false}
-	commandCtx := system.NewCommandContext(cmd, tc)
+	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
