@@ -41,5 +41,5 @@ jobs:
 
       - name: Run tests
         env:
-          DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN }}
+          DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TESTS_DOPPLER_TOKEN }}
         run: ./stack integration-tests
