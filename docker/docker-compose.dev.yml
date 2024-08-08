@@ -30,7 +30,7 @@ services:
         "0.0.0.0",
       ]
     volumes:
-      - ../data/chain:/home/user/.arbitrum
+      - chain-data:/home/user/.arbitrum
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8547/"]
       interval: 30s
@@ -95,3 +95,5 @@ services:
       - WEB3_PRIVATE_KEY
       - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
       - LOG_LEVEL=debug
+volumes:
+  chain-data:

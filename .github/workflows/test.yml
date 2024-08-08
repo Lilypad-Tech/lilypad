@@ -28,12 +28,12 @@ jobs:
 
       - name: Initialize chain
         run: |
-          docker compose -f ./docker/docker-compose.dev.yml up chain -d --wait
+          docker compose -f ./docker/docker-compose.dev.yml up chain -d
           ./stack chain-boot
 
       - name: Run stack
         run: |
-          docker compose -f ./docker/docker-compose.dev.yml up -d --wait
+          docker compose -f ./docker/docker-compose.dev.yml up -d
 
       - name: Run tests
         run: ./stack integration-tests
