@@ -93,8 +93,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		os.Exit(1)
 	}
 
-	tc := system.TelemetryConfig{Service: system.JobCreatorService, CollectorURL: options.Offer.Services.TelemetryURL, Enabled: false}
-	commandCtx := system.NewCommandContext(cmd, tc)
+	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 	result, err := jobcreator.RunJob(commandCtx, options, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()

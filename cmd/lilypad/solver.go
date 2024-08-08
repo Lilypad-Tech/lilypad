@@ -34,8 +34,7 @@ func newSolverCmd() *cobra.Command {
 }
 
 func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
-	tc := system.TelemetryConfig{Service: system.JobCreatorService, CollectorURL: options.Services.TelemetryURL, Enabled: false}
-	commandCtx := system.NewCommandContext(cmd, tc)
+	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)

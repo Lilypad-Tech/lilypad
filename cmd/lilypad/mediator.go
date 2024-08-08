@@ -35,8 +35,7 @@ func newMediatorCmd() *cobra.Command {
 }
 
 func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
-	tc := system.TelemetryConfig{Service: system.MediatorService, CollectorURL: options.Services.TelemetryURL, Enabled: false}
-	commandCtx := system.NewCommandContext(cmd, tc)
+	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)

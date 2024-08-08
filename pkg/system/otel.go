@@ -13,18 +13,23 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-type TelemetryConfig struct {
-	Service      Service
-	CollectorURL string
-	Enabled      bool
+type Telemetry struct {
+	TracerProvider *trace.TracerProvider
+	Shutdown       func(context.Context) error
 }
 
-func setupOTelSDK(ctx context.Context, config TelemetryConfig) (shutdown func(context.Context) error, err error) {
+type TelemetryConfig struct {
+	Service Service
+	URL     string
+	Enabled bool
+}
+
+func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// Call registered cleanup handlers, calling each
 	// cleanup handler once and joining error results.
-	shutdown = func(ctx context.Context) error {
+	Shutdown := func(ctx context.Context) error {
 		var err error
 		for _, fn := range shutdownFuncs {
 			err = errors.Join(err, fn(ctx))
@@ -35,7 +40,7 @@ func setupOTelSDK(ctx context.Context, config TelemetryConfig) (shutdown func(co
 
 	// On error, call shutdown for cleanup and return all errors.
 	handleErr := func(inErr error) {
-		err = errors.Join(inErr, shutdown(ctx))
+		err = errors.Join(inErr, Shutdown(ctx))
 	}
 
 	// Set up propagator
@@ -43,24 +48,25 @@ func setupOTelSDK(ctx context.Context, config TelemetryConfig) (shutdown func(co
 	otel.SetTextMapPropagator(prop)
 
 	// Set up tracer provider.
+	var TracerProvider *trace.TracerProvider
 	if config.Enabled {
-		tracerProvider, err := newTracerProvider(ctx, config)
+		TracerProvider, err = newTracerProvider(ctx, config)
 		if err != nil {
 			handleErr(err)
-			return shutdown, err
+			return Telemetry{
+				TracerProvider,
+				Shutdown,
+			}, err
 		}
-		shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-		otel.SetTracerProvider(tracerProvider)
-	}
-
-	provider := otel.GetTracerProvider()
-	if provider != nil {
-		fmt.Printf("*** tracer provider at setup: %+v ***\n", provider)
+		shutdownFuncs = append(shutdownFuncs, TracerProvider.Shutdown)
+	} else {
+		// TODO(bgins) Find a better Noop provider option
+		TracerProvider = trace.NewTracerProvider()
 	}
 
 	// TODO(bgins) Add meter and logger providers
 
-	return shutdown, nil
+	return Telemetry{TracerProvider, Shutdown}, nil
 }
 
 func newPropagator() propagation.TextMapPropagator {
@@ -79,10 +85,10 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 	// 	return nil, err
 	// }
 
-	fmt.Printf("*** Configuring provider with %+v ***\n", config)
+	// fmt.Printf("*** Configuring provider with %+v ***\n", config)
 
 	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpointURL(config.CollectorURL),
+		otlptracehttp.WithEndpointURL(config.URL),
 		// TODO Add auth
 		otlptracehttp.WithInsecure(),
 	)
