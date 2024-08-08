@@ -40,4 +40,6 @@ jobs:
         run: docker compose -f ./docker/docker-compose.dev.yml up -d
 
       - name: Run tests
+        env:
+          DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN }}
         run: ./stack integration-tests
