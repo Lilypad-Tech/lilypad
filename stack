@@ -309,9 +309,8 @@ function unit-tests() {
   npx hardhat test --network hardhat
 }
 
-# this assumes chain is running
-# and chain-fund-admin
-# and chain-boot
+# this assumes stack is running
+# see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   cd test
   doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .

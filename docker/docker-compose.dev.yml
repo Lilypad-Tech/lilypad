@@ -1,7 +1,7 @@
 name: lilypad
 services:
   chain:
-    image: offchainlabs/nitro-node:v2.3.4-b4cc111
+    image: offchainlabs/nitro-node:v3.1.1-beta.2-6073359
     container_name: chain
     ports:
       - 8547:8547
@@ -30,9 +30,9 @@ services:
         "0.0.0.0",
       ]
     volumes:
-      - ../data/chain:/home/user/.arbitrum
+      - chain-data:/home/user/.arbitrum
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8548/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8547/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -89,9 +89,12 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
-      - ../data/bacalhau:/tmp/lilypad/data
+      - bacalhau-data:/tmp/lilypad/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WEB3_PRIVATE_KEY
       - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
       - LOG_LEVEL=debug
+volumes:
+  chain-data:
+  bacalhau-data:
