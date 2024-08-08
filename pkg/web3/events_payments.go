@@ -2,11 +2,12 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/payments"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/payments"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,13 +50,15 @@ func (p *PaymentEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		paymentSub.Unsubscribe()
+	defer func() {
+		if paymentSub != nil {
+			paymentSub.Unsubscribe()
+		}
 	}()
-
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-p.paymentChan:
 			log.Debug().
 				Str("payments->event", "Payment").
@@ -64,11 +67,7 @@ func (p *PaymentEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-paymentSub.Err():
-			paymentSub.Unsubscribe()
-			paymentSub, err = connectPaymentSub()
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
 		}
 	}
 }

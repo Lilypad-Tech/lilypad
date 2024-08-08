@@ -22,7 +22,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          mask-password: 'true'
+          mask-password: "true"
 
       - name: Solver build, tag, and push image to Amazon ECR
         id: build-image
@@ -61,6 +61,7 @@ jobs:
               -d \
               --restart always \
               --name solver \
+              --log-opt max-size=100m \
               -e DOPPLER_TOKEN=$DEVNET_DOPPLER_TOKEN_SOLVER \
               $ECR_REGISTRY/$ECR_REPOSITORY_SOLVER:latest
 
@@ -84,7 +85,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          mask-password: 'true'
+          mask-password: "true"
 
       - name: Job creator build, tag, and push image to Amazon ECR
         id: build-image
@@ -122,5 +123,6 @@ jobs:
               -d \
               --restart always \
               --name job-creator \
+              --log-opt max-size=100m \
               -e DOPPLER_TOKEN=$DEVNET_DOPPLER_TOKEN_JOB_CREATOR \
               $ECR_REGISTRY/$ECR_REPOSITORY_JOB_CREATOR:latest
