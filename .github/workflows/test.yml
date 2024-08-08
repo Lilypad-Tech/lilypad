@@ -5,9 +5,6 @@ on:
     branches:
       - main
 
-env:
-  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_INTEGRATION_TESTS }}
-
 jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
@@ -27,13 +24,14 @@ jobs:
         run: docker compose -f docker/docker-compose.dev.yml build
 
       - name: Initialize chain
+        env:
+          ADMIN_ADDDRESS: ${{ secrets.ADMIN_ADDRESS }}
         run: |
           docker compose -f ./docker/docker-compose.dev.yml up chain -d
           ./stack chain-boot
 
       - name: Run stack
-        run: |
-          docker compose -f ./docker/docker-compose.dev.yml up -d
+        run: ./stack compose-up -d
 
       - name: Run tests
         run: ./stack integration-tests
