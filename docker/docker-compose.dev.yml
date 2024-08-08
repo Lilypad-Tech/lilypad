@@ -1,7 +1,7 @@
 name: lilypad
 services:
   chain:
-    image: offchainlabs/nitro-node:v2.3.4-b4cc111
+    image: offchainlabs/nitro-node:v3.1.1-beta.2-6073359
     container_name: chain
     ports:
       - 8547:8547
