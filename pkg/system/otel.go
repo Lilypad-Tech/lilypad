@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -109,4 +110,9 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 	)
 
 	return provider, nil
+}
+
+// Convert service names to use standardized OTel underscores
+func GetOTelServiceName(service Service) string {
+	return strings.Replace(string(service), "-", "_", -1)
 }
