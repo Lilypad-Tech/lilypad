@@ -240,7 +240,7 @@ function job-creator-docker-run() {
 
 function resource-provider() {
   echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@" --network dev --disable-pow true
+  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@" --network dev
 }
 
 function resource-provider-docker-build() {
