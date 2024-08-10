@@ -218,14 +218,18 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Web3SDK{
+
+	web3SDK := &Web3SDK{
 		PrivateKey:   privateKey,
 		Options:      options,
 		Client:       client,
 		CallOpts:     callOpts,
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
-	}, nil
+	}
+	log.Debug().Msgf("Public Address: %s", web3SDK.GetAddress())
+
+	return web3SDK, nil
 }
 
 func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
