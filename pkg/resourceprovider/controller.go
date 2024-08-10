@@ -16,6 +16,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -413,53 +414,58 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	controller.log.Info("run job", deal)
 
 	// Start run job trace
-	ctx, span := controller.tracerProvider.Tracer(string(system.ResourceProviderService)).Start(ctx, "run job",
-		trace.WithAttributes(attribute.String("Deal ID", deal.ID)),
+	service := system.ResourceProviderService
+	ctx, span := controller.tracerProvider.Tracer(system.GetOTelServiceName(service)).Start(ctx, "run_job",
+		trace.WithAttributes(attribute.String("deal.id", deal.ID)),
+		trace.WithAttributes(attribute.String("deal.job_creator", deal.JobCreator)),
+		trace.WithAttributes(attribute.String("deal.resource_provider", deal.ResourceProvider)),
+		trace.WithAttributes(attribute.String("deal.job_offer.id", deal.Deal.JobOffer.ID)),
+		trace.WithAttributes(attribute.String("deal.job_offer.module.repo", deal.Deal.JobOffer.Module.Repo)),
+		trace.WithAttributes(attribute.String("deal.job_offer.module.hash", deal.Deal.JobOffer.Module.Hash)),
+		trace.WithAttributes(attribute.String("deal.resource_offer.id", deal.Deal.ResourceOffer.ID)),
 	)
 	defer span.End()
 
-	// TODO Add more config info
-	span.AddEvent("starting job with configuration", trace.WithAttributes(attribute.String("version", system.Version)))
-
+	span.AddEvent("start")
 	result := data.Result{
 		DealID: deal.ID,
 		Error:  "",
 	}
 	err := func() error {
 		controller.log.Info("loading module", "")
+		span.AddEvent("module.load")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
-			// TODO span event with error message
-			// Mark span as erred (ERR?)
+			span.SetStatus(codes.Error, "load module failed")
+			span.RecordError(err)
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
 		controller.log.Info("module loaded", module)
-		// TODO span event module loaded
+		span.AddEvent("module.loaded")
+
+		span.AddEvent("executor.job.start")
 		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
 			controller.log.Error("error running job", err)
-			// TODO span event with error message
-			// Mark span as erred (ERR?)
+			span.SetStatus(codes.Error, "job execution failed")
+			span.RecordError(err)
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
 		result.InstructionCount = uint64(executorResult.InstructionCount)
 		result.DataID = executorResult.ResultsCID
 		controller.log.Info("got result", result)
-		// TODO span event job completed
+		span.AddEvent("executor.job.complete")
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
-
+		span.AddEvent("solver.files.upload")
 		response, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
-
 		if err != nil {
-			// Log the response body in debug mode
 			controller.log.Debug("[debug] error uploading results. response was ", response)
-			// TODO span event with response status code and body
-			// Mark span as erred (ERR?)
+			span.SetStatus(codes.Error, "upload results failed")
+			span.RecordError(err)
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
-
-		// TODO span event results uploaded
+		span.AddEvent("solver.files.uploaded", trace.WithAttributes(attribute.String("result.deal.id", result.DealID)))
 
 		return nil
 	}()
@@ -473,6 +479,7 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	// the tarball of the results has been uploaded
 	// now let's post the result data itself to the solver
 	// then we will post the results on-chain
+	span.AddEvent("solver.result.add")
 	createdResult, err := controller.solverClient.AddResult(result)
 	if err != nil {
 		// TODO: what should we do here?
@@ -480,9 +487,13 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		// and the JC can claim a refund
 		// but it's not really the fault of the RP that the solver refused to upload the results
 		controller.log.Error("error posting result", err)
+		span.SetStatus(codes.Error, "add result to solver failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("solver.result.added", trace.WithAttributes(attribute.String("result.id", createdResult.ID)))
 
+	span.AddEvent("chain.result.add")
 	txHash, err := controller.web3SDK.AddResult(
 		deal.Deal.ID,
 		createdResult.ID,
@@ -491,9 +502,13 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	)
 	if err != nil {
 		controller.log.Error("error calling add result tx for job", err)
+		span.SetStatus(codes.Error, "add result to chain failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("chain.result.added", trace.WithAttributes(attribute.String("txHash", txHash)))
 
+	span.AddEvent("solver.transaction_hash.add")
 	_, err = controller.solverClient.UpdateTransactionsResourceProvider(deal.ID, data.DealTransactionsResourceProvider{
 		AddResult: txHash,
 	})
@@ -502,6 +517,11 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		// some will be retryable - otherwise will be fatal
 		// we need a way to exit a job loop as a baseline
 		controller.log.Error("error adding add result tx hash for deal", err)
+		span.SetStatus(codes.Error, "add transcation hash to chain failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("solver.transaction_hash.added")
+
+	span.AddEvent("done")
 }
