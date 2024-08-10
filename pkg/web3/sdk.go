@@ -192,8 +192,10 @@ func NewContracts(
 }
 
 func NewContractSDK(options Web3Options) (*Web3SDK, error) {
-	// write to console
-	log.Debug().Msgf("NewContractSDK: %+v", options)
+	displayOpts := options
+	displayOpts.PrivateKey = "*********"
+	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+
 	client, err := ethclient.Dial(options.RpcURL)
 	if err != nil {
 		return nil, err
