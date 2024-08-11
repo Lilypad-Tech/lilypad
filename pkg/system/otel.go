@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -20,9 +22,11 @@ type Telemetry struct {
 }
 
 type TelemetryConfig struct {
-	Service Service
-	URL     string
-	Enabled bool
+	TelemetryURL string
+	Enabled      bool
+	Service      Service
+	Network      string
+	Address      string
 }
 
 func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
@@ -78,18 +82,8 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.TracerProvider, error) {
-	// exporter, err := stdouttrace.New(
-	// 	stdouttrace.WithPrettyPrint(),
-	// )
-	// if err != nil {
-	// 	fmt.Println("*** Failed to configure exporter ***")
-	// 	return nil, err
-	// }
-
-	// fmt.Printf("*** Configuring provider with %+v ***\n", config)
-
 	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpointURL(config.URL),
+		otlptracehttp.WithEndpointURL(config.TelemetryURL),
 		// TODO Add auth
 		otlptracehttp.WithInsecure(),
 	)
@@ -101,9 +95,15 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 	// Set resource with global attributes
 	resource := resource.NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(string(config.Service)),
+		semconv.ServiceNameKey.String(GetOTelServiceName(config.Service)),
+		semconv.ServiceVersionKey.String(Version),
+		attribute.String("system.os", runtime.GOOS),
+		attribute.String("system.arch", runtime.GOARCH),
+		attribute.String("chain.network", config.Network),
+		attribute.String("chain.address", config.Address),
 	)
 
+	// Set tracer provider
 	provider := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),
 		trace.WithResource(resource),

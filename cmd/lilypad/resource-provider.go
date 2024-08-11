@@ -26,7 +26,7 @@ func newResourceProviderCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runResourceProvider(cmd, options)
+			return runResourceProvider(cmd, options, network)
 		},
 	}
 
@@ -35,7 +35,7 @@ func newResourceProviderCmd() *cobra.Command {
 	return resourceProviderCmd
 }
 
-func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
+func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions, network string) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -49,7 +49,13 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	tc := system.TelemetryConfig{Service: system.ResourceProviderService, URL: options.Offers.Services.TelemetryURL, Enabled: true}
+	tc := system.TelemetryConfig{
+		TelemetryURL: options.Offers.Services.TelemetryURL,
+		Enabled:      true,
+		Service:      system.ResourceProviderService,
+		Network:      network,
+		Address:      web3SDK.GetAddress().String(),
+	}
 	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
 	if err != nil {
 		fmt.Printf("failed to setup opentelemetry: %s", err)
