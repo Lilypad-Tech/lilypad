@@ -48,6 +48,7 @@ func RunJob(
 	if err != nil {
 		return nil, err
 	}
+	jobCreatorService.controller.log.Debug("job offer ID", jobOfferContainer.ID)
 
 	updateChan := make(chan data.JobOfferContainer)
 
