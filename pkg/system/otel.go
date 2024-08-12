@@ -27,6 +27,7 @@ type TelemetryConfig struct {
 	Service      Service
 	Network      string
 	Address      string
+	GPU          []string
 }
 
 func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
@@ -99,6 +100,7 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 		semconv.ServiceVersionKey.String(Version),
 		attribute.String("system.os", runtime.GOOS),
 		attribute.String("system.arch", runtime.GOARCH),
+		attribute.StringSlice("system.gpu", config.GPU),
 		attribute.String("chain.network", config.Network),
 		attribute.String("chain.address", config.Address),
 	)

@@ -55,6 +55,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		Service:      system.ResourceProviderService,
 		Network:      network,
 		Address:      web3SDK.GetAddress().String(),
+		GPU:          system.GetGPUInfo(),
 	}
 	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
 	if err != nil {
