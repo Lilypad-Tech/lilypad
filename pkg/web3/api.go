@@ -275,8 +275,9 @@ func (sdk *Web3SDK) SubmitWork(
 	ctx context.Context,
 	nonce *big.Int,
 	nodeId string,
+	hashrate *big.Int,
 ) (common.Hash, error) {
-	tx, err := sdk.Contracts.Pow.SubmitWork(sdk.TransactOpts, nonce, nodeId)
+	tx, err := sdk.Contracts.Pow.SubmitWork(sdk.TransactOpts, nonce, nodeId, hashrate)
 	if err != nil {
 		return common.Hash{}, err
 	}
