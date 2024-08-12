@@ -48,7 +48,7 @@ function chain() {
     --name chain \
     -p 0.0.0.0:8547:8547 \
     -p 0.0.0.0:8548:8548 \
-    offchainlabs/nitro-node:v2.3.4-b4cc111 \
+    offchainlabs/nitro-node:v3.1.1-beta.2-6073359 \
       --init.dev-init \
       --init.dev-init-address $ADMIN_ADDRESS \
       --node.dangerous.no-l1-listener \

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.7](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.6...v2.2.7) (2024-08-07)
+
+
+### Reverts
+
+* Removes gpc options check ([#282](https://github.com/Lilypad-Tech/lilypad/issues/282)) ([09c5518](https://github.com/Lilypad-Tech/lilypad/commit/09c5518fa8bed7b98881bcde39c0ebfcaad43d7f))
+
 ## [2.2.6](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.5...v2.2.6) (2024-08-05)
 
 
