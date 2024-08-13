@@ -28,12 +28,22 @@ function compose-build() {
 
 function compose-up() {
   compose-env
-  doppler run -p resource-provider -c dev -- docker compose -f ./docker/docker-compose.dev.yml up "$@"
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
 function compose-down() {
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml down
+}
+
+
+############################################################################
+# Load env variables from .env.local
+############################################################################
+function load-local-env() {
+  while IFS= read -r line || [ -n "$line" ]; do
+    export $line
+  done < .env.local
 }
 
 ############################################################################
@@ -176,17 +186,21 @@ function print-local-dev-env() {
 }
 
 function run-cowsay-onchain() {
+  load-local-env
   cd hardhat
-  doppler run --preserve-env -p run-cowsay-onchain -c dev -- npx hardhat run scripts/run-cowsay-onchain.ts
+  npx hardhat run scripts/run-cowsay-onchain.ts
 }
 
 ############################################################################
 # solver
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function solver() {
-  echo "- Reminder to do doppler setup to project->solver and config->dev"
-  doppler run --preserve-env -p solver -c dev -- go run . solver --network dev
+  export WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+  load-local-env
+  go run . solver --network dev
 }
 
 function solver-docker-build() {
@@ -210,11 +224,14 @@ function solver-docker-run() {
 
 ############################################################################
 # job creator
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function job-creator() {
-  echo "- Reminder to do doppler setup to project->job-creator and config->dev"
-  doppler run --preserve-env -p job-creator -c dev -- go run . jobcreator --network dev
+  export WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+  load-local-env
+  go run . jobcreator --network dev
 }
 
 function job-creator-docker-build() {
@@ -236,11 +253,14 @@ function job-creator-docker-run() {
 
 ############################################################################
 # resource provider
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function resource-provider() {
-  echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@" --network dev --disable-pow true
+  export WEB3_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
+  load-local-env
+  go run . resource-provider "$@" --network dev --disable-pow true
 }
 
 function resource-provider-docker-build() {
@@ -312,15 +332,20 @@ function unit-tests() {
 # this assumes stack is running
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
+  load-local-env
   cd test
-  doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .
+  go test -v -count 1 .
 }
 
 ############################################################################
 # run
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 function run() {
-  doppler run --preserve-env -p run -c dev -- go run . run --network dev "$@"
+  export WEB3_PRIVATE_KEY=b3994e7660abe5f65f729bb64163c6cd6b7d0b1a8c67881a7346e3e8c7f026f5
+  load-local-env
+  go run . run --network dev "$@"
 }
 
 eval "$@"

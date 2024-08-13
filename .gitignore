@@ -11,6 +11,7 @@ lilypad
 .env
 *.env
 .env.*
+!.env.local
 ops/testnet/.terraform/providers
 .idea/
 .vscode/
