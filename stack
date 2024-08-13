@@ -198,9 +198,9 @@ function run-cowsay-onchain() {
 ############################################################################
 
 function solver() {
-  export WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-  export LOG_LEVEL=debug
   load-local-env
+  export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
+  export LOG_LEVEL=debug
   go run . solver --network dev
 }
 
@@ -230,9 +230,9 @@ function solver-docker-run() {
 ############################################################################
 
 function job-creator() {
-  export WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-  export LOG_LEVEL=debug
   load-local-env
+  export WEB3_PRIVATE_KEY=${JOB_CREATOR_PRIVATE_KEY}
+  export LOG_LEVEL=debug
   go run . jobcreator --network dev
 }
 
@@ -260,9 +260,9 @@ function job-creator-docker-run() {
 ############################################################################
 
 function resource-provider() {
-  export WEB3_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
-  export LOG_LEVEL=debug
   load-local-env
+  export WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
+  export LOG_LEVEL=debug
   go run . resource-provider "$@" --network dev --disable-pow true
 }
 
@@ -346,9 +346,9 @@ function integration-tests() {
 # Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 function run() {
-  export WEB3_PRIVATE_KEY=b3994e7660abe5f65f729bb64163c6cd6b7d0b1a8c67881a7346e3e8c7f026f5
-  export LOG_LEVEL=info
   load-local-env
+  export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
+  export LOG_LEVEL=info
   go run . run --network dev "$@"
 }
 
