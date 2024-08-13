@@ -28,7 +28,7 @@ function compose-build() {
 
 function compose-up() {
   compose-env
-  docker compose -f ./docker/docker-compose.dev.yml up "$@"
+  doppler run -p resource-provider -c dev -- docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
 function compose-down() {
