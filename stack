@@ -10,8 +10,6 @@ OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 
 ############################################################################
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
-  export DOPPLER_TOKEN_SOLVER="$(doppler configs tokens create -p solver -c dev docker --max-age 10m --plain)"
-  export DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 10m --plain)" 
 }
 
 function compose-init() {
@@ -22,13 +20,15 @@ function compose-init() {
 }
 
 function compose-build() {
+  load-local-env
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml build "$@"
 }
 
 function compose-up() {
+  load-local-env
   compose-env
-  doppler run -p resource-provider -c dev -- docker compose -f ./docker/docker-compose.dev.yml up "$@"
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
 function compose-down() {
