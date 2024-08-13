@@ -9,10 +9,11 @@ import (
 
 func GetDefaultServicesOptions() data.ServiceConfig {
 	return data.ServiceConfig{
-		Solver:       GetDefaultServeOptionString("SERVICE_SOLVER", ""),
-		Mediator:     GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{}),
-		APIHost:      GetDefaultServeOptionString("API_HOST", ""),
-		TelemetryURL: GetDefaultServeOptionString("TELEMETRY_URL", ""),
+		Solver:         GetDefaultServeOptionString("SERVICE_SOLVER", ""),
+		Mediator:       GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{}),
+		APIHost:        GetDefaultServeOptionString("API_HOST", ""),
+		TelemetryURL:   GetDefaultServeOptionString("TELEMETRY_URL", ""),
+		TelemetryToken: GetDefaultServeOptionString("TELEMETRY_TOKEN", ""),
 	}
 }
 
@@ -30,8 +31,12 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 		`The api host to connect to (API_HOST)`,
 	)
 	cmd.PersistentFlags().StringVar(
-		&servicesConfig.TelemetryURL, "telemetry-url", servicesConfig.APIHost,
-		`The telemetry collector to connect to (TELEMETRY_URL)`,
+		&servicesConfig.TelemetryURL, "telemetry-url", servicesConfig.TelemetryURL,
+		`The telemetry endpoint to connect to (TELEMETRY_URL)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&servicesConfig.TelemetryToken, "telemetry-token", servicesConfig.TelemetryToken,
+		`The token to auth with telemetry service (TELEMETRY_TOKEN)`,
 	)
 }
 
@@ -54,6 +59,9 @@ func ProcessServicesOptions(options data.ServiceConfig, network string) (data.Se
 	if options.TelemetryURL == "" {
 		options.TelemetryURL = config.ServiceConfig.TelemetryURL
 	}
+	if options.TelemetryToken == "" {
+		options.TelemetryToken = config.ServiceConfig.TelemetryToken
+	}
 
 	return options, nil
 }
@@ -69,7 +77,10 @@ func CheckServicesOptions(options data.ServiceConfig) error {
 		return fmt.Errorf("No api host specified - please use API_HOST or --api-host")
 	}
 	if len(options.TelemetryURL) == 0 {
-		return fmt.Errorf("No telemetry collectro specified - please use TELEMETRY_URL or --telemetry-url")
+		return fmt.Errorf("No telemetry endpoint specified - please use TELEMETRY_URL or --telemetry-url")
+	}
+	if len(options.TelemetryToken) == 0 {
+		return fmt.Errorf("No telemetry token specified - please use TELEMETRY_TOKEN or --telemetry-token")
 	}
 	return nil
 }

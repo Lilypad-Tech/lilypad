@@ -3,6 +3,7 @@ solver = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 mediator = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
 api_host = "http://localhost:8002/"
 telemetry_url = "http://localhost:4318"
+telemetry_token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VyIjoicmVzb3VyY2UtcHJvdmlkZXIifQ.n36M_ngwC4XPQ_pEkkWAnPiOinnx6-0VO1v_WgCTUEERD7b_p9KHCU6SY5bUdFh5UXRZHAhc1gfyc7rjAnmeDQ"
 
 [web3]
 rpc_url = "ws://localhost:8548"

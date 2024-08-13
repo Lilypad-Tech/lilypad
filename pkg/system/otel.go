@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"runtime"
 	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -22,12 +24,13 @@ type Telemetry struct {
 }
 
 type TelemetryConfig struct {
-	TelemetryURL string
-	Enabled      bool
-	Service      Service
-	Network      string
-	Address      string
-	GPU          []string
+	TelemetryURL   string
+	TelemetryToken string
+	Enabled        bool
+	Service        Service
+	Network        string
+	Address        string
+	GPU            []string
 }
 
 func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
@@ -66,7 +69,7 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 		}
 		shutdownFuncs = append(shutdownFuncs, TracerProvider.Shutdown)
 	} else {
-		// TODO(bgins) Find a better Noop provider option
+		// TODO(bgins) Investigate a better Noop provider
 		TracerProvider = trace.NewTracerProvider()
 	}
 
@@ -83,13 +86,9 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.TracerProvider, error) {
-	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpointURL(config.TelemetryURL),
-		// TODO Add auth
-		otlptracehttp.WithInsecure(),
-	)
+	exporter, err := newTracerExporter(ctx, config)
 	if err != nil {
-		fmt.Println("failed to configure trace exporter")
+		fmt.Printf("failed to configure trace exporter: %v", err)
 		return nil, err
 	}
 
@@ -112,6 +111,36 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 	)
 
 	return provider, nil
+}
+
+func newTracerExporter(ctx context.Context, config TelemetryConfig) (*otlptrace.Exporter, error) {
+	headers := map[string]string{"Authorization": fmt.Sprintf("Bearer %s", config.TelemetryToken)}
+	url, err := url.ParseRequestURI(config.TelemetryURL)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse telemetry URL: %s", err)
+	}
+
+	var exporter *otlptrace.Exporter
+	if url.Scheme == "https" {
+		exporter, err = otlptracehttp.New(ctx,
+			otlptracehttp.WithHeaders(headers),
+			otlptracehttp.WithEndpointURL(config.TelemetryURL),
+		)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		exporter, err = otlptracehttp.New(ctx,
+			otlptracehttp.WithHeaders(headers),
+			otlptracehttp.WithEndpointURL(config.TelemetryURL),
+			otlptracehttp.WithInsecure(),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return exporter, nil
 }
 
 // Convert service names to use standardized OTel underscores
