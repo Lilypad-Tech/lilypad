@@ -32,6 +32,9 @@ jobs:
           ./stack chain-boot
 
       - name: Run stack
+        env:
+          ADMIN_ADDRESS: ${{ secrets.INTEGRATION_TEST_ADMIN_ADDRESS }}
+          WEB3_PRIVATE_KEY: ${{ secrets.INTEGRATION_TEST_WEB3_PRIVATE_KEY }}
         run: ./stack compose-up -d 
 
       - name: Run tests
