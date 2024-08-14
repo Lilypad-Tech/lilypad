@@ -37,6 +37,7 @@ jobs:
           DOPPLER_TOKEN_JOB_CREATOR: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN_JOB_CREATOR }}
           DOPPLER_TOKEN_SOLVER: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN_SOLVER }}
           WEB3_PRIVATE_KEY: ${{ secrets.INTEGRATION_TEST_WEB3_PRIVATE_KEY }}
+          DISABLE_TELEMETRY: true
         run: docker compose -f ./docker/docker-compose.dev.yml up -d
 
       - name: Run tests
