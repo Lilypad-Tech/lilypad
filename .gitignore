@@ -1,4 +1,5 @@
 hardhat/node_modules
+hardhat/.openzeppelin
 hardhat/artifacts
 hardhat/cache
 hardhat/deployments/dev
