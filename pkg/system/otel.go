@@ -24,8 +24,9 @@ type Telemetry struct {
 }
 
 type TelemetryOptions struct {
-	URL   string `json:"url" toml:"url"`
-	Token string `json:"token" toml:"token"`
+	URL     string `json:"url" toml:"url"`
+	Token   string `json:"token" toml:"token"`
+	Disable bool
 }
 
 type TelemetryConfig struct {

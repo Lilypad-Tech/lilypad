@@ -9,8 +9,9 @@ import (
 
 func GetDefaultTelemetryOptions() system.TelemetryOptions {
 	return system.TelemetryOptions{
-		URL:   GetDefaultServeOptionString("TELEMETRY_URL", ""),
-		Token: GetDefaultServeOptionString("TELEMETRY_TOKEN", ""),
+		URL:     GetDefaultServeOptionString("TELEMETRY_URL", ""),
+		Token:   GetDefaultServeOptionString("TELEMETRY_TOKEN", ""),
+		Disable: GetDefaultServeOptionBool("DISABLE_TELEMETRY", false),
 	}
 }
 
@@ -22,6 +23,10 @@ func AddTelemetryCliFlags(cmd *cobra.Command, telemetryOptions *system.Telemetry
 	cmd.PersistentFlags().StringVar(
 		&telemetryOptions.Token, "telemetry-token", telemetryOptions.Token,
 		`The token to auth with telemetry service (TELEMETRY_TOKEN)`,
+	)
+	cmd.PersistentFlags().BoolVar(
+		&telemetryOptions.Disable, "disable-telemetry", telemetryOptions.Disable,
+		`Disable telemetry (DISABLE_TELEMETRY)`,
 	)
 }
 

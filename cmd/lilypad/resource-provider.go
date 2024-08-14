@@ -52,7 +52,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	tc := system.TelemetryConfig{
 		TelemetryURL:   options.Telemetry.URL,
 		TelemetryToken: options.Telemetry.Token,
-		Enabled:        true,
+		Enabled:        !options.Telemetry.Disable,
 		Service:        system.ResourceProviderService,
 		Network:        network,
 		Address:        web3SDK.GetAddress().String(),
