@@ -8,7 +8,7 @@
 
 ## Getting started
 
-Running the Lilypad application locally depends on the `.local.dev` file for secrets injection.  In this file are a series of private keys (with no funds on them) that are ONLY meant to be used for testing this app locally.  You are free to replace these keys with your own if you wish; however, be warned that the `.local.dev` file is not included in the `.gitignore` so you must be vigilent to not commit this file in your PRs.  We are not responsible for lost funds as a result of you posting your private keys on your commits/prs. So unless you have a very good reason to do so, leave the `.local.dev` file unchanged.
+Running the Lilypad application locally depends on the `.local.dev` file for secrets injection.  In this file are a series of private keys (with no funds on them) that are ONLY meant to be used for testing this app locally.  You are free to replace these keys with your own if you wish; however, be warned that the `.local.dev` file is not included in the `.gitignore` so you must be vigilant to not commit this file in your PRs.  We are not responsible for lost funds as a result of you posting your private keys on your commits/prs. So unless you have a very good reason to do so, leave the `.local.dev` file unchanged.
 
 A minimal local Lilypad network consists of the following pieces of infrastructure:
 
