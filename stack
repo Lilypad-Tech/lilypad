@@ -38,7 +38,7 @@ function compose-down() {
 
 
 ############################################################################
-# Load env variables from .env.local
+# Load env variables from .local.dev
 ############################################################################
 function load-local-env() {
   while IFS= read -r line || [ -n "$line" ]; do
