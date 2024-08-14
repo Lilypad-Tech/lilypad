@@ -108,3 +108,23 @@ There are two commands that can be used to run existing tests: `./stack unit-tes
 ## Notes on tooling
 
 Things should work right out-of-the-box, no extra configuration should be needed as Doppler provides the environment variables that are required with the current setup.
+
+## Troubleshooting
+
+In this section we'll highlight some common problems you might face when trying to boot up Lilypad locally
+
+### Chain-boot Related issues
+
+If you try and run `./stack chain-init` and get the following error
+```bash
+ProviderError: failed with 51333200 gas: insufficient funds for gas * price + value: address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 have 9318991353400000000 want 10000000000000000000
+    at HttpProvider.request (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/hardhat/src/internal/core/providers/http.ts:88:21)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async HardhatEthersProvider.estimateGas (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/@nomicfoundation/hardhat-ethers/src/internal/hardhat-ethers-provider.ts:237:27)
+    at async Wallet.populateTransaction (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/ethers/src.ts/providers/abstract-signer.ts:105:28)
+    at async Wallet.sendTransaction (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/ethers/src.ts/providers/abstract-signer.ts:232:21)
+    at async transferEther (/Users/nshahnazarian/Development/git/lilypad/hardhat/utils/web3.ts:61:14)
+    at async /Users/nshahnazarian/Development/git/lilypad/hardhat/scripts/fund-services-ether.ts:15:5
+```
+This can be addressed by doing following:
+- Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain_data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
