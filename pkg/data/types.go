@@ -83,11 +83,9 @@ const (
 // by the RP and JC - the solver will find an intersection
 // of these and attach them to the deal
 type ServiceConfig struct {
-	Solver         string   `json:"solver" toml:"solver"`
-	Mediator       []string `json:"mediator" toml:"mediator"`
-	APIHost        string   `json:"api_host" toml:"api_host"`
-	TelemetryURL   string   `json:"telemetry_url" toml:"telemetry_url"`
-	TelemetryToken string   `json:"telemetry_token" toml:"telemetry_token"`
+	Solver   string   `json:"solver" toml:"solver"`
+	Mediator []string `json:"mediator" toml:"mediator"`
+	APIHost  string   `json:"api_host" toml:"api_host"`
 }
 
 // posted to the solver by a job creator

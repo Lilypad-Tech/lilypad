@@ -2,8 +2,6 @@
 solver = "0xe05e1b71955da4934938a6b16f97e1db9de6b764"
 mediator = ["0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"]
 api_host = "https://api-testnet.lilypad.tech/"
-telemetry_url = "https://observe.lilypad.tech"
-telemetry_token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VyIjoicmVzb3VyY2UtcHJvdmlkZXIifQ.n36M_ngwC4XPQ_pEkkWAnPiOinnx6-0VO1v_WgCTUEERD7b_p9KHCU6SY5bUdFh5UXRZHAhc1gfyc7rjAnmeDQ"
 
 [web3]
 rpc_url = "wss://arb-sepolia.g.alchemy.com/v2/4PDb7czJf8E6z7ZjhXB0Z5fdU1XaQT0u"
@@ -16,3 +14,7 @@ token_address = "0x0352485f8a3cB6d305875FaC0C40ef01e0C06535"
 mediation_address = "0xD1377D4617CD634426A8b595507fd2045A2DFB03"
 jobcreator_address = "0xDBA89e33EFE2eD227c04CB31356EFdE618d4953F"
 pow_address = "0x8B852BA45293d6dd51B10c57625C6c5f25ADFB40"
+
+[telemetry]
+url = "https://observe.lilypad.tech"
+token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VyIjoicmVzb3VyY2UtcHJvdmlkZXIifQ.n36M_ngwC4XPQ_pEkkWAnPiOinnx6-0VO1v_WgCTUEERD7b_p9KHCU6SY5bUdFh5UXRZHAhc1gfyc7rjAnmeDQ"

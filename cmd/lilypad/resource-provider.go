@@ -50,8 +50,8 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	}
 
 	tc := system.TelemetryConfig{
-		TelemetryURL:   options.Offers.Services.TelemetryURL,
-		TelemetryToken: options.Offers.Services.TelemetryToken,
+		TelemetryURL:   options.Telemetry.URL,
+		TelemetryToken: options.Telemetry.Token,
 		Enabled:        true,
 		Service:        system.ResourceProviderService,
 		Network:        network,

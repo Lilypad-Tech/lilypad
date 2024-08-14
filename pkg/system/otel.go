@@ -23,6 +23,11 @@ type Telemetry struct {
 	Shutdown       func(context.Context) error
 }
 
+type TelemetryOptions struct {
+	URL   string `json:"url" toml:"url"`
+	Token string `json:"token" toml:"token"`
+}
+
 type TelemetryConfig struct {
 	TelemetryURL   string
 	TelemetryToken string
