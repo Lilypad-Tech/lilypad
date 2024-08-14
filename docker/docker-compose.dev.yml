@@ -37,7 +37,6 @@ services:
       timeout: 10s
       retries: 5
   solver:
-    env_file: ".local.dev"
     image: ghcr.io/lilypad-tech/solver
     container_name: solver
     depends_on:
@@ -64,7 +63,6 @@ services:
       retries: 5
 
   job-creator:
-    env_file: ".local.dev"
     image: ghcr.io/lilypad-tech/job-creator
     container_name: job-creator
     restart: unless-stopped
@@ -83,7 +81,6 @@ services:
       - API_HOST=${API_HOST}
       - LOG_LEVEL=debug
   resource-provider:
-    env_file: ".local.dev"
     image: ghcr.io/lilypad-tech/resource-provider
     container_name: resource-provider
     restart: unless-stopped
