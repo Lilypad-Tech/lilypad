@@ -115,7 +115,7 @@ In this section we'll highlight some common problems you might face when trying 
 
 ### Chain-boot Related issues
 
-If you try and run `./stack chain-init` and get the following error
+If you try and run `./stack compose-init` or `./stack chain-boot` and get the following error
 ```bash
 ProviderError: failed with 51333200 gas: insufficient funds for gas * price + value: address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 have 9318991353400000000 want 10000000000000000000
     at HttpProvider.request (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/hardhat/src/internal/core/providers/http.ts:88:21)
