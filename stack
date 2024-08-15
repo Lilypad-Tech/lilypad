@@ -6,12 +6,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
 
 ############################################################################
-# docker compose 
+# docker compose
 ############################################################################
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
   export DOPPLER_TOKEN_SOLVER="$(doppler configs tokens create -p solver -c dev docker --max-age 10m --plain)"
-  export DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 10m --plain)" 
+  export DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 10m --plain)"
+  export DISABLE_TELEMETRY=false
 }
 
 function compose-init() {
