@@ -43,4 +43,14 @@ jobs:
       - name: Run tests
         env:
           DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TESTS_DOPPLER_TOKEN }}
-        run: ./stack integration-tests || true
+          LOG_LEVEL: debug
+        run: ./stack integration-tests
+
+      - name: Display resource provider logs
+        run: docker logs resource-provider
+
+      - name: Display solver logs
+        run: docker logs solver
+
+      - name: Display chain logs
+        run: docker logs chain
