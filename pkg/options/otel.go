@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +34,7 @@ func AddTelemetryCliFlags(cmd *cobra.Command, telemetryOptions *system.Telemetry
 func ProcessTelemetryOptions(options system.TelemetryOptions, network string) (system.TelemetryOptions, error) {
 	config, err := getConfig(network)
 	if err != nil {
+		log.Error().Msgf("failed to load config for network %s: ", err)
 		return options, err
 	}
 

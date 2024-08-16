@@ -46,6 +46,7 @@ func RunJob(
 
 	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
 	if err != nil {
+		jobCreatorService.controller.log.Error("failed to add job offer", err)
 		return nil, err
 	}
 	jobCreatorService.controller.log.Debug("job offer ID", jobOfferContainer.ID)

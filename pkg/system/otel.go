@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -94,7 +95,7 @@ func newPropagator() propagation.TextMapPropagator {
 func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.TracerProvider, error) {
 	exporter, err := newTracerExporter(ctx, config)
 	if err != nil {
-		fmt.Printf("failed to configure trace exporter: %v", err)
+		log.Error().Msgf("failed to configure trace exporter: %v", err)
 		return nil, err
 	}
 
