@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.8](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.7...v2.2.8) (2024-08-16)
+
+
+### Bug Fixes
+
+* Remove ntfs zone files ([#286](https://github.com/Lilypad-Tech/lilypad/issues/286)) ([6b7b2dc](https://github.com/Lilypad-Tech/lilypad/commit/6b7b2dcc3c0e94607e20ee2646d78513ff907cfc))
+
 ## [2.2.7](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.6...v2.2.7) (2024-08-07)
 
 
