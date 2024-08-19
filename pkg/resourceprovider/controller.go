@@ -426,6 +426,13 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	)
 	defer span.End()
 
+	// When telemetry is disabled we use a Noop tracing provider,
+	// which does not export. We only log the trace ID when we are
+	// sending the trace somehwere.
+	if controller.options.Telemetry.Disable == false {
+		controller.log.Debug("starting job trace with trace ID", span.SpanContext().TraceID())
+	}
+
 	span.AddEvent("start")
 	result := data.Result{
 		DealID: deal.ID,
