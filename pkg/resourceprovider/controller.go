@@ -412,6 +412,7 @@ func (controller *ResourceProviderController) runJobs(ctx context.Context) error
 // run once
 func (controller *ResourceProviderController) runJob(ctx context.Context, deal data.DealContainer) {
 	controller.log.Info("run job", deal)
+	controller.log.Info("deal ID", deal.Deal.ID)
 
 	// Start run job trace
 	service := system.ResourceProviderService
