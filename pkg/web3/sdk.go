@@ -246,3 +246,12 @@ func (sdk *Web3SDK) WaitTx(ctx context.Context, tx *types.Transaction) (*types.R
 func (sdk *Web3SDK) GetAddress() common.Address {
 	return crypto.PubkeyToAddress(GetPublicKey(sdk.PrivateKey))
 }
+
+func (sdk *Web3SDK) GetBalance(address common.Address) (*big.Int, error) {
+	balance, err := sdk.Client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		return nil, err
+	}
+	return balance, nil
+}
