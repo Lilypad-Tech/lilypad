@@ -107,7 +107,7 @@ jobs:
           BODY=$(gh release view ${{ needs.release.outputs.tag_name }} --json body | jq -r '.body')
           EXTENSION=$(cat .github/releases/release_notes.md)
 
-          # Build up notes from BODY and EXTENSION seperated by two newlines
+          # Build up notes from BODY and EXTENSION separated by two newlines
           # https://trstringer.com/github-actions-multiline-strings/#option-2---environment-variable
           NOTES=$(cat << EOF
           $BODY
