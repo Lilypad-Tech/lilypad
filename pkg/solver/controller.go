@@ -3,6 +3,7 @@ package solver
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -320,6 +321,16 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, err
 	}
 	resourceOffer.ID = id
+
+	// Check the resource provider's ETH balance
+	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, err
+	}
+	// If the balance is 0, don't add the resource offer
+	if balance.Cmp(big.NewInt(0)) == 0 {
+		return nil, err
+	}
 
 	controller.log.Info("add resource offer", resourceOffer)
 

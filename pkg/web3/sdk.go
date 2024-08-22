@@ -247,8 +247,12 @@ func (sdk *Web3SDK) GetAddress() common.Address {
 	return crypto.PubkeyToAddress(GetPublicKey(sdk.PrivateKey))
 }
 
-func (sdk *Web3SDK) GetBalance(address common.Address) (*big.Int, error) {
-	balance, err := sdk.Client.BalanceAt(context.Background(), address, nil)
+func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
+	// Convert the string address to common.Address
+	ethAddress := common.HexToAddress(address)
+
+	// Get the balance using the converted address
+	balance, err := sdk.Client.BalanceAt(context.Background(), ethAddress, nil)
 	if err != nil {
 		log.Error().Msgf("error for GetBalance: %s", err.Error())
 		return nil, err
