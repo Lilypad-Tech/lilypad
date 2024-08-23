@@ -3,7 +3,6 @@ package solver
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -325,10 +324,12 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	// Check the resource provider's ETH balance
 	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
 	}
-	// If the balance is 0, don't add the resource offer
-	if balance.Cmp(big.NewInt(0)) == 0 {
+	// Convert InstructionPrice from ETH to Wei
+	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
+	// If the balance is less than the required balance, don't add the resource offer
+	if balance.Cmp(requiredBalanceWei) < 0 {
 		return nil, err
 	}
 
