@@ -6,6 +6,37 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
 
 ############################################################################
+# docker compose 
+############################################################################
+function compose-env() {
+  export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
+  export DOPPLER_TOKEN_SOLVER="$(doppler configs tokens create -p solver -c dev docker --max-age 10m --plain)"
+  export DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 10m --plain)" 
+}
+
+function compose-init() {
+  compose-env
+  chain-clean
+  docker compose -f ./docker/docker-compose.dev.yml up chain -d
+  chain-boot
+}
+
+function compose-build() {
+  compose-env
+  docker compose -f ./docker/docker-compose.dev.yml build "$@"
+}
+
+function compose-up() {
+  compose-env
+  doppler run -p resource-provider -c dev -- docker compose -f ./docker/docker-compose.dev.yml up "$@"
+}
+
+function compose-down() {
+  compose-env
+  docker compose -f ./docker/docker-compose.dev.yml down
+}
+
+############################################################################
 # chain
 ############################################################################
 
@@ -17,7 +48,7 @@ function chain() {
     --name chain \
     -p 0.0.0.0:8547:8547 \
     -p 0.0.0.0:8548:8548 \
-    offchainlabs/nitro-node:v2.3.4-b4cc111 \
+    offchainlabs/nitro-node:v3.1.1-beta.2-6073359 \
       --init.dev-init \
       --init.dev-init-address $ADMIN_ADDRESS \
       --node.dangerous.no-l1-listener \
@@ -51,6 +82,7 @@ function chain-boot() {
   npx hardhat deploy --network dev
   echo "- Fund services with tokens"
   npx hardhat run scripts/fund-services-tokens.ts --network dev
+  cd ..
   echo "- Done"
 }
 
@@ -82,6 +114,7 @@ function go-binding() {
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint solc \
     lilypad-solc \
        --base-path . \
@@ -91,31 +124,31 @@ function go-binding() {
       "contracts/$name.sol" \
       -o artifacts
 
-  chown -R $USER hardhat/artifacts
   mkdir -p hardhat/artifacts/bindings/$pkg
 
   # generate the go bindings
   docker run --rm \
     -v $(pwd)/hardhat:/src \
     -w /src \
+    --user $(id -u):$(id -g) \
     --entrypoint abigen \
     lilypad-solc \
       "--bin=artifacts/$name.bin" \
       "--abi=artifacts/$name.abi" \
       "--pkg=$pkg" "--out=artifacts/bindings/$pkg/$pkg.go"
 
-  chown -R $USER hardhat/artifacts/bindings/$pkg
-  chmod 0644 hardhat/artifacts/bindings/$pkg/$pkg.go
   cp -r hardhat/artifacts/bindings/$pkg pkg/web3/bindings/$pkg
 
   echo "- Generated go binding hardhat/artifacts/bindings/$pkg/$pkg.go"
 }
 
 function chain-clean(){
+  rm -Rf $(pwd)/data/chain
   rm -rf $(pwd)/hardhat/artifacts
   rm -rf $(pwd)/hardhat/cache
   rm -rf $(pwd)/hardhat/deployments/geth
   rm -rf $(pwd)/hardhat/deployments/dev
+  rm -rf $(pwd)/hardhat/.openzeppelin
 }
 
 ############################################################################
@@ -222,10 +255,10 @@ function resource-provider-docker-build() {
 function resource-provider-docker-run() {
   docker run \
     --rm \
-    --privileged \
     --name resource-provider \
     --add-host localhost:host-gateway \
     --env-file <(doppler -p resource-provider -c dev secrets download --no-file --format docker) \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     -e OFFER_GPU=0 \
     -e BACALHAU_API_HOST="DO_NOT_SET" \
     resource-provider
@@ -276,9 +309,8 @@ function unit-tests() {
   npx hardhat test --network hardhat
 }
 
-# this assumes chain is running
-# and chain-fund-admin
-# and chain-boot
+# this assumes stack is running
+# see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   cd test
   doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .

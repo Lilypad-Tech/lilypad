@@ -2,11 +2,12 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,26 +50,25 @@ func (s *JobCreatorEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		jobAddedSub.Unsubscribe()
+	defer func() {
+		if jobAddedSub != nil {
+			jobAddedSub.Unsubscribe()
+		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-s.jobAddedChan:
 			log.Debug().
-				Str("storage->event", "DealStateChange").
+				Str("storage->event", "JobAdded").
 				Msgf("%+v", event)
 			for _, handler := range s.jobAddedSubs {
 				go handler(*event)
 			}
 		case err := <-jobAddedSub.Err():
-			jobAddedSub.Unsubscribe()
-			jobAddedSub, err = connectJobAddedSub()
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("cancel by job JobAdded event subscribe error %w", err)
 		}
 	}
 }

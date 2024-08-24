@@ -1,7 +1,9 @@
 hardhat/node_modules
+hardhat/.openzeppelin
 hardhat/artifacts
 hardhat/cache
-hardhat/deployments/*
+hardhat/deployments/dev
+hardhat/deployments/geth
 hardhat/typechain-types
 node_modules/*
 # Ignore the binary executable
@@ -16,5 +18,5 @@ ops/testnet/.terraform/providers
 .run/
 bin/
 vendor/
-./data/
+/data/
 .DS_Store

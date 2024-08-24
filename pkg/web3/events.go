@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
@@ -51,9 +52,13 @@ func (eventChannels *EventChannels) Start(
 	for _, collection := range eventChannels.collections {
 		c := collection
 		go func() {
-			err := c.Start(sdk, ctx, cm)
-			if err != nil {
-				log.Error().Msgf("error starting listeners: %s", err.Error())
+			for {
+				err := c.Start(sdk, ctx, cm)
+				if err != nil {
+					log.Error().Msgf("error starting listeners: %s reconnect in 2 seconds", err.Error())
+				}
+
+				time.Sleep(time.Second * 2)
 			}
 		}()
 	}

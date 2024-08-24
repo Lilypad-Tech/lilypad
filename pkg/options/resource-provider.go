@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
@@ -25,8 +26,9 @@ func GetDefaultResourceProviderPowOptions() resourceprovider.ResourceProviderPow
 		DisablePow: GetDefaultServeOptionBool("DISABLE_POW", false),
 		NumWorkers: GetDefaultServeOptionInt("NUM_WORKER", 0),
 
-		CudaGridSize:  GetDefaultServeOptionInt("CUDA_GRID_SIZE", 256),
-		CudaBlockSize: GetDefaultServeOptionInt("CUDA_BLOCK_SIZE", 512),
+		CudaGridSize:       GetDefaultServeOptionInt("CUDA_GRID_SIZE", 128),
+		CudaBlockSize:      GetDefaultServeOptionInt("CUDA_BLOCK_SIZE", 1024),
+		CudaHashsPerThread: GetDefaultServeOptionInt("CUDA_HASH_PER_THREAD", 1000),
 	}
 }
 
@@ -95,12 +97,18 @@ func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovide
 
 	cmd.PersistentFlags().IntVar(
 		&options.CudaGridSize, "cuda-grid-size", options.CudaGridSize,
-		`Cuda grid size (CUDA_GRID_SIZE)`,
+		`Cuda grid size (sm*2) (CUDA_GRID_SIZE)`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&options.CudaBlockSize, "cuda-block-size", options.CudaBlockSize,
 		`Cuda block size (CUDA_BLOCK_SIZE)`,
 	)
+	cmd.PersistentFlags().IntVar(
+		&options.CudaHashsPerThread, "cuda-hash-per-thread", options.CudaHashsPerThread,
+		`Cuda hash per threads (CUDA_HASH_PER_THREAD)`,
+	)
+	// Explicitly parse flags for the CLI options
+	cmd.ParseFlags(os.Args)
 }
 
 func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderOptions) {

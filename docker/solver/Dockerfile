@@ -1,6 +1,6 @@
 ARG expose_via=local
 
-FROM golang:latest as base
+FROM golang:latest AS base
 WORKDIR /usr/src/app
 
 ARG arch=amd64
@@ -25,7 +25,7 @@ FROM base AS expose-local
 EXPOSE 8080
 RUN echo "doppler run -- lilypad solver --network $network" >> run
 
-FROM expose-$expose_via AS FINAL
+FROM expose-$expose_via AS final
 RUN chmod +x run
 
 CMD ["/bin/bash", "./run"]

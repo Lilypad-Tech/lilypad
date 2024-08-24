@@ -8,8 +8,9 @@ import (
 
 func NewSolverOptions() solver.SolverOptions {
 	options := solver.SolverOptions{
-		Server: GetDefaultServerOptions(),
-		Web3:   GetDefaultWeb3Options(),
+		Server:   GetDefaultServerOptions(),
+		Web3:     GetDefaultWeb3Options(),
+		Services: GetDefaultServicesOptions(),
 	}
 	options.Web3.Service = system.SolverService
 	return options
@@ -18,6 +19,7 @@ func NewSolverOptions() solver.SolverOptions {
 func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddServerCliFlags(cmd, &options.Server)
+	AddServicesCliFlags(cmd, &options.Services)
 }
 
 func CheckSolverOptions(options solver.SolverOptions) error {

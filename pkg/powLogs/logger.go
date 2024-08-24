@@ -2,8 +2,8 @@ package powLogs
 
 import (
 	"encoding/json"
-	"os"
 
+	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 )
 
@@ -19,8 +19,13 @@ type PowLog struct {
 
 const namespace = "pow-logs"
 const eventsEndpoint = "events"
+const hashrateEndpoint = "hashrates"
 
-var host = os.Getenv("API_HOST")
+var host string
+
+func Init(h string) {
+	host = h
+}
 
 func TrackEvent(data PowLog) {
 	if host == "" {
@@ -28,8 +33,19 @@ func TrackEvent(data PowLog) {
 	}
 
 	var url = host + namespace + "/" + eventsEndpoint
-	byts, _ := json.Marshal(data)
-	payload := string(byts)
+	bytes, _ := json.Marshal(data)
+	payload := string(bytes)
 
+	http.GenericJSONPostClient(url, payload)
+}
+
+func TrackHashrate(hashrate data.MinerHashRate) {
+	if host == "" {
+		return
+	}
+	bytes, _ := json.Marshal([]data.MinerHashRate{hashrate})
+	payload := string(bytes)
+
+	url := host + namespace + "/" + hashrateEndpoint
 	http.GenericJSONPostClient(url, payload)
 }

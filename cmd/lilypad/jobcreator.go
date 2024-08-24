@@ -17,7 +17,6 @@ func newJobCreatorCmd() *cobra.Command {
 		Long:    "Start the lilypad job creator service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			optionsfactory.CheckDeprecation(options.Offer.Services, options.Web3)
 
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessOnChainJobCreatorOptions(options, args, network)

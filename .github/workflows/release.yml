@@ -1,0 +1,214 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Create Release PR or Release
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Get Release Bot Token
+        id: get-release-bot-token
+        uses: peter-murray/workflow-application-token-action@v1
+        with:
+          application_id: ${{ secrets.RELEASE_BOT_ID }}
+          application_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          organization: "Lilypad-Tech"
+
+      # Create release PR or release
+      # - PRs are created on user-facing changes (feat, fix, or any breaking changes).
+      #   We merge these immediately in the merge job which pushes a release commit.
+      # - Releases are created when release-please finds an unpublished release commit
+      #   from one of its PRs.
+      - name: Create Release PR or Release
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ steps.get-release-bot-token.outputs.token }}
+
+    outputs:
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      sha: ${{ steps.release.outputs.sha }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+
+  merge:
+    if: needs.release.outputs.prs_created == 'true' && needs.release.outputs.releases_created == 'false'
+    name: Merge Release PR
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: release-please--branches--main
+
+      - name: Get Release Bot Token
+        id: get-release-bot-token
+        uses: peter-murray/workflow-application-token-action@v1
+        with:
+          application_id: ${{ secrets.RELEASE_BOT_ID }}
+          application_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          organization: "Lilypad-Tech"
+
+      # Approve with github-actions bot
+      - name: Approve PR
+        id: approve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr review --approve
+
+      # Auto-merge PR when status checks complete or merge immediately if no checks in progress
+      # The auto-merge flag requires branch protection rule overrides.
+      - name: Merge Release PR
+        env:
+          GH_TOKEN: ${{ steps.get-release-bot-token.outputs.token }}
+        run: gh pr merge --squash --auto || gh pr merge --squash
+
+  extend-notes:
+    if: needs.release.outputs.releases_created == 'true' && needs.release.outputs.prs_created == 'false'
+    name: Extend Release Notes
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Get Release Bot Token
+        id: get-release-bot-token
+        uses: peter-murray/workflow-application-token-action@v1
+        with:
+          application_id: ${{ secrets.RELEASE_BOT_ID }}
+          application_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          organization: "Lilypad-Tech"
+
+      - name: Extend Release Notes
+        env:
+          GH_TOKEN: ${{ steps.get-release-bot-token.outputs.token }}
+        run: |
+          BODY=$(gh release view ${{ needs.release.outputs.tag_name }} --json body | jq -r '.body')
+          EXTENSION=$(cat .github/releases/release_notes.md)
+
+          # Build up notes from BODY and EXTENSION separated by two newlines
+          # https://trstringer.com/github-actions-multiline-strings/#option-2---environment-variable
+          NOTES=$(cat << EOF
+          $BODY
+
+          $EXTENSION
+          EOF
+          )
+          echo "NOTES<<EOF" >> $GITHUB_ENV
+          echo "$NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+          gh release edit ${{ needs.release.outputs.tag_name }} --notes "$NOTES"
+
+  publish-binaries:
+    if: needs.release.outputs.releases_created == 'true' && needs.release.outputs.prs_created == 'false'
+    name: Build and Publish Binaries
+    needs: release
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            gpu: true
+            runner: ubuntu-latest
+          - goos: linux
+            goarch: arm64
+            gpu: true
+            runner: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            gpu: false
+            runner: macos-13 # uses amd64
+          - goos: darwin
+            goarch: arm64
+            gpu: false
+            runner: macos-latest # uses M1
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Build for ${{ matrix.goos }}/${{ matrix.goarch }} CPU-only
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+          mkdir -p build
+
+          # Debug: Print environment variables for the build
+          echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+          echo "Excluding CUDA. Use the 'cuda' build tag to include it."
+
+          go build -o "build/lilypad-${GOOS}-${GOARCH}-cpu" -v -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.version=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.commitSHA=${{ needs.release.outputs.sha }}'"
+
+          echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+          # Upload binary to release
+          gh release upload ${{ needs.release.outputs.tag_name }} "build/lilypad-${GOOS}-${GOARCH}-cpu"
+
+      - name: Install NVIDIA CUDA Toolkit
+        if: ${{ matrix.gpu }}
+        run: |
+          sudo apt-get install -y gnupg2 curl
+          sudo mkdir -p /usr/share/keyrings
+          curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-drivers.gpg
+          echo "deb [signed-by=/usr/share/keyrings/nvidia-drivers.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" | sudo tee /etc/apt/sources.list.d/nvidia-drivers.list
+          sudo apt-get update || true  # Ignore errors from this command
+          sudo apt-get install -y nvidia-cuda-toolkit
+          export PATH=/usr/local/cuda/bin:$PATH
+
+      - name: Build for ${{ matrix.goos }}/${{ matrix.goarch }} GPU
+        if: ${{ matrix.gpu }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          CUDA_HOME: /usr/local/cuda
+          LD_LIBRARY_PATH: /usr/local/cuda/lib64:$LD_LIBRARY_PATH
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- start"
+          mkdir -p build
+
+          # Debug: Print environment variables for the build
+          echo "Building for ${GOOS}/${GOARCH} with GOOS=$GOOS, GOARCH=$GOARCH"
+          echo "CUDA_HOME: $CUDA_HOME"
+          echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+          go build -o "build/lilypad-${GOOS}-${GOARCH}-gpu" -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/cmd/lilypad.version=${{ needs.release.outputs.tag_name }}' -X 'github.com/lilypad-tech/lilypad/cmd/lilypad.commitSHA=${{ needs.release.outputs.sha }}'"
+
+          echo "-------------- OS: ${GOOS} : Arch: ${GOARCH} ---------- done"
+
+          # Upload binary to release
+          gh release upload ${{ needs.release.outputs.tag_name }} "build/lilypad-${GOOS}-${GOARCH}-gpu"

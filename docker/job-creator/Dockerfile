@@ -1,4 +1,4 @@
-FROM golang:latest as base
+FROM golang:latest AS base
 WORKDIR /usr/src/app
 
 ARG network=dev

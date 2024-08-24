@@ -37,10 +37,6 @@ ENV PATH="/usr/local/bin:${PATH}"
 # Create a startup script to run both services simultaneously
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-# Launch docker daemon
-RUN echo "dockerd &" >> run
-RUN echo "while ! docker -v; do sleep 1; done" >> run
-RUN echo "sleep 3" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad

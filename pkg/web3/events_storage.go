@@ -2,11 +2,12 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,13 +50,16 @@ func (s *StorageEventChannels) Start(
 		return err
 	}
 
-	go func() {
-		<-ctx.Done()
-		dealStateChangeSub.Unsubscribe()
+	defer func() {
+		if dealStateChangeSub != nil {
+			dealStateChangeSub.Unsubscribe()
+		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cancel by context")
 		case event := <-s.dealStateChangeChan:
 			log.Debug().
 				Str("storage->event", "DealStateChange").
@@ -64,11 +68,7 @@ func (s *StorageEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-dealStateChangeSub.Err():
-			dealStateChangeSub.Unsubscribe()
-			dealStateChangeSub, err = connectDealStateChangeSub()
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("cancel by storage DealStateChange event subscribe error %w", err)
 		}
 	}
 }

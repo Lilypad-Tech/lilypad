@@ -26,7 +26,7 @@ const (
 	hashUpdateSecs = 15
 )
 
-type SubmitWork func(nonce *big.Int)
+type SubmitWork func(nonce *big.Int, hashrate float64)
 type Worker interface {
 	FindSolution(ctx context.Context, task *Task)
 	Stop()
@@ -38,8 +38,9 @@ type WorkerConfig struct {
 	resultCh     chan TaskResult
 
 	//cuda
-	gridSize  int
-	blockSize int
+	gridSize       int
+	blockSize      int
+	hashsPerThread int
 }
 
 type Task struct {
@@ -65,6 +66,7 @@ type MinerController struct {
 	task chan Task
 
 	updateHashes chan uint64
+	totalHash    int64
 }
 
 func NewMinerController(nodeId string, powCfg ResourceProviderPowOptions, task chan Task, submit SubmitWork) *MinerController {
@@ -86,7 +88,7 @@ func (m *MinerController) Start(ctx context.Context) {
 func (m *MinerController) speedMonitor(ctx context.Context) {
 	log.Debug().Msg("CPU miner speed monitor started")
 	var hashesPerSec float64
-	var totalHashes uint64
+	var latestTotalHash uint64
 	ticker := time.NewTicker(time.Second * hpsUpdateSecs)
 	defer ticker.Stop()
 
@@ -96,20 +98,21 @@ out:
 		// Periodic updates from the workers with how many hashes they
 		// have performed.
 		case numHashes := <-m.updateHashes:
-			totalHashes += numHashes
+			latestTotalHash += numHashes
+			m.totalHash += int64(numHashes)
 
 		// Time to update the hashes per second.
 		case <-ticker.C:
-			curHashesPerSec := float64(totalHashes) / hpsUpdateSecs
+			curHashesPerSec := float64(latestTotalHash) / hpsUpdateSecs
 			if hashesPerSec == 0 {
 				hashesPerSec = curHashesPerSec
 			}
 			hashesPerSec = (hashesPerSec + curHashesPerSec) / 2
-			if totalHashes != 0 && hashesPerSec != 0 {
+			if latestTotalHash != 0 && hashesPerSec != 0 {
 				log.Info().Msgf("Hash speed: %6.0f kilohashes/s",
 					hashesPerSec/1000)
 			}
-			totalHashes = 0
+			latestTotalHash = 0
 		case <-ctx.Done():
 			break out
 		}
@@ -134,8 +137,9 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 				updateHashes: m.updateHashes,
 				resultCh:     resultCh,
 
-				gridSize:  powCfg.CudaGridSize,
-				blockSize: powCfg.CudaBlockSize,
+				gridSize:       powCfg.CudaGridSize,
+				blockSize:      powCfg.CudaBlockSize,
+				hashsPerThread: powCfg.CudaHashsPerThread,
 			}
 
 			w, err := MaybeCudaOrCpu(wCfg)
@@ -148,6 +152,8 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 		return nil
 	}
 
+	// Todo this split u256 max value to multiple part, and send each part to different worker to find solution
+	// But we don't need so much big range in practice, uint64 range is enough to find solution, this also benefit to optimise hardware
 	maxUint256 := new(uint256.Int).Sub(uint256.NewInt(0), uint256.NewInt(1))
 	noncePerWorker := new(uint256.Int).Div(maxUint256, uint256.NewInt(uint64(numworkers)))
 
@@ -157,7 +163,7 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 		log.Err(err).Msg("Cannt create worker")
 	}
 
-	stopWrokers := func() {
+	stopWorkers := func() {
 		var wg sync.WaitGroup
 		for _, worker := range m.runningWorkers {
 			wg.Add(1)
@@ -185,11 +191,12 @@ func (m *MinerController) miningWorkerController(ctx context.Context) {
 	}
 
 	cache, _ := lru.New[uuid.UUID, *uint256.Int](2048) //prevent submint multiple times, consider power multiple cpu, use a little bigger value
+	workStartTime := time.Now()
 out:
 	for {
 		select {
 		case <-ctx.Done():
-			stopWrokers()
+			stopWorkers()
 			break out
 		case result := <-resultCh:
 			_, ok := cache.Get(result.Id)
@@ -197,11 +204,17 @@ out:
 				log.Warn().Msg("This work has been submit before")
 				continue
 			}
-			m.submit(result.Nonce.ToBig())
-			stopWrokers()
+
+			dur := (float64(time.Since(workStartTime).Milliseconds()) / 1000.0)
+			stopWorkers()
 			cache.Add(result.Id, new(uint256.Int))
+			time.Sleep(time.Second * hpsUpdateSecs) //to ensure data was reported
+			hashrate := float64(m.totalHash) / 1000 / 1000 / dur
+			m.submit(result.Nonce.ToBig(), hashrate)
 		case allTask := <-m.task:
-			stopWrokers()
+			stopWorkers()
+			m.totalHash = 0
+			workStartTime = time.Now()
 			spawNewWork(&allTask)
 		}
 	}

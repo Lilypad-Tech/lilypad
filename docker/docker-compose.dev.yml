@@ -1,0 +1,100 @@
+name: lilypad
+services:
+  chain:
+    image: offchainlabs/nitro-node:v3.1.1-beta.2-6073359
+    container_name: chain
+    ports:
+      - 8547:8547
+      - 8548:8548
+    command:
+      [
+        "--init.dev-init",
+        "--init.dev-init-address",
+        $ADMIN_ADDRESS,
+        "--node.dangerous.no-l1-listener",
+        "--node.parent-chain-reader.enable=false",
+        "--parent-chain.id=1337",
+        "--chain.id=412346",
+        "--node.sequencer",
+        "--execution.sequencer.enable",
+        "--node.dangerous.no-sequencer-coordinator",
+        "--node.staker.enable=false",
+        "--init.empty=false",
+        "--http.port",
+        "8547",
+        "--http.addr",
+        "0.0.0.0",
+        "--ws.port",
+        "8548",
+        "--ws.addr",
+        "0.0.0.0",
+      ]
+    volumes:
+      - chain-data:/home/user/.arbitrum
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8547/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  solver:
+    image: ghcr.io/lilypad-tech/solver
+    container_name: solver
+    depends_on:
+      - chain
+    build:
+      context: ..
+      dockerfile: ./docker/solver/Dockerfile
+      args:
+        - network=dev
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      - DOPPLER_TOKEN=${DOPPLER_TOKEN_SOLVER}
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  job-creator:
+    image: ghcr.io/lilypad-tech/job-creator
+    container_name: job-creator
+    restart: unless-stopped
+    depends_on:
+      - chain
+      - solver
+    build:
+      context: ..
+      dockerfile: ./docker/job-creator/Dockerfile
+      args:
+        - network=dev
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      - DOPPLER_TOKEN=${DOPPLER_TOKEN_JOB_CREATOR}
+  resource-provider:
+    image: ghcr.io/lilypad-tech/resource-provider
+    container_name: resource-provider
+    restart: unless-stopped
+    depends_on:
+      - chain
+      - solver
+    build:
+      context: ..
+      dockerfile: ./docker/resource-provider/Dockerfile
+      args:
+        - NETWORK=dev
+    extra_hosts:
+      - "localhost:host-gateway"
+    volumes:
+      - bacalhau-data:/tmp/lilypad/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WEB3_PRIVATE_KEY
+      - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+      - LOG_LEVEL=debug
+volumes:
+  chain-data:
+  bacalhau-data:

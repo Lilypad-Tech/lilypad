@@ -11,6 +11,7 @@ func GetDefaultServicesOptions() data.ServiceConfig {
 	return data.ServiceConfig{
 		Solver:   GetDefaultServeOptionString("SERVICE_SOLVER", ""),
 		Mediator: GetDefaultServeOptionStringArray("SERVICE_MEDIATORS", []string{}),
+		APIHost:  GetDefaultServeOptionString("API_HOST", ""),
 	}
 }
 
@@ -22,6 +23,10 @@ func AddServicesCliFlags(cmd *cobra.Command, servicesConfig *data.ServiceConfig)
 	cmd.PersistentFlags().StringSliceVar(
 		&servicesConfig.Mediator, "service-mediators", servicesConfig.Mediator,
 		`The mediators we trust (SERVICE_MEDIATORS)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&servicesConfig.APIHost, "api-host", servicesConfig.APIHost,
+		`The api host to connect to (API_HOST)`,
 	)
 }
 
@@ -38,6 +43,9 @@ func ProcessServicesOptions(options data.ServiceConfig, network string) (data.Se
 	if len(options.Mediator) == 0 {
 		options.Mediator = config.ServiceConfig.Mediator
 	}
+	if options.APIHost == "" {
+		options.APIHost = config.ServiceConfig.APIHost
+	}
 
 	return options, nil
 }
@@ -48,6 +56,9 @@ func CheckServicesOptions(options data.ServiceConfig) error {
 	}
 	if len(options.Mediator) == 0 {
 		return fmt.Errorf("No mediators services specified - please use SERVICE_MEDIATORS or --service-mediators")
+	}
+	if len(options.APIHost) == 0 {
+		return fmt.Errorf("No api host specified - please use API_HOST or --api-host")
 	}
 	return nil
 }

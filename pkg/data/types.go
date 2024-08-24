@@ -85,6 +85,7 @@ const (
 type ServiceConfig struct {
 	Solver   string   `json:"solver" toml:"solver"`
 	Mediator []string `json:"mediator" toml:"mediator"`
+	APIHost  string   `json:"api_host" toml:"api_host"`
 }
 
 // posted to the solver by a job creator
@@ -261,4 +262,11 @@ type DealContainer struct {
 	Deal             Deal             `json:"deal"`
 	Transactions     DealTransactions `json:"transactions"`
 	Mediator         string           `json:"mediator"`
+}
+
+type MinerHashRate struct {
+	ID       string  `json:"id"`
+	Address  string  `json:"address"`
+	Date     int64   `json:"date"`
+	Hashrate float64 `json:"hashrate"`
 }

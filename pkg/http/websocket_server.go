@@ -97,6 +97,8 @@ func StartWebSocketServer(
 			log.Error().Msgf("Error upgrading websocket: %s", err.Error())
 			return
 		}
+
+		conn.SetPingHandler(nil)
 		params := r.URL.Query()
 		connParams := WSConnectionParams{
 			ID:          params.Get("ID"),

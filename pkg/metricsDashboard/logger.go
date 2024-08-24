@@ -2,7 +2,6 @@ package metricsDashboard
 
 import (
 	"encoding/json"
-	"os"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -15,13 +14,24 @@ const nodeConnectionEndpoint = "uptimes"
 const dealsEndpoint = "deals"
 const namespace = "metrics-dashboard"
 
-var host = os.Getenv("API_HOST")
+var host string
+
+type NodeConnectionParams struct {
+	Event       string
+	ID          string
+	CountryCode string
+	IP          string
+}
 
 type DealPayload struct {
 	ID               string
 	JobCreator       string
 	ResourceProvider string
 	JobID            string
+}
+
+func Init(h string) {
+	host = h
 }
 
 func TrackJobOfferUpdate(evOffer data.JobOfferContainer) {
@@ -66,13 +76,6 @@ func TrackNodeInfo(resourceOffer data.ResourceOffer) {
 
 	url := host + namespace + "/" + nodeInfoEndpoint
 	http.GenericJSONPostClient(url, payload)
-}
-
-type NodeConnectionParams struct {
-	Event       string
-	ID          string
-	CountryCode string
-	IP          string
 }
 
 func TrackNodeConnectionEvent(params NodeConnectionParams) {

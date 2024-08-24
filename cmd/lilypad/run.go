@@ -27,7 +27,6 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			optionsfactory.CheckDeprecation(options.Offer.Services, options.Web3)
 
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args, network)
@@ -57,8 +56,8 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 ⠀⠀⠀⠀⠀⠈⠙⠛⠛⠘⠛⠋⠁⠀ ⠀⠀⠀   Decentralized Compute Network  https://lilypad.tech
 
 `
-	if VERSION != "" {
-		header = strings.Replace(header, "v2", VERSION, 1)
+	if version != "" {
+		header = strings.Replace(header, "v2", version, 1)
 	}
 	c.Print(header)
 

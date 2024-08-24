@@ -18,10 +18,15 @@ func newPowSignalCmd() *cobra.Command {
 		Long:    "Send a pow signal to smart contract.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			network, _ := cmd.Flags().GetString("network")
+			network, err := cmd.Flags().GetString("network")
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to retrieve 'network' flag")
+				return err
+			}
 
 			options, err := optionsfactory.ProcessPowSignalOptions(options, network)
 			if err != nil {
+				log.Error().Err(err).Msg("Failed to process PowSignal options")
 				return err
 			}
 			return runPowSignal(cmd, options)
@@ -39,6 +44,7 @@ func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
 
 	web3SDK, err := web3.NewContractSDK(options.Web3)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to initialize Web3 SDK")
 		return err
 	}
 
@@ -46,6 +52,6 @@ func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("send pow signal successful.")
+	log.Info().Msg("Send pow signal successful.")
 	return nil
 }
