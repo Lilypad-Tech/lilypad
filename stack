@@ -340,12 +340,6 @@ function integration-tests() {
   go test -v -count 1 .
 }
 
-function integration-tests-github() {
-  cd test
-  doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .
-  go test -v -count 1 .
-}
-
 ############################################################################
 # run
 #
