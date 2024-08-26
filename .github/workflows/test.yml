@@ -42,4 +42,4 @@ jobs:
       - name: Run tests
         env:
           DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TESTS_DOPPLER_TOKEN }}
-        run: ./stack integration-tests
+        run: ./stack integration-tests-github
