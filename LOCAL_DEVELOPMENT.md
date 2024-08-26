@@ -40,7 +40,6 @@ These are the commands to run the node and boot the network: `./stack chain-clea
 A helper script is in place to verify balances on the accounts: `cd hardhat && npx hardhat run scripts/balances.ts --network dev`
 
 ### 2. Solver service
-
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack solver`,`./stack solver-docker-build` and `./stack solver-docker-run` respectively. The `solver` service will output a log line that reads that "the solver has been registered successfully" or "the solver already exists". It is best to wait for this output before starting the services that will try to connect to the `solver`.
 
 ### 3. Job creator
@@ -50,12 +49,20 @@ This process can be executed directly if Golang has been installed or in a docke
 ### 4. Bacalhau node
 
 For the time being this process has to be executed directly. This means following the instructions to download their cli tool and expose it as a bin that can be used. Here's how to install the `bacalhau` tool:
-
+#### Linux
 ```sh
 # install the latest
 wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz
 # extract the downloaded archive and move the `bacalhau` binary to `/usr/local/bin`
 tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz
+mv bacalhau /usr/local/bin
+```
+#### Mac OS
+```sh
+# install the latest
+wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_darwin_amd64.tar.gz
+# extract the downloaded archive and move the `bacalhau` binary to `/usr/local/bin`
+tar xfv bacalhau_v1.3.2_darwin_amd64.tar.gz
 mv bacalhau /usr/local/bin
 ```
 
