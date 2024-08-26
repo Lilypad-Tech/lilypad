@@ -127,4 +127,13 @@ ProviderError: failed with 51333200 gas: insufficient funds for gas * price + va
     at async /Users/nshahnazarian/Development/git/lilypad/hardhat/scripts/fund-services-ether.ts:15:5
 ```
 This can be addressed by doing following:
-- Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain_data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
+- Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
+
+### Issues running onchain cowsay
+
+If you find that you have issues with the Job Creator not picking up your `run-cowsay-onchain` command while running the Lilypad stack through Docker, do the following:
+1. Stop the Docker stack by pressing ctrl+c
+2. Run the following command to clean up your Docker environment: `./stack compose-down && docker system prune -a`
+3. Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions
+4. Re-run your Docker stack using: `./stack compose-build && ./stack compose-init && ./stack compose-up`
+5. Re-run the onchain cowsay job: `./stack run-cowsay-onchain`
