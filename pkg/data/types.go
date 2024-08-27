@@ -88,6 +88,10 @@ type ServiceConfig struct {
 	APIHost  string   `json:"api_host" toml:"api_host"`
 }
 
+type TargetConfig struct {
+	Address string `json:"address" toml:"address"`
+}
+
 // posted to the solver by a job creator
 type JobOffer struct {
 	// this is the cid of the job offer where ID is set to empty string
@@ -114,6 +118,9 @@ type JobOffer struct {
 
 	// which parties are trusted by the job creator
 	Services ServiceConfig `json:"trusted_parties"`
+
+	// which node(s) (if any) to target
+	Target TargetConfig `json:"target"`
 }
 
 // this is what the solver keeps track of so we can know

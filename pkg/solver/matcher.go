@@ -143,6 +143,27 @@ func getMatchingDeals(
 	// loop over job offers
 	for _, jobOffer := range jobOffers {
 
+		// See if our jobOffer targets a specific address. If so, we will create a deal automatically
+		// with the matcing resourceOffer.
+		if jobOffer.JobOffer.Target.Address != "" {
+			resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
+			if err != nil {
+				return nil, err
+			}
+
+			// We don't have a resource provider for this address
+			if resourceOffer == nil {
+				continue
+			}
+
+			deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
+			if err != nil {
+				return nil, err
+			}
+			deals = append(deals, deal)
+			continue
+		}
+
 		// loop over resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
 		for _, resourceOffer := range resourceOffers {

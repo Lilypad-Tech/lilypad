@@ -197,6 +197,17 @@ func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOfferCont
 	return resourceOffer, nil
 }
 
+func (s *SolverStoreMemory) GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, resourceOffer := range s.resourceOfferMap {
+		if resourceOffer.ResourceProvider == address {
+			return resourceOffer, nil
+		}
+	}
+	return nil, nil
+}
+
 func (s *SolverStoreMemory) GetDeal(id string) (*data.DealContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
