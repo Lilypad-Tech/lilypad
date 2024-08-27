@@ -86,6 +86,7 @@ services:
       dockerfile: ./docker/resource-provider/Dockerfile
       args:
         - NETWORK=dev
+        - COMPUTE_MODE=cpu
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
