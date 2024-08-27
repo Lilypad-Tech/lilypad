@@ -1,0 +1,29 @@
+# Running the Lilypad application locally depends on the `.local.dev` file for secrets injection. 
+# This file contains a series of private keys (with no funds on them) that are ONLY meant to be used 
+# for testing this app locally. You are free to replace these keys with your own if you wish; however, 
+# be warned that the `.local.dev` file is not included in the `.gitignore`. Therefore, you must be 
+# vigilant not to commit this file in your PRs. We are not responsible for lost funds as a result of 
+# posting your private keys in your commits/PRs. Unless you have a very good reason to do so, 
+# leave the `.local.dev` file unchanged.
+
+API_HOST=http://localhost:8002/
+WEB3_RPC_URL=ws://localhost:8548
+SERVER_PORT=8080
+SERVER_URL=http://localhost:8080
+DIRECTORY_ADDRESS=0x976EA74026E726554dB657fA54763abd0C3a0aa9
+JOB_CREATOR_ADDRESS=0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc
+JOB_CREATOR_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+MEDIATOR_PRIVATE_KEY=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
+RESOURCE_PROVIDER_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
+SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+SOLVER_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+RUN_PRIVATE_KEY=b3994e7660abe5f65f729bb64163c6cd6b7d0b1a8c67881a7346e3e8c7f026f5
+WEB3_CHAIN_ID=412346
+WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
+WEB3_JOBCREATOR_ADDRESS_=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+WEB3_MEDIATOR_ADDRESS_=0x0B306BF915C4d645ff596e518fAf3F9669b97016
+WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+WEB3_POW_ADDRESS_=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1
+WEB3_STORAGE_ADDRESS_=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
+WEB3_TOKEN_ADDRESS_=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
