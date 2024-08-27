@@ -78,7 +78,6 @@ services:
       - "localhost:host-gateway"
     environment:
       - WEB3_PRIVATE_KEY=${JOB_CREATOR_PRIVATE_KEY}
-      - API_HOST=${API_HOST}
       - LOG_LEVEL=debug
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider
