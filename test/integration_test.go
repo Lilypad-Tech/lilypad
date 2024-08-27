@@ -79,7 +79,7 @@ func testStackWithOptions(
 ) (*jobcreator.RunJobResults, error) {
 	// give the solver server a chance to boot before we get all the websockets
 	// up and trying to connect to it
-	time.Sleep(20000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	mediator, err := getMediator(t, commandCtx, options)
 	if err != nil {

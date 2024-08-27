@@ -19,9 +19,7 @@ RUN echo "#!/bin/bash" >> run
 FROM base AS expose-cloudflare
 RUN curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${arch}.deb
 RUN dpkg -i cloudflared.deb
-RUN if [ "${network}" != "dev" ]; then \
-        echo "doppler run --command \"cloudflared tunnel run & lilypad solver --network ${network}\"" >> run; \
-    fi
+RUN echo "doppler run --command \"cloudflared tunnel run & lilypad solver --network ${network}\"" >> run
 
 FROM base AS expose-local
 EXPOSE 8080
