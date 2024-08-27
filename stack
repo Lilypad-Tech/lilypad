@@ -42,7 +42,10 @@ function compose-down() {
 ############################################################################
 function load-local-env() {
   while IFS= read -r line || [ -n "$line" ]; do
-    export $line
+    # Skip lines that are empty, start with a #, or are just whitespace
+    if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+      export $line
+    fi
   done < .local.dev
 }
 
