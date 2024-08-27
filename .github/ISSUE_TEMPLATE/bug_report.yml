@@ -1,0 +1,55 @@
+name:  "\U0001F41E Bug report"
+description: Report an issue with Lilypad
+labels: ['triage: bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of the bug. If you intend to submit a pull request for this issue, tell us in the description. Thanks!
+      placeholder: Bug description
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Please provide instructions for reproducing the bug. If the report is vague and has no reproduction, it may take the Lilypad team time to triage the issue. We may ask you for more details or close the issue if we cannot reproduce.
+      placeholder: Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Please include logs around the time this bug occurred. Skip this section if logs are included in the reproduction. Please do not insert an image of logs, but instead copy-paste the log text.
+      render: shell
+  - type: textarea
+    id: Screenshots
+    attributes:
+      label: Screenshots
+      description: Please include screenshots of info that is relevant to this issue.
+      render: shell
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: Please provide details about the hardware and software (Lilypad Version, OS, OS version, Architecture) in use when the bug occured. Resource providers should also include Bacalhau version and GPU information.
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Select the severity of this issue
+      options:
+        - Annoyance
+        - Blocking an upgrade
+        - Blocking all Lilypad usage
+    validations:
+      required: true
