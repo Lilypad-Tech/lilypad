@@ -194,7 +194,7 @@ function run-cowsay-onchain() {
 ############################################################################
 # solver
 #
-# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function solver() {
@@ -226,7 +226,7 @@ function solver-docker-run() {
 ############################################################################
 # job creator
 #
-# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function job-creator() {
@@ -256,7 +256,7 @@ function job-creator-docker-run() {
 ############################################################################
 # resource provider
 #
-# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function resource-provider() {
@@ -343,7 +343,7 @@ function integration-tests() {
 ############################################################################
 # run
 #
-# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development.  You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 function run() {
   load-local-env

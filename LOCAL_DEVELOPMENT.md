@@ -8,7 +8,7 @@
 
 ## Getting started
 
-Running the Lilypad application locally depends on the `.local.dev` file for secrets injection.  In this file are a series of private keys (with no funds on them) that are ONLY meant to be used for testing this app locally.  You are free to replace these keys with your own if you wish; however, be warned that the `.local.dev` file is not included in the `.gitignore` so you must be vigilant to not commit this file in your PRs.  We are not responsible for lost funds as a result of you posting your private keys on your commits/prs. So unless you have a very good reason to do so, leave the `.local.dev` file unchanged.
+Running the Lilypad application locally depends on the `.local.dev` file for secrets injection. In this file are a series of private keys (with no funds on them) that are ONLY meant to be used for testing this app locally. You are free to replace these keys with your own if you wish; however, be warned that the `.local.dev` file is not included in the `.gitignore` so you must be vigilant to not commit this file in your PRs. We are not responsible for lost funds as a result of you posting your private keys on your commits/prs. So unless you have a very good reason to do so, leave the `.local.dev` file unchanged.
 
 A minimal local Lilypad network consists of the following pieces of infrastructure:
 
@@ -118,7 +118,7 @@ Things should work right out-of-the-box, no extra configuration should be needed
 
 ## Troubleshooting
 
-In this section we'll highlight some common problems you might face when trying to boot up Lilypad locally
+In this section we'll address some common problems you might face when trying to boot up Lilypad locally
 
 ### Chain-boot Related issues
 
@@ -133,7 +133,7 @@ ProviderError: failed with 51333200 gas: insufficient funds for gas * price + va
     at async transferEther (/Users/nshahnazarian/Development/git/lilypad/hardhat/utils/web3.ts:61:14)
     at async /Users/nshahnazarian/Development/git/lilypad/hardhat/scripts/fund-services-ether.ts:15:5
 ```
-This can be addressed by doing following:
+This can be addressed by doing the following:
 - Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
 
 ### Issues running onchain cowsay
