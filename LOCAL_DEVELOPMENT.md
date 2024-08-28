@@ -5,9 +5,10 @@
 - [Golang](https://go.dev/doc/install)
 - [node](https://nodejs.org/en/download/package-manager)
 - [Docker](https://docs.docker.com/engine/install/)
-- [Doppler](https://docs.doppler.com/docs/install-cli)
 
 ## Getting started
+
+Running the Lilypad application locally depends on the `.local.dev` file for secrets injection. In this file are a series of private keys (with no funds on them) that are ONLY meant to be used for testing this app locally. You are free to replace these keys with your own if you wish; however, be warned that the `.local.dev` file is not included in the `.gitignore` so you must be vigilant to not commit this file in your PRs. We are not responsible for lost funds as a result of you posting your private keys on your commits/prs. So unless you have a very good reason to do so, leave the `.local.dev` file unchanged.
 
 A minimal local Lilypad network consists of the following pieces of infrastructure:
 
@@ -114,3 +115,32 @@ There are two commands that can be used to run existing tests: `./stack unit-tes
 ## Notes on tooling
 
 Things should work right out-of-the-box, no extra configuration should be needed as Doppler provides the environment variables that are required with the current setup.
+
+## Troubleshooting
+
+In this section we'll address some common problems you might face when trying to boot up Lilypad locally
+
+### Chain-boot Related issues
+
+If you try and run `./stack compose-init` or `./stack chain-boot` and get the following error
+```bash
+ProviderError: failed with 51333200 gas: insufficient funds for gas * price + value: address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 have 9318991353400000000 want 10000000000000000000
+    at HttpProvider.request (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/hardhat/src/internal/core/providers/http.ts:88:21)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async HardhatEthersProvider.estimateGas (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/@nomicfoundation/hardhat-ethers/src/internal/hardhat-ethers-provider.ts:237:27)
+    at async Wallet.populateTransaction (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/ethers/src.ts/providers/abstract-signer.ts:105:28)
+    at async Wallet.sendTransaction (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/ethers/src.ts/providers/abstract-signer.ts:232:21)
+    at async transferEther (/Users/nshahnazarian/Development/git/lilypad/hardhat/utils/web3.ts:61:14)
+    at async /Users/nshahnazarian/Development/git/lilypad/hardhat/scripts/fund-services-ether.ts:15:5
+```
+This can be addressed by doing the following:
+- Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
+
+### Issues running onchain cowsay
+
+If you find that you have issues with the Job Creator not picking up your `run-cowsay-onchain` command while running the Lilypad stack through Docker, do the following:
+1. Stop the Docker stack by pressing ctrl+c
+2. Run the following command to clean up your Docker environment: `./stack compose-down && docker system prune -a`
+3. Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions
+4. Re-run your Docker stack using: `./stack compose-build && ./stack compose-init && ./stack compose-up`
+5. Re-run the onchain cowsay job: `./stack run-cowsay-onchain`
