@@ -49,7 +49,11 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     environment:
-      - DOPPLER_TOKEN=${DOPPLER_TOKEN_SOLVER}
+      - WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
+      - LOG_LEVEL=debug
+      - SERVER_PORT=${SERVER_PORT}
+      - SERVER_URL=${SERVER_URL}
+      - WEB3_RPC_URL=${WEB3_RPC_URL}
     ports:
       - 8080:8080
     healthcheck:
@@ -73,7 +77,8 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     environment:
-      - DOPPLER_TOKEN=${DOPPLER_TOKEN_JOB_CREATOR}
+      - WEB3_PRIVATE_KEY=${JOB_CREATOR_PRIVATE_KEY}
+      - LOG_LEVEL=debug
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider
     container_name: resource-provider
@@ -86,13 +91,14 @@ services:
       dockerfile: ./docker/resource-provider/Dockerfile
       args:
         - NETWORK=dev
+        - COMPUTE_MODE=cpu
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
       - bacalhau-data:/tmp/lilypad/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - WEB3_PRIVATE_KEY
+      - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
       - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
       - LOG_LEVEL=debug
       - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}

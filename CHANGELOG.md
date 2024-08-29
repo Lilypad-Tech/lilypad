@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.0...v2.3.1) (2024-08-26)
+
+
+### Bug Fixes
+
+* Gpu support for rp Dockerfile ([#299](https://github.com/Lilypad-Tech/lilypad/issues/299)) ([d830232](https://github.com/Lilypad-Tech/lilypad/commit/d83023239a564c0bdb0abb78242e4212d8c8ef6c))
+
+## [2.3.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.8...v2.3.0) (2024-08-25)
+
+
+### Features
+
+* Add ETH Balance Check on RP Matching ([#298](https://github.com/Lilypad-Tech/lilypad/issues/298)) ([561a64a](https://github.com/Lilypad-Tech/lilypad/commit/561a64acbc007a210abea3aac2d216955fb3c6c9))
+
 ## [2.2.8](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.7...v2.2.8) (2024-08-16)
 
 

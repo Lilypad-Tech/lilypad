@@ -21,28 +21,18 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Build Docker Images
-        run: docker compose -f docker/docker-compose.dev.yml build
+        run: ./stack compose-build
 
       - name: Initialize chain
-        env:
-          ADMIN_ADDRESS: ${{ secrets.INTEGRATION_TEST_ADMIN_ADDRESS }}
-        run: |
-          ./stack chain-clean
-          docker compose -f ./docker/docker-compose.dev.yml up chain -d
-          ./stack chain-boot
+        run: ./stack compose-init
 
       - name: Run stack
         env:
-          ADMIN_ADDRESS: ${{ secrets.INTEGRATION_TEST_ADMIN_ADDRESS }}
-          DOPPLER_TOKEN_JOB_CREATOR: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN_JOB_CREATOR }}
-          DOPPLER_TOKEN_SOLVER: ${{ secrets.INTEGRATION_TEST_DOPPLER_TOKEN_SOLVER }}
-          WEB3_PRIVATE_KEY: ${{ secrets.INTEGRATION_TEST_WEB3_PRIVATE_KEY }}
           DISABLE_TELEMETRY: true
-        run: docker compose -f ./docker/docker-compose.dev.yml up -d
+        run: ./stack compose-up -d
 
       - name: Run tests
         env:
-          DOPPLER_TOKEN: ${{ secrets.INTEGRATION_TESTS_DOPPLER_TOKEN }}
           LOG_LEVEL: debug
         run: ./stack integration-tests
 
