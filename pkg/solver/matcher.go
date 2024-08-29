@@ -123,6 +123,7 @@ func doOffersMatch(
 
 func getMatchingDeals(
 	db store.SolverStore,
+	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 ) ([]data.Deal, error) {
 	deals := []data.Deal{}
 
@@ -153,6 +154,11 @@ func getMatchingDeals(
 
 			// We don't have a resource provider for this address
 			if resourceOffer == nil {
+				log.Trace().
+					Str("job offer", jobOffer.ID).
+					Str("target address", jobOffer.JobOffer.Target.Address).
+					Msgf("No resource provider found for address")
+				updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
 				continue
 			}
 

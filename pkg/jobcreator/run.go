@@ -77,6 +77,11 @@ waitloop:
 		}
 	}
 
+	// Check if our job was cancelled
+	if finalJobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") {
+		return nil, fmt.Errorf("job was cancelled")
+	}
+
 	result, err := jobCreatorService.GetResult(finalJobOffer.DealID)
 	if err != nil {
 		return nil, err

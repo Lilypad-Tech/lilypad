@@ -115,6 +115,9 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		case "ResultsRejected":
 			desc = "Results rejected! Getting refund..."
 			emoji = "🙀"
+		case "JobOfferCancelled":
+			desc = "Job cancelled..."
+			emoji = "😭"
 		default:
 			desc = st
 			emoji = "🌟"
