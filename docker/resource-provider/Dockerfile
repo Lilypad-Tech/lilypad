@@ -46,7 +46,7 @@ RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow ${DISABLE_POW} &" >> run
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --offer-gpu 1 --disable-pow ${DISABLE_POW} &" >> run
 RUN echo "wait -n" >> run
 RUN chmod +x run
 
