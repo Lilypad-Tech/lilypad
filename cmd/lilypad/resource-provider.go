@@ -52,6 +52,8 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
+	// TODO Check Bacalhau version
+
 	resourecProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {
 		select {
