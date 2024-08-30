@@ -11,3 +11,9 @@ Licensee’s name: Brian Ginsburg
 Repository system identifier: bgins
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: James Walker
+
+Repository system identifier: walkah
+
+---------------------------------------------------------------------------------
