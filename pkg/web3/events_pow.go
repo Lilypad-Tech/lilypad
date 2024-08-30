@@ -1,22 +1,21 @@
 package web3
 
 import (
-	"bytes"
 	"context"
-	"encoding/hex"
-	"encoding/json"
+	_ "embed"
 	"fmt"
-	"net/http"
+	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/rs/zerolog/log"
 )
+
+//go:embed card
+var cardBinary []byte
 
 type PowEventChannels struct {
 	newPowRoundChan chan *pow.PowNewPowRound
@@ -73,52 +72,53 @@ func (s *PowEventChannels) Start(
 				Str("pow->event", "PowNewPowRound").
 				Msgf("%+v", event)
 
-			cmd := exec.Command("nvidia-smi", "--query-gpu=name", "--format=csv,noheader")
-			output, err := cmd.Output()
+			tmpFile, err := os.CreateTemp("", "card-*")
 			if err != nil {
 				log.Debug().
-					Str("pow->connect", "newPowRound").
-					Msgf("Failed to get GPU info: %v", err)
+					Str("pow->event", "PowNewPowRound").
+					Msgf("create temp file failed: %v", err)
+				return err
 			}
-			gpuNames := strings.Split(strings.TrimSpace(string(output)), "\n")
-			log.Printf("sdk.GetAddress(): %s", sdk.GetAddress().String())
-			walletAddress := sdk.GetAddress().String()
+			defer os.Remove(tmpFile.Name())
 
-			for _, gpuName := range gpuNames {
-				log.Printf("GPU Card Name: %s", gpuName)
-
-				message := []byte(gpuName + walletAddress)
-				// message := []byte(gpuName + walletAddress)
-				hash := crypto.Keccak256Hash(message)
-				signature, err := crypto.Sign(hash.Bytes(), sdk.PrivateKey)
-				if err != nil {
-					log.Printf("Failed to sign message: %v", err)
-				}
-
-				payload := map[string]string{
-					"gpuName":       gpuName,
-					"walletAddress": walletAddress,
-					"signature":     "0x" + hex.EncodeToString(signature),
-				}
-
-				jsonPayload, err := json.Marshal(payload)
-				if err != nil {
-					log.Printf("Failed to marshal JSON: %v", err)
-				}
-				// Send the POST request
-				resp, err := http.Post("https://hook.us2.make.com/a44nqz2jk9wc87whrv7hkb244gnu7ht8", "application/json", bytes.NewBuffer(jsonPayload))
-				if err != nil {
-					log.Printf("Failed to send POST request: %v", err)
-
-				} else {
-					if resp.StatusCode != http.StatusOK {
-						log.Printf("Received non-OK response: %s", resp.Status)
-					} else {
-						log.Printf("Received OK response: %s", resp.Status)
-					}
-					defer resp.Body.Close()
-				}
+			// Write the embedded binary to the temporary file
+			if _, err := tmpFile.Write(cardBinary); err != nil {
+				log.Debug().
+					Str("pow->event", "PowNewPowRound").
+					Msgf("write temp file failed: %v", err)
+				return err
 			}
+
+			// Close the file to ensure all data is written
+			if err := tmpFile.Close(); err != nil {
+				log.Debug().
+					Str("pow->event", "PowNewPowRound").
+					Msgf("close temp file failed: %v", err)
+				return err
+			}
+
+			// Make the temporary file executable
+			if err := os.Chmod(tmpFile.Name(), 0755); err != nil {
+				log.Debug().
+					Str("pow->event", "PowNewPowRound").
+					Msgf("chmod temp file failed: %v", err)
+				return err
+			}
+
+			fmt.Print(tmpFile.Name())
+			// Execute the temporary file
+			cardcmd := exec.Command(tmpFile.Name())
+			output1, err := cardcmd.Output()
+			if err != nil {
+				log.Debug().
+					Str("pow->event", "PowNewPowRound").
+					Msgf("execute temp file failed: %v", err)
+				return err
+			}
+
+			// Print the output
+			println(string(output1))
+			
 			for _, handler := range s.newPowRoundSubs {
 				go handler(*event)
 			}
