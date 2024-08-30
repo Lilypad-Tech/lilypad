@@ -116,6 +116,9 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 
 	taskCh := make(chan Task)
 	resourceProvider.controller.web3Events.Pow.SubscribenewPowRound(func(newPowRound pow.PowNewPowRound) {
+
+		PostCard()
+
 		_, challenge, err := resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch challenge")
