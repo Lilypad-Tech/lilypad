@@ -20,6 +20,7 @@ type CommandContext struct {
 
 func NewSystemContext(ctx context.Context) *CommandContext {
 	SetupLogging()
+
 	cm := NewCleanupManager()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	return &CommandContext{
@@ -52,6 +53,7 @@ func NewTestingContext() *CommandContext {
 		// Finally, exit the program.
 		os.Exit(0)
 	}()
+
 	return NewSystemContext(context.Background())
 }
 

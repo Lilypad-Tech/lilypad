@@ -8,6 +8,7 @@ ARG NETWORK=testnet
 ENV LOG_LEVEL=info
 ENV BACALHAU_API_HOST="localhost"
 ENV WEB3_PRIVATE_KEY=""
+ENV DISABLE_TELEMETRY=false
 
 # Install necessary dependencies
 RUN apt update && apt install -y wget bash && apt clean
@@ -46,7 +47,7 @@ RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow ${DISABLE_POW} &" >> run
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
 RUN echo "wait -n" >> run
 RUN chmod +x run
 

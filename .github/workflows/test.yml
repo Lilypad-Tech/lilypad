@@ -27,7 +27,20 @@ jobs:
         run: ./stack compose-init
 
       - name: Run stack
+        env:
+          DISABLE_TELEMETRY: true
         run: ./stack compose-up -d
 
       - name: Run tests
+        env:
+          LOG_LEVEL: debug
         run: ./stack integration-tests
+
+      - name: Display resource provider logs
+        run: docker logs resource-provider
+
+      - name: Display solver logs
+        run: docker logs solver
+
+      - name: Display chain logs
+        run: docker logs chain

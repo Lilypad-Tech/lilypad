@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
 
@@ -14,8 +15,9 @@ import (
 var fs embed.FS
 
 type Config struct {
-	Web3          web3.Web3Options   `toml:"web3"`
-	ServiceConfig data.ServiceConfig `toml:"services"`
+	Web3             web3.Web3Options        `toml:"web3"`
+	ServiceConfig    data.ServiceConfig      `toml:"services"`
+	TelemetryOptions system.TelemetryOptions `toml:"telemetry"`
 }
 
 // TODO(bgins) Check for user-defined config files
