@@ -23,3 +23,9 @@ Licensee’s name: Narbeh Shahnazarian
 Repository system identifier: narbs91
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: lilypad-releases
+
+Repository system identifier: lilypad-releases
+
+---------------------------------------------------------------------------------
