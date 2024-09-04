@@ -53,3 +53,4 @@ RUN chmod +x run
 
 # Run startup script when container starts
 CMD ["/bin/bash", "./run"]
+
