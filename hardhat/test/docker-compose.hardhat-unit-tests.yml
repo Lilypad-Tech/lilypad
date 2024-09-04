@@ -1,0 +1,13 @@
+version: '3.3'
+
+services:
+  hardhat-unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hardhat-unit-tests
+    image: hardhat-unit-tests
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: bash -c "npx hardhat test --network hardhat"

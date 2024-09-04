@@ -348,6 +348,15 @@ function integration-tests() {
 }
 
 ############################################################################
+# tests in docker
+############################################################################
+
+function compose-unit-tests() {
+  cd hardhat
+  docker compose -f docker-compose.hardhat-unit-tests.yml up    
+}
+
+############################################################################
 # run
 #
 # Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
