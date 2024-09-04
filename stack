@@ -13,6 +13,7 @@ function compose-env() {
   export DISABLE_TELEMETRY=false
 }
 
+
 function compose-init() {
   compose-env
   chain-clean
