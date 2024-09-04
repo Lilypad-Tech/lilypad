@@ -6,6 +6,22 @@ on:
       - main
 
 jobs:
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install node
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./hardhat
+
+      - name: Run unit tests
+        run: ./stack unit-tests
+        
   run-integration-tests:
     runs-on: ubuntu-latest
     steps:
