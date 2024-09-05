@@ -64,7 +64,8 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer)
 	if err != nil {
 		return err
 	}

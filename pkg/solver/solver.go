@@ -9,6 +9,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type SolverOptions struct {
@@ -30,8 +31,9 @@ func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
 	web3SDK *web3.Web3SDK,
+	tracer trace.Tracer,
 ) (*Solver, error) {
-	controller, err := NewSolverController(web3SDK, store, options)
+	controller, err := NewSolverController(web3SDK, store, options, tracer)
 	if err != nil {
 		return nil, err
 	}
