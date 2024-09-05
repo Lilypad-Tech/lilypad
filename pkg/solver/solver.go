@@ -12,9 +12,10 @@ import (
 )
 
 type SolverOptions struct {
-	Web3     web3.Web3Options
-	Server   http.ServerOptions
-	Services data.ServiceConfig
+	Web3      web3.Web3Options
+	Server    http.ServerOptions
+	Services  data.ServiceConfig
+	Telemetry system.TelemetryOptions
 }
 
 type Solver struct {

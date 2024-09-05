@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
@@ -24,7 +26,7 @@ func newSolverCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runSolver(cmd, options)
+			return runSolver(cmd, options, network)
 		},
 	}
 
@@ -33,7 +35,7 @@ func newSolverCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
+func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -46,6 +48,21 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	if err != nil {
 		return err
 	}
+
+	tc := system.TelemetryConfig{
+		TelemetryURL:   options.Telemetry.URL,
+		TelemetryToken: options.Telemetry.Token,
+		Enabled:        !options.Telemetry.Disable,
+		Service:        system.SolverService,
+		Network:        network,
+		Address:        web3SDK.GetAddress().String(),
+		GPU:            system.GetGPUInfo(),
+	}
+	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
+	if err != nil {
+		fmt.Printf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 
 	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
 	if err != nil {
