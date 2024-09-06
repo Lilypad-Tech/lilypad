@@ -827,6 +827,7 @@ func (_Pow *PowTransactorSession) RenounceOwnership() (*types.Transaction, error
 //
 // Solidity: function submitWork(uint256 nonce, string nodeId) returns()
 func (_Pow *PowTransactor) SubmitWork(opts *bind.TransactOpts, nonce *big.Int, nodeId string) (*types.Transaction, error) {
+	opts.NoSend = true
 	return _Pow.contract.Transact(opts, "submitWork", nonce, nodeId)
 }
 

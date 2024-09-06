@@ -1,9 +1,12 @@
 package web3
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -281,14 +284,42 @@ func (sdk *Web3SDK) SubmitWork(
 		return common.Hash{}, err
 	}
 
-	receipt, err := sdk.WaitTx(ctx, tx)
+	url := sdk.Options.PowSubmitURL
+
+	txData, err := json.Marshal(tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	if receipt.Status == 0 {
-		return tx.Hash(), fmt.Errorf("excute transaction fail")
+	req, err := http.NewRequest("POST", url+"/submitPOW", bytes.NewBuffer(txData))
+	if err != nil {
+		return common.Hash{}, err
 	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return common.Hash{}, fmt.Errorf("failed to submit transaction: %s", resp.Status)
+	}
+
+	// =========OLD CODE=========
+	// receipt, err := sdk.WaitTx(ctx, tx)
+	// if err != nil {
+	// 	return common.Hash{}, err
+	// }
+
+	// if receipt.Status == 0 {
+	// 	return tx.Hash(), fmt.Errorf("excute transaction fail")
+	// }
+	// =========OLD CODE=========
 
 	return tx.Hash(), nil
 }

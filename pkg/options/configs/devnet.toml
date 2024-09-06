@@ -14,6 +14,7 @@ token_address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 mediation_address = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
 jobcreator_address = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
 pow_address = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
+pow_submit_url = "TODO ADD URL HERE"
 
 [telemetry]
 url = "https://observe.lilypad.tech"
