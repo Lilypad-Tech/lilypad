@@ -192,8 +192,10 @@ func NewContracts(
 }
 
 func NewContractSDK(options Web3Options) (*Web3SDK, error) {
-	// write to console
-	log.Debug().Msgf("NewContractSDK: %+v", options)
+	displayOpts := options
+	displayOpts.PrivateKey = "*********"
+	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+
 	client, err := ethclient.Dial(options.RpcURL)
 	if err != nil {
 		return nil, err
@@ -218,14 +220,18 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Web3SDK{
+
+	web3SDK := &Web3SDK{
 		PrivateKey:   privateKey,
 		Options:      options,
 		Client:       client,
 		CallOpts:     callOpts,
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
-	}, nil
+	}
+	log.Debug().Msgf("Public Address: %s", web3SDK.GetAddress())
+
+	return web3SDK, nil
 }
 
 func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
@@ -245,4 +251,17 @@ func (sdk *Web3SDK) WaitTx(ctx context.Context, tx *types.Transaction) (*types.R
 
 func (sdk *Web3SDK) GetAddress() common.Address {
 	return crypto.PubkeyToAddress(GetPublicKey(sdk.PrivateKey))
+}
+
+func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
+	// Convert the string address to common.Address
+	ethAddress := common.HexToAddress(address)
+
+	// Get the balance using the converted address
+	balance, err := sdk.Client.BalanceAt(context.Background(), ethAddress, nil)
+	if err != nil {
+		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		return nil, err
+	}
+	return balance, nil
 }

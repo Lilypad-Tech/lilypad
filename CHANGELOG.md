@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.4.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.1...v2.4.0) (2024-09-04)
+
+
+### Features
+
+* Add run job traces ([#292](https://github.com/Lilypad-Tech/lilypad/issues/292)) ([bff7bcf](https://github.com/Lilypad-Tech/lilypad/commit/bff7bcf825b819b35efbbd8c0da23c2b4eee5fcd))
+
+## [2.3.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.0...v2.3.1) (2024-08-26)
+
+
+### Bug Fixes
+
+* Gpu support for rp Dockerfile ([#299](https://github.com/Lilypad-Tech/lilypad/issues/299)) ([d830232](https://github.com/Lilypad-Tech/lilypad/commit/d83023239a564c0bdb0abb78242e4212d8c8ef6c))
+
+## [2.3.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.8...v2.3.0) (2024-08-25)
+
+
+### Features
+
+* Add ETH Balance Check on RP Matching ([#298](https://github.com/Lilypad-Tech/lilypad/issues/298)) ([561a64a](https://github.com/Lilypad-Tech/lilypad/commit/561a64acbc007a210abea3aac2d216955fb3c6c9))
+
+## [2.2.8](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.7...v2.2.8) (2024-08-16)
+
+
+### Bug Fixes
+
+* Remove ntfs zone files ([#286](https://github.com/Lilypad-Tech/lilypad/issues/286)) ([6b7b2dc](https://github.com/Lilypad-Tech/lilypad/commit/6b7b2dcc3c0e94607e20ee2646d78513ff907cfc))
+
 ## [2.2.7](https://github.com/Lilypad-Tech/lilypad/compare/v2.2.6...v2.2.7) (2024-08-07)
 
 

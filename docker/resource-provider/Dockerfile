@@ -1,20 +1,17 @@
-FROM docker:dind
-WORKDIR /usr/src/app
+ARG COMPUTE_MODE=gpu
 
-# Build args
+FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS base
+WORKDIR /usr/src/app
 ARG NETWORK=testnet
-ARG DISABLE_POW=false
 
 # Default environment variables
 ENV LOG_LEVEL=info
-ENV OFFER_GPU=1
 ENV BACALHAU_API_HOST="localhost"
 ENV WEB3_PRIVATE_KEY=""
+ENV DISABLE_TELEMETRY=false
 
 # Install necessary dependencies
-RUN apk update
-RUN apk add wget
-RUN apk add bash
+RUN apt update && apt install -y wget bash && apt clean
 
 # Install Bacalhau
 RUN cd /tmp && \
@@ -28,7 +25,17 @@ COPY --from=golang:1.22.4-alpine /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . .
-RUN go build -v .
+
+FROM base AS build-gpu
+RUN nvcc --version &&  nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx  ./pkg/resourceprovider/cudaminer/keccak.cu
+RUN go build -v --tags cuda
+ENV DISABLE_POW=false
+
+FROM base AS build-cpu
+RUN go build -v
+ENV DISABLE_POW=true
+
+FROM build-$COMPUTE_MODE AS final
 RUN mv lilypad /usr/local/bin
 
 # Add both lilypad and bacalhau executables to PATH
@@ -40,7 +47,7 @@ RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 # Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow ${DISABLE_POW} &" >> run
+RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
 RUN echo "wait -n" >> run
 RUN chmod +x run
 

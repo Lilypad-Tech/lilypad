@@ -321,6 +321,18 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	}
 	resourceOffer.ID = id
 
+	// Check the resource provider's ETH balance
+	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
+	}
+	// Convert InstructionPrice from ETH to Wei
+	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
+	// If the balance is less than the required balance, don't add the resource offer
+	if balance.Cmp(requiredBalanceWei) < 0 {
+		return nil, err
+	}
+
 	controller.log.Info("add resource offer", resourceOffer)
 
 	metricsDashboard.TrackNodeInfo(resourceOffer)

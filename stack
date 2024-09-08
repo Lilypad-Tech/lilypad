@@ -6,34 +6,51 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
 
 ############################################################################
-# docker compose 
+# docker compose
 ############################################################################
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
-  export DOPPLER_TOKEN_SOLVER="$(doppler configs tokens create -p solver -c dev docker --max-age 10m --plain)"
-  export DOPPLER_TOKEN_JOB_CREATOR="$(doppler configs tokens create -p job-creator -c dev docker --max-age 10m --plain)" 
+  export DISABLE_TELEMETRY=false
 }
 
 function compose-init() {
   compose-env
   chain-clean
+  if docker volume ls -q | grep -q "^lilypad_chain-data$"; then
+    docker volume rm lilypad_chain-data
+  fi
   docker compose -f ./docker/docker-compose.dev.yml up chain -d
   chain-boot
 }
 
 function compose-build() {
+  load-local-env
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml build "$@"
 }
 
 function compose-up() {
+  load-local-env
   compose-env
-  doppler run -p resource-provider -c dev -- docker compose -f ./docker/docker-compose.dev.yml up "$@"
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
 function compose-down() {
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml down
+}
+
+
+############################################################################
+# Load env variables from .local.dev
+############################################################################
+function load-local-env() {
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip lines that are empty, start with a #, or are just whitespace
+    if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+      export $line
+    fi
+  done < .local.dev
 }
 
 ############################################################################
@@ -176,17 +193,22 @@ function print-local-dev-env() {
 }
 
 function run-cowsay-onchain() {
+  load-local-env
   cd hardhat
-  doppler run --preserve-env -p run-cowsay-onchain -c dev -- npx hardhat run scripts/run-cowsay-onchain.ts
+  npx hardhat run scripts/run-cowsay-onchain.ts
 }
 
 ############################################################################
 # solver
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function solver() {
-  echo "- Reminder to do doppler setup to project->solver and config->dev"
-  doppler run --preserve-env -p solver -c dev -- go run . solver --network dev
+  load-local-env
+  export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
+  export LOG_LEVEL=debug
+  go run . solver --network dev
 }
 
 function solver-docker-build() {
@@ -210,11 +232,15 @@ function solver-docker-run() {
 
 ############################################################################
 # job creator
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function job-creator() {
-  echo "- Reminder to do doppler setup to project->job-creator and config->dev"
-  doppler run --preserve-env -p job-creator -c dev -- go run . jobcreator --network dev
+  load-local-env
+  export WEB3_PRIVATE_KEY=${JOB_CREATOR_PRIVATE_KEY}
+  export LOG_LEVEL=debug
+  go run . jobcreator --network dev
 }
 
 function job-creator-docker-build() {
@@ -236,11 +262,15 @@ function job-creator-docker-run() {
 
 ############################################################################
 # resource provider
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function resource-provider() {
-  echo "- Reminder to do doppler setup to project->resource-provider and config->dev"
-  doppler run --preserve-env -p resource-provider -c dev -- go run . resource-provider "$@" --network dev --disable-pow true
+  load-local-env
+  export WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
+  export LOG_LEVEL=debug
+  go run . resource-provider "$@" --network dev --disable-pow true
 }
 
 function resource-provider-docker-build() {
@@ -309,19 +339,24 @@ function unit-tests() {
   npx hardhat test --network hardhat
 }
 
-# this assumes chain is running
-# and chain-fund-admin
-# and chain-boot
+# this assumes stack is running
+# see LOCAL_DEVELOPMENT.md
 function integration-tests() {
+  load-local-env
   cd test
-  doppler run --preserve-env -p integration-tests -c dev -- go test -v -count 1 .
+  go test -v -count 1 .
 }
 
 ############################################################################
 # run
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 function run() {
-  doppler run --preserve-env -p run -c dev -- go run . run --network dev "$@"
+  load-local-env
+  export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
+  export LOG_LEVEL=info
+  go run . run --network dev "$@"
 }
 
 eval "$@"

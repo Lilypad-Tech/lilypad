@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,7 @@ func NewRootCmd() *cobra.Command {
 	RootCmd := &cobra.Command{
 		Use:   getCommandLineExecutable(),
 		Short: "Lilypad",
-		Long:  fmt.Sprintf("Lilypad: %s \nCommit: %s \n", version, commitSHA),
+		Long:  fmt.Sprintf("Lilypad: %s \nCommit: %s \n", system.Version, system.CommitSHA),
 	}
 
 	var network string
