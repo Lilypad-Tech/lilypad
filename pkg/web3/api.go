@@ -3,14 +3,13 @@ package web3
 import (
 	"context"
 	"fmt"
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
+	"math/big"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {
@@ -289,6 +288,45 @@ func (sdk *Web3SDK) SubmitWork(
 	if receipt.Status == 0 {
 		return tx.Hash(), fmt.Errorf("excute transaction fail")
 	}
+
+	return tx.Hash(), nil
+}
+
+func (sdk *Web3SDK) SubmitWorkForBatching(
+	ctx context.Context,
+	nonce *big.Int,
+	nodeId string,
+) (common.Hash, error) {
+	optsCopy := sdk.TransactOpts
+	optsCopy.NoSend = true
+	tx, err := sdk.Contracts.Pow.SubmitWork(optsCopy, nonce, nodeId)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	// call the endpoint here
+	// sdk.Options.PowBatchWsUrl
+	//url := "http://localhost:8080/submitPOW"
+	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(txData))
+	//if err != nil {
+	//	log.Fatalf("Failed to create request: %v", err)
+	//}
+	//
+	//
+	//req.Header.Set("Content-Type", "application/json")
+	//
+	//
+	//client := &http.Client{}
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	log.Fatalf("Failed to send request: %v", err)
+	//}
+	//defer resp.Body.Close()
+	//
+	//if resp.StatusCode != http.StatusOK {
+	//	log.Fatalf("Failed to submit transaction: %s", resp.Status)
+	//}
+	//
+	//fmt.Println("Transaction submitted successfully")
 
 	return tx.Hash(), nil
 }

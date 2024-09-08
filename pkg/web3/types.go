@@ -9,9 +9,10 @@ import (
 type Web3Options struct {
 
 	// core settings
-	RpcURL     string `json:"rpc_url" toml:"rpc_url"`
-	PrivateKey string `json:"private_key" toml:"private_key"`
-	ChainID    int    `json:"chain_id" toml:"chain_id"`
+	RpcURL        string `json:"rpc_url" toml:"rpc_url"`
+	PowBatchWsUrl string `json:"pow_batch_ws_url" toml:"pow_batch_ws_url"`
+	PrivateKey    string `json:"private_key" toml:"private_key"`
+	ChainID       int    `json:"chain_id" toml:"chain_id"`
 
 	// contract addresses
 	ControllerAddress string `json:"controller_address" toml:"controller_address"`

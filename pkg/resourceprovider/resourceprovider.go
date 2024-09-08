@@ -134,6 +134,28 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 		}
 	})
 
+	// new submit work for batching...
+	//submitWork := func(nonce *big.Int, hashrate float64) {
+	//	finishTime := time.Now().Unix()
+	//	id := walletAddress.String() + strconv.FormatInt(finishTime, 10)
+	//	powLogs.TrackHashrate(data.MinerHashRate{
+	//		ID:       id,
+	//		Address:  walletAddress.String(),
+	//		Date:     finishTime,
+	//		Hashrate: hashrate,
+	//	})
+	//	txId, err := resourceProvider.web3SDK.SubmitWorkForBatching(ctx, nonce, nodeId)
+	//	if err != nil {
+	//		log.Err(err).Msgf("Submit work fail")
+	//		return
+	//	}
+	//	log.Info().Str("address", walletAddress.Hex()).
+	//		Str("nodeid", nodeId).
+	//		Str("Nonce", nonce.String()).
+	//		Str("txid", txId.String()).
+	//		Msgf("Mine and submit successfully")
+	//}
+
 	submitWork := func(nonce *big.Int, hashrate float64) {
 		finishTime := time.Now().Unix()
 		id := walletAddress.String() + strconv.FormatInt(finishTime, 10)
