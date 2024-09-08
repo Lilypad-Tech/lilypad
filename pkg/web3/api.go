@@ -1,6 +1,7 @@
 package web3
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
@@ -10,6 +11,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
 	"math/big"
+	"net/http"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {
@@ -292,43 +294,48 @@ func (sdk *Web3SDK) SubmitWork(
 	return tx.Hash(), nil
 }
 
-func (sdk *Web3SDK) SubmitWorkForBatching(
-	ctx context.Context,
-	nonce *big.Int,
-	nodeId string,
-) (common.Hash, error) {
+func (sdk *Web3SDK) SubmitWorkForBatching(ctx context.Context, nonce *big.Int, nodeId string) (common.Hash, error) {
 	optsCopy := sdk.TransactOpts
 	optsCopy.NoSend = true
 	tx, err := sdk.Contracts.Pow.SubmitWork(optsCopy, nonce, nodeId)
 	if err != nil {
 		return common.Hash{}, err
 	}
-	// call the endpoint here
-	// sdk.Options.PowBatchWsUrl
-	//url := "http://localhost:8080/submitPOW"
-	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(txData))
-	//if err != nil {
-	//	log.Fatalf("Failed to create request: %v", err)
-	//}
-	//
-	//
-	//req.Header.Set("Content-Type", "application/json")
-	//
-	//
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	log.Fatalf("Failed to send request: %v", err)
-	//}
-	//defer resp.Body.Close()
-	//
-	//if resp.StatusCode != http.StatusOK {
-	//	log.Fatalf("Failed to submit transaction: %s", resp.Status)
-	//}
-	//
-	//fmt.Println("Transaction submitted successfully")
+	//call the endpoint here
+	req, err := createRequest(sdk.Options.PowBatchWsUrl, tx.Data())
+	if err != nil {
+		fmt.Errorf("failed to create request: %v", err)
+	}
 
+	err = executeRequest(req)
+	if err != nil {
+		fmt.Errorf("failed to execute request: %v", err)
+	}
+
+	fmt.Println("Transaction submitted successfully")
 	return tx.Hash(), nil
+}
+
+func createRequest(url string, data []byte) (*http.Request, error) {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
+
+func executeRequest(req *http.Request) error {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
 }
 
 type PowValidPOWSubmission struct {
