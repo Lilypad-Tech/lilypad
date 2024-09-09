@@ -14,7 +14,7 @@ token_address = "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
 mediation_address = "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
 jobcreator_address = "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
 pow_address = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
-pow_submit_url = "TODO ADD URL HERE"
+pow_batch_ws_url = "TODO ADD URL HERE"
 
 [telemetry]
 url = "http://localhost:8500"

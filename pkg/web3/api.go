@@ -3,7 +3,6 @@ package web3
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -284,44 +283,42 @@ func (sdk *Web3SDK) SubmitWork(
 		return common.Hash{}, err
 	}
 
-	url := sdk.Options.PowSubmitURL
-
-	txData, err := json.Marshal(tx)
+	req, err := createRequest(sdk.Options.PowBatchWsUrl, tx.Data())
 	if err != nil {
-		return common.Hash{}, err
+		fmt.Errorf("failed to create request: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", url+"/submitPOW", bytes.NewBuffer(txData))
+	err = executeRequest(req)
 	if err != nil {
-		return common.Hash{}, err
+		fmt.Errorf("failed to execute request: %v", err)
 	}
 
+	fmt.Println("Transaction submitted successfully")
+	return tx.Hash(), nil
+
+}
+
+
+func createRequest(url string, data []byte) (*http.Request, error) {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
 
-	// Send the request
+func executeRequest(req *http.Request) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return common.Hash{}, err
+		return err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
-		return common.Hash{}, fmt.Errorf("failed to submit transaction: %s", resp.Status)
+		fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-
-	// =========OLD CODE=========
-	// receipt, err := sdk.WaitTx(ctx, tx)
-	// if err != nil {
-	// 	return common.Hash{}, err
-	// }
-
-	// if receipt.Status == 0 {
-	// 	return tx.Hash(), fmt.Errorf("excute transaction fail")
-	// }
-	// =========OLD CODE=========
-
-	return tx.Hash(), nil
+	return nil
 }
 
 type PowValidPOWSubmission struct {
