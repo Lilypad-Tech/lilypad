@@ -29,3 +29,9 @@ Licensee’s name: Robert Jitaru
 Repository system identifier: Rodebrechtd
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Logan Lentz
+
+Repository system identifier: noryev
+
+---------------------------------------------------------------------------------
