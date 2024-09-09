@@ -1,6 +1,8 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
@@ -24,7 +26,7 @@ func newResourceProviderCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runResourceProvider(cmd, options)
+			return runResourceProvider(cmd, options, network)
 		},
 	}
 
@@ -33,7 +35,7 @@ func newResourceProviderCmd() *cobra.Command {
 	return resourceProviderCmd
 }
 
-func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions) error {
+func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions, network string) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -47,7 +49,22 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor)
+	tc := system.TelemetryConfig{
+		TelemetryURL:   options.Telemetry.URL,
+		TelemetryToken: options.Telemetry.Token,
+		Enabled:        !options.Telemetry.Disable,
+		Service:        system.ResourceProviderService,
+		Network:        network,
+		Address:        web3SDK.GetAddress().String(),
+		GPU:            system.GetGPUInfo(),
+	}
+	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
+	if err != nil {
+		fmt.Printf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+
+	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor, telemetry)
 	if err != nil {
 		return err
 	}

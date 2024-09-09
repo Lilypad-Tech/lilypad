@@ -17,3 +17,15 @@ Licensee’s name: James Walker
 Repository system identifier: walkah
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Narbeh Shahnazarian
+
+Repository system identifier: narbs91
+
+---------------------------------------------------------------------------------
+
+Licensee’s name: Robert Jitaru
+
+Repository system identifier: Rodebrechtd
+
+---------------------------------------------------------------------------------

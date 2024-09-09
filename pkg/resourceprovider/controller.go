@@ -15,16 +15,20 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ResourceProviderController struct {
-	solverClient *solver.SolverClient
-	options      ResourceProviderOptions
-	web3SDK      *web3.Web3SDK
-	web3Events   *web3.EventChannels
-	loop         *system.ControlLoop
-	log          *system.ServiceLogger
-	executor     executor.Executor
+	solverClient   *solver.SolverClient
+	options        ResourceProviderOptions
+	web3SDK        *web3.Web3SDK
+	web3Events     *web3.EventChannels
+	loop           *system.ControlLoop
+	log            *system.ServiceLogger
+	tracerProvider trace.TracerProvider
+	executor       executor.Executor
 	// keep track of which jobs are running
 	// this is because no remote state will change
 	// whilst we are actually running a job
@@ -42,6 +46,7 @@ func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
+	telemetry system.Telemetry,
 ) (*ResourceProviderController, error) {
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Offers.Services.Solver)
@@ -61,13 +66,14 @@ func NewResourceProviderController(
 	}
 
 	controller := &ResourceProviderController{
-		solverClient: solverClient,
-		options:      options,
-		web3SDK:      web3SDK,
-		web3Events:   web3.NewEventChannels(),
-		log:          system.NewServiceLogger(system.ResourceProviderService),
-		executor:     executor,
-		runningJobs:  map[string]bool{},
+		solverClient:   solverClient,
+		options:        options,
+		web3SDK:        web3SDK,
+		web3Events:     web3.NewEventChannels(),
+		log:            system.NewServiceLogger(system.ResourceProviderService),
+		tracerProvider: telemetry.TracerProvider,
+		executor:       executor,
+		runningJobs:    map[string]bool{},
 	}
 	return controller, nil
 }
@@ -151,7 +157,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve()
+			err := controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -180,7 +186,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
  *
 */
 
-func (controller *ResourceProviderController) solve() error {
+func (controller *ResourceProviderController) solve(ctx context.Context) error {
 	controller.log.Debug("solving", "")
 
 	// if the solver does not know about resource offers
@@ -198,7 +204,7 @@ func (controller *ResourceProviderController) solve() error {
 	}
 
 	// if there are jobs that have had both sides agree then we should run the job
-	err = controller.runJobs()
+	err = controller.runJobs(ctx)
 	if err != nil {
 		return err
 	}
@@ -359,7 +365,7 @@ func (controller *ResourceProviderController) agreeToDeals() error {
  *
 */
 
-func (controller *ResourceProviderController) runJobs() error {
+func (controller *ResourceProviderController) runJobs(ctx context.Context) error {
 	agreedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -395,7 +401,7 @@ func (controller *ResourceProviderController) runJobs() error {
 			controller.runningJobs[dealContainer.ID] = true
 		}()
 
-		go controller.runJob(dealContainer)
+		go controller.runJob(ctx, dealContainer)
 	}
 
 	return err
@@ -404,37 +410,70 @@ func (controller *ResourceProviderController) runJobs() error {
 // this is run in it's own go-routine
 // we've already updated controller.runningJobs so we know this will only
 // run once
-func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
+func (controller *ResourceProviderController) runJob(ctx context.Context, deal data.DealContainer) {
 	controller.log.Info("run job", deal)
+	controller.log.Info("deal ID", deal.Deal.ID)
+
+	// Start run job trace
+	service := system.ResourceProviderService
+	ctx, span := controller.tracerProvider.Tracer(system.GetOTelServiceName(service)).Start(ctx, "run_job",
+		trace.WithAttributes(attribute.String("deal.id", deal.ID)),
+		trace.WithAttributes(attribute.String("deal.job_creator", deal.JobCreator)),
+		trace.WithAttributes(attribute.String("deal.resource_provider", deal.ResourceProvider)),
+		trace.WithAttributes(attribute.String("deal.job_offer.id", deal.Deal.JobOffer.ID)),
+		trace.WithAttributes(attribute.String("deal.job_offer.module.repo", deal.Deal.JobOffer.Module.Repo)),
+		trace.WithAttributes(attribute.String("deal.job_offer.module.hash", deal.Deal.JobOffer.Module.Hash)),
+		trace.WithAttributes(attribute.String("deal.resource_offer.id", deal.Deal.ResourceOffer.ID)),
+	)
+	defer span.End()
+
+	// When telemetry is disabled we use a Noop tracing provider,
+	// which does not export. We only log the trace ID when we are
+	// sending the trace somehwere.
+	if controller.options.Telemetry.Disable == false {
+		controller.log.Debug("starting job trace with trace ID", span.SpanContext().TraceID())
+	}
+
+	span.AddEvent("start")
 	result := data.Result{
 		DealID: deal.ID,
 		Error:  "",
 	}
 	err := func() error {
 		controller.log.Info("loading module", "")
+		span.AddEvent("module.load")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
+			span.SetStatus(codes.Error, "load module failed")
+			span.RecordError(err)
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
 		controller.log.Info("module loaded", module)
+		span.AddEvent("module.loaded")
+
+		span.AddEvent("executor.job.start")
 		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
 			controller.log.Error("error running job", err)
+			span.SetStatus(codes.Error, "job execution failed")
+			span.RecordError(err)
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
 		result.InstructionCount = uint64(executorResult.InstructionCount)
 		result.DataID = executorResult.ResultsCID
 		controller.log.Info("got result", result)
+		span.AddEvent("executor.job.complete")
 
 		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
-
+		span.AddEvent("solver.files.upload")
 		response, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
-
 		if err != nil {
-			// Log the response body in debug mode
 			controller.log.Debug("[debug] error uploading results. response was ", response)
+			span.SetStatus(codes.Error, "upload results failed")
+			span.RecordError(err)
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
+		span.AddEvent("solver.files.uploaded", trace.WithAttributes(attribute.String("result.deal.id", result.DealID)))
 
 		return nil
 	}()
@@ -448,6 +487,7 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 	// the tarball of the results has been uploaded
 	// now let's post the result data itself to the solver
 	// then we will post the results on-chain
+	span.AddEvent("solver.result.add")
 	createdResult, err := controller.solverClient.AddResult(result)
 	if err != nil {
 		// TODO: what should we do here?
@@ -455,9 +495,13 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		// and the JC can claim a refund
 		// but it's not really the fault of the RP that the solver refused to upload the results
 		controller.log.Error("error posting result", err)
+		span.SetStatus(codes.Error, "add result to solver failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("solver.result.added", trace.WithAttributes(attribute.String("result.id", createdResult.ID)))
 
+	span.AddEvent("chain.result.add")
 	txHash, err := controller.web3SDK.AddResult(
 		deal.Deal.ID,
 		createdResult.ID,
@@ -466,9 +510,13 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 	)
 	if err != nil {
 		controller.log.Error("error calling add result tx for job", err)
+		span.SetStatus(codes.Error, "add result to chain failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("chain.result.added", trace.WithAttributes(attribute.String("txHash", txHash)))
 
+	span.AddEvent("solver.transaction_hash.add")
 	_, err = controller.solverClient.UpdateTransactionsResourceProvider(deal.ID, data.DealTransactionsResourceProvider{
 		AddResult: txHash,
 	})
@@ -477,6 +525,11 @@ func (controller *ResourceProviderController) runJob(deal data.DealContainer) {
 		// some will be retryable - otherwise will be fatal
 		// we need a way to exit a job loop as a baseline
 		controller.log.Error("error adding add result tx hash for deal", err)
+		span.SetStatus(codes.Error, "add transcation hash to chain failed")
+		span.RecordError(err)
 		return
 	}
+	span.AddEvent("solver.transaction_hash.added")
+
+	span.AddEvent("done")
 }
