@@ -93,7 +93,7 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	}
 	// TODO: we may want to relax this
 	if version.GitVersion != "v1.3.2" {
-		return false, errors.New("Bacalhau version is not v1.3.2")
+		return false, errors.New("Bacalhau version must be v1.3.2")
 	}
 
 	return true, nil
