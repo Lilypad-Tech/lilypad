@@ -16,7 +16,7 @@ type BacalhauClient struct {
 	options BacalhauExecutorOptions
 }
 
-func NewClient(options BacalhauExecutorOptions) (*BacalhauClient, error) {
+func newClient(options BacalhauExecutorOptions) (*BacalhauClient, error) {
 	http := retryablehttp.NewClient()
 	return &BacalhauClient{
 		http:    http,
@@ -24,17 +24,16 @@ func NewClient(options BacalhauExecutorOptions) (*BacalhauClient, error) {
 	}, nil
 }
 
-func (client *BacalhauClient) Alive() (bool, error) {
+func (client *BacalhauClient) alive() (bool, error) {
 	result, err := getRequest[apimodels.IsAliveResponse](client, "agent/alive")
 	if err != nil {
 		return false, err
 	}
 
-	fmt.Println("%v\n", result)
 	return result.IsReady(), nil
 }
 
-func (client *BacalhauClient) GetVersion() (apimodels.GetVersionResponse, error) {
+func (client *BacalhauClient) getVersion() (apimodels.GetVersionResponse, error) {
 	return getRequest[apimodels.GetVersionResponse](client, "agent/version")
 }
 

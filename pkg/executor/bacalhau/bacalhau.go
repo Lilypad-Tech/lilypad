@@ -30,7 +30,7 @@ type BacalhauExecutor struct {
 }
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
-	client, err := NewClient(options)
+	client, err := newClient(options)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +81,13 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 
 // Checks that Bacalhau is installed, correctly configured, and available
 func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
-	isAlive, err := executor.bacalhauClient.Alive()
+	isAlive, err := executor.bacalhauClient.alive()
 	if !isAlive || err != nil {
 		return false, errors.New("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again.")
 	}
 
 	// Check that we have the right version of Bacalhau
-	version, err := executor.bacalhauClient.GetVersion()
+	version, err := executor.bacalhauClient.getVersion()
 	if err != nil {
 		return false, err
 	}
