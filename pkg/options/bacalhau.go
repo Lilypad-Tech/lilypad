@@ -10,6 +10,7 @@ import (
 func GetDefaultBacalhauOptions() bacalhau.BacalhauExecutorOptions {
 	return bacalhau.BacalhauExecutorOptions{
 		ApiHost: GetDefaultServeOptionString("BACALHAU_API_HOST", "localhost"),
+		ApiPort: GetDefaultServeOptionString("BACALHAU_API_PORT", "1234"),
 	}
 }
 
@@ -17,6 +18,11 @@ func AddBacalhauCliFlags(cmd *cobra.Command, bacalhauOptions *bacalhau.BacalhauE
 	cmd.PersistentFlags().StringVar(
 		&bacalhauOptions.ApiHost, "bacalhau-api-host", bacalhauOptions.ApiHost,
 		`The api hostname for the bacalhau cluster to run jobs`,
+	)
+
+	cmd.PersistentFlags().StringVar(
+		&bacalhauOptions.ApiPort, "bacalhau-api-port", bacalhauOptions.ApiPort,
+		`The api port for the bacalhau cluster to run jobs`,
 	)
 }
 

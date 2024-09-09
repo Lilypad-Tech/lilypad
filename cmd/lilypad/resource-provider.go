@@ -49,6 +49,12 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
+	// Ensure that our executor is available
+	status, err := executor.IsAvailable()
+	if !status || err != nil {
+		return err
+	}
+
 	tc := system.TelemetryConfig{
 		TelemetryURL:   options.Telemetry.URL,
 		TelemetryToken: options.Telemetry.Token,
