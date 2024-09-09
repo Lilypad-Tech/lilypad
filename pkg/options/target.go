@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func AddTargetCliflags(cmd *cobra.Command, targetConfig *data.TargetConfig) {
+func AddTargetCliFlags(cmd *cobra.Command, targetConfig *data.TargetConfig) {
 	cmd.PersistentFlags().StringVarP(
 		&targetConfig.Address, "target", "t", targetConfig.Address,
 		`The address to target (TARGET)`,

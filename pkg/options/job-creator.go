@@ -55,7 +55,7 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 	AddTimeoutCliFlags(cmd, &offerOptions.Timeouts)
 	AddModuleCliFlags(cmd, &offerOptions.Module)
 	AddServicesCliFlags(cmd, &offerOptions.Services)
-	AddTargetCliflags(cmd, &offerOptions.Target)
+	AddTargetCliFlags(cmd, &offerOptions.Target)
 }
 
 func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOptions) {

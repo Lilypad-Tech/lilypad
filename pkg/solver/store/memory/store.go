@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -201,7 +202,7 @@ func (s *SolverStoreMemory) GetResourceOfferByAddress(address string) (*data.Res
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, resourceOffer := range s.resourceOfferMap {
-		if resourceOffer.ResourceProvider == address {
+		if strings.ToLower(resourceOffer.ResourceProvider) == strings.ToLower(address) {
 			return resourceOffer, nil
 		}
 	}
