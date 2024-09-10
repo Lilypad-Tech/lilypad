@@ -2,9 +2,7 @@ package web3
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/lilypad-tech/lilypad/pkg/system"
