@@ -108,7 +108,7 @@ This [guide](https://vanjacosic.com/posts/sign-your-git-commits-using-ssh-keys/#
 
 We require all code contributors to sign a contributor license agreement (CLA) that grants license on contributions to Lilypad and Lilypad users. Agreement to the contributor license agreement does not restrict usage of contributions outside of this repository. See [CLA.md](CLA.md) for more details.
 
-To sign the CLA, open a pull request that adds a license accpetance entry to [NOTICES.md](NOTICES.md) and adds your GitHub username to the contributors list in [.cla-bot](.cla-bot). All commits on the pull request must be signed as described in [Signed commits](CONTRIBUTING.md#signed-commits) section of this document.
+To sign the CLA, open a pull request that adds a license acceptance entry to [NOTICES.md](NOTICES.md) and adds your GitHub username to the contributors list in [.clabot](.clabot). All commits on the pull request must be signed as described in [Signed commits](CONTRIBUTING.md#signed-commits) section of this document.
 
 We will review the pull request and add you as a contributor. Agreement to the CLA is required before we merge other contributions.
 

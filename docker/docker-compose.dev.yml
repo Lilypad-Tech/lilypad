@@ -101,6 +101,7 @@ services:
       - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
       - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
       - LOG_LEVEL=debug
+      - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
 volumes:
   chain-data:
   bacalhau-data:

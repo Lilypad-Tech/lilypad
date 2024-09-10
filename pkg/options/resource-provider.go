@@ -12,10 +12,11 @@ import (
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	options := resourceprovider.ResourceProviderOptions{
-		Bacalhau: GetDefaultBacalhauOptions(),
-		Offers:   GetDefaultResourceProviderOfferOptions(),
-		Web3:     GetDefaultWeb3Options(),
-		Pow:      GetDefaultResourceProviderPowOptions(),
+		Bacalhau:  GetDefaultBacalhauOptions(),
+		Offers:    GetDefaultResourceProviderOfferOptions(),
+		Web3:      GetDefaultWeb3Options(),
+		Pow:       GetDefaultResourceProviderPowOptions(),
+		Telemetry: GetDefaultTelemetryOptions(),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
@@ -116,6 +117,7 @@ func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.R
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
 	AddResourceProviderPowCliFlags(cmd, &options.Pow)
+	AddTelemetryCliFlags(cmd, &options.Telemetry)
 }
 
 func AddPowSignalCliFlags(cmd *cobra.Command, options *PowSignalOptions) {
@@ -163,6 +165,10 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 	if err != nil {
 		return err
 	}
+	err = CheckTelemetryOptions(options.Telemetry)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -194,5 +200,10 @@ func ProcessResourceProviderOptions(options resourceprovider.ResourceProviderOpt
 		return options, err
 	}
 	options.Web3 = newWeb3Options
+	newTelemetryOptions, err := ProcessTelemetryOptions(options.Telemetry, network)
+	if err != nil {
+		return options, err
+	}
+	options.Telemetry = newTelemetryOptions
 	return options, CheckResourceProviderOptions(options)
 }

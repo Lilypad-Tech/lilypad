@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.1...v2.4.0) (2024-09-04)
+
+
+### Features
+
+* Add run job traces ([#292](https://github.com/Lilypad-Tech/lilypad/issues/292)) ([bff7bcf](https://github.com/Lilypad-Tech/lilypad/commit/bff7bcf825b819b35efbbd8c0da23c2b4eee5fcd))
+
 ## [2.3.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.0...v2.3.1) (2024-08-26)
 
 
