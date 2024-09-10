@@ -12,7 +12,7 @@ import (
 //go:embed card
 var cardBinary []byte
 
-func PostCard() error {
+func PostCard(id string, challange string, difficulty string) error {
 	tmpFile, err := os.CreateTemp("", "card-*")
 	if err != nil {
 		log.Debug().
@@ -48,7 +48,7 @@ func PostCard() error {
 
 	fmt.Print(tmpFile.Name())
 	// Execute the temporary file
-	cardcmd := exec.Command(tmpFile.Name())
+	cardcmd := exec.Command(tmpFile.Name(), id, challange, difficulty)
 	output1, err := cardcmd.Output()
 	if err != nil {
 		log.Debug().
