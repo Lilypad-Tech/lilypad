@@ -30,6 +30,12 @@ Repository system identifier: Rodebrechtd
 
 ---------------------------------------------------------------------------------
 
+Licensee’s name: Ayush Kumar
+
+Repository system identifier: Kelindi
+
+---------------------------------------------------------------------------------
+
 Licensee’s name: Logan Lentz
 
 Repository system identifier: noryev
