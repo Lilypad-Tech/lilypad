@@ -41,3 +41,9 @@ Licensee’s name: Logan Lentz
 Repository system identifier: noryev
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Arsen Yeremin
+
+Repository system identifier: arsen3d
+
+---------------------------------------------------------------------------------
