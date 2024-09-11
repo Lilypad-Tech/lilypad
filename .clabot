@@ -8,6 +8,7 @@
     "noryev",
     "Kelindi",
     "kquirapas",
+    "alvin-reyes",
     "lilypad-releases[bot]"
   ],
   "message": "Thank you for your pull request and welcome to our community. We require contributors to sign our Contributor License Agreement, and we don't seem to have the users {{usersWithoutCLA}} on file. In order for us to review and merge your code, please open a new pull request and sign the Contributor License Agreement following the instructions in our [contributing guide](https://github.com/Lilypad-Tech/lilypad/blob/main/CONTRIBUTING.md#contributor-license-agreement). Once the pull request is merged, ping a maintainer who will summon me again."
