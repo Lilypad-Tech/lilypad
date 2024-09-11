@@ -29,3 +29,27 @@ Licensee’s name: Robert Jitaru
 Repository system identifier: Rodebrechtd
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Ayush Kumar
+
+Repository system identifier: Kelindi
+
+---------------------------------------------------------------------------------
+
+Licensee’s name: Logan Lentz
+
+Repository system identifier: noryev
+
+---------------------------------------------------------------------------------
+
+Licensee’s name: Arsen Yeremin
+
+Repository system identifier: arsen3d
+
+---------------------------------------------------------------------------------
+
+Licensee’s name: Kristian Quirapas
+
+Repository system identifier: kquirapas
+
+---------------------------------------------------------------------------------
