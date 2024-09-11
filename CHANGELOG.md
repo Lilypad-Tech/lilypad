@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.4.0...v2.5.0) (2024-09-11)
+
+
+### Features
+
+* Allow address targeting ([#307](https://github.com/Lilypad-Tech/lilypad/issues/307)) ([2d49cc4](https://github.com/Lilypad-Tech/lilypad/commit/2d49cc47a27d0f6c7d866b0bf242688bfc9e92ca))
+* Changed rpc to Quicknode  ([#348](https://github.com/Lilypad-Tech/lilypad/issues/348)) ([6db6ec9](https://github.com/Lilypad-Tech/lilypad/commit/6db6ec93d884fa50b9f6f5424278ac940caf4da2))
+* Pow post binary ([#316](https://github.com/Lilypad-Tech/lilypad/issues/316)) ([e37df74](https://github.com/Lilypad-Tech/lilypad/commit/e37df74a3c874ada1908ee30e86e4816cf089b85))
+* Preflight check for bacalhau version ([#338](https://github.com/Lilypad-Tech/lilypad/issues/338)) ([c9a349c](https://github.com/Lilypad-Tech/lilypad/commit/c9a349c8d834f7f2620aecd0f91c11a1c19c3471))
+
 ## [2.4.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.1...v2.4.0) (2024-09-04)
 
 
