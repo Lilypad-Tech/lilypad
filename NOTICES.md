@@ -53,3 +53,9 @@ Licensee’s name: Kristian Quirapas
 Repository system identifier: kquirapas
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Alvin Reyes
+
+Repository system identifier: alvin-reyes
+
+---------------------------------------------------------------------------------
