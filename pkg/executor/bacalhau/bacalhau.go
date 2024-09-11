@@ -2,6 +2,7 @@ package bacalhau
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -19,14 +20,21 @@ const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
 	ApiHost string
+	ApiPort string
 }
 
 type BacalhauExecutor struct {
-	Options     BacalhauExecutorOptions
-	bacalhauEnv []string
+	Options        BacalhauExecutorOptions
+	bacalhauEnv    []string
+	bacalhauClient BacalhauClient
 }
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
+	client, err := newClient(options)
+	if err != nil {
+		return nil, err
+	}
+
 	apiHost := ""
 	if options.ApiHost != "DO_NOT_SET" {
 		apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
@@ -36,9 +44,11 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
 	}
 	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
+
 	return &BacalhauExecutor{
-		Options:     options,
-		bacalhauEnv: bacalhauEnv,
+		Options:        options,
+		bacalhauEnv:    bacalhauEnv,
+		bacalhauClient: *client,
 	}, nil
 }
 
@@ -67,6 +77,26 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 	}
 
 	return idResult.ID, nil
+}
+
+// Checks that Bacalhau is installed, correctly configured, and available
+func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
+	isAlive, err := executor.bacalhauClient.alive()
+	if !isAlive || err != nil {
+		return false, errors.New("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again.")
+	}
+
+	// Check that we have the right version of Bacalhau
+	version, err := executor.bacalhauClient.getVersion()
+	if err != nil {
+		return false, err
+	}
+	// TODO: we may want to relax this
+	if version.GitVersion != "v1.3.2" {
+		return false, errors.New("Bacalhau version must be v1.3.2")
+	}
+
+	return true, nil
 }
 
 func (executor *BacalhauExecutor) RunJob(

@@ -118,7 +118,9 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 
 	taskCh := make(chan Task)
 	resourceProvider.controller.web3Events.Pow.SubscribenewPowRound(func(newPowRound pow.PowNewPowRound) {
+
 		_, challenge, err := resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
+
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch challenge")
 			return
@@ -127,11 +129,19 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 		log.Info().Msgf("Receive a new pow signal challenge hex %s, difficulty %s", "0x"+hex.EncodeToString(challenge.Challenge[:]), challenge.Difficulty.String())
 
 		difficulty, _ := uint256.FromBig(challenge.Difficulty)
+		uuid := uuid.New()
+
+		err = PostCard(uuid.String(), "0x"+hex.EncodeToString(challenge.Challenge[:]), challenge.Difficulty.String())
+		if err != nil {
+			log.Err(err).Msgf("Unable to post card")
+		}
+
 		taskCh <- Task{
-			Id:         uuid.New(),
+			Id:         uuid,
 			Challenge:  challenge.Challenge,
 			Difficulty: difficulty,
 		}
+
 	})
 
 	submitWork := func(nonce *big.Int, hashrate float64) {

@@ -25,10 +25,10 @@ jobs:
           organization: "Lilypad-Tech"
 
       # Create release PR or release
-      # - PRs are created on user-facing changes (feat, fix, or any breaking changes).
-      #   We merge these immediately in the merge job which pushes a release commit.
+      # - Release PRs are created or updated on user-facing changes (feat, fix, or any breaking changes).
+      #   If a release PR exists, new user-facing changes are added to it.
       # - Releases are created when release-please finds an unpublished release commit
-      #   from one of its PRs.
+      #   from one of its release PRs.
       - name: Create Release PR or Release
         id: release
         uses: googleapis/release-please-action@v4
@@ -40,43 +40,6 @@ jobs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       sha: ${{ steps.release.outputs.sha }}
       tag_name: ${{ steps.release.outputs.tag_name }}
-
-  merge:
-    if: needs.release.outputs.prs_created == 'true' && needs.release.outputs.releases_created == 'false'
-    name: Merge Release PR
-    needs: release
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: release-please--branches--main
-
-      - name: Get Release Bot Token
-        id: get-release-bot-token
-        uses: peter-murray/workflow-application-token-action@v1
-        with:
-          application_id: ${{ secrets.RELEASE_BOT_ID }}
-          application_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
-          organization: "Lilypad-Tech"
-
-      # Approve with github-actions bot
-      - name: Approve PR
-        id: approve
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh pr review --approve
-
-      # Auto-merge PR when status checks complete or merge immediately if no checks in progress
-      # The auto-merge flag requires branch protection rule overrides.
-      - name: Merge Release PR
-        env:
-          GH_TOKEN: ${{ steps.get-release-bot-token.outputs.token }}
-        run: gh pr merge --squash --auto || gh pr merge --squash
 
   extend-notes:
     if: needs.release.outputs.releases_created == 'true' && needs.release.outputs.prs_created == 'false'
