@@ -268,7 +268,7 @@ func (controller *SolverController) registerAsSolver() error {
 
 func (controller *SolverController) solve() error {
 	// find out which deals we can make from matching the offers
-	deals, err := getMatchingDeals(controller.store)
+	deals, err := getMatchingDeals(controller.store, controller.updateJobOfferState)
 	if err != nil {
 		return err
 	}

@@ -123,6 +123,7 @@ func doOffersMatch(
 
 func getMatchingDeals(
 	db store.SolverStore,
+	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 ) ([]data.Deal, error) {
 	deals := []data.Deal{}
 
@@ -142,6 +143,32 @@ func getMatchingDeals(
 
 	// loop over job offers
 	for _, jobOffer := range jobOffers {
+
+		// See if our jobOffer targets a specific address. If so, we will create a deal automatically
+		// with the matcing resourceOffer.
+		if jobOffer.JobOffer.Target.Address != "" {
+			resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
+			if err != nil {
+				return nil, err
+			}
+
+			// We don't have a resource provider for this address
+			if resourceOffer == nil {
+				log.Trace().
+					Str("job offer", jobOffer.ID).
+					Str("target address", jobOffer.JobOffer.Target.Address).
+					Msgf("No resource provider found for address")
+				updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
+				continue
+			}
+
+			deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
+			if err != nil {
+				return nil, err
+			}
+			deals = append(deals, deal)
+			continue
+		}
 
 		// loop over resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
