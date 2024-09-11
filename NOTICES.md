@@ -47,3 +47,15 @@ Licensee’s name: Arsen Yeremin
 Repository system identifier: arsen3d
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Kristian Quirapas
+
+Repository system identifier: kquirapas
+
+---------------------------------------------------------------------------------
+
+Licensee’s name: Alvin Reyes
+
+Repository system identifier: alvin-reyes
+
+---------------------------------------------------------------------------------
