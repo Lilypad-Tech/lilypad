@@ -14,6 +14,8 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -107,7 +109,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve()
+			err := controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -272,20 +274,35 @@ func (controller *SolverController) registerAsSolver() error {
  *
 */
 
-func (controller *SolverController) solve() error {
+func (controller *SolverController) solve(ctx context.Context) error {
+	// Start solve trace
+	ctx, span := controller.tracer.Start(ctx, "solve")
+	defer span.End()
+
 	// find out which deals we can make from matching the offers
+	span.AddEvent("get_matching_deals.start")
 	deals, err := matcher.GetMatchingDeals(controller.store, controller.updateJobOfferState)
 	if err != nil {
+		span.SetStatus(codes.Error, "get matching deals failed")
+		span.RecordError(err)
 		return err
 	}
+	span.AddEvent("get_matching_deals.done")
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "deal_ids",
+		Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
+	})
 
 	// loop over each of the deals add add them to the store and emit events
+	span.AddEvent("add_deals.start")
 	for _, deal := range deals {
 		_, err := controller.addDeal(deal)
 		if err != nil {
 			return err
 		}
 	}
+	span.AddEvent("add_deals.done")
+
 	return nil
 }
 

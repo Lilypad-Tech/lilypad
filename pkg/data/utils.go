@@ -43,6 +43,14 @@ func GetDealID(deal Deal) (string, error) {
 	return CalculateCID(deal)
 }
 
+func GetDealIDs(deals []Deal) []string {
+	var ids []string
+	for _, deal := range deals {
+		ids = append(ids, deal.ID)
+	}
+	return ids
+}
+
 func GetModuleID(module ModuleConfig) (string, error) {
 	return CalculateCID(module)
 }
