@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
@@ -50,6 +51,14 @@ func LogSolverEvent(badge string, ev SolverEvent) {
 
 func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
 	LogSolverEvent(system.GetServiceBadge(service), ev)
+}
+
+func getDealIDs(deals []data.Deal) []string {
+	var ids []string
+	for _, deal := range deals {
+		ids = append(ids, deal.ID)
+	}
+	return ids
 }
 
 func GetDealsFilePath(id string) string {
