@@ -102,7 +102,7 @@ func (w *GpuWorker) FindSolution(ctx context.Context, task *Task) {
 	hashesCompleted := uint64(0)
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
-	batch_size := uint64(w.cfg.gridSize * w.cfg.blockSize)
+	batch_size := uint64(w.cfg.gridSize * w.cfg.blockSize / 32)
 OUT:
 	for {
 		select {
