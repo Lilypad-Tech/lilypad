@@ -20,6 +20,7 @@ type PowLog struct {
 const namespace = "pow-logs"
 const eventsEndpoint = "events"
 const hashrateEndpoint = "hashrates"
+const cardInfoEndpoint = "cardinfos"
 
 var host string
 
@@ -47,5 +48,16 @@ func TrackHashrate(hashrate data.MinerHashRate) {
 	payload := string(bytes)
 
 	url := host + namespace + "/" + hashrateEndpoint
+	http.GenericJSONPostClient(url, payload)
+}
+
+func TrackCardInfo(cardInfo map[string]string) {
+	if host == "" {
+		return
+	}
+	bytes, _ := json.Marshal(cardInfo)
+	payload := string(bytes)
+
+	url := host + namespace + "/" + cardInfoEndpoint
 	http.GenericJSONPostClient(url, payload)
 }
