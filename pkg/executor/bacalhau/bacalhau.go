@@ -83,7 +83,7 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	isAlive, err := executor.bacalhauClient.alive()
 	if !isAlive || err != nil {
-		return false, errors.New("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again.")
+		return false, fmt.Errorf("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again. %w", err)
 	}
 
 	// Check that we have the right version of Bacalhau
