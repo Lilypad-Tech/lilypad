@@ -1,6 +1,7 @@
 package solver
 
 import (
+	"context"
 	"sort"
 	"strings"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ListOfResourceOffers []data.ResourceOffer
@@ -122,24 +126,47 @@ func doOffersMatch(
 }
 
 func getMatchingDeals(
+	ctx context.Context,
 	db store.SolverStore,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
+	tracer trace.Tracer,
 ) ([]data.Deal, error) {
 	deals := []data.Deal{}
 
+	ctx, span := tracer.Start(ctx, "get_matching_deals")
+	defer span.End()
+
+	// Get resource offers
+	span.AddEvent("db.get_resource_offers.start")
 	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
+		span.SetStatus(codes.Error, "get resource offers failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "resource_offers",
+		Value: attribute.StringSliceValue(getResourceOfferIDs(resourceOffers)),
+	})
+	span.AddEvent("db.get_resource_offers.done")
 
+	// Get job offers
+	span.AddEvent("db.get_job_offers.start")
 	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
+		span.SetStatus(codes.Error, "get job offers failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "job_offers",
+		Value: attribute.StringSliceValue(getJobOfferIDs(jobOffers)),
+	})
+	span.AddEvent("db.get_resource_offers.done")
 
 	// loop over job offers
 	for _, jobOffer := range jobOffers {

@@ -61,6 +61,22 @@ func getDealIDs(deals []data.Deal) []string {
 	return ids
 }
 
+func getResourceOfferIDs(resourceOffers []data.ResourceOfferContainer) []string {
+	var ids []string
+	for _, offer := range resourceOffers {
+		ids = append(ids, offer.ID)
+	}
+	return ids
+}
+
+func getJobOfferIDs(jobOffers []data.JobOfferContainer) []string {
+	var ids []string
+	for _, offer := range jobOffers {
+		ids = append(ids, offer.ID)
+	}
+	return ids
+}
+
 func GetDealsFilePath(id string) string {
 	return system.GetDataDir(filepath.Join(FILES_DIR, id))
 }
