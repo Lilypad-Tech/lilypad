@@ -206,6 +206,7 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 			continue
 		} else {
 			break
+		}
 	}
 
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
