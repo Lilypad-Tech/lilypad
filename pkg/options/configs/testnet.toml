@@ -4,7 +4,7 @@ mediator = ["0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2"]
 api_host = "https://api-testnet.lilypad.tech/"
 
 [web3]
-rpc_url = "wss://arbitrum-sepolia-rpc.publicnode.com,wss://capable-tame-butterfly.arbitrum-sepolia.quiknode.pro/b866a1312df26e5763237e1aff0a300bd4501647"
+rpc_url = "wss://arbitrum-sepolia-rpc.publicnode.com,wss://arb-sepolia.g.alchemy.com/v2/4PDb7czJf8E6z7ZjhXB0Z5fdU1XaQT0u"
 chain_id = 421614
 controller_address = "0x4a83270045FB4BCd1bdFe1bD6B00762A9D8bbF4E"
 payments_address = "0xdE7CEa09A23e7Aa4980B95F69B8912F39A0e323A"
