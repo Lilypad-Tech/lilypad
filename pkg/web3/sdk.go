@@ -196,10 +196,18 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
-	client, err := ethclient.Dial(options.RpcURL)
-	if err != nil {
-		return nil, err
+	rpcs := strings.Split(options.RpcURL, ",")
+	var client *ethclient.Client
+	var err error
+	for _, url := range rpcs {
+		client, err = ethclient.Dial(url)
+		if err != nil {
+			log.Error().Msgf("Failed to connect to %s: %v", url, err)
+			continue
+		} else {
+			break
 	}
+
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return nil, err
@@ -229,7 +237,8 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
 	}
-	log.Debug().Msgf("Public Address: %s", web3SDK.GetAddress())
+	// fmt.Printf("Public Address: %s\n", web3SDK.GetAddress())
+	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
 }
