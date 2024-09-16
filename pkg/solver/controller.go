@@ -7,6 +7,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
+	"github.com/lilypad-tech/lilypad/pkg/solver/matcher"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -268,7 +269,7 @@ func (controller *SolverController) registerAsSolver() error {
 
 func (controller *SolverController) solve() error {
 	// find out which deals we can make from matching the offers
-	deals, err := getMatchingDeals(controller.store, controller.updateJobOfferState)
+	deals, err := matcher.GetMatchingDeals(controller.store, controller.updateJobOfferState)
 	if err != nil {
 		return err
 	}

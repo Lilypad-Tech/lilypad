@@ -1,4 +1,4 @@
-package solver
+package matcher
 
 import (
 	"testing"
@@ -136,7 +136,7 @@ func TestDoOffersMatch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := doOffersMatch(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
-			if result != tc.shouldMatch {
+			if result.matched() != tc.shouldMatch {
 				t.Errorf("Expected match to be %v, but got %v", tc.shouldMatch, result)
 			}
 		})
