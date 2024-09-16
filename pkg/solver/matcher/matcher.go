@@ -79,7 +79,7 @@ func GetMatchingDeals(
 				continue
 			}
 
-			result := doOffersMatch(resourceOffer.ResourceOffer, jobOffer.JobOffer)
+			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
 			logMatch(result)
 
 			if result.matched() {

@@ -100,7 +100,7 @@ func (_ solverMismatch) message() string { return "no matching solver" }
 // the most basic of matchers
 // basically just check if the resource offer >= job offer cpu, gpu & ram
 // if the job offer is zero then it will match any resource offer
-func doOffersMatch(
+func matchOffers(
 	resourceOffer data.ResourceOffer,
 	jobOffer data.JobOffer,
 ) matchResult {

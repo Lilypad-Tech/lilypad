@@ -135,7 +135,7 @@ func TestDoOffersMatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := doOffersMatch(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
+			result := matchOffers(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
 			if result.matched() != tc.shouldMatch {
 				t.Errorf("Expected match to be %v, but got %v", tc.shouldMatch, result)
 			}
