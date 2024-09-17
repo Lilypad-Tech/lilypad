@@ -114,6 +114,9 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 				matching = false
 			}
 		}
+		if !query.IncludeCancelled && jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") {
+			matching = false
+		}
 		if matching {
 			jobOffers = append(jobOffers, *jobOffer)
 		}
