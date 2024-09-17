@@ -238,7 +238,6 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
 	}
-	// fmt.Printf("Public Address: %s\n", web3SDK.GetAddress())
 	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
