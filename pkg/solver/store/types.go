@@ -9,6 +9,9 @@ type GetJobOffersQuery struct {
 
 	// we use the DealID property of the jobOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
+
+	// this will include cancelled job offers in the results
+	IncludeCancelled bool `json:"include_cancelled"`
 }
 
 type GetResourceOffersQuery struct {
