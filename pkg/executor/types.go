@@ -13,6 +13,7 @@ type ExecutorResults struct {
 type Executor interface {
 	Id() (string, error)
 	IsAvailable() (bool, error)
+	GetMachineSpecs() ([]data.MachineSpec, error)
 	// run the given job and return a local folder
 	// that contains the results
 	RunJob(

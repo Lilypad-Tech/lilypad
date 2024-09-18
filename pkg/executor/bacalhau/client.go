@@ -37,6 +37,10 @@ func (client *BacalhauClient) getVersion() (apimodels.GetVersionResponse, error)
 	return getRequest[apimodels.GetVersionResponse](client, "agent/version")
 }
 
+func (client *BacalhauClient) getNodes() (apimodels.ListNodesResponse, error) {
+	return getRequest[apimodels.ListNodesResponse](client, "orchestrator/nodes")
+}
+
 func getRequest[ResultType any](client *BacalhauClient, requestPath string) (ResultType, error) {
 	var result ResultType
 	url := fmt.Sprintf("%s/%s", client.getBaseUrl(), requestPath)

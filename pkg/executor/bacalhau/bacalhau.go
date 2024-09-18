@@ -99,6 +99,31 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	return true, nil
 }
 
+func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
+	var specs []data.MachineSpec
+	result, err := executor.bacalhauClient.getNodes()
+	if err != nil {
+		return specs, err
+	}
+
+	for _, node := range result.Nodes {
+		spec := data.MachineSpec{
+			CPU: int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "mili-CPU"
+			RAM: int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
+			GPU: int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
+		}
+		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
+			spec.GPUs = append(spec.GPUs, data.GPUSpec{
+				Name:   gpu.Name,
+				Vendor: string(gpu.Vendor),
+				VRAM:   int(gpu.Memory),
+			})
+		}
+		specs = append(specs, spec)
+	}
+	return specs, nil
+}
+
 func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,

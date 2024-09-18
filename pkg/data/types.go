@@ -14,11 +14,21 @@ type MachineSpec struct {
 	// let's not use a float and fix the precision to 1/1000
 	GPU int `json:"gpu"`
 
+	GPUs []GPUSpec `json:"gpus"`
+
 	// Milli-CPU
 	CPU int `json:"cpu"`
 
 	// Megabytes
 	RAM int `json:"ram"`
+}
+
+type GPUSpec struct {
+	Name string `json:"name"`
+
+	Vendor string `json:"vendor"`
+
+	VRAM int `json:"vram"`
 }
 
 // this is what is loaded from the template file in the git repo
