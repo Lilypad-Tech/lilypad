@@ -1,4 +1,4 @@
-package solver
+package matcher
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
-func TestDoOffersMatch(t *testing.T) {
+func TestMatchOffers(t *testing.T) {
 	services := data.ServiceConfig{
 		Solver:   "oranges",
 		Mediator: []string{"apples"},
@@ -35,6 +35,20 @@ func TestDoOffersMatch(t *testing.T) {
 		Services: services,
 	}
 
+	cowsayModuleConfig := data.ModuleConfig{
+		Name: "cowsay",
+		Repo: "https://github.com/Lilypad-Tech/lilypad-module-cowsay",
+		Hash: "v0.0.4",
+		Path: "/lilypad_module.json.tmpl",
+	}
+
+	lilysayModuleConfig := data.ModuleConfig{
+		Name: "lilysay",
+		Repo: "https://github.com/Lilypad-Tech/lilypad-module-lilysay",
+		Hash: "v0.5.2",
+		Path: "/lilypad_module.json.tmpl",
+	}
+
 	testCases := []struct {
 		name          string
 		resourceOffer func(offer data.ResourceOffer) data.ResourceOffer
@@ -52,12 +66,60 @@ func TestDoOffersMatch(t *testing.T) {
 			shouldMatch: true,
 		},
 		{
-			name: "CPU mis-match",
+			name: "CPU mismatch",
 			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
 				return offer
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				offer.Spec.CPU = 2000
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "GPU mismatch",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Spec.GPU = 2000
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "RAM mismatch",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Spec.GPU = 2048
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Resource provider supports module",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
+				offer.Modules = []string{moduleID}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = cowsayModuleConfig
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Resource provider does not support module",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
+				offer.Modules = []string{moduleID}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = lilysayModuleConfig
 				return offer
 			},
 			shouldMatch: false,
@@ -70,39 +132,6 @@ func TestDoOffersMatch(t *testing.T) {
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				offer.Services.Mediator = []string{}
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Mis-matched mediators",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Mediator = []string{"apples2"}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Different but matching mediators",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Mediator = []string{"apples2", "apples"}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Different solver",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Solver = "pears"
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				return offer
 			},
 			shouldMatch: false,
@@ -131,12 +160,56 @@ func TestDoOffersMatch(t *testing.T) {
 			},
 			shouldMatch: true,
 		},
+		{
+			name: "Resource provider using unimplemented market pricing",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Mode = data.MarketPrice
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Mismatched mediators",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Services.Mediator = []string{"apples2"}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Different mediators with one matching mediator",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Services.Mediator = []string{"apples2", "apples"}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Different solver",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Services.Solver = "pears"
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				return offer
+			},
+			shouldMatch: false,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := doOffersMatch(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
-			if result != tc.shouldMatch {
+			result := matchOffers(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
+			if result.matched() != tc.shouldMatch {
 				t.Errorf("Expected match to be %v, but got %v", tc.shouldMatch, result)
 			}
 		})
