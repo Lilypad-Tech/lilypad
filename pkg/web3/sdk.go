@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"math/big"
 	"strconv"
 	"strings"
@@ -208,6 +209,9 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 		} else {
 			break
 		}
+	}
+	if client == nil {
+		return nil, errors.New("Failed to connect to a web3 RPC provider")
 	}
 
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
