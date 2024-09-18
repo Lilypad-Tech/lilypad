@@ -204,7 +204,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	for _, url := range rpcs {
 		client, err = ethclient.Dial(url)
 		if err != nil {
-			log.Error().Msgf("Failed to connect to %s: %v", url, err)
+			log.Warn().Msgf("Failed to connect to %s: %v", url, err)
 			continue
 		} else {
 			break
