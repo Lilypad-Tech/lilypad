@@ -2,6 +2,8 @@ package lilypad
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
@@ -36,6 +38,17 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions, network string) error {
+	fmt.Println("Starting Bacalhau")
+	go resourceprovider.StartIpfs()
+	wait("http://127.0.0.1:5001/webui")
+	//time.Sleep(10 * time.Second)
+
+	fmt.Println("Starting Bacalhau")
+	go resourceprovider.StartBacalhau()
+	wait("http://localhost:1234/api/v1/agent/alive")
+	// url := ""
+	// time.Sleep(10 * time.Second)
+
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -84,5 +97,20 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		case <-commandCtx.Ctx.Done():
 			return nil
 		}
+	}
+}
+
+func wait(url string) {
+	for {
+		resp, err := http.Get(url)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			resp.Body.Close()
+
+			break
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		time.Sleep(1 * time.Second)
 	}
 }

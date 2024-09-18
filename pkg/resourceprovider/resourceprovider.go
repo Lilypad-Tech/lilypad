@@ -84,6 +84,7 @@ func NewResourceProvider(
 	executor executor.Executor,
 	telemetry system.Telemetry,
 ) (*ResourceProvider, error) {
+
 	controller, err := NewResourceProviderController(options, web3SDK, executor, telemetry)
 	if err != nil {
 		return nil, err
@@ -98,6 +99,7 @@ func NewResourceProvider(
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+
 	if !resourceProvider.options.Pow.DisablePow {
 		if errCh := resourceProvider.StartMineLoop(ctx); errCh != nil {
 			return errCh
