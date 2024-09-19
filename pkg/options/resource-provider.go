@@ -12,11 +12,12 @@ import (
 
 func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 	options := resourceprovider.ResourceProviderOptions{
-		Bacalhau:  GetDefaultBacalhauOptions(),
-		Offers:    GetDefaultResourceProviderOfferOptions(),
-		Web3:      GetDefaultWeb3Options(),
-		Pow:       GetDefaultResourceProviderPowOptions(),
-		Telemetry: GetDefaultTelemetryOptions(),
+		Bacalhau:   GetDefaultBacalhauOptions(),
+		Offers:     GetDefaultResourceProviderOfferOptions(),
+		Web3:       GetDefaultWeb3Options(),
+		Pow:        GetDefaultResourceProviderPowOptions(),
+		Telemetry:  GetDefaultTelemetryOptions(),
+		Standalone: GetDefaultServeOptionBool("STAND_ALONE", false),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
@@ -80,6 +81,7 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 		&offerOptions.Modules, "offer-modules", offerOptions.Modules,
 		`The modules you are willing to run (OFFER_MODULES).`,
 	)
+
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, &offerOptions.DefaultPricing)
 	AddTimeoutCliFlags(cmd, &offerOptions.DefaultTimeouts)
@@ -118,6 +120,10 @@ func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.R
 	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
 	AddResourceProviderPowCliFlags(cmd, &options.Pow)
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
+	cmd.PersistentFlags().BoolVar(
+		&options.Standalone, "standalone", options.Standalone,
+		`lanuch standalone resource provider (STAND_ALONE)`,
+	)
 }
 
 func AddPowSignalCliFlags(cmd *cobra.Command, options *PowSignalOptions) {

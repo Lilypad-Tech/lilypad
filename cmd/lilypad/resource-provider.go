@@ -38,17 +38,15 @@ func newResourceProviderCmd() *cobra.Command {
 }
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions, network string) error {
-	fmt.Println("Starting Bacalhau")
-	go resourceprovider.StartIpfs()
-	wait("http://127.0.0.1:5001/webui")
-	//time.Sleep(10 * time.Second)
+	if options.Standalone {
+		fmt.Println("Starting IPFS")
+		go resourceprovider.StartIpfs()
+		wait("http://127.0.0.1:5001/webui")
 
-	fmt.Println("Starting Bacalhau")
-	go resourceprovider.StartBacalhau()
-	wait("http://localhost:1234/api/v1/agent/alive")
-	// url := ""
-	// time.Sleep(10 * time.Second)
-
+		fmt.Println("Starting Bacalhau")
+		go resourceprovider.StartBacalhau()
+		wait("http://localhost:1234/api/v1/agent/alive")
+	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 

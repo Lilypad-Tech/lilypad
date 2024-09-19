@@ -65,11 +65,12 @@ type ResourceProviderPowOptions struct {
 }
 
 type ResourceProviderOptions struct {
-	Bacalhau  bacalhau.BacalhauExecutorOptions
-	Offers    ResourceProviderOfferOptions
-	Web3      web3.Web3Options
-	Pow       ResourceProviderPowOptions
-	Telemetry system.TelemetryOptions
+	Bacalhau   bacalhau.BacalhauExecutorOptions
+	Offers     ResourceProviderOfferOptions
+	Web3       web3.Web3Options
+	Pow        ResourceProviderPowOptions
+	Telemetry  system.TelemetryOptions
+	Standalone bool
 }
 
 type ResourceProvider struct {
