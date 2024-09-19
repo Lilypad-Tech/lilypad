@@ -57,33 +57,7 @@ func StartIpfs() error {
 
 	}
 
-	// println(tmpFile.Name())
-	// // Write the embedded binary to the temporary file
-	// if _, err := tmpFile.Write(ipfsBinary); err != nil {
-	// 	log.Debug().
-	// 		Str("ipfs", "tmpFile.Write").
-	// 		Msgf("write temp file failed: %v", err)
-	// 	return err
-	// }
-
-	// // Close the file to ensure all data is written
-	// if err := tmpFile.Close(); err != nil {
-	// 	log.Debug().
-	// 		Str("ipfs", "tmpFile.Close").
-	// 		Msgf("close temp file failed: %v", err)
-	// 	return err
-	// }
-
-	// // Make the temporary file executable
-	// if err := os.Chmod(tmpFile.Name(), 0755); err != nil {
-	// 	log.Debug().
-	// 		Str("ipfs", "os.Chmod").
-	// 		Msgf("chmod temp file failed: %v", err)
-	// 	return err
-	// }
-
-	// Execute the temporary file
-	// ipfscmd := exec.Command(tmpFile.Name(), "daemon")
+	
 	ipfscmd := exec.Command(tmpFile.Name(), "daemon")
 
 	println(ipfscmd.String())

@@ -15,7 +15,7 @@ func decompressAndExtract(data []byte, destFile string) error {
 	gzipReader, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		log.Debug().
-			Str("bacalhau", "PowNewPowRound").
+			Str("decompress", "NewReader").
 			Msgf("create gzip reader failed: %v", err)
 		return err
 	}
@@ -30,7 +30,7 @@ func decompressAndExtract(data []byte, destFile string) error {
 		}
 		if err != nil {
 			log.Debug().
-				Str("bacalhau", "PowNewPowRound").
+				Str("decompress", "Read").
 				Msgf("read tar header failed: %v", err)
 			return err
 		}
@@ -40,21 +40,21 @@ func decompressAndExtract(data []byte, destFile string) error {
 			outFile, err := os.Create(destFile)
 			if err != nil {
 				log.Debug().
-					Str("bacalhau", "PowNewPowRound").
+					Str("decompress", "Create").
 					Msgf("create file failed: %v", err)
 				return err
 			}
 			if _, err := io.Copy(outFile, tarReader); err != nil {
 				outFile.Close()
 				log.Debug().
-					Str("bacalhau", "PowNewPowRound").
+					Str("decompress", "Copy").
 					Msgf("write file failed: %v", err)
 				return err
 			}
 			outFile.Close()
 			if err := os.Chmod(destFile, os.FileMode(header.Mode)); err != nil {
 				log.Debug().
-					Str("bacalhau", "PowNewPowRound").
+					Str("decompress", "Chmod").
 					Msgf("chmod file failed: %v", err)
 				return err
 			}
