@@ -65,3 +65,9 @@ Licensee’s name: hunjixin
 Repository system identifier: hunjixin
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Robert Marinescu
+
+Repository system identifier: sigmundxyz
+
+---------------------------------------------------------------------------------
