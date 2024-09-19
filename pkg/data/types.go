@@ -21,6 +21,9 @@ type MachineSpec struct {
 
 	// Megabytes
 	RAM int `json:"ram"`
+
+	// Disk space available
+	Disk int `json:"disk"`
 }
 
 type GPUSpec struct {

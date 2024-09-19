@@ -108,9 +108,10 @@ func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) 
 
 	for _, node := range result.Nodes {
 		spec := data.MachineSpec{
-			CPU: int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "mili-CPU"
-			RAM: int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
-			GPU: int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
+			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "mili-CPU"
+			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
+			GPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
+			Disk: int(node.Info.ComputeNodeInfo.MaxCapacity.Disk),
 		}
 		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
 			spec.GPUs = append(spec.GPUs, data.GPUSpec{
