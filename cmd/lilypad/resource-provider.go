@@ -39,13 +39,7 @@ func newResourceProviderCmd() *cobra.Command {
 
 func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourceProviderOptions, network string) error {
 	if options.Standalone {
-		fmt.Println("Starting IPFS")
-		go resourceprovider.StartIpfs()
-		wait("http://127.0.0.1:5001/webui")
-
-		fmt.Println("Starting Bacalhau")
-		go resourceprovider.StartBacalhau()
-		wait("http://localhost:1234/api/v1/agent/alive")
+		keepAlive(true)
 	}
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
@@ -103,12 +97,44 @@ func wait(url string) {
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			resp.Body.Close()
-
 			break
 		}
 		if resp != nil {
 			resp.Body.Close()
 		}
 		time.Sleep(1 * time.Second)
+	}
+}
+func alive(url string) bool {
+	resp, err := http.Get(url)
+	if err == nil && resp.StatusCode == http.StatusOK {
+		resp.Body.Close()
+
+		return true
+	}
+	if resp != nil {
+		resp.Body.Close()
+	}
+	return false
+}
+
+func keepAlive(init bool) {
+	for {
+		if !alive("http://localhost:5001/webui") {
+			fmt.Println("IPFS is not running. Starting IPFS")
+			go resourceprovider.StartIpfs()
+			wait("http://localhost:5001/webui")
+		}
+		if !alive("http://localhost:1234/api/v1/agent/alive") {
+			fmt.Println("Bacalhau is not running. Starting Bacalhau")
+			go resourceprovider.StartBacalhau()
+			wait("http://localhost:1234/api/v1/agent/alive")
+		}
+		if init {
+			go keepAlive(false)
+			break
+		} else {
+			time.Sleep(1 * time.Second)
+		}
 	}
 }
