@@ -39,7 +39,30 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	web3SDK, err := web3.NewContractSDK(options.Web3)
+	// Extract address for telemetry
+	privateKey, err := web3.ParsePrivateKey(options.Web3.PrivateKey)
+	if err != nil {
+		return err
+	}
+	address := web3.GetAddress(privateKey)
+
+	tc := system.TelemetryConfig{
+		TelemetryURL:   options.Telemetry.URL,
+		TelemetryToken: options.Telemetry.Token,
+		Enabled:        !options.Telemetry.Disable,
+		Service:        system.ResourceProviderService,
+		Network:        network,
+		Address:        address.String(),
+		GPU:            system.GetGPUInfo(),
+	}
+	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
+	if err != nil {
+		fmt.Printf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
 		return err
 	}
@@ -55,22 +78,6 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	tc := system.TelemetryConfig{
-		TelemetryURL:   options.Telemetry.URL,
-		TelemetryToken: options.Telemetry.Token,
-		Enabled:        !options.Telemetry.Disable,
-		Service:        system.ResourceProviderService,
-		Network:        network,
-		Address:        web3SDK.GetAddress().String(),
-		GPU:            system.GetGPUInfo(),
-	}
-	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
-	if err != nil {
-		fmt.Printf("failed to setup opentelemetry: %s", err)
-	}
-	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
-
-	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
 	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor, tracer)
 	if err != nil {
 		return err
