@@ -39,28 +39,12 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	// Extract address for telemetry
-	privateKey, err := web3.ParsePrivateKey(options.Web3.PrivateKey)
-	if err != nil {
-		return err
-	}
-	address := web3.GetAddress(privateKey)
-
-	tc := system.TelemetryConfig{
-		TelemetryURL:   options.Telemetry.URL,
-		TelemetryToken: options.Telemetry.Token,
-		Enabled:        !options.Telemetry.Disable,
-		Service:        system.ResourceProviderService,
-		Network:        network,
-		Address:        address.String(),
-		GPU:            system.GetGPUInfo(),
-	}
-	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
-	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.ResourceProviderService, network, options.Telemetry, options.Web3)
 	if err != nil {
 		fmt.Printf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
 
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
