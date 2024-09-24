@@ -21,6 +21,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // these are the go-binding wrappers for the various deployed contracts
@@ -191,7 +192,7 @@ func NewContracts(
 	}, nil
 }
 
-func NewContractSDK(options Web3Options) (*Web3SDK, error) {
+func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
