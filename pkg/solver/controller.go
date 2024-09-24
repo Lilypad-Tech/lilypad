@@ -14,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // add an enum for various types of event
@@ -48,6 +49,7 @@ type SolverController struct {
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
 	log             *system.ServiceLogger
+	tracer          trace.Tracer
 }
 
 // the background "even if we have not heard of an event" loop
@@ -60,6 +62,7 @@ func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
 	options SolverOptions,
+	tracer trace.Tracer,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
@@ -67,6 +70,7 @@ func NewSolverController(
 		store:      store,
 		options:    options,
 		log:        system.NewServiceLogger(system.SolverService),
+		tracer:     tracer,
 	}
 	return controller, nil
 }
