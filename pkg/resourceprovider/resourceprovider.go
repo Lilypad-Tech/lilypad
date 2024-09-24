@@ -19,6 +19,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // this configures the resource offers we will keep track of
@@ -82,9 +83,9 @@ func NewResourceProvider(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
-	telemetry system.Telemetry,
+	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-	controller, err := NewResourceProviderController(options, web3SDK, executor, telemetry)
+	controller, err := NewResourceProviderController(options, web3SDK, executor, tracer)
 	if err != nil {
 		return nil, err
 	}

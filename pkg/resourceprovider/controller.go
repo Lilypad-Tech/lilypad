@@ -21,14 +21,14 @@ import (
 )
 
 type ResourceProviderController struct {
-	solverClient   *solver.SolverClient
-	options        ResourceProviderOptions
-	web3SDK        *web3.Web3SDK
-	web3Events     *web3.EventChannels
-	loop           *system.ControlLoop
-	log            *system.ServiceLogger
-	tracerProvider trace.TracerProvider
-	executor       executor.Executor
+	solverClient *solver.SolverClient
+	options      ResourceProviderOptions
+	web3SDK      *web3.Web3SDK
+	web3Events   *web3.EventChannels
+	loop         *system.ControlLoop
+	log          *system.ServiceLogger
+	tracer       trace.Tracer
+	executor     executor.Executor
 	// keep track of which jobs are running
 	// this is because no remote state will change
 	// whilst we are actually running a job
@@ -42,11 +42,17 @@ type ResourceProviderController struct {
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
 
+// the interval at which we check and post resource offers
+const RESOURCE_OFFER_INTERVAL = 10 * time.Minute
+
+// simple time tracking for the last time we posted resource offers
+var lastResourceOfferPost time.Time
+
 func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
 	executor executor.Executor,
-	telemetry system.Telemetry,
+	tracer trace.Tracer,
 ) (*ResourceProviderController, error) {
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Offers.Services.Solver)
@@ -66,14 +72,14 @@ func NewResourceProviderController(
 	}
 
 	controller := &ResourceProviderController{
-		solverClient:   solverClient,
-		options:        options,
-		web3SDK:        web3SDK,
-		web3Events:     web3.NewEventChannels(),
-		log:            system.NewServiceLogger(system.ResourceProviderService),
-		tracerProvider: telemetry.TracerProvider,
-		executor:       executor,
-		runningJobs:    map[string]bool{},
+		solverClient: solverClient,
+		options:      options,
+		web3SDK:      web3SDK,
+		web3Events:   web3.NewEventChannels(),
+		log:          system.NewServiceLogger(system.ResourceProviderService),
+		tracer:       tracer,
+		executor:     executor,
+		runningJobs:  map[string]bool{},
 	}
 	return controller, nil
 }
@@ -157,7 +163,11 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve(ctx)
+			err := controller.ensureResourceOffers()
+			if err != nil {
+				errorChan <- err
+			}
+			err = controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -189,16 +199,9 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 func (controller *ResourceProviderController) solve(ctx context.Context) error {
 	controller.log.Debug("solving", "")
 
-	// if the solver does not know about resource offers
-	// that we have - we should post them to the solver
-	err := controller.ensureResourceOffers()
-	if err != nil {
-		return err
-	}
-
 	// if there are deals that have been matched and we have not agreed
 	// then we should agree to them
-	err = controller.agreeToDeals()
+	err := controller.agreeToDeals()
 	if err != nil {
 		return err
 	}
@@ -246,6 +249,11 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {
+	// We only want to run this every RESOURCE_OFFER_INTERVAL
+	if !lastResourceOfferPost.IsZero() && time.Since(lastResourceOfferPost) < RESOURCE_OFFER_INTERVAL {
+		return nil
+	}
+
 	// load the resource offers that are currently active and so should not be replaced
 	activeResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -287,6 +295,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 		}
 	}
 
+	lastResourceOfferPost = time.Now()
 	return err
 }
 
@@ -415,8 +424,7 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	controller.log.Info("deal ID", deal.Deal.ID)
 
 	// Start run job trace
-	service := system.ResourceProviderService
-	ctx, span := controller.tracerProvider.Tracer(system.GetOTelServiceName(service)).Start(ctx, "run_job",
+	ctx, span := controller.tracer.Start(ctx, "run_job",
 		trace.WithAttributes(attribute.String("deal.id", deal.ID)),
 		trace.WithAttributes(attribute.String("deal.job_creator", deal.JobCreator)),
 		trace.WithAttributes(attribute.String("deal.resource_provider", deal.ResourceProvider)),

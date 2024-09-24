@@ -7,6 +7,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func newSolverCmd() *cobra.Command {
@@ -37,7 +38,8 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	web3SDK, err := web3.NewContractSDK(options.Web3)
+	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.SolverService))
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
 	if err != nil {
 		return err
 	}

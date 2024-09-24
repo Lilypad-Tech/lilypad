@@ -1,13 +1,17 @@
 package web3_test
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
 	"testing"
+
 	"github.com/BurntSushi/toml"
 	"github.com/lilypad-tech/lilypad/pkg/options"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func getConfig() (*options.Config, error) {
@@ -44,14 +48,14 @@ func CreateTestWeb3SDK() (*web3.Web3SDK, error) {
 		JobCreatorAddress: config.Web3.JobCreatorAddress,
 	}
 
-	sdk, err := web3.NewContractSDK(options)
+	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
+	sdk, err := web3.NewContractSDK(context.Background(), options, noopTracer)
 	if err != nil {
 		return nil, err
 	}
 
 	return sdk, nil
 }
-
 
 func TestGetBalance(t *testing.T) {
 	sdk, err := CreateTestWeb3SDK()
