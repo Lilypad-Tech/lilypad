@@ -331,7 +331,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		return nil, err
+		return nil, fmt.Errorf("address %s dont has enough balance expect %s but only have %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)
