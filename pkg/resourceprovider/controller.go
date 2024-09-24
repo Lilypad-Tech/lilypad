@@ -42,6 +42,12 @@ type ResourceProviderController struct {
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
 
+// the interval at which we check and post resource offers
+const RESOURCE_OFFER_INTERVAL = 10 * time.Minute
+
+// simple time tracking for the last time we posted resource offers
+var lastResourceOfferPost time.Time
+
 func NewResourceProviderController(
 	options ResourceProviderOptions,
 	web3SDK *web3.Web3SDK,
@@ -157,7 +163,11 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve(ctx)
+			err := controller.ensureResourceOffers()
+			if err != nil {
+				errorChan <- err
+			}
+			err = controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -189,16 +199,9 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 func (controller *ResourceProviderController) solve(ctx context.Context) error {
 	controller.log.Debug("solving", "")
 
-	// if the solver does not know about resource offers
-	// that we have - we should post them to the solver
-	err := controller.ensureResourceOffers()
-	if err != nil {
-		return err
-	}
-
 	// if there are deals that have been matched and we have not agreed
 	// then we should agree to them
-	err = controller.agreeToDeals()
+	err := controller.agreeToDeals()
 	if err != nil {
 		return err
 	}
@@ -246,6 +249,11 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 }
 
 func (controller *ResourceProviderController) ensureResourceOffers() error {
+	// We only want to run this every RESOURCE_OFFER_INTERVAL
+	if !lastResourceOfferPost.IsZero() && time.Since(lastResourceOfferPost) < RESOURCE_OFFER_INTERVAL {
+		return nil
+	}
+
 	// load the resource offers that are currently active and so should not be replaced
 	activeResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -287,6 +295,7 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 		}
 	}
 
+	lastResourceOfferPost = time.Now()
 	return err
 }
 
