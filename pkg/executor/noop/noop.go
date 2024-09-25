@@ -52,6 +52,10 @@ func (executor *NoopExecutor) IsAvailable() (bool, error) {
 	return true, nil
 }
 
+func (executor *NoopExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
+	return []data.MachineSpec{}, nil
+}
+
 func (executor *NoopExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,

@@ -228,7 +228,7 @@ func (controller *ResourceProviderController) solve(ctx context.Context) error {
 */
 
 /*
-Ensure resource offers are posted to the solve
+Ensure resource offers are posted to the solver
 */
 
 func (controller *ResourceProviderController) getResourceOffer(index int, spec data.MachineSpec) data.ResourceOffer {
@@ -274,8 +274,15 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 
 	addResourceOffers := []data.ResourceOffer{}
 
-	// map over the specs we have in the config
-	for index, spec := range controller.options.Offers.Specs {
+	// get the specs from our available compute node(s)
+	computeNodes, err := controller.executor.GetMachineSpecs()
+	if err != nil {
+		controller.log.Error("error getting machine specs", err)
+		return err
+	}
+
+	// map over the specs we have
+	for index, spec := range computeNodes {
 
 		// check if the resource offer already exists
 		// if it does then we need to update it
