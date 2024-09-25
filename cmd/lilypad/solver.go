@@ -61,7 +61,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverErrors := solverService.Start(commandCtx.Ctx, commandCtx.Cm)
+	solverErrors := solverService.Start(commandCtx.Ctx, commandCtx.Cm, telemetry.TracerProvider)
 
 	for {
 		select {
