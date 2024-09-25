@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 
+	retry "github.com/avast/retry-go"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/holiman/uint256"
@@ -119,9 +121,19 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 
 	taskCh := make(chan Task)
 	resourceProvider.controller.web3Events.Pow.SubscribenewPowRound(func(newPowRound pow.PowNewPowRound) {
-
-		_, challenge, err := resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
-
+		var challenge *pow.PowGenerateChallenge
+		var err error
+		err = retrySend(ctx, 28, func() error {
+			_, challenge, err = resourceProvider.web3SDK.GetGenerateChallenge(ctx, nodeId)
+			if err != nil {
+				if isRecoverable(err) {
+					log.Warn().Err(err).Msg("got a error, try to resend get challenge")
+					return err
+				}
+				return retry.Unrecoverable(err)
+			}
+			return nil
+		})
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch challenge")
 			return
@@ -142,7 +154,6 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 			Challenge:  challenge.Challenge,
 			Difficulty: difficulty,
 		}
-
 	})
 
 	submitWork := func(nonce *big.Int, hashrate float64) {
@@ -154,11 +165,24 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 			Date:     finishTime,
 			Hashrate: hashrate,
 		})
-		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
+
+		var txId common.Hash
+		err = retrySend(ctx, 28, func() error {
+			txId, err = resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
+			if err != nil {
+				if isRecoverable(err) {
+					log.Warn().Err(err).Msg("got a error, try to submit work")
+					return err
+				}
+				return retry.Unrecoverable(err) //others is unrecoverable  or all error regard as recoverable?
+			}
+			return nil
+		})
 		if err != nil {
 			log.Err(err).Msgf("Submit work fail")
 			return
 		}
+
 		log.Info().Str("address", walletAddress.Hex()).
 			Str("nodeid", nodeId).
 			Str("Nonce", nonce.String()).
@@ -187,4 +211,19 @@ func TriggerNewPowRound(ctx context.Context, web3SDK *web3.Web3SDK) (common.Hash
 		return tx.Hash(), fmt.Errorf("trigger new pow round")
 	}
 	return tx.Hash(), nil
+}
+
+// retrySend retry interval 1s,2s,4s,8s,10s,10s,10s
+// total time cost 15 +10(retryCount-4) for retryCount > 4
+func retrySend(ctx context.Context, retryCount uint, retryableFunc retry.RetryableFunc) error {
+	return retry.Do(retryableFunc, retry.Attempts(retryCount),
+		retry.Context(ctx),
+		retry.DelayType(retry.BackOffDelay),
+		retry.Delay(time.Second),
+		retry.MaxDelay(time.Second*10),
+	)
+}
+
+func isRecoverable(err error) bool {
+	return strings.Contains(err.Error(), "Your app has exceeded its compute units per second capacity")
 }
