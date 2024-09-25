@@ -54,6 +54,7 @@ services:
       - SERVER_PORT=${SERVER_PORT}
       - SERVER_URL=${SERVER_URL}
       - WEB3_RPC_URL=${WEB3_RPC_URL}
+      - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
     ports:
       - 8080:8080
     healthcheck:
