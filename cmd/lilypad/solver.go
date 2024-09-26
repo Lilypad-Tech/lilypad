@@ -1,13 +1,12 @@
 package lilypad
 
 import (
-	"fmt"
-
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +40,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, options.Web3)
 	if err != nil {
-		fmt.Printf("failed to setup opentelemetry: %s", err)
+		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
