@@ -6,8 +6,8 @@ import (
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func newSolverCmd() *cobra.Command {
@@ -25,7 +25,7 @@ func newSolverCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runSolver(cmd, options)
+			return runSolver(cmd, options, network)
 		},
 	}
 
@@ -34,12 +34,18 @@ func newSolverCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
+func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.SolverService))
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, options.Web3)
+	if err != nil {
+		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
+
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
 		return err
 	}
@@ -49,12 +55,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions) error {
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK)
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer)
 	if err != nil {
 		return err
 	}
 
-	solverErrors := solverService.Start(commandCtx.Ctx, commandCtx.Cm)
+	solverErrors := solverService.Start(commandCtx.Ctx, commandCtx.Cm, telemetry.TracerProvider)
 
 	for {
 		select {

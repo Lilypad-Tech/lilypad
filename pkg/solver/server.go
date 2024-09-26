@@ -18,6 +18,8 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 type solverServer struct {
@@ -56,12 +58,13 @@ func NewSolverServer(
  *
 */
 
-func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager) error {
+func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
 	router := mux.NewRouter()
 
 	subrouter := router.PathPrefix(http.API_SUB_PATH).Subrouter()
 
 	subrouter.Use(http.CorsMiddleware)
+	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
