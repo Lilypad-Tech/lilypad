@@ -198,20 +198,9 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
-	rpcs := strings.Split(options.RpcURL, ",")
-	var client *ethclient.Client
-	var err error
-	for _, url := range rpcs {
-		client, err = ethclient.Dial(url)
-		if err != nil {
-			log.Warn().Msgf("Failed to connect to %s: %v", url, err)
-			continue
-		} else {
-			break
-		}
-	}
-	if client == nil {
-		return nil, errors.New("Failed to connect to a web3 RPC provider")
+	client, err := getEthClient(options)
+	if err != nil {
+		return nil, err
 	}
 
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
@@ -246,6 +235,26 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
+}
+
+func getEthClient(options Web3Options) (*ethclient.Client, error) {
+	rpcs := strings.Split(options.RpcURL, ",")
+	var client *ethclient.Client
+	var err error
+	for _, url := range rpcs {
+		client, err = ethclient.Dial(url)
+		if err != nil {
+			log.Warn().Msgf("Failed to connect to %s: %v", url, err)
+			continue
+		} else {
+			break
+		}
+	}
+	if client == nil {
+		return nil, errors.New("Failed to connect to a web3 RPC provider")
+	}
+
+	return client, nil
 }
 
 func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
