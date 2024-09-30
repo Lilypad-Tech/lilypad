@@ -70,3 +70,8 @@ Licensee’s name: Robert Marinescu
 Repository system identifier: sigmundxyz
 
 ---------------------------------------------------------------------------------
+Licensee’s name: Alexander Paul Quinit
+
+Repository system identifier: apquinit
+
+---------------------------------------------------------------------------------
