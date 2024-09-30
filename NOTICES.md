@@ -70,3 +70,8 @@ Licensee’s name: Robert Marinescu
 Repository system identifier: sigmundxyz
 
 ---------------------------------------------------------------------------------
+Licensee’s name: Mar Quirapas
+
+Repository system identifier: mcryptographer
+
+---------------------------------------------------------------------------------
