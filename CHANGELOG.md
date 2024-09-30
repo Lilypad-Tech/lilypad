@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.7.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.6.0...v2.7.0) (2024-09-26)
+
+
+### Features
+
+* Add solver HTTP tracing ([#388](https://github.com/Lilypad-Tech/lilypad/issues/388)) ([88fe924](https://github.com/Lilypad-Tech/lilypad/commit/88fe924c3c73016aaa4d94f96666bc1696c561d2))
+* Fetch machine specs from bacalhau ([#371](https://github.com/Lilypad-Tech/lilypad/issues/371)) ([d867292](https://github.com/Lilypad-Tech/lilypad/commit/d867292b816fb9665bb8d6d9a30e5da09bf7e9d3))
+
+
+### Bug Fixes
+
+* Resourceoffer updates ([#381](https://github.com/Lilypad-Tech/lilypad/issues/381)) ([6353895](https://github.com/Lilypad-Tech/lilypad/commit/6353895e5b5103502c49277dbe749d80a0df990b))
+* Wrong balance err check ([#382](https://github.com/Lilypad-Tech/lilypad/issues/382)) ([aaf5d9a](https://github.com/Lilypad-Tech/lilypad/commit/aaf5d9a6cb3ea95ede239d58f1d80c12dfd481f8))
+
 ## [2.6.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.5.0...v2.6.0) (2024-09-17)
 
 
