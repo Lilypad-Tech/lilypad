@@ -14,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/powLogs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -104,6 +105,19 @@ func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.
 			return errCh
 		}
 	}
+	resourceOffer := data.ResourceOffer{
+		ID:               uuid.New().String(),
+		ResourceProvider: resourceProvider.web3SDK.GetAddress().String(),
+		// TODO: is this index correct?
+		Index:           0,
+		Spec:             resourceProvider.options.Offers.OfferSpec,
+		Modules:          resourceProvider.options.Offers.Modules,
+		Mode:             resourceProvider.options.Offers.Mode,
+		DefaultPricing:   resourceProvider.options.Offers.DefaultPricing,
+		DefaultTimeouts: resourceProvider.options.Offers.DefaultTimeouts,
+		Services:         resourceProvider.options.Offers.Services,
+	}
+	metricsDashboard.TrackNodeInfo(resourceOffer)
 	return resourceProvider.controller.Start(ctx, cm)
 }
 
