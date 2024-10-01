@@ -57,12 +57,21 @@ func newServeCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	// optionsfactory.AddJobCreatorCliFlags(runCmd, &options)
+
 	return runCmd
 }
 func run(ctx context.Context, w io.Writer) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
-	srv := New()
+
+	// logger := log.New(w, "", log.Ldate|log.Ltime)
+	// config := config.New()
+	// db := db.New(config, logger)
+	// lw := logsWriter.New(config, logger)
+	// geo := geo.New(logger)
+	srv := New() //, db, lw, geo)
 
 	httpServer := &http.Server{
 		Addr:         net.JoinHostPort("127.0.0.1", "9876"),
@@ -96,7 +105,7 @@ func run(ctx context.Context, w io.Writer) error {
 
 	return nil
 }
-func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (cid string, dataid string, err error) {
+func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r string, err error) {
 
 	c := color.New(color.FgCyan).Add(color.Bold)
 	header := `
@@ -124,11 +133,23 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (cid 
 
 	// start the spinner animation
 	if err := spinner.Start(); err != nil {
-		return "", "", fmt.Errorf("failed to start spinner: %w", err)
+		return "", fmt.Errorf("failed to start spinner: %w", err)
 	}
 
+	// update message
+	// spinner.Message("uploading files")
+
+	// let spinner render some more
+	// time.Sleep(1 * time.Second)
+
+	// if you wanted to print a failure message...
+	//
+	// if err := spinner.StopFail(); err != nil {
+	// 	return fmt.Errorf("failed to stop spinner: %w", err)
+	// }
+
 	if err := spinner.Stop(); err != nil {
-		return "", "", fmt.Errorf("failed to stop spinner: %w", err)
+		return "", fmt.Errorf("failed to stop spinner: %w", err)
 	}
 
 	if err != nil {
@@ -177,10 +198,15 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (cid 
 			fmt.Printf("failed to start spinner: %s", err)
 			os.Exit(1)
 		}
+
+		// UPDATE FUNCTION
+		// fmt.Printf("evOffer: %s --------------------------------------\n")
+		// spew.Dump(evOffer)
+
 	})
 	if err != nil {
 		fmt.Printf("Error: %s", err)
-		return "", "", err
+		return "", err
 	}
 	spinner.Stop()
 	fmt.Printf("\n🍂 Lilypad job completed, try 👇\n    open %s\n    cat %s/stdout\n    cat %s/stderr\n    https://ipfs.io/ipfs/%s\n",
@@ -189,10 +215,58 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (cid 
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		result.Result.DataID,
 	)
-	return result.Result.DataID, result.JobOffer.DealID, err
+	return result.Result.DataID, err
 }
 
-func New() http.Handler {
+// func createSpinner(message string, emoji string) (*yacspin.Spinner, error) {
+// 	// build the configuration, each field is documented
+// 	cfg := yacspin.Config{
+// 		Frequency:         100 * time.Millisecond,
+// 		CharSet:           yacspin.CharSets[69],
+// 		Suffix:            " ", // puts a least one space between the animating spinner and the Message
+// 		Message:           message,
+// 		SuffixAutoColon:   true,
+// 		ColorAll:          false,
+// 		Colors:            []string{"fgMagenta"},
+// 		StopCharacter:     emoji,
+// 		StopColors:        []string{"fgGreen"},
+// 		StopMessage:       message,
+// 		StopFailCharacter: "✗",
+// 		StopFailColors:    []string{"fgRed"},
+// 		StopFailMessage:   "failed",
+// 	}
+
+// 	s, err := yacspin.New(cfg)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to make spinner from struct: %w", err)
+// 	}
+
+// 	stopOnSignal(s)
+// 	return s, nil
+// }
+
+// func stopOnSignal(spinner *yacspin.Spinner) {
+// 	// ensure we stop the spinner before exiting, otherwise cursor will remain
+// 	// hidden and terminal will require a `reset`
+// 	sigCh := make(chan os.Signal, 1)
+// 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+// 	go func() {
+// 		<-sigCh
+
+// 		spinner.StopFailMessage("interrupted")
+
+// 		// ignoring error intentionally
+// 		_ = spinner.StopFail()
+
+//			os.Exit(0)
+//		}()
+//	}
+func New(
+// logger *log.Logger,
+// db *gorm.DB,
+// lw *logsWriter.Writer,
+// geo *geo.Geo,
+) http.Handler {
 	router := mux.NewRouter()
 	// middleware
 	router.Use(cors)
@@ -203,7 +277,6 @@ func New() http.Handler {
 	handler := addRoutes(
 		router,
 	)
-	router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
 
 	return handler
 }
@@ -231,18 +304,28 @@ func loggerMiddleware(logger *log.Logger) func(n http.Handler) http.Handler {
 func addRoutes(
 	router *mux.Router,
 ) http.Handler {
+	// metricsDashboardRouter := router.PathPrefix("/metrics-dashboard").Subrouter()
+
 	powLogsRouter := router.PathPrefix("/run").Subrouter()
-	powLogsRouter.Handle("/job", handleJob()).Methods("POST")
+
+	//todo need other api?
+	powLogsRouter.Handle("/job", handlePostCardInfos()).Methods("POST")
+	// powLogsRouter.Handle("/cardinfos/{address}/{signature}", handleGetCardInfoByAddress(logger, db)).Methods("GET")
+
+	// // Temporary until self host RPC is deprecated
+	// loggerRouter := router.PathPrefix("/log").Subrouter()
+	// loggerRouter.Handle("/error", HandleErrorLog(logger, db)).Methods("POST")
 	return router
 }
 
 type JobModule struct {
 	gorm.Model
-	Module string                 `json:"module"`
-	Input  map[string]interface{} `json:"input"`
+	//todo card info field
+	Module string `json:"module"`
+	Input  string `json:"input"`
 }
 
-func handleJob() http.Handler {
+func handlePostCardInfos() http.Handler {
 
 	return http.HandlerFunc(
 
@@ -250,26 +333,58 @@ func handleJob() http.Handler {
 			var entry JobModule
 			err := json.NewDecoder(r.Body).Decode(&entry)
 			if err != nil {
+				// logger.Printf("error parsing card info request body %s", err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 			fmt.Println(entry)
 			options := optionsfactory.NewJobCreatorOptions()
 			options.Offer.Module.Name = entry.Module
-			options.Offer.Inputs = map[string]string{entry.Input["name"].(string): entry.Input["value"].(string)}
-			inputArgs := []string{entry.Module} //strings.Split(entry.Module, " ") //[]string{entry.Input} //
+			inputArgs := strings.Split(entry.Module, " ")
 			options, err = optionsfactory.ProcessJobCreatorOptions(options, inputArgs, network)
 			if err != nil {
 				fmt.Println(err)
 				// return err
 			}
-			cid, dataid, err := runServeJob(gcmd, options)
-			if err != nil {
-				fmt.Println(err)
+			x, err := runServeJob(gcmd, options)
+			// // Extract the signature from the entry
+			// signatureBytes, err := hex.DecodeString(entry.Signature[2:]) // Remove "0x" prefix
+			// if err != nil {
+			// 	logger.Printf("error decoding signature %s", err)
+			// 	http.Error(w, "invalid signature format", http.StatusBadRequest)
+			// 	return
+			// }
 
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(fmt.Sprintf("{\"cid\":\"%s\",\"dataid\":\"%s\"}", cid, dataid)))
+			// // Compute the hash of the message
+			// message := []byte(entry.Address + entry.Timestamp + entry.PowID + entry.Uuid + entry.GpuName + entry.Executable + entry.NvidiaSmi + entry.Challenge + entry.Difficulty) // Adjust the message as needed
+			// hash := crypto.Keccak256Hash(message)
+
+			// // Verify the signature
+			// sigPublicKey, err := crypto.SigToPub(hash.Bytes(), signatureBytes)
+			// if err != nil {
+			// 	logger.Printf("error verifying signature %s", err)
+			// 	http.Error(w, "invalid signature", http.StatusBadRequest)
+			// 	return
+			// }
+
+			// // Derive the address from the recovered public key
+			// recoveredAddress := crypto.PubkeyToAddress(*sigPublicKey).Hex()
+
+			// // Compare the derived address with the provided wallet address
+			// if recoveredAddress != entry.Address {
+			// 	logger.Printf("signature does not match wallet address")
+			// 	http.Error(w, "invalid signature", http.StatusBadRequest)
+			// 	return
+			// }
+
+			// if err = db.Save(&entry).Error; err != nil {
+			// 	logger.Printf("error saving card info %s", err)
+			// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+			// 	return
+			// }
+
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte("OK " + x))
 		},
 	)
 }
