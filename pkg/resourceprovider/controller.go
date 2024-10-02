@@ -250,9 +250,9 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 
 func (controller *ResourceProviderController) checkResourceoffers() error {
 	// We only want to run this every RESOURCE_OFFER_INTERVAL
-	if !lastResourceOfferPost.IsZero() && time.Since(lastResourceOfferPost) < RESOURCE_OFFER_INTERVAL {
-		return nil
-	}
+	// if !lastResourceOfferPost.IsZero() && time.Since(lastResourceOfferPost) < RESOURCE_OFFER_INTERVAL {
+	// 	return nil
+	// }
 
 	err := controller.ensureResourceOffers()
 	if err != nil {

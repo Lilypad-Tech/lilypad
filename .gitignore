@@ -21,4 +21,3 @@ vendor/
 /data/
 .DS_Store
 pkg/executor/bacalhau/test.json
-*debug_bin*
