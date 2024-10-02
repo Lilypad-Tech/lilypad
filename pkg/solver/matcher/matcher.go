@@ -40,29 +40,16 @@ func GetMatchingDeals(
 	// loop over job offers
 	for _, jobOffer := range jobOffers {
 
-		// See if our jobOffer targets a specific address. If so, we will create a deal automatically
-		// with the matcing resourceOffer.
+		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
-			resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
+			deal, err := getTargetedDeal(db, jobOffer, updateJobOfferState)
 			if err != nil {
 				return nil, err
 			}
 
-			// We don't have a resource provider for this address
-			if resourceOffer == nil {
-				log.Trace().
-					Str("job offer", jobOffer.ID).
-					Str("target address", jobOffer.JobOffer.Target.Address).
-					Msgf("No resource provider found for address")
-				updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
-				continue
+			if deal != nil {
+				deals = append(deals, *deal)
 			}
-
-			deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
-			if err != nil {
-				return nil, err
-			}
-			deals = append(deals, deal)
 			continue
 		}
 
@@ -129,4 +116,30 @@ func GetMatchingDeals(
 		Msgf(system.GetServiceString(system.SolverService, "Solver solving"))
 
 	return deals, nil
+}
+
+// See if our jobOffer targets a specific address. If so, we will create a deal automatically
+// with the matcing resourceOffer.
+func getTargetedDeal(
+	db store.SolverStore,
+	jobOffer data.JobOfferContainer,
+	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
+) (*data.Deal, error) {
+	resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	// We don't have a resource provider for this address
+	if resourceOffer == nil {
+		log.Trace().
+			Str("job offer", jobOffer.ID).
+			Str("target address", jobOffer.JobOffer.Target.Address).
+			Msgf("No resource provider found for address")
+		updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
+		return nil, nil
+	}
+
+	deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
+	return &deal, err
 }
