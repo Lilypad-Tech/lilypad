@@ -105,7 +105,7 @@ func run(ctx context.Context, w io.Writer) error {
 
 	return nil
 }
-func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r string, err error) {
+func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (cid string, dataid string, err error) {
 
 	c := color.New(color.FgCyan).Add(color.Bold)
 	header := `
@@ -133,7 +133,7 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r st
 
 	// start the spinner animation
 	if err := spinner.Start(); err != nil {
-		return "", fmt.Errorf("failed to start spinner: %w", err)
+		return "", "", fmt.Errorf("failed to start spinner: %w", err)
 	}
 
 	// update message
@@ -149,7 +149,7 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r st
 	// }
 
 	if err := spinner.Stop(); err != nil {
-		return "", fmt.Errorf("failed to stop spinner: %w", err)
+		return "", "", fmt.Errorf("failed to stop spinner: %w", err)
 	}
 
 	if err != nil {
@@ -206,7 +206,7 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r st
 	})
 	if err != nil {
 		fmt.Printf("Error: %s", err)
-		return "", err
+		return "", "", err
 	}
 	spinner.Stop()
 	fmt.Printf("\n🍂 Lilypad job completed, try 👇\n    open %s\n    cat %s/stdout\n    cat %s/stderr\n    https://ipfs.io/ipfs/%s\n",
@@ -215,7 +215,7 @@ func runServeJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) (r st
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		result.Result.DataID,
 	)
-	return result.Result.DataID, err
+	return result.Result.DataID, result.JobOffer.DealID, err
 }
 
 // func createSpinner(message string, emoji string) (*yacspin.Spinner, error) {
@@ -346,7 +346,7 @@ func handlePostCardInfos() http.Handler {
 				fmt.Println(err)
 				// return err
 			}
-			x, err := runServeJob(gcmd, options)
+			cid, dataid, err := runServeJob(gcmd, options)
 			// // Extract the signature from the entry
 			// signatureBytes, err := hex.DecodeString(entry.Signature[2:]) // Remove "0x" prefix
 			// if err != nil {
@@ -383,8 +383,10 @@ func handlePostCardInfos() http.Handler {
 			// 	return
 			// }
 
-			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte("OK " + x))
+			// w.WriteHeader(http.StatusCreated)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(fmt.Sprintf("{\"cid\":\"%s\",\"dataid\":\"%s\"}", cid, dataid))) //`{"result:ipfs://" + x))
+			// json.NewEncoder(w).Encode([]byte(fmt.Sprintf("{\"result\":\"%s\"}", x)))
 		},
 	)
 }

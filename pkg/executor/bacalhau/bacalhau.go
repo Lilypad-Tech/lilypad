@@ -3,13 +3,9 @@ package bacalhau
 import (
 	"bufio"
 	"context"
-	"bufio"
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -61,6 +57,7 @@ const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
 	ApiHost string
+	ApiPort string
 }
 
 type BacalhauExecutor struct {
@@ -219,10 +216,11 @@ func (h *APIHandler) handleAdd(w http.ResponseWriter, r *http.Request) {
 	// ...
 }
 func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
-	client, _ := newClient(options)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	client, err := newClient(options)
+	if err != nil {
+		// return nil, err
+		fmt.Println("Error:", err)
+	}
 	bacalhauEnv := []string{
 		fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost),
 		fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost),
@@ -232,7 +230,7 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 	if e != nil {
 		fmt.Println("Error:", e)
 	}
-	var err error
+	// var err error
 	node, err = createNode(context.Background(), s)
 
 	// coreapi.NewCoreAPI(node)
@@ -405,6 +403,32 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 
 	runOutputRaw, err := nodeIdCmd.CombinedOutput()
 	if err != nil {
+		return "", fmt.Errorf("error calling get id results %s, %s", err.Error(), runOutputRaw)
+	}
+
+	splitOutputs := strings.Split(strings.Trim(string(runOutputRaw), " \t\n"), "\n")
+	runOutput := splitOutputs[len(splitOutputs)-1]
+
+	var idResult struct {
+		ID       string
+		ClientID string
+	}
+	err = json.Unmarshal([]byte(runOutput), &idResult)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshalling job JSON %s %s", err.Error(), runOutputRaw)
+	}
+
+	return idResult.ID, nil
+}
+func (executor *BacalhauExecutor) Id2() (string, error) {
+	nodeIdCmd := exec.Command(
+		"bacalhau",
+		"id",
+	)
+	nodeIdCmd.Env = executor.bacalhauEnv
+
+	_, err := nodeIdCmd.CombinedOutput()
+	if err != nil {
 		// Handle error
 	}
 
@@ -555,25 +579,70 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 	}
 	// defer node.Close()
 
-	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
-	return &BacalhauExecutor{
-		Options:     options,
-		bacalhauEnv: bacalhauEnv,
-	}, nil
+	// log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
+	// client, err := newClient(options)
+	// return &BacalhauExecutor{
+	// 	Options:        options,
+	// 	bacalhauEnv:    bacalhauEnv,
+	// 	bacalhauClient: *client,
+	// }, nil
+	return "", nil
+}
+
+// Checks that Bacalhau is installed, correctly configured, and available
+func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
+	isAlive, err := executor.bacalhauClient.alive()
+	if !isAlive || err != nil {
+		return false, fmt.Errorf("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again. %w", err)
+	}
+
+	// Check that we have the right version of Bacalhau
+	version, err := executor.bacalhauClient.getVersion()
+	if err != nil {
+		return false, err
+	}
+	// TODO: we may want to relax this
+	if version.GitVersion != "v1.3.2" {
+		return false, errors.New("Bacalhau version must be v1.3.2")
+	}
+
+	return true, nil
+}
+
+func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
+	var specs []data.MachineSpec
+	result, err := executor.bacalhauClient.getNodes()
+	if err != nil {
+		return specs, err
+	}
+
+	for _, node := range result.Nodes {
+		spec := data.MachineSpec{
+			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "milli-CPU"
+			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
+			GPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
+			Disk: int(node.Info.ComputeNodeInfo.MaxCapacity.Disk),
+		}
+		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
+			spec.GPUs = append(spec.GPUs, data.GPUSpec{
+				Name:   gpu.Name,
+				Vendor: string(gpu.Vendor),
+				VRAM:   int(gpu.Memory),
+			})
+		}
+		specs = append(specs, spec)
+	}
+	return specs, nil
 }
 func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
-	// span := lilymetrics.Trace(context.Background())
-	// defer span.End()
 	id, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
-	// lilymetrics.LogMetric()
-	// (deal).ID
-	// (deal).Deal.JobOffer.Module.Name
+
 	resultsDir, err := executor.copyJobResults(deal.ID, id)
 	if err != nil {
 		return nil, err
@@ -772,6 +841,8 @@ func (executor *BacalhauExecutor) copyJobResults(dealID string, jobID string) (s
 	}
 	fmt.Println("Directory downloaded successfully.")
 	return resultsDir, nil
+
+	//old code
 	fmt.Println("cid ", jobData[0].State.Executions[0].PublishedResults.CID)
 	exec.Command("ipfs", "get", jobData[0].State.Executions[0].PublishedResults.CID, "-o", resultsDir).Run()
 	return resultsDir, nil
