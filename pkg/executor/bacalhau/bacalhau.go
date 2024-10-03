@@ -3,9 +3,13 @@ package bacalhau
 import (
 	"bufio"
 	"context"
+	"bufio"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -35,6 +39,8 @@ import (
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
 
 	// "github.com/lilypad-tech/lilypad/pkg/lilymetrics"
+
+	// "github.com/lilypad-tech/lilypad/pkg/lilymetrics"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 
@@ -55,7 +61,6 @@ const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
 	ApiHost string
-	ApiPort string
 }
 
 type BacalhauExecutor struct {
@@ -400,68 +405,161 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 
 	runOutputRaw, err := nodeIdCmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error calling get id results %s, %s", err.Error(), runOutputRaw)
+		// Handle error
 	}
 
-	splitOutputs := strings.Split(strings.Trim(string(runOutputRaw), " \t\n"), "\n")
-	runOutput := splitOutputs[len(splitOutputs)-1]
-
-	var idResult struct {
-		ID       string
-		ClientID string
-	}
-	err = json.Unmarshal([]byte(runOutput), &idResult)
+	// Obtain the CoreAPI instance
+	api, err := coreapi.NewCoreAPI(node)
 	if err != nil {
-		return "", fmt.Errorf("error unmarshalling job JSON %s %s", err.Error(), runOutputRaw)
+		// Handle error
 	}
 
-	return idResult.ID, nil
-}
+	// Create an APIHandler instance
+	handler := NewAPIHandler(api)
 
-// Checks that Bacalhau is installed, correctly configured, and available
-func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
-	isAlive, err := executor.bacalhauClient.alive()
-	if !isAlive || err != nil {
-		return false, fmt.Errorf("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again. %w", err)
-	}
+	// Start the HTTP server on port 5001
+	fmt.Println("Starting server on :5001")
+	go http.ListenAndServe(":5001", handler)
+	// http.HandleFunc("/api/v0/", func(w http.ResponseWriter, r *http.Request) {
+	// 	// Implement your API request handling logic here
+	// 	// You can use the `api` instance to interact with the IPFS node's API
+	// 	// and return the appropriate response to the client.
+	// 	// For example:
+	// 	id, err := api.ID()
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// err = apiServer.Run(ctx, coreiface.ServeOptionsHTTP, addr)
+	// if err != nil {
+	// 	// Handle error
+	// }
+	// apiServer.Swarm().s
+	// Start the API server
+	// err = apiServer.Start(context.Background())
+	// if err != nil {
+	// 	// Handle error
+	// }
 
-	// Check that we have the right version of Bacalhau
-	version, err := executor.bacalhauClient.getVersion()
+	// cfg := &core.BuildCfg{
+	// 	Online:    true,
+	// 	Permanent: true,
+	// }
+	// cfg.Host = libp2p.DefaultHostOption
+	// Set the ListenAddr to ":5001" to make the node listen on port 5001
+	// cfg.Host =core.  //libp2p.DefaultHostOption
+	//cfg.Host = libp2p.
+	//.("/ip4/0.0.0.0/tcp/5001")
+	// cfg.ExtraOpts
+	// kubo.(context.Background(), cfg)
+	// err := daemon.Daemon(context.Background(), cfg).Start()
+	// // daemon, err := kubo.InitDaemon(context.Background())
+	// // err = daemon.Start(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// r := kubo.Start(kubo.BuildDefaultEnv)
+	// fmt.Println("result ", r)
+	valueMap := make(map[string]bool)
+
+	// Assign values to the map
+	valueMap["daemon"] = true
+	// cfg1 := &core.BuildCfg{
+	// 	Online:    true,
+	// 	Permanent: true,
+	// 	Host:      libp2p.DefaultHostOption,
+	// 	Routing:   libp2p.DHTOption,
+	// 	ExtraOpts: valueMap,
+	// }
+
+	// cfg := &core.BuildCfg{
+	// 	Online:    true,
+	// 	Permanent: true,
+	// 	Host: func(ctx context.Context, id peer.ID, ps peer.Peerstore, bwr metrics.Reporter, fs *pnet.PSK) (host.Host, error) {
+	// 		// h := host.Host(libp2p.New(ctx, libp2p.Identity(id), libp2p.Peerstore(ps), libp2p.BandwidthReporter(bwr), libp2p.PrivateNetwork(fs), libp2p.ListenAddrStrings("/ip4/")...))
+	// 		libp2p.Host(ctx, id, ps, bwr, fs)
+	// 		return h, nil
+	// 		// return libp2p.Host(
+	// 		// h, _ := libp2p.Host(ctx, id, ps, bwr, fs)
+	// 		// return h.Host, nil
+	// 		// // h.Host.Network().ListenAddresses(["/ip4/0.0.0.0/tcp/5001"])
+	// 		// // h.Host.Net
+	// 		// return h.Host, nil
+	// 		// // return libp2p.New(ctx,
+	// 		// // 	libp2p.Identity(id),
+	// 		// // 	libp2p.Peerstore(ps),
+	// 		// // 	libp2p.BandwidthReporter(bwr),
+	// 		// // 	libp2p.PrivateNetwork(fs),
+	// 		// // 	libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/5001"),
+	// 		// // )
+	// 	},
+	// }
+
+	//ctx := context.Background()
+	// var testIdentity = config.Identity{
+	// 	PeerID:  "QmNgdzLieYi8tgfo2WfTUzNVH5hQK9oAYGVf6dxN12NrHt",
+	// 	PrivKey: "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",
+	// }
+
+	// good := []*config.Config{
+	// 	{
+
+	// 		Identity: testIdentity,
+	// 		Addresses: config.Addresses{
+	// 			Swarm: []string{"/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/udp/4001/quic-v1"},
+	// 			API:   []string{"/ip4/0.0.0.0/tcp/5001"},
+	// 		},
+	// 	},
+
+	// 	{
+	// 		Identity: testIdentity,
+	// 		Addresses: config.Addresses{
+	// 			Swarm: []string{"/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/udp/4001/quic-v1"},
+	// 			API:   []string{"/ip4/127.0.0.1/tcp/8000"},
+	// 		},
+	// 	},
+	// }
+	// cfg, err := config.Init(io.Discard, 2048)
+	// r := &repo.Mock{
+	// 	// C: *good[1],
+	// 	C: *cfg,
+	// 	D: syncds.MutexWrap(datastore.NewMapDatastore()),
+	// }
+	// node, err := core.NewNode(context.Background(), &core.BuildCfg{Online: true,
+	// 	Permanent: true,
+	// 	Repo:      r})
+	// node, err := core.NewNode(context.Background(), cfg1)
+	fmt.Println("ID " + node.Identity.String())
 	if err != nil {
-		return false, err
-	}
-	// TODO: we may want to relax this
-	if version.GitVersion != "v1.3.2" {
-		return false, errors.New("Bacalhau version must be v1.3.2")
+		fmt.Println("Error:", err)
+		// return
 	}
 
-	return true, nil
-}
+	// Start the node
+	// if err := node.Start(); err != nil {
+	// 	fmt.Println("Error starting node:", err)
+	// 	// return
+	// }
+	//{} core.ListenAddrOption("/ip4/0.0.0.0/tcp/5001")
 
-func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
-	var specs []data.MachineSpec
-	result, err := executor.bacalhauClient.getNodes()
+	// node, err := core.NewNode(context.Background(), &core.BuildCfg{
+	// 	Online: true,
+
+	// })
+	n, err = coreapi.NewCoreAPI(node)
+
 	if err != nil {
-		return specs, err
+		fmt.Println("Error initializing IPFS node:", err)
+		// return "", err
 	}
+	// defer node.Close()
 
-	for _, node := range result.Nodes {
-		spec := data.MachineSpec{
-			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "milli-CPU"
-			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
-			GPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
-			Disk: int(node.Info.ComputeNodeInfo.MaxCapacity.Disk),
-		}
-		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
-			spec.GPUs = append(spec.GPUs, data.GPUSpec{
-				Name:   gpu.Name,
-				Vendor: string(gpu.Vendor),
-				VRAM:   int(gpu.Memory),
-			})
-		}
-		specs = append(specs, spec)
-	}
-	return specs, nil
+	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
+	return &BacalhauExecutor{
+		Options:     options,
+		bacalhauEnv: bacalhauEnv,
+	}, nil
 }
 func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
