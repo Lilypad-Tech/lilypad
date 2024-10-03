@@ -79,7 +79,14 @@ func run(ctx context.Context, w io.Writer) error {
 		WriteTimeout: 120 * time.Second,
 		ReadTimeout:  120 * time.Second,
 		IdleTimeout:  120 * time.Second,
+		
 	}
+
+	// router := mux.NewRouter()
+	// router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
+	// router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("dashboard/build"))))
+	// http.Handle("/", http.FileServer(http.Dir("dashboard/build")))
+	// go http.ListenAndServe(":8000", router)
 
 	go func() {
 		log.Printf("Listening on %s\n", httpServer.Addr)
@@ -277,6 +284,7 @@ func New(
 	handler := addRoutes(
 		router,
 	)
+	router.PathPrefix("/files").Handler(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/lilypad/data/downloaded-files/"))))
 
 	return handler
 }
