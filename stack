@@ -301,7 +301,7 @@ function resource-provider-docker-run() {
 function bacalhau-node(){
   export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
   export LOG_LEVEL=debug
-  bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked
+  bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked --ipfs-connect "/ip4/127.0.0.1/tcp/5001/p2p/12D3KooWQZBLq654HbT233ueuTzJWjWZhcXfNrfpGLMfjYqqdGuE"
 }
 
 function bacalhau-docker-build() {
@@ -355,7 +355,7 @@ function integration-tests() {
 function run() {
   load-local-env
   export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
-  export LOG_LEVEL=info
+  export LOG_LEVEL=debug
   go run . run --network dev "$@"
 }
 
