@@ -78,6 +78,9 @@ function chain() {
       --node.dangerous.no-sequencer-coordinator \
       --node.staker.enable=false \
       --init.empty=false \
+      --http.vhosts \* \
+      --http.corsdomain \* \
+      --ws.origins \*\
       --http.port 8547 \
       --http.addr 0.0.0.0 \
       --ws.port 8548 \
@@ -208,7 +211,7 @@ function solver() {
   load-local-env
   export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
   export LOG_LEVEL=debug
-  go run . solver --network dev
+  go run . solver --network dev 
 }
 
 function solver-docker-build() {
