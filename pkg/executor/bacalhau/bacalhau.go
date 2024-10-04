@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	cid "github.com/ipfs/go-cid"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
@@ -143,10 +146,17 @@ func (executor *BacalhauExecutor) RunJob(
 	// TODO Remove this print line
 	fmt.Printf("*** Results CID: %s\n", jobState.State.Executions[0].PublishedResult.CID)
 
-	resultsDir, err := executor.copyJobResults(deal.ID, id)
+	c, err := cid.Decode(jobState.State.Executions[0].PublishedResult.CID)
+	bytes, err := fetchResults(c)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO Remove this print line
+	fmt.Printf("Result: %s", string(bytes))
+
+	// TODO Write results to result directory
+	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 
 	if len(jobState.State.Executions) <= 0 {
 		return nil, fmt.Errorf("no executions found for job %s", id)
@@ -259,6 +269,28 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 	}
 
 	return &job, nil
+}
+
+func fetchResults(c cid.Cid) ([]byte, error) {
+	client := &http.Client{}
+	requestURL := fmt.Sprintf("http://127.0.0.1:5001/api/v0/get?arg=%s", c)
+	req, err := http.NewRequest("POST", requestURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create results request: %s", err)
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to retrieve results: %s", err)
+	}
+	defer res.Body.Close()
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read retrieved results: %s", err)
+	}
+
+	return bytes, nil
 }
 
 // Compile-time interface check:
