@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
@@ -134,12 +135,15 @@ func (executor *BacalhauExecutor) RunJob(
 		return nil, err
 	}
 
-	resultsDir, err := executor.copyJobResults(deal.ID, id)
+	jobState, err := executor.getJobState(deal.ID, id)
 	if err != nil {
 		return nil, err
 	}
 
-	jobState, err := executor.getJobState(deal.ID, id)
+	// TODO Remove this print line
+	fmt.Printf("*** Results CID: %s\n", jobState.State.Executions[0].PublishedResult.CID)
+
+	resultsDir, err := executor.copyJobResults(deal.ID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -229,23 +233,29 @@ func (executor *BacalhauExecutor) copyJobResults(dealID string, jobID string) (s
 }
 
 func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bacalhau.JobWithInfo, error) {
-	describeCmd := exec.Command(
-		"bacalhau",
-		"describe",
-		"--json",
-		jobID,
-	)
-	describeCmd.Env = executor.bacalhauEnv
-
-	output, err := describeCmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("error calling describe command results %s -> %s", dealID, err.Error())
-	}
-
 	var job bacalhau.JobWithInfo
-	err = json.Unmarshal(output, &job)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling job JSON %s -> %s", dealID, err.Error())
+
+	for len(job.State.Executions) == 0 {
+		describeCmd := exec.Command(
+			"bacalhau",
+			"describe",
+			"--json",
+			jobID,
+		)
+		describeCmd.Env = executor.bacalhauEnv
+
+		output, err := describeCmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("error calling describe command results %s -> %s", dealID, err.Error())
+		}
+
+		err = json.Unmarshal(output, &job)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling job JSON %s -> %s", dealID, err.Error())
+		}
+
+		// TODO Do we need a timeout in this loop?
+		time.Sleep(time.Second * 1)
 	}
 
 	return &job, nil
