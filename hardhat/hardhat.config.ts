@@ -37,11 +37,11 @@ const config: HardhatUserConfig = {
       accounts: [getAccount('admin').privateKey],
     },
     devnet: {
-      url: 'http://0.0.0.0:8547',
+      url: 'http://192.168.0.95:8547',
       chainId: 412346,
       accounts: [getAccount('admin').privateKey],
     },
-    testnet:{
+    testnet: {
       url: 'https://sepolia-rollup.arbitrum.io/rpc',
       chainId: 421614,
       accounts: [getAccount('admin').privateKey],
