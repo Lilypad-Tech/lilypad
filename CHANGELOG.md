@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.7.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.6.0...v2.7.0) (2024-09-26)
+
+
+### Features
+
+* Add solver HTTP tracing ([#388](https://github.com/Lilypad-Tech/lilypad/issues/388)) ([88fe924](https://github.com/Lilypad-Tech/lilypad/commit/88fe924c3c73016aaa4d94f96666bc1696c561d2))
+* Fetch machine specs from bacalhau ([#371](https://github.com/Lilypad-Tech/lilypad/issues/371)) ([d867292](https://github.com/Lilypad-Tech/lilypad/commit/d867292b816fb9665bb8d6d9a30e5da09bf7e9d3))
+
+
+### Bug Fixes
+
+* Resourceoffer updates ([#381](https://github.com/Lilypad-Tech/lilypad/issues/381)) ([6353895](https://github.com/Lilypad-Tech/lilypad/commit/6353895e5b5103502c49277dbe749d80a0df990b))
+* Wrong balance err check ([#382](https://github.com/Lilypad-Tech/lilypad/issues/382)) ([aaf5d9a](https://github.com/Lilypad-Tech/lilypad/commit/aaf5d9a6cb3ea95ede239d58f1d80c12dfd481f8))
+
+## [2.6.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.5.0...v2.6.0) (2024-09-17)
+
+
+### Features
+
+* Added public addresses with failover ([#365](https://github.com/Lilypad-Tech/lilypad/issues/365)) ([973f396](https://github.com/Lilypad-Tech/lilypad/commit/973f396521f9ed17d5009d5368640e1132b16d6a))
+* Card-api-update ([#366](https://github.com/Lilypad-Tech/lilypad/issues/366)) ([0747cef](https://github.com/Lilypad-Tech/lilypad/commit/0747cefecbe2e2bc99d5f02ce12dcfc21337df73))
+
+
+### Bug Fixes
+
+* Exclude canceled job offers ([#363](https://github.com/Lilypad-Tech/lilypad/issues/363)) ([8b2784f](https://github.com/Lilypad-Tech/lilypad/commit/8b2784f0fc5a5ec8a3b426a098a9d11ab1864763))
+
+## [2.5.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.4.0...v2.5.0) (2024-09-11)
+
+
+### Features
+
+* Allow address targeting ([#307](https://github.com/Lilypad-Tech/lilypad/issues/307)) ([2d49cc4](https://github.com/Lilypad-Tech/lilypad/commit/2d49cc47a27d0f6c7d866b0bf242688bfc9e92ca))
+* Changed rpc to Quicknode  ([#348](https://github.com/Lilypad-Tech/lilypad/issues/348)) ([6db6ec9](https://github.com/Lilypad-Tech/lilypad/commit/6db6ec93d884fa50b9f6f5424278ac940caf4da2))
+* Pow post binary ([#316](https://github.com/Lilypad-Tech/lilypad/issues/316)) ([e37df74](https://github.com/Lilypad-Tech/lilypad/commit/e37df74a3c874ada1908ee30e86e4816cf089b85))
+* Preflight check for bacalhau version ([#338](https://github.com/Lilypad-Tech/lilypad/issues/338)) ([c9a349c](https://github.com/Lilypad-Tech/lilypad/commit/c9a349c8d834f7f2620aecd0f91c11a1c19c3471))
+
 ## [2.4.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.3.1...v2.4.0) (2024-09-04)
 
 

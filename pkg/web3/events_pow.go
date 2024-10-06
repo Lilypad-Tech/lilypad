@@ -3,7 +3,6 @@ package web3
 import (
 	"context"
 	"fmt"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -39,6 +38,7 @@ func (s *PowEventChannels) Start(
 		log.Debug().
 			Str("pow->connect", "newPowRound").
 			Msgf("start to watch new pow round")
+
 		return sdk.Contracts.Pow.WatchNewPowRound(
 			&bind.WatchOpts{Start: &blockNumber, Context: ctx},
 			s.newPowRoundChan,
@@ -64,6 +64,7 @@ func (s *PowEventChannels) Start(
 			log.Debug().
 				Str("pow->event", "PowNewPowRound").
 				Msgf("%+v", event)
+
 			for _, handler := range s.newPowRoundSubs {
 				go handler(*event)
 			}

@@ -11,7 +11,7 @@ ENV WEB3_PRIVATE_KEY=""
 ENV DISABLE_TELEMETRY=false
 
 # Install necessary dependencies
-RUN apt update && apt install -y wget bash && apt clean
+RUN apt update && apt install -y wget bash curl && apt clean
 
 # Install Bacalhau
 RUN cd /tmp && \
@@ -27,7 +27,7 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 COPY . .
 
 FROM base AS build-gpu
-RUN nvcc --version &&  nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx  ./pkg/resourceprovider/cudaminer/keccak.cu
+RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
 RUN go build -v --tags cuda
 ENV DISABLE_POW=false
 
@@ -46,6 +46,10 @@ RUN touch run
 RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
 RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
+
+# Wait for Bacalhau to be ready by checking the correct API endpoint
+RUN echo "while ! curl -s http://0.0.0.0:1234/api/v1/agent/alive | grep '\"Status\": \"OK\"'; do echo 'Waiting for Bacalhau...'; sleep 2; done" >> run
+
 # Launch Lilypad
 RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
 RUN echo "wait -n" >> run

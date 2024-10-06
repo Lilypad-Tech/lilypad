@@ -14,11 +14,24 @@ type MachineSpec struct {
 	// let's not use a float and fix the precision to 1/1000
 	GPU int `json:"gpu"`
 
+	GPUs []GPUSpec `json:"gpus"`
+
 	// Milli-CPU
 	CPU int `json:"cpu"`
 
 	// Megabytes
 	RAM int `json:"ram"`
+
+	// Disk space available
+	Disk int `json:"disk"`
+}
+
+type GPUSpec struct {
+	Name string `json:"name"`
+
+	Vendor string `json:"vendor"`
+
+	VRAM int `json:"vram"`
 }
 
 // this is what is loaded from the template file in the git repo
@@ -88,6 +101,10 @@ type ServiceConfig struct {
 	APIHost  string   `json:"api_host" toml:"api_host"`
 }
 
+type TargetConfig struct {
+	Address string `json:"address" toml:"address"`
+}
+
 // posted to the solver by a job creator
 type JobOffer struct {
 	// this is the cid of the job offer where ID is set to empty string
@@ -114,6 +131,9 @@ type JobOffer struct {
 
 	// which parties are trusted by the job creator
 	Services ServiceConfig `json:"trusted_parties"`
+
+	// which node(s) (if any) to target
+	Target TargetConfig `json:"target"`
 }
 
 // this is what the solver keeps track of so we can know

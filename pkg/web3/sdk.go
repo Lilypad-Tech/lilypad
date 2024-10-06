@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"crypto/ecdsa"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"math/big"
 	"strconv"
 	"strings"
@@ -21,7 +22,10 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
+
+const erc20ABI = `[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256","internalType": "uint256"}],"type":"function"}]`
 
 // these are the go-binding wrappers for the various deployed contracts
 type Contracts struct {
@@ -191,15 +195,24 @@ func NewContracts(
 	}, nil
 }
 
-func NewContractSDK(options Web3Options) (*Web3SDK, error) {
+func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
-	client, err := ethclient.Dial(options.RpcURL)
-	if err != nil {
-		return nil, err
+	rpcs := strings.Split(options.RpcURL, ",")
+	var client *ethclient.Client
+	var err error
+	for _, url := range rpcs {
+		client, err = ethclient.Dial(url)
+		if err != nil {
+			log.Error().Msgf("Failed to connect to %s: %v", url, err)
+			continue
+		} else {
+			break
+		}
 	}
+
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return nil, err
@@ -229,7 +242,7 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
 	}
-	log.Debug().Msgf("Public Address: %s", web3SDK.GetAddress())
+	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
 }
@@ -264,4 +277,31 @@ func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
 		return nil, err
 	}
 	return balance, nil
+}
+
+func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
+	// Convert the string address to common.Address
+	client := sdk.Client
+	ethAddress := common.HexToAddress(address)
+	lpToken := common.HexToAddress(sdk.Options.TokenAddress) // LP Token Address
+
+	// Get the balance using the converted address
+	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
+	if err != nil {
+		log.Printf("error parsing ABI: %s", err)
+	}
+	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
+
+	var out []interface{}
+	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
+	if err != nil {
+		log.Printf("error calling balanceOf: %s", err)
+	}
+	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
+
+	if err != nil {
+		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		return nil, err
+	}
+	return &lpBalance, nil
 }

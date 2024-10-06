@@ -31,6 +31,8 @@ type JobCreatorOfferOptions struct {
 	Inputs map[string]string
 	// which mediators and directories this RP will trust
 	Services data.ServiceConfig
+	// which node(s) (if any) to target
+	Target data.TargetConfig
 }
 
 type JobCreatorOptions struct {

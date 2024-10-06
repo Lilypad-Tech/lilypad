@@ -16,6 +16,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/stretchr/testify/assert"
+	traceNoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 type testOptions struct {
@@ -38,7 +39,8 @@ func getMediator(
 		return nil, err
 	}
 
-	web3SDK, err := web3.NewContractSDK(mediatorOptions.Web3)
+	noopTracer := traceNoop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.MediatorService))
+	web3SDK, err := web3.NewContractSDK(systemContext.Ctx, mediatorOptions.Web3, noopTracer)
 	if err != nil {
 		return nil, err
 	}

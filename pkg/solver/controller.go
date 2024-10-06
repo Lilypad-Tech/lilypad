@@ -3,16 +3,19 @@ package solver
 import (
 	"context"
 	"fmt"
+	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
+	"github.com/lilypad-tech/lilypad/pkg/solver/matcher"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // add an enum for various types of event
@@ -47,6 +50,7 @@ type SolverController struct {
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
 	log             *system.ServiceLogger
+	tracer          trace.Tracer
 }
 
 // the background "even if we have not heard of an event" loop
@@ -59,6 +63,7 @@ func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
 	options SolverOptions,
+	tracer trace.Tracer,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
@@ -66,6 +71,7 @@ func NewSolverController(
 		store:      store,
 		options:    options,
 		log:        system.NewServiceLogger(system.SolverService),
+		tracer:     tracer,
 	}
 	return controller, nil
 }
@@ -268,7 +274,7 @@ func (controller *SolverController) registerAsSolver() error {
 
 func (controller *SolverController) solve() error {
 	// find out which deals we can make from matching the offers
-	deals, err := getMatchingDeals(controller.store)
+	deals, err := matcher.GetMatchingDeals(controller.store, controller.updateJobOfferState)
 	if err != nil {
 		return err
 	}
@@ -321,16 +327,38 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	}
 	resourceOffer.ID = id
 
-	// Check the resource provider's ETH balance
+	/////////
+	//resourceAddress := controller.web3SDK.GetAddress()
+	////msg := ethereum.CallMsg{
+	////	From: resourceAddress,
+	////	To:   &contractAddress,
+	////	Data: input,
+	////}
+
+	///////
+
+	//// Check the resource provider's ETH balance
 	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
 	}
-	// Convert InstructionPrice from ETH to Wei
-	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
+	fmt.Println("balance", balance)
+	//// Convert InstructionPrice from ETH to Wei
+	requiredBalanceWei := web3.EtherToWei(0.0006) // 0.0006 based on the required balance for a job
+
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		return nil, err
+		return nil, fmt.Errorf("address %s doesn't have enough funds. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+	}
+
+	// required LP balance
+	requiredBalanceLp := web3.EtherToWei(float64(jobcreator.JOB_PRICE)) // based on the required LP balance for a job
+	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+	}
+	if balanceLp.Cmp(requiredBalanceLp) < 0 {
+		return nil, fmt.Errorf("address %s doesn't have enough LP balance. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)

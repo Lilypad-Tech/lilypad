@@ -1,10 +1,13 @@
 package lilypad
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +35,35 @@ func getDefaultServeOptionInt(envName string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+/*
+Telemetry
+*/
+func configureTelemetry(ctx context.Context,
+	service system.Service,
+	network string,
+	options system.TelemetryOptions,
+	web3Options web3.Web3Options,
+) (*system.Telemetry, error) {
+	privateKey, err := web3.ParsePrivateKey(web3Options.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	address := web3.GetAddress(privateKey)
+
+	tc := system.TelemetryConfig{
+		TelemetryURL:   options.URL,
+		TelemetryToken: options.Token,
+		Enabled:        !options.Disable,
+		Service:        service,
+		Network:        network,
+		Address:        address.String(),
+		GPU:            system.GetGPUInfo(),
+	}
+	telemetry, err := system.SetupOTelSDK(ctx, tc)
+
+	return &telemetry, err
 }
 
 /*

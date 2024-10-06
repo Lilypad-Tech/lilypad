@@ -7,6 +7,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func newPowSignalCmd() *cobra.Command {
@@ -42,7 +43,8 @@ func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	web3SDK, err := web3.NewContractSDK(options.Web3)
+	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to initialize Web3 SDK")
 		return err
