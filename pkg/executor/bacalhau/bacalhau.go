@@ -1,21 +1,20 @@
 package bacalhau
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	cid "github.com/ipfs/go-cid"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
@@ -143,27 +142,28 @@ func (executor *BacalhauExecutor) RunJob(
 		return nil, err
 	}
 
-	// TODO Remove this print line
-	fmt.Printf("*** Results CID: %s\n", jobState.State.Executions[0].PublishedResult.CID)
-
-	c, err := cid.Decode(jobState.State.Executions[0].PublishedResult.CID)
-	bytes, err := fetchResults(c)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO Remove this print line
-	fmt.Printf("Result: %s", string(bytes))
-
-	// TODO Write results to result directory
-	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, deal.ID))
-
 	if len(jobState.State.Executions) <= 0 {
 		return nil, fmt.Errorf("no executions found for job %s", id)
 	}
 
+	// Check that the job completed successfully
 	if jobState.State.State != bacalhau.JobStateCompleted {
 		return nil, fmt.Errorf("job %s did not complete successfully: %s", id, jobState.State.State.String())
+	}
+
+	// TODO Remove this print line
+	cidString := jobState.State.Executions[0].PublishedResult.CID
+	fmt.Printf("*** Results CID: %s\n", cidString)
+
+	ipfsClient, err := ipfs.NewClient(context.Background(), "/ip4/127.0.0.1/tcp/5001")
+	if err != nil {
+		return nil, fmt.Errorf("error creating IPFS client %s -> %s", deal.ID, err.Error())
+	}
+
+	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
+	err = ipfsClient.Get(context.Background(), cidString, resultsDir)
+	if err != nil {
+		return nil, fmt.Errorf("error getting results from IPFS %s -> %s", deal.ID, err)
 	}
 
 	// TODO: we should think about WASM and instruction count here
@@ -269,28 +269,6 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 	}
 
 	return &job, nil
-}
-
-func fetchResults(c cid.Cid) ([]byte, error) {
-	client := &http.Client{}
-	requestURL := fmt.Sprintf("http://127.0.0.1:5001/api/v0/get?arg=%s", c)
-	req, err := http.NewRequest("POST", requestURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create results request: %s", err)
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve results: %s", err)
-	}
-	defer res.Body.Close()
-
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read retrieved results: %s", err)
-	}
-
-	return bytes, nil
 }
 
 // Compile-time interface check:
