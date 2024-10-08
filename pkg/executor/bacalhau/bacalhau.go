@@ -153,12 +153,9 @@ func (executor *BacalhauExecutor) RunJob(
 		return nil, fmt.Errorf("job %s did not complete successfully: %s", id, jobState.State.State.String())
 	}
 
-	// TODO Remove this print line
-	cidString := jobState.State.Executions[0].PublishedResult.CID
-	fmt.Printf("*** Results CID: %s\n", cidString)
-
 	system.EnsureDataDir(RESULTS_DIR)
 	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
+	cidString := jobState.State.Executions[0].PublishedResult.CID
 	err = executor.ipfsClient.Get(context.Background(), cidString, resultsDir)
 	if err != nil {
 		return nil, fmt.Errorf("error getting results from IPFS %s -> %s", deal.ID, err)
