@@ -15,6 +15,9 @@ mediation_address = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
 jobcreator_address = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
 pow_address = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
 
+[ipfs]
+addr = "/ip4/127.0.0.1/tcp/5001"
+
 [telemetry]
 url = "https://observe.lilypad.tech"
 token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VyIjoicmVzb3VyY2UtcHJvdmlkZXIifQ.n36M_ngwC4XPQ_pEkkWAnPiOinnx6-0VO1v_WgCTUEERD7b_p9KHCU6SY5bUdFh5UXRZHAhc1gfyc7rjAnmeDQ"

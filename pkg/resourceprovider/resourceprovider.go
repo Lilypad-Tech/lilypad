@@ -14,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/powLogs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -70,6 +71,7 @@ type ResourceProviderOptions struct {
 	Offers    ResourceProviderOfferOptions
 	Web3      web3.Web3Options
 	Pow       ResourceProviderPowOptions
+	IPFS      ipfs.IPFSOptions
 	Telemetry system.TelemetryOptions
 }
 
