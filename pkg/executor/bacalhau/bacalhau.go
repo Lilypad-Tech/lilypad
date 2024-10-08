@@ -30,9 +30,10 @@ type BacalhauExecutor struct {
 	Options        BacalhauExecutorOptions
 	bacalhauEnv    []string
 	bacalhauClient BacalhauClient
+	ipfsClient     *ipfs.Client
 }
 
-func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
+func NewBacalhauExecutor(options BacalhauExecutorOptions, ipfsClient *ipfs.Client) (*BacalhauExecutor, error) {
 	client, err := newClient(options)
 	if err != nil {
 		return nil, err
@@ -52,6 +53,7 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 		Options:        options,
 		bacalhauEnv:    bacalhauEnv,
 		bacalhauClient: *client,
+		ipfsClient:     ipfsClient,
 	}, nil
 }
 
@@ -155,14 +157,9 @@ func (executor *BacalhauExecutor) RunJob(
 	cidString := jobState.State.Executions[0].PublishedResult.CID
 	fmt.Printf("*** Results CID: %s\n", cidString)
 
-	ipfsClient, err := ipfs.NewClient(context.Background(), "/ip4/127.0.0.1/tcp/5001")
-	if err != nil {
-		return nil, fmt.Errorf("error creating IPFS client %s -> %s", deal.ID, err.Error())
-	}
-
 	system.EnsureDataDir(RESULTS_DIR)
 	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
-	err = ipfsClient.Get(context.Background(), cidString, resultsDir)
+	err = executor.ipfsClient.Get(context.Background(), cidString, resultsDir)
 	if err != nil {
 		return nil, fmt.Errorf("error getting results from IPFS %s -> %s", deal.ID, err)
 	}
