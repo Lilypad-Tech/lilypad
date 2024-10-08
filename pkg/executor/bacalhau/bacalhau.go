@@ -160,6 +160,7 @@ func (executor *BacalhauExecutor) RunJob(
 		return nil, fmt.Errorf("error creating IPFS client %s -> %s", deal.ID, err.Error())
 	}
 
+	system.EnsureDataDir(RESULTS_DIR)
 	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 	err = ipfsClient.Get(context.Background(), cidString, resultsDir)
 	if err != nil {
