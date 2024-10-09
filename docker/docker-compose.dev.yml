@@ -36,6 +36,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+  ipfs:
+    image: ipfs/kubo:v0.30.0
+    container_name: ipfs
+    restart: unless-stopped
+    ports:
+      - 5001:5001
+    volumes:
+      - ipfs-data:/data/ipfs
   solver:
     image: ghcr.io/lilypad-tech/solver
     container_name: solver
@@ -87,6 +95,7 @@ services:
     depends_on:
       - chain
       - solver
+      - ipfs
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
@@ -100,9 +109,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
-      - BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
       - LOG_LEVEL=debug
       - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
 volumes:
   chain-data:
+  ipfs-data:
   bacalhau-data:

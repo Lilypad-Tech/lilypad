@@ -6,6 +6,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
@@ -15,6 +16,7 @@ type MediatorOptions struct {
 	Bacalhau bacalhau.BacalhauExecutorOptions
 	Services data.ServiceConfig
 	Web3     web3.Web3Options
+	IPFS     ipfs.IPFSOptions
 }
 
 type Mediator struct {

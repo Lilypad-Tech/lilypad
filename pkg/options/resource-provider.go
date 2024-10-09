@@ -16,6 +16,7 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 		Offers:    GetDefaultResourceProviderOfferOptions(),
 		Web3:      GetDefaultWeb3Options(),
 		Pow:       GetDefaultResourceProviderPowOptions(),
+		IPFS:      GetDefaultIPFSOptions(),
 		Telemetry: GetDefaultTelemetryOptions(),
 	}
 	options.Web3.Service = system.ResourceProviderService
@@ -117,6 +118,7 @@ func AddResourceProviderCliFlags(cmd *cobra.Command, options *resourceprovider.R
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddResourceProviderOfferCliFlags(cmd, &options.Offers)
 	AddResourceProviderPowCliFlags(cmd, &options.Pow)
+	AddIPFSCliFlags(cmd, &options.IPFS)
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
 }
 
@@ -165,6 +167,10 @@ func CheckResourceProviderOptions(options resourceprovider.ResourceProviderOptio
 	if err != nil {
 		return err
 	}
+	err = CheckIPFSOptions(options.IPFS)
+	if err != nil {
+		return err
+	}
 	err = CheckTelemetryOptions(options.Telemetry)
 	if err != nil {
 		return err
@@ -200,6 +206,11 @@ func ProcessResourceProviderOptions(options resourceprovider.ResourceProviderOpt
 		return options, err
 	}
 	options.Web3 = newWeb3Options
+	newIPFSOptions, err := ProcessIPFSOptions(options.IPFS, network)
+	if err != nil {
+		return options, err
+	}
+	options.IPFS = newIPFSOptions
 	newTelemetryOptions, err := ProcessTelemetryOptions(options.Telemetry, network)
 	if err != nil {
 		return options, err

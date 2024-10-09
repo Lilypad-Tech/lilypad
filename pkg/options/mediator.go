@@ -13,6 +13,7 @@ func NewMediatorOptions() mediator.MediatorOptions {
 		Bacalhau: GetDefaultBacalhauOptions(),
 		Web3:     GetDefaultWeb3Options(),
 		Services: GetDefaultServicesOptions(),
+		IPFS:     GetDefaultIPFSOptions(),
 	}
 	options.Web3.Service = system.MediatorService
 	return options
@@ -22,6 +23,7 @@ func AddMediatorCliFlags(cmd *cobra.Command, options *mediator.MediatorOptions) 
 	AddBacalhauCliFlags(cmd, &options.Bacalhau)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddServicesCliFlags(cmd, &options.Services)
+	AddIPFSCliFlags(cmd, &options.IPFS)
 }
 
 func CheckMediatorOptions(options mediator.MediatorOptions) error {
@@ -30,6 +32,10 @@ func CheckMediatorOptions(options mediator.MediatorOptions) error {
 		return err
 	}
 	err = CheckBacalhauOptions(options.Bacalhau)
+	if err != nil {
+		return err
+	}
+	err = CheckIPFSOptions(options.IPFS)
 	if err != nil {
 		return err
 	}
@@ -46,12 +52,16 @@ func ProcessMediatorOptions(options mediator.MediatorOptions, network string) (m
 		return options, err
 	}
 	options.Web3 = newWeb3Options
-
 	newServicesOptions, err := ProcessServicesOptions(options.Services, network)
 	if err != nil {
 		return options, err
 	}
 	options.Services = newServicesOptions
+	newIPFSOptions, err := ProcessIPFSOptions(options.IPFS, network)
+	if err != nil {
+		return options, err
+	}
+	options.IPFS = newIPFSOptions
 
 	return options, CheckMediatorOptions(options)
 }

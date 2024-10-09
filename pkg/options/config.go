@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
@@ -17,6 +18,7 @@ var fs embed.FS
 type Config struct {
 	Web3             web3.Web3Options        `toml:"web3"`
 	ServiceConfig    data.ServiceConfig      `toml:"services"`
+	IPFSOptions      ipfs.IPFSOptions        `toml:"ipfs"`
 	TelemetryOptions system.TelemetryOptions `toml:"telemetry"`
 }
 
