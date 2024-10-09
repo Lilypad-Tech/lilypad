@@ -163,7 +163,7 @@ func (controller *ResourceProviderController) Start(ctx context.Context, cm *sys
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.ensureResourceOffers()
+			err := controller.checkResourceoffers()
 			if err != nil {
 				errorChan <- err
 			}
@@ -248,12 +248,22 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 	}
 }
 
-func (controller *ResourceProviderController) ensureResourceOffers() error {
+func (controller *ResourceProviderController) checkResourceoffers() error {
 	// We only want to run this every RESOURCE_OFFER_INTERVAL
 	if !lastResourceOfferPost.IsZero() && time.Since(lastResourceOfferPost) < RESOURCE_OFFER_INTERVAL {
 		return nil
 	}
 
+	err := controller.ensureResourceOffers()
+	if err != nil {
+		return err
+	}
+
+	lastResourceOfferPost = time.Now()
+	return nil
+}
+
+func (controller *ResourceProviderController) ensureResourceOffers() error {
 	// load the resource offers that are currently active and so should not be replaced
 	activeResourceOffers, err := controller.solverClient.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: controller.web3SDK.GetAddress().String(),
@@ -302,7 +312,6 @@ func (controller *ResourceProviderController) ensureResourceOffers() error {
 		}
 	}
 
-	lastResourceOfferPost = time.Now()
 	return err
 }
 
@@ -545,6 +554,8 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		return
 	}
 	span.AddEvent("solver.transaction_hash.added")
+
+	controller.ensureResourceOffers()
 
 	span.AddEvent("done")
 }
