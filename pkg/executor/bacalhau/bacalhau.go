@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
@@ -239,9 +238,6 @@ func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bac
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshalling job JSON %s -> %s", dealID, err.Error())
 		}
-
-		// TODO Do we need a timeout in this loop?
-		time.Sleep(time.Second * 1)
 	}
 
 	return &job, nil
