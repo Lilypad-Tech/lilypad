@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.8.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.7.0...v2.8.0) (2024-10-10)
+
+
+### Features
+
+* Add get_ethclient trace ([#390](https://github.com/Lilypad-Tech/lilypad/issues/390)) ([edb8fe8](https://github.com/Lilypad-Tech/lilypad/commit/edb8fe8201d09db75a145513528830fec8d701f1))
+* Add IPFS client to retrieve results ([#400](https://github.com/Lilypad-Tech/lilypad/issues/400)) ([85f92b9](https://github.com/Lilypad-Tech/lilypad/commit/85f92b9fea2531ecc6f448f4f7122f076f7c212c))
+
+
+### Bug Fixes
+
+* Re-register resource offers after runJob ([#396](https://github.com/Lilypad-Tech/lilypad/issues/396)) ([1cc64f2](https://github.com/Lilypad-Tech/lilypad/commit/1cc64f245b6d9f44d6430953197335215ccdac66))
+
 ## [2.7.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.6.0...v2.7.0) (2024-09-26)
 
 
