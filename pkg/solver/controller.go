@@ -275,13 +275,12 @@ func (controller *SolverController) registerAsSolver() error {
 */
 
 func (controller *SolverController) solve(ctx context.Context) error {
-	// Start solve trace
 	ctx, span := controller.tracer.Start(ctx, "solve")
 	defer span.End()
 
 	// find out which deals we can make from matching the offers
 	span.AddEvent("get_matching_deals.start")
-	deals, err := matcher.GetMatchingDeals(controller.store, controller.updateJobOfferState)
+	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
 		span.RecordError(err)

@@ -1,12 +1,17 @@
 package matcher
 
 import (
+	"context"
+	"errors"
 	"sort"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ListOfResourceOffers []data.ResourceOffer
@@ -18,8 +23,10 @@ func (a ListOfResourceOffers) Less(i, j int) bool {
 func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 func GetMatchingDeals(
+	ctx context.Context,
 	db store.SolverStore,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
+	tracer trace.Tracer,
 ) ([]data.Deal, error) {
 	deals := []data.Deal{}
 
@@ -42,7 +49,7 @@ func GetMatchingDeals(
 
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
-			deal, err := getTargetedDeal(db, jobOffer, updateJobOfferState)
+			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer)
 			if err != nil {
 				return nil, err
 			}
@@ -121,10 +128,17 @@ func GetMatchingDeals(
 // See if our jobOffer targets a specific address. If so, we will create a deal automatically
 // with the matcing resourceOffer.
 func getTargetedDeal(
+	ctx context.Context,
 	db store.SolverStore,
 	jobOffer data.JobOfferContainer,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
+	tracer trace.Tracer,
 ) (*data.Deal, error) {
+	ctx, span := tracer.Start(ctx, "get_targeted_deal",
+		trace.WithAttributes(attribute.String("job_offer.target.address", jobOffer.JobOffer.Target.Address)))
+	defer span.End()
+
+	span.AddEvent("db.get_resource_offer_by_address.start")
 	resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
 	if err != nil {
 		return nil, err
@@ -136,10 +150,22 @@ func getTargetedDeal(
 			Str("job offer", jobOffer.ID).
 			Str("target address", jobOffer.JobOffer.Target.Address).
 			Msgf("No resource provider found for address")
+		span.SetStatus(codes.Error, "no resource provider found for address")
+		span.RecordError(errors.New("no resource provider found for address"))
+
 		updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
 		return nil, nil
 	}
+	span.AddEvent("db.get_resource_offer_by_address.found", trace.WithAttributes(attribute.String("resource_offer.id", resourceOffer.ID)))
 
+	span.AddEvent("get_deal.start")
 	deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
-	return &deal, err
+	if err != nil {
+		span.SetStatus(codes.Error, "get deal failed")
+		span.RecordError(err)
+		return nil, err
+	}
+	span.AddEvent("get_deal.done", trace.WithAttributes(attribute.String("deal.id", deal.ID)))
+
+	return &deal, nil
 }
