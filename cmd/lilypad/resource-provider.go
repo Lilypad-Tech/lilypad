@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -39,32 +41,35 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	web3SDK, err := web3.NewContractSDK(options.Web3)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.ResourceProviderService, network, options.Telemetry, options.Web3)
 	if err != nil {
-		return err
-	}
-
-	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
-	if err != nil {
-		return err
-	}
-
-	tc := system.TelemetryConfig{
-		TelemetryURL:   options.Telemetry.URL,
-		TelemetryToken: options.Telemetry.Token,
-		Enabled:        !options.Telemetry.Disable,
-		Service:        system.ResourceProviderService,
-		Network:        network,
-		Address:        web3SDK.GetAddress().String(),
-		GPU:            system.GetGPUInfo(),
-	}
-	telemetry, err := system.SetupOTelSDK(commandCtx.Ctx, tc)
-	if err != nil {
-		fmt.Printf("failed to setup opentelemetry: %s", err)
+		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
 
-	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor, telemetry)
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
+	if err != nil {
+		return err
+	}
+
+	ipfsClient, err := ipfs.NewClient(commandCtx.Ctx, options.IPFS.Addr)
+	if err != nil {
+		return fmt.Errorf("error creating IPFS client: %s", err.Error())
+	}
+
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau, ipfsClient)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that our executor is available
+	status, err := executor.IsAvailable()
+	if !status || err != nil {
+		return err
+	}
+
+	resourceProviderService, err := resourceprovider.NewResourceProvider(options, web3SDK, executor, tracer)
 	if err != nil {
 		return err
 	}

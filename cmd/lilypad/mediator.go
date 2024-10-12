@@ -1,13 +1,17 @@
 package lilypad
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
+	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/mediator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func newMediatorCmd() *cobra.Command {
@@ -38,12 +42,18 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	web3SDK, err := web3.NewContractSDK(options.Web3)
+	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.MediatorService))
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
 	if err != nil {
 		return err
 	}
 
-	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
+	ipfsClient, err := ipfs.NewClient(commandCtx.Ctx, options.IPFS.Addr)
+	if err != nil {
+		return fmt.Errorf("error creating IPFS client: %s", err.Error())
+	}
+
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau, ipfsClient)
 	if err != nil {
 		return err
 	}

@@ -29,5 +29,6 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		Pricing:    options.Pricing,
 		Timeouts:   options.Timeouts,
 		Services:   options.Services,
+		Target:     options.Target,
 	}, nil
 }

@@ -3,7 +3,10 @@ package web3
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
+	"fmt"
 	"math/big"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -21,6 +24,9 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // these are the go-binding wrappers for the various deployed contracts
@@ -191,15 +197,16 @@ func NewContracts(
 	}, nil
 }
 
-func NewContractSDK(options Web3Options) (*Web3SDK, error) {
+func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
-	client, err := ethclient.Dial(options.RpcURL)
+	client, err := getEthClient(ctx, options, tracer)
 	if err != nil {
 		return nil, err
 	}
+
 	privateKey, err := ParsePrivateKey(options.PrivateKey)
 	if err != nil {
 		return nil, err
@@ -229,9 +236,45 @@ func NewContractSDK(options Web3Options) (*Web3SDK, error) {
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
 	}
-	log.Debug().Msgf("Public Address: %s", web3SDK.GetAddress())
+	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
+}
+
+func getEthClient(ctx context.Context, options Web3Options, tracer trace.Tracer) (*ethclient.Client, error) {
+	ctx, span := tracer.Start(ctx, "get_ethclient", trace.WithAttributes(attribute.Int("web3.chain_id", options.ChainID)))
+	defer span.End()
+
+	rpcs := strings.Split(options.RpcURL, ",")
+	var err error
+	var parsedURL *url.URL
+	var client *ethclient.Client
+	for _, u := range rpcs {
+		parsedURL, err = url.Parse(u)
+		if err != nil {
+			log.Warn().Msgf("Unable to parse web3 RPC URL: %v", err)
+			span.RecordError(errors.New("Unable to parse web3 RPC URL"))
+			continue
+		}
+
+		span.AddEvent("ethclient.dial", trace.WithAttributes(attribute.String("web3.rpc_url", parsedURL.Host)))
+		client, err = ethclient.Dial(u)
+		if err != nil {
+			log.Warn().Msgf("Failed to connect to %s: %v", parsedURL.Host, err)
+			span.RecordError(fmt.Errorf("Failed to connect to %s", parsedURL.Host))
+			continue
+		} else {
+			log.Info().Msgf("Connected to %s", parsedURL.Host)
+			span.AddEvent("ethclient.connected")
+			break
+		}
+	}
+	if client == nil {
+		span.SetStatus(codes.Error, "Failed to connect with web3 RPC URL")
+		return nil, errors.New("Failed to connect to a web3 RPC provider")
+	}
+
+	return client, nil
 }
 
 func (sdk *Web3SDK) getBlockNumber() (uint64, error) {

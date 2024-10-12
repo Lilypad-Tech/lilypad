@@ -15,6 +15,7 @@ A minimal local Lilypad network consists of the following pieces of infrastructu
 - One blockchain node
 - One solver service
 - One job creator service
+- One IPFS node
 - One bacalhau node
 - One resource provider service
 
@@ -40,15 +41,33 @@ These are the commands to run the node and boot the network: `./stack chain-clea
 A helper script is in place to verify balances on the accounts: `cd hardhat && npx hardhat run scripts/balances.ts --network dev`
 
 ### 2. Solver service
+
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack solver`,`./stack solver-docker-build` and `./stack solver-docker-run` respectively. The `solver` service will output a log line that reads that "the solver has been registered successfully" or "the solver already exists". It is best to wait for this output before starting the services that will try to connect to the `solver`.
 
 ### 3. Job creator
 
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack job-creator`,`./stack job-creator-docker-build` and `./stack job-creator-docker-run` respectively. The `job-creator` service's main function is to listen to events from the blockchain to execute jobs and when it receives such an event it will relay the payload to the `solver`. So think about the `job-creator` as the "on-chain solver".
 
-### 4. Bacalhau node
+### 4. IPFS node
+
+This process can be run directly using an IPFS Kubo binary. [Download a Kubo binary](https://dist.ipfs.tech/#kubo) for your platform and architecture. Initiliaze an repository where Kubo will store settings and internal data:
+
+```sh
+ipfs init
+```
+
+Start the IPFS node with the default settings:
+
+```sh
+ipfs daemon
+```
+
+Kubo should report an RPC API server listening on `/ip4/127.0.0.1/tcp/5001`. Our Bacalhau node stores job results on this IPFS node.
+
+### 5. Bacalhau node
 
 For the time being this process has to be executed directly. This means following the instructions to download their cli tool and expose it as a bin that can be used. Here's how to install the `bacalhau` tool:
+
 #### Linux
 ```sh
 # install the latest
@@ -68,7 +87,7 @@ mv bacalhau /usr/local/bin
 
 Once the tool has been installed, the following command can be used to start the node: `./stack bacalhau-node`.
 
-### 5. Resource provider
+### 6. Resource provider
 
 For the time being this process has to be executed directly and needs Golang to be installed. This is the command to execute the service: `./stack resource-provider`. If you have a GPU you can use the following flag to use it: `./stack resource-provider --offer-gpu 1`
 

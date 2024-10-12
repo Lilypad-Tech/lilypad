@@ -59,3 +59,19 @@ Licensee’s name: Alvin Reyes
 Repository system identifier: alvin-reyes
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: hunjixin
+
+Repository system identifier: hunjixin
+
+---------------------------------------------------------------------------------
+Licensee’s name: Robert Marinescu
+
+Repository system identifier: sigmundxyz
+
+---------------------------------------------------------------------------------
+Licensee’s name: Mar Quirapas
+
+Repository system identifier: mcryptographer
+
+---------------------------------------------------------------------------------

@@ -9,6 +9,9 @@ type GetJobOffersQuery struct {
 
 	// we use the DealID property of the jobOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
+
+	// this will include cancelled job offers in the results
+	IncludeCancelled bool `json:"include_cancelled"`
 }
 
 type GetResourceOffersQuery struct {
@@ -53,6 +56,7 @@ type SolverStore interface {
 	GetDeals(query GetDealsQuery) ([]data.DealContainer, error)
 	GetJobOffer(id string) (*data.JobOfferContainer, error)
 	GetResourceOffer(id string) (*data.ResourceOfferContainer, error)
+	GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error)
 	GetDeal(id string) (*data.DealContainer, error)
 	GetResult(id string) (*data.Result, error)
 	GetMatchDecision(resourceOffer string, jobOffer string) (*data.MatchDecision, error)

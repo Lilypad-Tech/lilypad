@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -113,6 +114,9 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 				matching = false
 			}
 		}
+		if !query.IncludeCancelled && jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") {
+			matching = false
+		}
 		if matching {
 			jobOffers = append(jobOffers, *jobOffer)
 		}
@@ -195,6 +199,17 @@ func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOfferCont
 		return nil, nil
 	}
 	return resourceOffer, nil
+}
+
+func (s *SolverStoreMemory) GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, resourceOffer := range s.resourceOfferMap {
+		if strings.ToLower(resourceOffer.ResourceProvider) == strings.ToLower(address) {
+			return resourceOffer, nil
+		}
+	}
+	return nil, nil
 }
 
 func (s *SolverStoreMemory) GetDeal(id string) (*data.DealContainer, error) {
