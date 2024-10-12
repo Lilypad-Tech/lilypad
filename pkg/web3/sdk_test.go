@@ -3,6 +3,7 @@ package web3_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -48,6 +49,8 @@ func CreateTestWeb3SDK() (*web3.Web3SDK, error) {
 		JobCreatorAddress: config.Web3.JobCreatorAddress,
 	}
 
+	fmt.Println("options: ", options)
+
 	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
 	sdk, err := web3.NewContractSDK(context.Background(), options, noopTracer)
 	if err != nil {
@@ -75,7 +78,7 @@ func TestGetLPBalance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Web3SDK: %v", err)
 	}
-	balance, err := sdk.GetLPBalance("0xd10D15cc705f7D2558352B1212A9b3685155d93D")
+	balance, err := sdk.GetLPBalance("0x9162B48910E12079c089477DeF4384312f0a6E00") // faucet address
 	if err != nil {
 		t.Fatalf("Failed to get LP balance: %v", err)
 	}

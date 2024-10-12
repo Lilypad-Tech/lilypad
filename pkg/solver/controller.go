@@ -3,7 +3,6 @@ package solver
 import (
 	"context"
 	"fmt"
-	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -341,7 +340,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	}
 
 	// required LP balance
-	requiredBalanceLp := web3.EtherToWei(float64(jobcreator.JOB_PRICE)) // based on the required LP balance for a job
+	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
 	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
