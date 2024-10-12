@@ -5,7 +5,7 @@ services:
     container_name: ipfs
     restart: unless-stopped
     ports:
-      - 4001:5001
+      - 4001:4001
       - 127.0.0.1:5001:5001
       - 127.0.0.1:8080:8080
     volumes:
