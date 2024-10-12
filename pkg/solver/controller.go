@@ -3,6 +3,7 @@ package solver
 import (
 	"context"
 	"fmt"
+	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -332,10 +333,21 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
 	}
 	// Convert InstructionPrice from ETH to Wei
-	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
+	requiredBalanceWei := web3.EtherToWei(0.0006) // 0.0006 based on the required balance for a job
+
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
 		return nil, fmt.Errorf("address %s doesn't have enough funds. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+	}
+
+	// required LP balance
+	requiredBalanceLp := web3.EtherToWei(float64(jobcreator.JOB_PRICE)) // based on the required LP balance for a job
+	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+	}
+	if balanceLp.Cmp(requiredBalanceLp) < 0 {
+		return nil, fmt.Errorf("address %s doesn't have enough LP balance. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)

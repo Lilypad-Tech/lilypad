@@ -70,6 +70,18 @@ func TestGetBalance(t *testing.T) {
 	t.Logf("Balance: %d\n", balance)
 }
 
+func TestGetLPBalance(t *testing.T) {
+	sdk, err := CreateTestWeb3SDK()
+	if err != nil {
+		t.Fatalf("Failed to create Web3SDK: %v", err)
+	}
+	balance, err := sdk.GetLPBalance("0xd10D15cc705f7D2558352B1212A9b3685155d93D")
+	if err != nil {
+		t.Fatalf("Failed to get LP balance: %v", err)
+	}
+	t.Logf("LP Balance: %d\n", balance)
+}
+
 func TestGetBlockNumber(t *testing.T) {
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
