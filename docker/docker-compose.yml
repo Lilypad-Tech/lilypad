@@ -1,0 +1,32 @@
+# This is a docker-compose file for use by Resource Providers
+services:
+  ipfs:
+    image: ipfs/kubo:v0.30.0
+    container_name: ipfs
+    restart: unless-stopped
+    ports:
+      - 4001:5001
+      - 127.0.0.1:5001:5001
+      - 127.0.0.1:8080:8080
+    volumes:
+      - ipfs-data:/data/ipfs
+  resource-provider:
+    image: ghcr.io/lilypad-tech/resource-provider:latest
+    container_name: resource-provider
+    restart: unless-stopped
+    depends_on:
+      - ipfs
+    build:
+      context: ..
+      dockerfile: ./docker/resource-provider/Dockerfile
+      args:
+        - COMPUTE_MODE=gpu
+    volumes:
+      - bacalhau-data:/tmp/lilypad/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WEB3_PRIVATE_KEY
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+volumes:
+  ipfs-data:
+  bacalhau-data:
