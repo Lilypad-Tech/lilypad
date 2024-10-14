@@ -323,6 +323,7 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
 	if err != nil {
 		log.Error().Msgf("error parsing ABI: %s", err)
+		return nil, err
 	}
 	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
 
@@ -330,7 +331,9 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
 	if err != nil {
 		log.Error().Msgf("error calling balanceOf: %s", err)
+		return nil, err
 	}
+
 	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
 
 	if err != nil {
