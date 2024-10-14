@@ -2,9 +2,13 @@ package web3_test
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 	"log"
+	"math/big"
 	"os"
 	"testing"
 
@@ -85,6 +89,30 @@ func TestGetLPBalance(t *testing.T) {
 	t.Logf("LP Balance: %d\n", balance)
 }
 
+func TestGetLPBalanceNoBalance(t *testing.T) {
+	sdk, err := CreateTestWeb3SDK()
+	noBalanceInt := big.NewInt(0)
+	if err != nil {
+		t.Fatalf("Failed to create Web3SDK: %v", err)
+	}
+
+	// generate new address with no balance
+	newAddress := generateNewAddressWoLp()
+
+	t.Logf("newAddress to check no LP balance: %s\n", newAddress)
+
+	balance, err := sdk.GetLPBalance(newAddress) // randomly generated address (100% no LP balance)
+	if err != nil {
+		t.Fatalf("Failed to get LP balance: %v", err)
+	}
+
+	if balance.Cmp(noBalanceInt) > 0 {
+		t.Fatalf("Balance should be nil")
+	}
+
+	t.Logf("LP Balance: %d\n", balance)
+}
+
 func TestGetBlockNumber(t *testing.T) {
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
@@ -97,4 +125,28 @@ func TestGetBlockNumber(t *testing.T) {
 	}
 
 	t.Logf("Block number: %s\n", blockNumberHex)
+}
+
+func generateNewAddressWoLp() string {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	fmt.Println(address)
+
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(publicKeyBytes[1:])
+
+	return address
+
 }

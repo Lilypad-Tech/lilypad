@@ -322,14 +322,14 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
 	if err != nil {
-		log.Printf("error parsing ABI: %s", err)
+		log.Error().Msgf("error parsing ABI: %s", err)
 	}
 	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
 
 	var out []interface{}
 	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
 	if err != nil {
-		log.Printf("error calling balanceOf: %s", err)
+		log.Error().Msgf("error calling balanceOf: %s", err)
 	}
 	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
 

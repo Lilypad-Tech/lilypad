@@ -57,6 +57,7 @@ type SolverController struct {
 // reacts to events in the system - this 10 second background
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
+const REQUIRED_BALANCE_IN_WEI = 0.0006
 
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
@@ -332,7 +333,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
 	}
 	// Convert InstructionPrice from ETH to Wei
-	requiredBalanceWei := web3.EtherToWei(0.0006) // 0.0006 based on the required balance for a job
+	requiredBalanceWei := web3.EtherToWei(REQUIRED_BALANCE_IN_WEI) // 0.0006 based on the required balance for a job
 
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
