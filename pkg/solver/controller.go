@@ -57,6 +57,7 @@ type SolverController struct {
 // reacts to events in the system - this 10 second background
 // loop is just for in case we miss any events
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
+const REQUIRED_BALANCE_IN_WEI = 0.0006
 
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
@@ -332,10 +333,21 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
 	}
 	// Convert InstructionPrice from ETH to Wei
-	requiredBalanceWei := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice))
+	requiredBalanceWei := web3.EtherToWei(REQUIRED_BALANCE_IN_WEI) // 0.0006 based on the required balance for a job
+
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
 		return nil, fmt.Errorf("address %s doesn't have enough funds. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+	}
+
+	// required LP balance
+	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
+	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+	}
+	if balanceLp.Cmp(requiredBalanceLp) < 0 {
+		return nil, fmt.Errorf("address %s doesn't have enough LP balance. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)

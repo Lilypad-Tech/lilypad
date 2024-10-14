@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"math/big"
 	"net/url"
 	"strconv"
@@ -28,6 +29,9 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// LP token ABI
+const erc20ABI = `[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256","internalType": "uint256"}],"type":"function"}]`
 
 // these are the go-binding wrappers for the various deployed contracts
 type Contracts struct {
@@ -307,4 +311,34 @@ func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
 		return nil, err
 	}
 	return balance, nil
+}
+
+func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
+	// Convert the string address to common.Address
+	client := sdk.Client
+	ethAddress := common.HexToAddress(address)
+	lpToken := common.HexToAddress(sdk.Options.TokenAddress) // LP Token Address
+
+	// Get the balance using the converted address
+	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
+	if err != nil {
+		log.Error().Msgf("error parsing ABI: %s", err)
+		return nil, err
+	}
+	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
+
+	var out []interface{}
+	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
+	if err != nil {
+		log.Error().Msgf("error calling balanceOf: %s", err)
+		return nil, err
+	}
+
+	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
+
+	if err != nil {
+		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		return nil, err
+	}
+	return &lpBalance, nil
 }
