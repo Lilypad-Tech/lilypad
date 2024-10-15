@@ -2,8 +2,13 @@ package web3_test
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"errors"
+	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 	"log"
+	"math/big"
 	"os"
 	"testing"
 
@@ -48,6 +53,8 @@ func CreateTestWeb3SDK() (*web3.Web3SDK, error) {
 		JobCreatorAddress: config.Web3.JobCreatorAddress,
 	}
 
+	fmt.Println("options: ", options)
+
 	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
 	sdk, err := web3.NewContractSDK(context.Background(), options, noopTracer)
 	if err != nil {
@@ -70,6 +77,42 @@ func TestGetBalance(t *testing.T) {
 	t.Logf("Balance: %d\n", balance)
 }
 
+func TestGetLPBalance(t *testing.T) {
+	sdk, err := CreateTestWeb3SDK()
+	if err != nil {
+		t.Fatalf("Failed to create Web3SDK: %v", err)
+	}
+	balance, err := sdk.GetLPBalance("0x9162B48910E12079c089477DeF4384312f0a6E00") // faucet address
+	if err != nil {
+		t.Fatalf("Failed to get LP balance: %v", err)
+	}
+	t.Logf("LP Balance: %d\n", balance)
+}
+
+func TestGetLPBalanceNoBalance(t *testing.T) {
+	sdk, err := CreateTestWeb3SDK()
+	noBalanceInt := big.NewInt(0)
+	if err != nil {
+		t.Fatalf("Failed to create Web3SDK: %v", err)
+	}
+
+	// generate new address with no balance
+	newAddress := generateNewAddressWoLp()
+
+	t.Logf("newAddress to check no LP balance: %s\n", newAddress)
+
+	balance, err := sdk.GetLPBalance(newAddress) // randomly generated address (100% no LP balance)
+	if err != nil {
+		t.Fatalf("Failed to get LP balance: %v", err)
+	}
+
+	if balance.Cmp(noBalanceInt) > 0 {
+		t.Fatalf("Balance should be nil")
+	}
+
+	t.Logf("LP Balance: %d\n", balance)
+}
+
 func TestGetBlockNumber(t *testing.T) {
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
@@ -82,4 +125,28 @@ func TestGetBlockNumber(t *testing.T) {
 	}
 
 	t.Logf("Block number: %s\n", blockNumberHex)
+}
+
+func generateNewAddressWoLp() string {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	fmt.Println(address)
+
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(publicKeyBytes[1:])
+
+	return address
+
 }
