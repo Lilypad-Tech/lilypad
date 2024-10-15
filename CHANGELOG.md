@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.8.0...v2.9.0) (2024-10-15)
+
+
+### Features
+
+* Add docker compose for RPs ([#404](https://github.com/Lilypad-Tech/lilypad/issues/404)) ([5b6e598](https://github.com/Lilypad-Tech/lilypad/commit/5b6e5989f2ddf9f528b2ec513c048a5b6bc0d4b9))
+
 ## [2.8.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.7.0...v2.8.0) (2024-10-14)
 
 
