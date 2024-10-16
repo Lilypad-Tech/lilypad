@@ -33,12 +33,28 @@ func GetJobOfferID(offer JobOffer) (string, error) {
 	return CalculateCID(offer)
 }
 
+func GetJobOfferContainerIDs(jobOffers []JobOfferContainer) []string {
+	var ids []string
+	for _, offer := range jobOffers {
+		ids = append(ids, offer.ID)
+	}
+	return ids
+}
+
 func GetResourceOfferID(offer ResourceOffer) (string, error) {
 	offer.ID = ""
 	return CalculateCID(offer)
 }
 
 func GetResourceOfferIDs(resourceOffers []ResourceOffer) []string {
+	var ids []string
+	for _, offer := range resourceOffers {
+		ids = append(ids, offer.ID)
+	}
+	return ids
+}
+
+func GetResourceOfferContainerIDs(resourceOffers []ResourceOfferContainer) []string {
 	var ids []string
 	for _, offer := range resourceOffers {
 		ids = append(ids, offer.ID)

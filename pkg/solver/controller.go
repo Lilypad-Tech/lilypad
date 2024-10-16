@@ -279,14 +279,12 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	defer span.End()
 
 	// find out which deals we can make from matching the offers
-	span.AddEvent("get_matching_deals.start")
 	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
 		span.RecordError(err)
 		return err
 	}
-	span.AddEvent("get_matching_deals.done")
 	span.SetAttributes(attribute.KeyValue{
 		Key:   "deal_ids",
 		Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
@@ -295,7 +293,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	// loop over each of the deals add add them to the store and emit events
 	span.AddEvent("add_deals.start")
 	for _, deal := range deals {
-		_, err := controller.addDeal(deal)
+		_, err := controller.addDeal(ctx, deal)
 		if err != nil {
 			return err
 		}
@@ -407,7 +405,7 @@ func (controller *SolverController) removeResourceOfferByResourceProvider(ID str
 	return nil
 }
 
-func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer, error) {
+func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal) (*data.DealContainer, error) {
 	id, err := data.GetDealID(deal)
 	if err != nil {
 		return nil, err

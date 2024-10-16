@@ -29,21 +29,42 @@ func GetMatchingDeals(
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 	tracer trace.Tracer,
 ) ([]data.Deal, error) {
+	ctx, span := tracer.Start(ctx, "get_matching_deals")
+	defer span.End()
+
 	deals := []data.Deal{}
 
+	// Get resource offers
+	span.AddEvent("db.get_resource_offers.start")
 	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
+		span.SetStatus(codes.Error, "get resource offers failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "resource_offers",
+		Value: attribute.StringSliceValue(data.GetResourceOfferContainerIDs(resourceOffers)),
+	})
+	span.AddEvent("db.get_resource_offers.done")
 
+	// Get job offers
+	span.AddEvent("db.get_job_offers.start")
 	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched: true,
 	})
 	if err != nil {
+		span.SetStatus(codes.Error, "get job offers failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "job_offers",
+		Value: attribute.StringSliceValue(data.GetJobOfferContainerIDs(jobOffers)),
+	})
+	span.AddEvent("db.get_resource_offers.done")
 
 	// loop over job offers
 	for _, jobOffer := range jobOffers {
@@ -120,12 +141,20 @@ func GetMatchingDeals(
 		if len(matchingResourceOffers) > 0 {
 			// now let's order the matching resource offers by price
 			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
-
 			cheapestResourceOffer := matchingResourceOffers[0]
+
+			span.AddEvent("get_deal.start", trace.WithAttributes(attribute.String("cheapest_resource_offer", cheapestResourceOffer.ID),
+				attribute.KeyValue{
+					Key:   "matching_resource_offers",
+					Value: attribute.StringSliceValue(data.GetResourceOfferIDs(matchingResourceOffers)),
+				}))
 			deal, err := data.GetDeal(jobOffer.JobOffer, cheapestResourceOffer)
 			if err != nil {
+				span.SetStatus(codes.Error, "unable to get deal")
+				span.RecordError(err)
 				return nil, err
 			}
+			span.AddEvent("get_deal.done", trace.WithAttributes(attribute.String("deal.id", deal.ID)))
 
 			// add the match decision for this job offer
 			for _, matchingResourceOffer := range matchingResourceOffers {
@@ -135,13 +164,22 @@ func GetMatchingDeals(
 					addDealID = deal.ID
 				}
 
+				span.AddEvent("add_match_decision.start")
 				_, err := db.AddMatchDecision(matchingResourceOffer.ID, jobOffer.ID, addDealID, true)
 				if err != nil {
+					span.SetStatus(codes.Error, "unable to add match decision")
+					span.RecordError(err)
 					return nil, err
 				}
+				span.AddEvent("add_match_decision.done")
 			}
 
 			deals = append(deals, deal)
+			span.AddEvent("append_deal",
+				trace.WithAttributes(attribute.KeyValue{
+					Key:   "deals",
+					Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
+				}))
 		}
 	}
 
