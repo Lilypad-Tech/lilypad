@@ -406,30 +406,56 @@ func (controller *SolverController) removeResourceOfferByResourceProvider(ID str
 }
 
 func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal) (*data.DealContainer, error) {
+	ctx, span := controller.tracer.Start(ctx, "add_deal")
+	defer span.End()
+
+	span.AddEvent("data.get_deal_id.start")
 	id, err := data.GetDealID(deal)
 	if err != nil {
+		span.SetStatus(codes.Error, "get deal ID failed")
+		span.RecordError(err)
 		return nil, err
 	}
 	deal.ID = id
+	span.SetAttributes(attribute.String("deal.id", deal.ID))
+	span.AddEvent("data.get_deal_id.done")
 
 	controller.log.Info("add deal", deal)
 
+	span.AddEvent("store.add_deal.start")
 	ret, err := controller.store.AddDeal(data.GetDealContainer(deal))
 	if err != nil {
+		span.SetStatus(codes.Error, "add deal to store failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("store.add_deal.done")
+
+	span.AddEvent("write_event.start")
 	controller.writeEvent(SolverEvent{
 		EventType: DealAdded,
 		Deal:      ret,
 	})
+	span.AddEvent("write_event.done")
+
+	span.AddEvent("update_job_offer_state.start")
 	_, err = controller.updateJobOfferState(ret.JobOffer, ret.ID, ret.State)
 	if err != nil {
+		span.SetStatus(codes.Error, "updated job offer state failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("update_job_offer_state.done")
+
+	span.AddEvent("update_resource_offer_state.start")
 	_, err = controller.updateResourceOfferState(ret.ResourceOffer, ret.ID, ret.State)
 	if err != nil {
+		span.SetStatus(codes.Error, "updated resource offer state failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("update_resource_offer_state.done")
+
 	return ret, nil
 }
 
