@@ -2,6 +2,7 @@ package resourceprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -455,37 +456,40 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		Error:  "",
 	}
 	err := func() error {
-		controller.log.Info("loading module", "")
-		span.AddEvent("module.load")
+		span.AddEvent("module.load: " + controller.log.Info("module loaded", ""))
+		// span.AddEvent("module.load")
 		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
 			span.SetStatus(codes.Error, "load module failed")
-			span.RecordError(err)
+			formattedErr := controller.log.Error("load module failed", err)
+			span.RecordError(errors.New(formattedErr))
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
-		controller.log.Info("module loaded", module)
-		span.AddEvent("module.loaded")
+		span.AddEvent("module.loaded: " + controller.log.Info("module loaded", module))
 
 		span.AddEvent("executor.job.start")
 		executorResult, err := controller.executor.RunJob(deal, *module)
 		if err != nil {
-			controller.log.Error("error running job", err)
+			formattedErr := controller.log.Error("error running job", err)
 			span.SetStatus(codes.Error, "job execution failed")
-			span.RecordError(err)
+			span.RecordError(errors.New(formattedErr))
 			return fmt.Errorf("error running job: %s", err.Error())
 		}
 		result.InstructionCount = uint64(executorResult.InstructionCount)
 		result.DataID = executorResult.ResultsCID
-		controller.log.Info("got result", result)
-		span.AddEvent("executor.job.complete")
+		// controller.log.Info("got result", result)
+		span.AddEvent("executor.job.complete: " + controller.log.Info("got result", result))
+		// span.AddEvent("executor.job.complete")
 
-		controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
-		span.AddEvent("solver.files.upload")
+		// controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir)
+		span.AddEvent("solver.files.upload: " + controller.log.Info(fmt.Sprintf("uploading results: %s %s %s", deal.ID, executorResult.ResultsDir, executorResult.ResultsCID), executorResult.ResultsDir))
+		// span.AddEvent("solver.files.upload")
 		response, err := controller.solverClient.UploadResultFiles(deal.ID, executorResult.ResultsDir)
 		if err != nil {
 			controller.log.Debug("[debug] error uploading results. response was ", response)
 			span.SetStatus(codes.Error, "upload results failed")
-			span.RecordError(err)
+			formattedErr := controller.log.Error("run_job", err)
+			span.RecordError(errors.New(formattedErr))
 			return fmt.Errorf("error uploading results: %s", err.Error())
 		}
 		span.AddEvent("solver.files.uploaded", trace.WithAttributes(attribute.String("result.deal.id", result.DealID)))
@@ -524,9 +528,11 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		result.InstructionCount,
 	)
 	if err != nil {
-		controller.log.Error("error calling add result tx for job", err)
+		// controller.log.Error("error calling add result tx for job", err)
 		span.SetStatus(codes.Error, "add result to chain failed")
-		span.RecordError(err)
+		formattedErr := controller.log.Error("error calling add result tx for job", err)
+		span.RecordError(errors.New(formattedErr))
+		// span.RecordError(err)
 		return
 	}
 	span.AddEvent("chain.result.added", trace.WithAttributes(attribute.String("txHash", txHash)))
@@ -539,9 +545,11 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		// TODO: we need a way of deciding based on certain classes of error what happens
 		// some will be retryable - otherwise will be fatal
 		// we need a way to exit a job loop as a baseline
-		controller.log.Error("error adding add result tx hash for deal", err)
+		// controller.log.Error("error adding add result tx hash for deal", err)
 		span.SetStatus(codes.Error, "add transcation hash to chain failed")
-		span.RecordError(err)
+		formattedErr := controller.log.Error("error adding add result tx hash for deal", err)
+		span.RecordError(errors.New(formattedErr))
+		// span.RecordError(err)
 		return
 	}
 	span.AddEvent("solver.transaction_hash.added")
