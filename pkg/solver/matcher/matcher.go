@@ -3,6 +3,7 @@ package matcher
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -63,27 +64,55 @@ func GetMatchingDeals(
 		// loop over resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
 		for _, resourceOffer := range resourceOffers {
+			_, matchSpan := tracer.Start(ctx, "match",
+				trace.WithAttributes(attribute.String("job_offer.id", jobOffer.ID),
+					attribute.String("resource_offer.id", resourceOffer.ID)),
+			)
+
+			matchSpan.AddEvent("db.get_match_decision.start")
 			decision, err := db.GetMatchDecision(resourceOffer.ID, jobOffer.ID)
 			if err != nil {
+				matchSpan.SetStatus(codes.Error, "unable to retrieve match decision")
+				matchSpan.RecordError(err)
 				return nil, err
 			}
+			matchSpan.AddEvent("db.get_match_decision.done")
 
 			// if this exists it means we've already tried to match the two elements and should not try again
 			if decision != nil {
+				matchSpan.AddEvent("decision_already_checked",
+					trace.WithAttributes(attribute.Bool("decision.result", decision.Result)))
 				continue
 			}
 
+			matchSpan.AddEvent("match_offers.start")
 			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
 			logMatch(result)
+			matchSpan.AddEvent("match_offers.done",
+				trace.WithAttributes(attribute.String("result", fmt.Sprintf("%T", result)),
+					attribute.Bool("result.matched", result.matched()),
+					attribute.String("result.message", result.message())),
+			)
 
 			if result.matched() {
 				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
+				matchSpan.AddEvent("append_match",
+					trace.WithAttributes(attribute.KeyValue{
+						Key:   "matching_resource_offers",
+						Value: attribute.StringSliceValue(data.GetResourceOfferIDs(matchingResourceOffers)),
+					}))
 			} else {
+				matchSpan.AddEvent("add_match_decision.start")
 				_, err := db.AddMatchDecision(resourceOffer.ID, jobOffer.ID, "", false)
 				if err != nil {
+					matchSpan.SetStatus(codes.Error, "unable to record mismatch decision")
+					matchSpan.RecordError(err)
 					return nil, err
 				}
+				matchSpan.AddEvent("add_match_decision.done")
 			}
+
+			matchSpan.End()
 		}
 
 		// yay - we've got some matching resource offers

@@ -38,6 +38,14 @@ func GetResourceOfferID(offer ResourceOffer) (string, error) {
 	return CalculateCID(offer)
 }
 
+func GetResourceOfferIDs(resourceOffers []ResourceOffer) []string {
+	var ids []string
+	for _, offer := range resourceOffers {
+		ids = append(ids, offer.ID)
+	}
+	return ids
+}
+
 func GetDealID(deal Deal) (string, error) {
 	deal.ID = ""
 	return CalculateCID(deal)
