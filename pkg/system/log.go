@@ -3,6 +3,9 @@ package system
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -20,12 +23,16 @@ func NewServiceLogger(service Service) *ServiceLogger {
 	}
 }
 
-func (s *ServiceLogger) Error(title string, err error) {
-	Error(s.service, title, err)
+func (s *ServiceLogger) Error(title string, err error) string {
+	// Error(s.service, title, err)
+	formattedErr := logWithCaller(3, zerolog.ErrorLevel, s.service, title, err)
+	return formattedErr
 }
 
-func (s *ServiceLogger) Info(title string, data interface{}) {
-	Info(s.service, title, data)
+func (s *ServiceLogger) Info(title string, data interface{}) string {
+	// Info(s.service, title, data)
+	formattedInfo := logWithCaller(3, zerolog.ErrorLevel, s.service, title, data)
+	return formattedInfo
 }
 
 func (s *ServiceLogger) Debug(title string, data interface{}) {
@@ -54,17 +61,31 @@ func SetupLogging() {
 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
 }
 
-func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, title string, data interface{}) {
+func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, title string, data interface{}) string {
 	zerolog.CallerSkipFrameCount = skipFrameCount
 	defer func() { zerolog.CallerSkipFrameCount = 3 }() // Reset to the default value
 
+	// Get the caller information
+	_, file, line, ok := runtime.Caller(0)
+	if !ok {
+		file = "unknown"
+		line = 0
+	} else {
+		file = filepath.Dir(file)
+		if idx := strings.Index(file, "lilypad/"); idx != -1 {
+			file = file[idx:]
+		}
+	}
+
+	formattedMessage := fmt.Sprintf("ERR %s:%d > %s=%+v", file, line, GetServiceString(service, title), data)
 	e := log.WithLevel(level).
 		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data))
 	e.Caller().Msg("")
+	return formattedMessage
 }
 
-func Error(service Service, title string, err error) {
-	logWithCaller(5, zerolog.ErrorLevel, service, title, err)
+func Error(service Service, title string, data interface{}) {
+	logWithCaller(5, zerolog.InfoLevel, service, title, data)
 }
 
 func Info(service Service, title string, data interface{}) {
