@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -78,6 +79,9 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 	} else {
 		// TODO(bgins) Investigate a better Noop provider
 		TracerProvider = trace.NewTracerProvider()
+		_, span := TracerProvider.Tracer(string(config.Service)).Start(ctx, "noop")
+		defer span.End()
+		span.AddEvent("noop")
 	}
 
 	// TODO(bgins) Add meter and logger providers
@@ -153,4 +157,13 @@ func newTracerExporter(ctx context.Context, config TelemetryConfig) (*otlptrace.
 // Convert service names to use standardized OTel underscores
 func GetOTelServiceName(service Service) string {
 	return strings.Replace(string(service), "-", "_", -1)
+}
+
+func newLoggerProvider() (*stdoutlog.Exporter, error) {
+	logExporter, err := stdoutlog.New()
+	if err != nil {
+		return nil, err
+	}
+
+	return logExporter, nil
 }
