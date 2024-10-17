@@ -338,7 +338,7 @@ func logMatch(result matchResult) {
 	case marketPriceUnavailable:
 		log.Trace().
 			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
+			Str("pricing mode", string(r.resourceOffer.Mode)).
 			Msg(r.message())
 	case priceMismatch:
 		log.Trace().
