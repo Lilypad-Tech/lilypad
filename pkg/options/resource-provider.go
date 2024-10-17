@@ -46,7 +46,7 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		// this can be populated by a config file
 		Specs: []data.MachineSpec{},
 		// if an RP wants to only run certain modules they list them here
-		// XXX SECURITY: enforce that they are specified with specific git hashes!
+		// XXX SECURITY: enforce that they are specified by CID
 		Modules: GetDefaultServeOptionStringArray("OFFER_MODULES", []string{}),
 		// this is the default pricing mode for an RP
 		Mode: GetDefaultPricingMode(data.FixedPrice),

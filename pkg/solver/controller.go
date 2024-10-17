@@ -14,6 +14,8 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -107,7 +109,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 		ctx,
 		CONTROL_LOOP_INTERVAL,
 		func() error {
-			err := controller.solve()
+			err := controller.solve(ctx)
 			if err != nil {
 				errorChan <- err
 			}
@@ -272,20 +274,32 @@ func (controller *SolverController) registerAsSolver() error {
  *
 */
 
-func (controller *SolverController) solve() error {
+func (controller *SolverController) solve(ctx context.Context) error {
+	ctx, span := controller.tracer.Start(ctx, "solve")
+	defer span.End()
+
 	// find out which deals we can make from matching the offers
-	deals, err := matcher.GetMatchingDeals(controller.store, controller.updateJobOfferState)
+	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer)
 	if err != nil {
+		span.SetStatus(codes.Error, "get matching deals failed")
+		span.RecordError(err)
 		return err
 	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "deal_ids",
+		Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
+	})
 
 	// loop over each of the deals add add them to the store and emit events
+	span.AddEvent("add_deals.start")
 	for _, deal := range deals {
-		_, err := controller.addDeal(deal)
+		_, err := controller.addDeal(ctx, deal)
 		if err != nil {
 			return err
 		}
 	}
+	span.AddEvent("add_deals.done")
+
 	return nil
 }
 
@@ -391,31 +405,57 @@ func (controller *SolverController) removeResourceOfferByResourceProvider(ID str
 	return nil
 }
 
-func (controller *SolverController) addDeal(deal data.Deal) (*data.DealContainer, error) {
+func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal) (*data.DealContainer, error) {
+	ctx, span := controller.tracer.Start(ctx, "add_deal")
+	defer span.End()
+
+	span.AddEvent("data.get_deal_id.start")
 	id, err := data.GetDealID(deal)
 	if err != nil {
+		span.SetStatus(codes.Error, "get deal ID failed")
+		span.RecordError(err)
 		return nil, err
 	}
 	deal.ID = id
+	span.SetAttributes(attribute.String("deal.id", deal.ID))
+	span.AddEvent("data.get_deal_id.done")
 
 	controller.log.Info("add deal", deal)
 
+	span.AddEvent("store.add_deal.start")
 	ret, err := controller.store.AddDeal(data.GetDealContainer(deal))
 	if err != nil {
+		span.SetStatus(codes.Error, "add deal to store failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("store.add_deal.done")
+
+	span.AddEvent("write_event.start")
 	controller.writeEvent(SolverEvent{
 		EventType: DealAdded,
 		Deal:      ret,
 	})
+	span.AddEvent("write_event.done")
+
+	span.AddEvent("update_job_offer_state.start")
 	_, err = controller.updateJobOfferState(ret.JobOffer, ret.ID, ret.State)
 	if err != nil {
+		span.SetStatus(codes.Error, "updated job offer state failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("update_job_offer_state.done")
+
+	span.AddEvent("update_resource_offer_state.start")
 	_, err = controller.updateResourceOfferState(ret.ResourceOffer, ret.ID, ret.State)
 	if err != nil {
+		span.SetStatus(codes.Error, "updated resource offer state failed")
+		span.RecordError(err)
 		return nil, err
 	}
+	span.AddEvent("update_resource_offer_state.done")
+
 	return ret, nil
 }
 
