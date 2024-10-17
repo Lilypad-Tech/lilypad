@@ -102,6 +102,7 @@ func GetMatchingDeals(
 			if decision != nil {
 				matchSpan.AddEvent("decision_already_checked",
 					trace.WithAttributes(attribute.Bool("decision.result", decision.Result)))
+				matchSpan.End()
 				continue
 			}
 
