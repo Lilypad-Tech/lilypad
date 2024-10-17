@@ -3,7 +3,6 @@ package matcher
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sort"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -109,11 +108,7 @@ func GetMatchingDeals(
 			matchSpan.AddEvent("match_offers.start")
 			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
 			logMatch(result)
-			matchSpan.AddEvent("match_offers.done",
-				trace.WithAttributes(attribute.String("result", fmt.Sprintf("%T", result)),
-					attribute.Bool("result.matched", result.matched()),
-					attribute.String("result.message", result.message())),
-			)
+			matchSpan.AddEvent("match_offers.done", trace.WithAttributes(result.attributes()...))
 
 			if result.matched() {
 				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
