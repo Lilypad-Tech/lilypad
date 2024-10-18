@@ -1,15 +1,18 @@
 package matcher
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type matchResult interface {
 	matched() bool
 	message() string
+	attributes() []attribute.KeyValue
 }
 
 type offersMatched struct {
@@ -19,6 +22,13 @@ type offersMatched struct {
 
 func (_ offersMatched) matched() bool   { return true }
 func (_ offersMatched) message() string { return "offers matched" }
+func (result offersMatched) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+	}
+}
 
 type cpuMismatch struct {
 	resourceOffer data.ResourceOffer
@@ -27,6 +37,15 @@ type cpuMismatch struct {
 
 func (_ cpuMismatch) matched() bool   { return false }
 func (_ cpuMismatch) message() string { return "did not match CPU" }
+func (result cpuMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.spec.cpu", result.jobOffer.Spec.CPU),
+		attribute.Int("match_result.resource_offer.spec.cpu", result.resourceOffer.Spec.CPU),
+	}
+}
 
 type gpuMismatch struct {
 	resourceOffer data.ResourceOffer
@@ -35,6 +54,15 @@ type gpuMismatch struct {
 
 func (_ gpuMismatch) matched() bool   { return false }
 func (_ gpuMismatch) message() string { return "did not match GPU" }
+func (result gpuMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.spec.gpu", result.jobOffer.Spec.GPU),
+		attribute.Int("match_result.resource_offer.spec.gpu", result.resourceOffer.Spec.GPU),
+	}
+}
 
 type ramMismatch struct {
 	resourceOffer data.ResourceOffer
@@ -43,6 +71,15 @@ type ramMismatch struct {
 
 func (_ ramMismatch) matched() bool   { return false }
 func (_ ramMismatch) message() string { return "did not match RAM" }
+func (result ramMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.spec.ram", result.jobOffer.Spec.RAM),
+		attribute.Int("match_result.resource_offer.spec.ram", result.resourceOffer.Spec.RAM),
+	}
+}
 
 type moduleIDError struct {
 	resourceOffer data.ResourceOffer
@@ -51,34 +88,83 @@ type moduleIDError struct {
 }
 
 func (_ moduleIDError) matched() bool   { return false }
-func (_ moduleIDError) message() string { return "error getting module ID" }
+func (_ moduleIDError) message() string { return "error computing module ID" }
+func (result moduleIDError) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.String("match_result.err", result.err.Error()),
+		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
+		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
+	}
+}
 
 type moduleMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
+	moduleID      string
 }
 
 func (_ moduleMismatch) matched() bool   { return false }
-func (_ moduleMismatch) message() string { return "did not match modules" }
+func (_ moduleMismatch) message() string { return "resource provider does not provide module" }
+func (result moduleMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.String("match_result.module_id", result.moduleID),
+		attribute.StringSlice("match_result.resource_offer.modules", result.resourceOffer.Modules),
+		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
+		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
+	}
+}
 
 type marketPriceUnavailable struct {
 	resourceOffer data.ResourceOffer
-	jobOffer      data.JobOffer
 }
 
 func (_ marketPriceUnavailable) matched() bool { return false }
 func (_ marketPriceUnavailable) message() string {
-	return "do not support market priced resource offers"
+	return "no support for market priced resource offers"
+}
+func (result marketPriceUnavailable) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.String("match_result.resource_offer.mode", string(result.resourceOffer.Mode)),
+	}
 }
 
 type priceMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
+	moduleID      string
 }
 
 func (_ priceMismatch) matched() bool { return false }
 func (_ priceMismatch) message() string {
 	return "fixed price job offer cannot afford resource offer"
+}
+func (result priceMismatch) attributes() []attribute.KeyValue {
+	// If the module instruction price is not specified, this lookup will use the zero-value of 0
+	moduleInstructionPrice := result.resourceOffer.ModulePricing[result.moduleID].InstructionPrice
+
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.pricing.instruction_price", int(result.jobOffer.Pricing.InstructionPrice)),
+		attribute.Int("match_result.resource_offer.module_pricing.instruction_price", int(moduleInstructionPrice)),
+		attribute.Int("match_result.resource_offer.default_pricing.instruction_price", int(result.resourceOffer.DefaultPricing.InstructionPrice)),
+		attribute.String("match_result.job_offer.mode", string(result.jobOffer.Mode)),
+		attribute.String("match_result.resource_offer.mode", string(result.resourceOffer.Mode)),
+		attribute.String("match_result.module_id", result.moduleID),
+		attribute.StringSlice("match_result.resource_offer.modules", result.resourceOffer.Modules),
+		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
+		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
+	}
 }
 
 type mediatorMismatch struct {
@@ -88,6 +174,15 @@ type mediatorMismatch struct {
 
 func (_ mediatorMismatch) matched() bool   { return false }
 func (_ mediatorMismatch) message() string { return "no matching mutual mediators" }
+func (result mediatorMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.StringSlice("match_result.job_offer.services.mediator", result.jobOffer.Services.Mediator),
+		attribute.StringSlice("match_result.resource_offer.services.mediator", result.resourceOffer.Services.Mediator),
+	}
+}
 
 type solverMismatch struct {
 	resourceOffer data.ResourceOffer
@@ -96,6 +191,15 @@ type solverMismatch struct {
 
 func (_ solverMismatch) matched() bool   { return false }
 func (_ solverMismatch) message() string { return "no matching solver" }
+func (result solverMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.String("match_result.job_offer.services.solver", result.jobOffer.Services.Solver),
+		attribute.String("match_result.resource_offer.services.solver", result.resourceOffer.Services.Solver),
+	}
+}
 
 // the most basic of matchers
 // basically just check if the resource offer >= job offer cpu, gpu & ram
@@ -123,16 +227,17 @@ func matchOffers(
 		}
 	}
 
+	moduleID, err := data.GetModuleID(jobOffer.Module)
+	if err != nil {
+		return &moduleIDError{
+			jobOffer:      jobOffer,
+			resourceOffer: resourceOffer,
+			err:           err,
+		}
+	}
+
 	// if the resource provider has specified modules then check them
 	if len(resourceOffer.Modules) > 0 {
-		moduleID, err := data.GetModuleID(jobOffer.Module)
-		if err != nil {
-			return &moduleIDError{
-				jobOffer:      jobOffer,
-				resourceOffer: resourceOffer,
-				err:           err,
-			}
-		}
 		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
 		hasModule := false
 		for _, module := range resourceOffer.Modules {
@@ -146,6 +251,7 @@ func matchOffers(
 			return &moduleMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
+				moduleID:      moduleID,
 			}
 		}
 	}
@@ -153,7 +259,6 @@ func matchOffers(
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
 		return &marketPriceUnavailable{
-			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
 	}
@@ -164,6 +269,7 @@ func matchOffers(
 			return &priceMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
+				moduleID:      moduleID,
 			}
 		}
 	}
@@ -232,7 +338,7 @@ func logMatch(result matchResult) {
 	case marketPriceUnavailable:
 		log.Trace().
 			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
+			Str("pricing mode", string(r.resourceOffer.Mode)).
 			Msg(r.message())
 	case priceMismatch:
 		log.Trace().
