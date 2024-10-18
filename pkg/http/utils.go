@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	stdlog "log"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/rs/zerolog/log"
 )
@@ -23,6 +25,9 @@ const X_LILYPAD_USER_HEADER = "X-Lilypad-User"
 
 // this is the signature of the message
 const X_LILYPAD_SIGNATURE_HEADER = "X-Lilypad-Signature"
+
+// the version run by the client or service
+const X_LILYPAD_VERSION_HEADER = "X-Lilypad-Version"
 
 // the context name we keep the address
 const CONTEXT_ADDRESS = "address"
@@ -100,6 +105,7 @@ func AddHeaders(
 	}
 	req.Header.Add(X_LILYPAD_USER_HEADER, userPayload)
 	req.Header.Add(X_LILYPAD_SIGNATURE_HEADER, userSignature)
+	req.Header.Add(X_LILYPAD_VERSION_HEADER, system.Version)
 	return nil
 }
 
@@ -159,6 +165,14 @@ func GetAddressFromHeaders(req *http.Request) (string, error) {
 	}
 
 	return signatureAddress, nil
+}
+
+func GetVersionFromHeaders(req *http.Request) (string, error) {
+	versionHeader := req.Header.Get(X_LILYPAD_VERSION_HEADER)
+	if versionHeader == "" {
+		return "", errors.New("missing version header")
+	}
+	return versionHeader, nil
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {
