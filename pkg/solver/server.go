@@ -289,6 +289,9 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 }
 
 func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
+	versionHeader, _ := http.GetVersionFromHeaders(req)
+	log.Debug().Msgf("resource provider adding offer with version header %s", versionHeader)
+
 	signerAddress, err := http.GetAddressFromHeaders(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
