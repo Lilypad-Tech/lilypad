@@ -12,10 +12,9 @@ import (
 )
 
 type CommandContext struct {
-	CommandContext context.Context
-	Ctx            context.Context
-	Cm             *CleanupManager
-	CancelFunc     context.CancelFunc
+	Ctx        context.Context
+	Cm         *CleanupManager
+	CancelFunc context.CancelFunc
 }
 
 func NewSystemContext(ctx context.Context) *CommandContext {
@@ -24,10 +23,9 @@ func NewSystemContext(ctx context.Context) *CommandContext {
 	cm := NewCleanupManager()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	return &CommandContext{
-		CommandContext: ctx,
-		Ctx:            ctx,
-		Cm:             cm,
-		CancelFunc:     cancel,
+		Ctx:        ctx,
+		Cm:         cm,
+		CancelFunc: cancel,
 	}
 }
 
