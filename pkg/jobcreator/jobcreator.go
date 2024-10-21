@@ -39,6 +39,7 @@ type JobCreatorOptions struct {
 	Mediation JobCreatorMediationOptions
 	Offer     JobCreatorOfferOptions
 	Web3      web3.Web3Options
+	Telemetry system.TelemetryOptions
 }
 
 type JobCreator struct {
