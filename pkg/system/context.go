@@ -62,7 +62,6 @@ func NewCommandContext(cmd *cobra.Command) *CommandContext {
 }
 
 func (cmdContext *CommandContext) Cleanup() {
-	cmdContext.Cm.Cleanup(cmdContext.CommandContext)
 	cmdContext.Cm.Cleanup(cmdContext.Ctx)
 	cmdContext.CancelFunc()
 }
