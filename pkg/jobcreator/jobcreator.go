@@ -6,6 +6,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type JobCreatorMediationOptions struct {
@@ -51,8 +52,9 @@ type JobCreator struct {
 func NewJobCreator(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
+	tracer trace.Tracer,
 ) (*JobCreator, error) {
-	controller, err := NewJobCreatorController(options, web3SDK)
+	controller, err := NewJobCreatorController(options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}
