@@ -5,8 +5,8 @@ import (
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func newJobCreatorCmd() *cobra.Command {
@@ -24,7 +24,7 @@ func newJobCreatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runJobCreator(cmd, options)
+			return runJobCreator(cmd, options, network)
 		},
 	}
 
@@ -33,18 +33,24 @@ func newJobCreatorCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
+func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.JobCreatorService))
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, options.Web3)
+	if err != nil {
+		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.JobCreatorService))
+
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
 		return err
 	}
 
 	// create the job creator and start it's control loop
-	jobCreatorService, err := jobcreator.NewOnChainJobCreator(options, web3SDK)
+	jobCreatorService, err := jobcreator.NewOnChainJobCreator(options, web3SDK, tracer)
 	if err != nil {
 		return err
 	}

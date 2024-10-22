@@ -13,6 +13,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type JobOfferSubscriber func(offer data.JobOfferContainer)
@@ -25,6 +26,7 @@ type JobCreatorController struct {
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
 	jobOfferSubscriptions []JobOfferSubscriber
+	tracer                trace.Tracer
 }
 
 // the background "even if we have not heard of an event" loop
@@ -36,6 +38,7 @@ const CONTROL_LOOP_INTERVAL = 10 * time.Second
 func NewJobCreatorController(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
+	tracer trace.Tracer,
 ) (*JobCreatorController, error) {
 	// we know the address of the solver but what is it's url?
 	solverUrl, err := web3SDK.GetSolverUrl(options.Offer.Services.Solver)
@@ -63,6 +66,7 @@ func NewJobCreatorController(
 		web3Events:            web3.NewEventChannels(),
 		log:                   system.NewServiceLogger(system.JobCreatorService),
 		jobOfferSubscriptions: []JobOfferSubscriber{},
+		tracer:                tracer,
 	}
 	return controller, nil
 }
