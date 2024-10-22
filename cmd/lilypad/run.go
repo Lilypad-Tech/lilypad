@@ -73,18 +73,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 		return fmt.Errorf("failed to start spinner: %w", err)
 	}
 
-	// update message
-	// spinner.Message("uploading files")
-
-	// let spinner render some more
-	// time.Sleep(1 * time.Second)
-
-	// if you wanted to print a failure message...
-	//
-	// if err := spinner.StopFail(); err != nil {
-	// 	return fmt.Errorf("failed to stop spinner: %w", err)
-	// }
-
 	if err := spinner.Stop(); err != nil {
 		return fmt.Errorf("failed to stop spinner: %w", err)
 	}
