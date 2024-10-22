@@ -95,7 +95,8 @@ func testStackWithOptions(
 		return nil, err
 	}
 
-	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions, func(evOffer data.JobOfferContainer) {
+	noopTracer := traceNoop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
+	result, err := jobcreator.RunJob(commandCtx, jobCreatorOptions, noopTracer, func(evOffer data.JobOfferContainer) {
 
 	})
 	if err != nil {
