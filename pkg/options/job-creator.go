@@ -147,11 +147,21 @@ func ProcessOnChainJobCreatorOptions(options jobcreator.JobCreatorOptions, args 
 	}
 	options.Offer.Services = newServicesOptions
 
+	newTelemetryOptions, err := ProcessTelemetryOptions(options.Telemetry, network)
+	if err != nil {
+		return options, err
+	}
+	options.Telemetry = newTelemetryOptions
+
 	err = CheckWeb3Options(options.Web3)
 	if err != nil {
 		return options, err
 	}
 	err = CheckServicesOptions(options.Offer.Services)
+	if err != nil {
+		return options, err
+	}
+	err = CheckTelemetryOptions(options.Telemetry)
 	if err != nil {
 		return options, err
 	}
