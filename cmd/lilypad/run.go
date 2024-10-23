@@ -14,6 +14,7 @@ import (
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/theckman/yacspin"
@@ -33,7 +34,7 @@ func newRunCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runJob(cmd, options)
+			return runJob(cmd, options, network)
 		},
 	}
 
@@ -42,7 +43,7 @@ func newRunCmd() *cobra.Command {
 	return runCmd
 }
 
-func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
+func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string) error {
 	c := color.New(color.FgCyan).Add(color.Bold)
 	header := `
 ⠀⠀⠀⠀⠀⠀⣀⣤⣤⢠⣤⣀⠀⠀⠀⠀⠀
@@ -72,18 +73,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 		return fmt.Errorf("failed to start spinner: %w", err)
 	}
 
-	// update message
-	// spinner.Message("uploading files")
-
-	// let spinner render some more
-	// time.Sleep(1 * time.Second)
-
-	// if you wanted to print a failure message...
-	//
-	// if err := spinner.StopFail(); err != nil {
-	// 	return fmt.Errorf("failed to stop spinner: %w", err)
-	// }
-
 	if err := spinner.Stop(); err != nil {
 		return fmt.Errorf("failed to stop spinner: %w", err)
 	}
@@ -95,7 +84,15 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions) error {
 
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
-	result, err := jobcreator.RunJob(commandCtx, options, func(evOffer data.JobOfferContainer) {
+
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, options.Web3)
+	if err != nil {
+		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
+	}
+	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
+	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.JobCreatorService))
+
+	result, err := jobcreator.RunJob(commandCtx, options, tracer, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()
 		st := data.GetAgreementStateString(evOffer.State)
 		var desc string

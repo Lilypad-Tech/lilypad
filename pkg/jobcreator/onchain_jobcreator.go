@@ -11,6 +11,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	jobcreatorweb3 "github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const JOB_PRICE = 2
@@ -26,8 +27,9 @@ type OnChainJobCreator struct {
 func NewOnChainJobCreator(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
+	tracer trace.Tracer,
 ) (*OnChainJobCreator, error) {
-	controller, err := NewJobCreatorController(options, web3SDK)
+	controller, err := NewJobCreatorController(options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}

@@ -14,6 +14,7 @@ func NewJobCreatorOptions() jobcreator.JobCreatorOptions {
 		Offer:     GetDefaultJobCreatorOfferOptions(),
 		Web3:      GetDefaultWeb3Options(),
 		Mediation: GetDefaultJobCreatorMediationOptions(),
+		Telemetry: GetDefaultTelemetryOptions(),
 	}
 	options.Web3.Service = system.JobCreatorService
 	return options
@@ -62,6 +63,7 @@ func AddJobCreatorCliFlags(cmd *cobra.Command, options *jobcreator.JobCreatorOpt
 	AddJobCreatorMediationCliFlags(cmd, &options.Mediation)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddJobCreatorOfferCliFlags(cmd, &options.Offer)
+	AddTelemetryCliFlags(cmd, &options.Telemetry)
 }
 
 func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
@@ -74,6 +76,10 @@ func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
 		return err
 	}
 	err = CheckServicesOptions(options.Offer.Services)
+	if err != nil {
+		return err
+	}
+	err = CheckTelemetryOptions(options.Telemetry)
 	if err != nil {
 		return err
 	}
@@ -119,6 +125,12 @@ func ProcessJobCreatorOptions(options jobcreator.JobCreatorOptions, args []strin
 	}
 	options.Offer.Target = newTargetOptions
 
+	newTelemetryOptions, err := ProcessTelemetryOptions(options.Telemetry, network)
+	if err != nil {
+		return options, err
+	}
+	options.Telemetry = newTelemetryOptions
+
 	return options, CheckJobCreatorOptions(options)
 }
 
@@ -135,11 +147,21 @@ func ProcessOnChainJobCreatorOptions(options jobcreator.JobCreatorOptions, args 
 	}
 	options.Offer.Services = newServicesOptions
 
+	newTelemetryOptions, err := ProcessTelemetryOptions(options.Telemetry, network)
+	if err != nil {
+		return options, err
+	}
+	options.Telemetry = newTelemetryOptions
+
 	err = CheckWeb3Options(options.Web3)
 	if err != nil {
 		return options, err
 	}
 	err = CheckServicesOptions(options.Offer.Services)
+	if err != nil {
+		return options, err
+	}
+	err = CheckTelemetryOptions(options.Telemetry)
 	if err != nil {
 		return options, err
 	}

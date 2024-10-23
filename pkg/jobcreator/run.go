@@ -7,7 +7,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"go.opentelemetry.io/otel/trace/noop"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type RunJobResults struct {
@@ -18,16 +18,16 @@ type RunJobResults struct {
 func RunJob(
 	ctx *system.CommandContext,
 	options JobCreatorOptions,
+	tracer trace.Tracer,
 	eventSub JobOfferSubscriber,
 ) (*RunJobResults, error) {
-	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.JobCreatorService))
-	web3SDK, err := web3.NewContractSDK(ctx.Ctx, options.Web3, noopTracer)
+	web3SDK, err := web3.NewContractSDK(ctx.Ctx, options.Web3, tracer)
 	if err != nil {
 		return nil, err
 	}
 
 	// create the job creator and start it's control loop
-	jobCreatorService, err := NewJobCreator(options, web3SDK)
+	jobCreatorService, err := NewJobCreator(options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}
