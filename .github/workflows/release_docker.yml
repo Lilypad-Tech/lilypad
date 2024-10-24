@@ -41,6 +41,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            COMMIT_SHA=${{ github.sha }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

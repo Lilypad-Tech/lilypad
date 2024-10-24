@@ -3,6 +3,8 @@ ARG COMPUTE_MODE=gpu
 FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS base
 WORKDIR /usr/src/app
 ARG NETWORK=testnet
+ARG VERSION
+ARG COMMIT_SHA
 
 # Default environment variables
 ENV LOG_LEVEL=info
@@ -28,11 +30,11 @@ COPY . .
 
 FROM base AS build-gpu
 RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
-RUN go build -v --tags cuda
+RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=false
 
 FROM base AS build-cpu
-RUN go build -v
+RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=true
 
 FROM build-$COMPUTE_MODE AS final

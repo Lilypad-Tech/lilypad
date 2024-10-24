@@ -102,6 +102,8 @@ services:
       args:
         - NETWORK=dev
         - COMPUTE_MODE=cpu
+        - VERSION=${VERSION}
+        - COMMIT_SHA=${COMMIT_SHA}
     extra_hosts:
       - "localhost:host-gateway"
     volumes:

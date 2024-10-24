@@ -26,6 +26,7 @@ function compose-init() {
 function compose-build() {
   load-local-env
   compose-env
+  get-build-version
   docker compose -f ./docker/docker-compose.dev.yml build "$@"
 }
 
@@ -51,6 +52,14 @@ function load-local-env() {
       export $line
     fi
   done < .local.dev
+}
+
+############################################################################
+# Get build version info
+############################################################################
+function get-build-version() {
+  export VERSION=$(git rev-parse --abbrev-ref HEAD)
+  export COMMIT_SHA=$(git rev-parse HEAD)
 }
 
 ############################################################################
@@ -274,11 +283,14 @@ function resource-provider() {
 }
 
 function resource-provider-docker-build() {
+  get-build-version
   docker build \
     -t resource-provider \
     -f ./docker/resource-provider/Dockerfile \
     --build-arg NETWORK=dev \
     --build-arg DISABLE_POW=true \
+    --build-arg VERSION=${VERSION} \
+    --build-arg COMMIT_SHA=${COMMIT_SHA} \
     .
 }
 
