@@ -325,7 +325,11 @@ func (controller *JobCreatorController) checkResults() error {
 				return err
 			}
 		} else {
-			controller.downloadResult(dealContainer)
+			err := controller.downloadResult(dealContainer)
+			if err != nil {
+				controller.log.Error("failed to download results", err)
+				return err
+			}
 		}
 	}
 
