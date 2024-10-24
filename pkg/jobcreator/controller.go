@@ -2,7 +2,10 @@ package jobcreator
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -325,10 +328,16 @@ func (controller *JobCreatorController) checkResults() error {
 				return err
 			}
 		} else {
-			err := controller.downloadResult(dealContainer)
-			if err != nil {
-				controller.log.Error("failed to download results", err)
-				return err
+			// We check for all completed deals, including deals whose results
+			// we have already downloaded. Check the download path and download
+			// if results do not exist.
+			downloadPath := solver.GetDownloadsFilePath(dealContainer.ID)
+			if _, err := os.Stat(downloadPath); errors.Is(err, fs.ErrNotExist) {
+				err := controller.downloadResult(dealContainer)
+				if err != nil {
+					controller.log.Error("failed to download results", err)
+					return err
+				}
 			}
 		}
 	}
