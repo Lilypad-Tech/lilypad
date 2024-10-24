@@ -319,7 +319,11 @@ func (controller *JobCreatorController) checkResults() error {
 			// there is an error with the job
 			// accept anyway
 			// TODO: trigger mediation here
-			controller.acceptResult(dealContainer)
+			err := controller.acceptResult(dealContainer)
+			if err != nil {
+				controller.log.Error("failed to accept results", err)
+				return err
+			}
 		} else {
 			controller.downloadResult(dealContainer)
 		}
@@ -337,7 +341,11 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 	controller.log.Debug("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
 
 	// TODO: activate the mediation check here
-	controller.acceptResult(dealContainer)
+	err = controller.acceptResult(dealContainer)
+	if err != nil {
+		controller.log.Error("failed to accept results", err)
+		return err
+	}
 
 	// work out if we should check or accept the results
 	// if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
