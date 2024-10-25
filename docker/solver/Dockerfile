@@ -8,7 +8,7 @@ ARG network=dev
 
 COPY . .
 RUN go mod download && go mod verify
-RUN go build -v .
+RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 RUN go install
 
 RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
@@ -24,9 +24,9 @@ RUN echo "doppler run --command \"cloudflared tunnel run & lilypad solver --netw
 FROM base AS expose-local
 EXPOSE 8080
 RUN if [ "${network}" = "dev" ]; then \
-        echo "lilypad solver --network $network" >> run; \
+    echo "lilypad solver --network $network" >> run; \
     else \
-        echo "doppler run -- lilypad solver --network $network" >> run; \
+    echo "doppler run -- lilypad solver --network $network" >> run; \
     fi
 
 FROM expose-$expose_via AS final
