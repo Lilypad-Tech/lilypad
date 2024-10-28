@@ -29,6 +29,7 @@ type WSConnectionParams struct {
 }
 
 // Define the minimum compatible client version
+// WIP hardcoded version
 const minimumClientVersion = "1.0.0"
 
 // StartWebSocketServer starts a WebSocket server

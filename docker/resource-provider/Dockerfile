@@ -28,11 +28,13 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . .
 
+#WIP hardcoded version
 FROM base AS build-gpu
 RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
 RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=0.1.0' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=false
 
+#WIP hardcoded version
 FROM base AS build-cpu
 RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=0.1.0' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=true

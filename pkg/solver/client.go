@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// WIP hardcoded version
 const clientVersion = "0.1.0" // Define the client version here
 
 type SolverClient struct {
