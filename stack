@@ -33,7 +33,7 @@ function compose-build() {
 function compose-up() {
   load-local-env
   compose-env
-  docker compose -f ./docker/docker-compose.dev.yml up "$@"
+  docker compose -f ./docker/docker-compose.dev.yml up "$@" -d
 }
 
 function compose-down() {

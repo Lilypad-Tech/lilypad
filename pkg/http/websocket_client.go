@@ -13,7 +13,7 @@ import (
 func ConnectWebSocket(
 	url string,
 	ctx context.Context,
-) chan []byte {
+) (*websocket.Conn, chan []byte) {
 	connectFactory := func() *websocket.Conn {
 		for {
 			log.Debug().Msgf("WebSocket connection connecting: %s", url)
@@ -24,6 +24,17 @@ func ConnectWebSocket(
 				continue
 			}
 			conn.SetPongHandler(nil)
+
+			// Set the close handler to log specific error codes and reasons
+			conn.SetCloseHandler(func(code int, text string) error {
+				if code == websocket.ClosePolicyViolation {
+					log.Error().Msgf("Connection closed due to incompatible client version: %s.", text)
+				} else {
+					log.Warn().Msgf("Connection closed: %s (code: %d)", text, code)
+				}
+				return nil
+			})
+
 			return conn
 		}
 	}
@@ -73,5 +84,5 @@ func ConnectWebSocket(
 			}
 		}
 	}()
-	return responseCh
+	return conn, responseCh
 }

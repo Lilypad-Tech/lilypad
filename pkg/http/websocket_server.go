@@ -28,6 +28,9 @@ type WSConnectionParams struct {
 	IP          string
 }
 
+// Define the minimum compatible client version
+const minimumClientVersion = "1.0.0"
+
 // StartWebSocketServer starts a WebSocket server
 func StartWebSocketServer(
 	r *mux.Router,
@@ -53,11 +56,7 @@ func StartWebSocketServer(
 		delete(connections, conn)
 	}
 
-	// spawn a reader from the incoming message channel
-	// each message we get we fan out to all the currently connected websocket clients
-
-	// TODO: we should add some subscription channels here because right now we are
-	// splatting a lot of bytes down the write because everyone is hearing everything
+	// Fan-out messages to all connected clients
 	go func() {
 		for {
 			select {
@@ -67,20 +66,14 @@ func StartWebSocketServer(
 					Str("payload", string(message)).
 					Msgf("")
 				func() {
-					// hold the mutex while we iterate over connections because
-					// you can't modify a map while iterating over it (fatal
-					// error: concurrent map iteration and map write)
 					mutex.Lock()
 					defer mutex.Unlock()
 					for _, connWrapper := range connections {
-						// wrap in a func so that we can defer the unlock so we can
-						// unlock the mutex on panics as well as errors
 						func() {
 							connWrapper.mu.Lock()
 							defer connWrapper.mu.Unlock()
 							if err := connWrapper.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 								log.Error().Msgf("Error writing to websocket: %s", err.Error())
-								// don't stop reading from messageChan just because one write failed
 							}
 						}()
 					}
@@ -97,6 +90,28 @@ func StartWebSocketServer(
 			log.Error().Msgf("Error upgrading websocket: %s", err.Error())
 			return
 		}
+		defer conn.Close()
+
+		// Read the initial message from the client, expected to be the version
+		_, clientVersionMsg, err := conn.ReadMessage()
+		if err != nil {
+			log.Error().Msgf("Error reading client version: %s", err.Error())
+			return
+		}
+
+		clientVersion := string(clientVersionMsg)
+		log.Debug().Msgf("Client version received: %s", clientVersion)
+
+		// Compare client version with minimum required version
+		if clientVersion < minimumClientVersion {
+			log.Warn().Msgf("Client version %s is incompatible, required: %s", clientVersion, minimumClientVersion)
+			// Send a CloseMessage with code 1008 (Policy Violation) and a reason
+			closeMessage := websocket.FormatCloseMessage(1008, clientVersion+" Please upgrade to the latest version: "+minimumClientVersion)
+			conn.WriteMessage(websocket.CloseMessage, closeMessage)
+			return // Exit to close the connection
+		}
+
+		conn.WriteMessage(websocket.TextMessage, []byte("version_accepted"))
 
 		conn.SetPingHandler(nil)
 		params := r.URL.Query()
@@ -106,7 +121,6 @@ func StartWebSocketServer(
 			CountryCode: r.Header.Get("Cf-Ipcountry"),
 			IP:          r.Header.Get("Cf-Connecting-Ip"),
 		}
-		defer conn.Close()
 		connectCB(connParams)
 		addConnection(conn)
 

@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gorilla/websocket"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
 )
+
+const clientVersion = "0.1.0" // Define the client version here
 
 type SolverClient struct {
 	options         http.ClientOptions
@@ -31,18 +34,39 @@ func NewSolverClient(
 func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager) error {
 
 	websocketURL := fmt.Sprintf("%s%s%s%s%s", http.WEBSOCKET_SUB_PATH, "?&Type=", client.options.Type, "&ID=", client.options.PublicAddress)
-	websocketEventChannel := http.ConnectWebSocket(http.WebsocketURL(client.options, websocketURL), ctx)
+	conn, websocketEventChannel := http.ConnectWebSocket(http.WebsocketURL(client.options, websocketURL), ctx)
+
+	// Send client version as the first message after connecting
+	err := conn.WriteMessage(websocket.TextMessage, []byte(clientVersion))
+	if err != nil {
+		log.Error().Msg("Failed to send client version")
+		return err
+	}
+
+	// Wait for server response to check if version is accepted
+	_, serverResponse, err := conn.ReadMessage()
+	if err != nil {
+		log.Error().Msg("Failed to receive version response from server")
+		return err
+	}
+
+	if string(serverResponse) == "version_rejected" {
+		log.Error().Msg("Server rejected client version. Please upgrade to the latest version.")
+		conn.Close()
+		return fmt.Errorf("connection closed due to incompatible client version")
+	}
+
 	go func() {
 		for {
 			select {
 			case evBytes := <-websocketEventChannel:
-				// parse the ev into a new SolverEvent
+				// Parse the event into a new SolverEvent
 				var ev SolverEvent
 				if err := json.Unmarshal(evBytes, &ev); err != nil {
 					log.Error().Msgf("Error unmarshalling event: %s", err.Error())
 					continue
 				}
-				// loop over each event channel and write the event to it
+				// Notify each subscriber with the received event
 				for _, handler := range client.solverEventSubs {
 					go handler(ev)
 				}
