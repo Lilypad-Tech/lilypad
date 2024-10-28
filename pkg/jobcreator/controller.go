@@ -164,7 +164,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 }
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error)
+	errorChan := make(chan error, 1)
 	err := controller.subscribeToSolver()
 	if err != nil {
 		errorChan <- err
