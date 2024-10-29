@@ -80,7 +80,6 @@ func RunJob(
 	updateChan := make(chan data.JobOfferContainer)
 
 	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
-		// spew.Dump(evOffer)
 		if evOffer.JobOffer.ID != jobOfferContainer.ID {
 			return
 		}
