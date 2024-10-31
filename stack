@@ -35,11 +35,21 @@ function compose-up() {
   docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
+function compose-build-ci() {
+  load-local-env
+  compose-env
+  get-build-version
+  export LOG_LEVEL=debug
+  export API_HOST=""
+  export DISABLE_TELEMETRY=true
+  docker compose -f ./docker/docker-compose.dev.yml build "$@"
+}
+
 function compose-up-ci() {
   load-local-env
   compose-env
   export LOG_LEVEL=debug
-  export API_HOST=
+  export API_HOST=""
   export DISABLE_TELEMETRY=true
   docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
@@ -369,7 +379,7 @@ function integration-tests() {
 function integration-tests-ci() {
   load-local-env
   export LOG_LEVEL=debug
-  export API_HOST=
+  export API_HOST=""
   export DISABLE_TELEMETRY=true
   cd test
   go test -v -count 1 .
