@@ -35,11 +35,19 @@ function compose-up() {
   docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
+function compose-up-ci() {
+  load-local-env
+  compose-env
+  export LOG_LEVEL=debug
+  export API_HOST=
+  export DISABLE_TELEMETRY=true
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
+}
+
 function compose-down() {
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml down
 }
-
 
 ############################################################################
 # Load env variables from .local.dev
@@ -354,6 +362,15 @@ function unit-tests() {
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   load-local-env
+  cd test
+  go test -v -count 1 .
+}
+
+function integration-tests-ci() {
+  load-local-env
+  export LOG_LEVEL=debug
+  export API_HOST=
+  export DISABLE_TELEMETRY=true
   cd test
   go test -v -count 1 .
 }
