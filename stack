@@ -10,7 +10,6 @@ OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 
 ############################################################################
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
-  export DISABLE_TELEMETRY=false
 }
 
 function compose-init() {
