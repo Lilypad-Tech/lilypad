@@ -2,7 +2,10 @@ package jobcreator
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -161,7 +164,7 @@ func (controller *JobCreatorController) subscribeToWeb3() error {
 }
 
 func (controller *JobCreatorController) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error)
+	errorChan := make(chan error, 1)
 	err := controller.subscribeToSolver()
 	if err != nil {
 		errorChan <- err
@@ -319,9 +322,23 @@ func (controller *JobCreatorController) checkResults() error {
 			// there is an error with the job
 			// accept anyway
 			// TODO: trigger mediation here
-			controller.acceptResult(dealContainer)
+			err := controller.acceptResult(dealContainer)
+			if err != nil {
+				controller.log.Error("failed to accept results", err)
+				return err
+			}
 		} else {
-			controller.downloadResult(dealContainer)
+			// We check for all completed deals, including deals whose results
+			// we have already downloaded. Check the download path and download
+			// if results do not exist.
+			downloadPath := solver.GetDownloadsFilePath(dealContainer.ID)
+			if _, err := os.Stat(downloadPath); errors.Is(err, fs.ErrNotExist) {
+				err := controller.downloadResult(dealContainer)
+				if err != nil {
+					controller.log.Error("failed to download results", err)
+					return err
+				}
+			}
 		}
 	}
 
@@ -337,7 +354,11 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 	controller.log.Debug("Downloaded results for job", solver.GetDownloadsFilePath(dealContainer.ID))
 
 	// TODO: activate the mediation check here
-	controller.acceptResult(dealContainer)
+	err = controller.acceptResult(dealContainer)
+	if err != nil {
+		controller.log.Error("failed to accept results", err)
+		return err
+	}
 
 	// work out if we should check or accept the results
 	// if controller.options.Mediation.CheckResultsPercentage >= rand.Intn(100) {
