@@ -9,9 +9,17 @@ import (
 
 func GetDefaultServerOptions() http.ServerOptions {
 	return http.ServerOptions{
-		URL:  GetDefaultServeOptionString("SERVER_URL", ""),
-		Host: GetDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
-		Port: GetDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
+		URL:         GetDefaultServeOptionString("SERVER_URL", ""),
+		Host:        GetDefaultServeOptionString("SERVER_HOST", "0.0.0.0"),
+		Port:        GetDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
+		RateLimiter: GetDefaultRateLimiterOptions(),
+	}
+}
+
+func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
+	return http.RateLimiterOptions{
+		RequestLimit: GetDefaultServeOptionInt("SERVER_RATE_REQUEST_LIMIT", 5),
+		WindowLength: GetDefaultServeOptionInt("SERVER_RATE_WINDOW_LENGTH", 10),
 	}
 }
 
@@ -27,6 +35,14 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.Port, "server-port", serverOptions.Port,
 		`The port to bind the api server to (SERVER_PORT).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.RateLimiter.RequestLimit, "server-rate-request-limit", serverOptions.RateLimiter.RequestLimit,
+		`The max requests over the rate window length (SERVER_RATE_REQUEST_LIMIT).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.RateLimiter.WindowLength, "server-rate-window-length", serverOptions.RateLimiter.WindowLength,
+		`The time window over which to limit in seconds (SERVER_RATE_WINDOW_LENGTH).`,
 	)
 }
 
