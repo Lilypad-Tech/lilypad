@@ -50,7 +50,6 @@ jobs:
       - name: Run tests
         env:
           LOG_LEVEL: debug
-          DISABLE_TELEMETRY: true
         run: ./stack integration-tests
 
       - name: Display resource provider logs

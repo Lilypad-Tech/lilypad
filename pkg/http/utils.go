@@ -429,5 +429,15 @@ func newRetryClient() *retryablehttp.Client {
 				Msgf("")
 		}
 	}
+	// Return custom error with response body
+	retryClient.ErrorHandler = func(resp *http.Response, err error, numTries int) (*http.Response, error) {
+		body, err := io.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("%s %s gave up after %d attempt(s): %s", resp.Request.Method, resp.Request.URL, numTries, err)
+		}
+
+		return nil, fmt.Errorf("%s %s gave up after %d attempt(s): %s", resp.Request.Method, resp.Request.URL, numTries, string(body))
+	}
 	return retryClient
 }
