@@ -37,21 +37,16 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Build Docker Images
-        run: ./stack compose-build
+        run: ./stack compose-build-ci
 
       - name: Initialize chain
         run: ./stack compose-init
 
       - name: Run stack
-        env:
-          DISABLE_TELEMETRY: true
-        run: ./stack compose-up -d
+        run: ./stack compose-up-ci -d
 
       - name: Run tests
-        env:
-          LOG_LEVEL: debug
-          DISABLE_TELEMETRY: true
-        run: ./stack integration-tests
+        run: ./stack integration-tests-ci
 
       - name: Display resource provider logs
         run: docker logs resource-provider

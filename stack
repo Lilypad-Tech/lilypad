@@ -10,7 +10,6 @@ OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 
 ############################################################################
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
-  export DISABLE_TELEMETRY=false
 }
 
 function compose-init() {
@@ -36,11 +35,29 @@ function compose-up() {
   docker compose -f ./docker/docker-compose.dev.yml up "$@"
 }
 
+function compose-build-ci() {
+  load-local-env
+  compose-env
+  get-build-version
+  export LOG_LEVEL=debug
+  export API_HOST=""
+  export DISABLE_TELEMETRY=true
+  docker compose -f ./docker/docker-compose.dev.yml build "$@"
+}
+
+function compose-up-ci() {
+  load-local-env
+  compose-env
+  export LOG_LEVEL=debug
+  export API_HOST=""
+  export DISABLE_TELEMETRY=true
+  docker compose -f ./docker/docker-compose.dev.yml up "$@"
+}
+
 function compose-down() {
   compose-env
   docker compose -f ./docker/docker-compose.dev.yml down
 }
-
 
 ############################################################################
 # Load env variables from .local.dev
@@ -355,6 +372,15 @@ function unit-tests() {
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   load-local-env
+  cd test
+  go test -v -count 1 .
+}
+
+function integration-tests-ci() {
+  load-local-env
+  export LOG_LEVEL=debug
+  export API_HOST=""
+  export DISABLE_TELEMETRY=true
   cd test
   go test -v -count 1 .
 }
