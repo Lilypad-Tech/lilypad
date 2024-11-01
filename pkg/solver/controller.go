@@ -351,7 +351,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough funds. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+		return nil, fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
 	}
 
 	// required LP balance
@@ -361,7 +361,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
 	}
 	if balanceLp.Cmp(requiredBalanceLp) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough LP balance. required balance is %s but expected balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
+		return nil, fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)
