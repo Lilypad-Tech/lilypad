@@ -73,7 +73,7 @@ func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, er
 		return ret, err
 	}
 
-	jobCreatorOptions.Mediation.CheckResultsPercentage = options.moderationChance
+	ret.Mediation.CheckResultsPercentage = options.moderationChance
 	ret.Telemetry.Disable = true
 	ret.Offer.Services.APIHost = ""
 	return ret, nil
