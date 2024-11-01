@@ -31,6 +31,7 @@ func getMediator(
 ) (*mediator.Mediator, error) {
 	mediatorOptions := optionsfactory.NewMediatorOptions()
 	mediatorOptions.Web3.PrivateKey = os.Getenv("MEDIATOR_PRIVATE_KEY")
+
 	if mediatorOptions.Web3.PrivateKey == "" {
 		return nil, fmt.Errorf("MEDIATOR_PRIVATE_KEY is not defined")
 	}
@@ -38,6 +39,7 @@ func getMediator(
 	if err != nil {
 		return nil, err
 	}
+	mediatorOptions.Services.APIHost = ""
 
 	noopTracer := traceNoop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.MediatorService))
 	web3SDK, err := web3.NewContractSDK(systemContext.Ctx, mediatorOptions.Web3, noopTracer)
@@ -58,6 +60,7 @@ func getMediator(
 func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, error) {
 	jobCreatorOptions := optionsfactory.NewJobCreatorOptions()
 	jobCreatorOptions.Web3.PrivateKey = os.Getenv("JOB_CREATOR_PRIVATE_KEY")
+
 	if jobCreatorOptions.Web3.PrivateKey == "" {
 		return jobCreatorOptions, fmt.Errorf("JOB_CREATOR_PRIVATE_KEY is not defined")
 	}
@@ -71,6 +74,8 @@ func getJobCreatorOptions(options testOptions) (jobcreator.JobCreatorOptions, er
 	}
 
 	jobCreatorOptions.Mediation.CheckResultsPercentage = options.moderationChance
+	ret.Telemetry.Disable = true
+	ret.Offer.Services.APIHost = ""
 	return ret, nil
 }
 
