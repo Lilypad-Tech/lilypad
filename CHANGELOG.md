@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.9.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.8.0...v2.9.0) (2024-11-05)
+
+
+### Features
+
+* Add custom retryablehttp error handler ([#423](https://github.com/Lilypad-Tech/lilypad/issues/423)) ([711ae57](https://github.com/Lilypad-Tech/lilypad/commit/711ae579dffba5701f9e5ce8faaae25928fcf363))
+* Add deal making trace ([#336](https://github.com/Lilypad-Tech/lilypad/issues/336)) ([a8febc0](https://github.com/Lilypad-Tech/lilypad/commit/a8febc04f55f4ed185f0e1010551a54e638988df))
+* Add docker compose for RPs ([#404](https://github.com/Lilypad-Tech/lilypad/issues/404)) ([5b6e598](https://github.com/Lilypad-Tech/lilypad/commit/5b6e5989f2ddf9f528b2ec513c048a5b6bc0d4b9))
+* Add job creator CLI run trace ([#418](https://github.com/Lilypad-Tech/lilypad/issues/418)) ([f9ce8a7](https://github.com/Lilypad-Tech/lilypad/commit/f9ce8a78311d9935308a0411e0df7511a73dea2e))
+* Add job creator tracer ([#411](https://github.com/Lilypad-Tech/lilypad/issues/411)) ([b467d0f](https://github.com/Lilypad-Tech/lilypad/commit/b467d0fa36f9720038bf5714d7ce1409a375d2a8))
+* Add Lilypad version HTTP header ([#408](https://github.com/Lilypad-Tech/lilypad/issues/408)) ([b4e56e3](https://github.com/Lilypad-Tech/lilypad/commit/b4e56e34a4f6b6b3979e9523731b8952162ad143))
+* Add solver rate limiter ([#419](https://github.com/Lilypad-Tech/lilypad/issues/419)) ([d30b6d8](https://github.com/Lilypad-Tech/lilypad/commit/d30b6d81e7f315b37d8a2bf61210c6ef19a9877e))
+* Upgrade binary to support v4 cardinfof schema ([#412](https://github.com/Lilypad-Tech/lilypad/issues/412)) ([d93c821](https://github.com/Lilypad-Tech/lilypad/commit/d93c82174a152fcad0f3d2d290d137efdb5334b2))
+
+
+### Bug Fixes
+
+* Add version info to RP Docker build ([#415](https://github.com/Lilypad-Tech/lilypad/issues/415)) ([d0b40cc](https://github.com/Lilypad-Tech/lilypad/commit/d0b40cc41f0cc12b24f8c3e17e38436c7f3c99fe))
+* Handle accept result and download result errors ([#416](https://github.com/Lilypad-Tech/lilypad/issues/416)) ([c2c4a11](https://github.com/Lilypad-Tech/lilypad/commit/c2c4a116a273ac9bfc26a7189f8d104492d24a26))
+
 ## [2.8.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.7.0...v2.8.0) (2024-10-14)
 
 
