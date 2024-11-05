@@ -69,7 +69,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
