@@ -351,17 +351,23 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+		err := fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+		controller.log.Error("ETH balance check failed", err)
+		return nil, nil
 	}
 
 	// required LP balance
 	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
 	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+		err := fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+		controller.log.Error("LP Balance error", err)
+		return nil, nil
 	}
 	if balanceLp.Cmp(requiredBalanceLp) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
+		err := fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
+		controller.log.Error("LP balance check failed", err)
+		return nil, nil
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)
