@@ -1,16 +1,12 @@
 package resourceprovider
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
 
 	"github.com/rs/zerolog/log"
 )
-
-//go:embed card
-var cardBinary []byte
 
 func PostCard(id string, challange string, difficulty string) error {
 	tmpFile, err := os.CreateTemp("", "card-*")

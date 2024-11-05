@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"os"
 	"strconv"
 	"time"
 
@@ -134,6 +135,7 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 		difficulty, _ := uint256.FromBig(challenge.Difficulty)
 		uuid := uuid.New()
 
+		os.Setenv("WEB3_PRIVATE_KEY", resourceProvider.options.Web3.PrivateKey) //to ensure this env exit because binary need it but if user specific this with flag, no environment variable exit.
 		err = PostCard(uuid.String(), "0x"+hex.EncodeToString(challenge.Challenge[:]), challenge.Difficulty.String())
 		if err != nil {
 			log.Err(err).Msgf("Unable to post card")
