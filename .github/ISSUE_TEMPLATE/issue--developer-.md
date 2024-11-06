@@ -16,7 +16,7 @@ solver, job-creation, executor, mediation, protocol-smart-contracts, module-deve
 ## Describe the changes, and how this affects/ interacts with each system.
 
 <Delete Below> -------------------------------------------------------------------------
-## Once this issue is created, please update the following
+## Once this issue is created, please update the following:
 
 ![image](../assets/issue-tags.png)
 
@@ -28,5 +28,5 @@ solver, job-creation, executor, mediation, protocol-smart-contracts, module-deve
 * **Effort Estimate** - Your best guess. 1 = xs 3= sm 5 = md 8 = lg 
 * **Development** - Please link all PRs as they are created!
 
-### Add Tags for all the systems/ functionality this is related to
+ **Add Labels for all the systems/ functionality this is related to**
 
