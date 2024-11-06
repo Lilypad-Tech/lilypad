@@ -18,7 +18,7 @@ solver, job-creation, executor, mediation, protocol-smart-contracts, module-deve
 <Delete Below> -------------------------------------------------------------------------
 ## Once this issue is created, please update the following:
 
-![image](../assets/issue-tags.png)
+<img src="../assets/issue-tags.png" alt="Issue Tag" style="width:auto; height:35%;">
 
 * **Status** - Backlog, Up Next, or In Progress
 * **Team** - Engineering
