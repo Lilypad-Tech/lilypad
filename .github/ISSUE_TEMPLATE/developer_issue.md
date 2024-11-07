@@ -1,6 +1,6 @@
 ---
 name: Issue (Developer)
-about: Describe this issue template's purpose here.
+about: Use this to describe and add development work
 title: Issue Description - System/ Functionality
 labels: ''
 assignees: '@Lily[ad-Tech/lilypad-core-engineering'
