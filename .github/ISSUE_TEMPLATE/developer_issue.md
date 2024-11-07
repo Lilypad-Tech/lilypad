@@ -11,7 +11,7 @@ assignees: '@Lily[ad-Tech/lilypad-core-engineering'
 
 ## Which system(s) or functionality does this affect
 *This can be one or many. Please also include this in the title*
-solver, job-creation, executor, mediation, protocol-smart-contracts, module-development, apis, cron-server, databases-metrics, observability, rp-tooling, incentives, infrastructure-devops 
+solver, job-creation, executor, mediation, protocol-smart-contracts, module-development, apis, cron-server, databases-metrics, observability, resource-provider, incentives, infrastructure-devops 
 
 ## Describe the changes, and how this affects/ interacts with each system.
 
