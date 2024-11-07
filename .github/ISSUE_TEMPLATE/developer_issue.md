@@ -25,7 +25,7 @@ solver, job-creation, executor, mediation, protocol-smart-contracts, module-deve
 * **Priority** - your Best Guess
 * **Start Date** - Today or when you plan to start
 * **Sprint** Either current sprint, or the sprint you think it should be included
-* **Effort Estimate** - Your best guess. 1 = xs 3= sm 5 = md 8 = lg 
+* **Effort Estimate** - Your best guess. 1 = xs 3 = sm 5 = md 8 = lg 
 * **Development** - Please link all PRs as they are created!
 
  **Add Labels for all the systems/ functionality this is related to**
