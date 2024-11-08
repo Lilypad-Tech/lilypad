@@ -49,12 +49,7 @@ func (s *StorageEventChannels) Start(
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if dealStateChangeSub != nil {
-			dealStateChangeSub.Unsubscribe()
-		}
-	}()
+	cm.RegisterCallback(unsubscribeSub(dealStateChangeSub))
 
 	for {
 		select {
