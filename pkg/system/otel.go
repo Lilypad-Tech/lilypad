@@ -40,6 +40,12 @@ type TelemetryConfig struct {
 	GPU            []string
 }
 
+type MetricsOptions struct {
+	URL    string `json:"url" toml:"url"`
+	Token  string `json:"token" toml:"token"`
+	Enable bool
+}
+
 func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
 	var shutdownFuncs []func(context.Context) error
 

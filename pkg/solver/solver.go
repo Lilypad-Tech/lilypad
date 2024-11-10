@@ -18,6 +18,7 @@ type SolverOptions struct {
 	Server    http.ServerOptions
 	Services  data.ServiceConfig
 	Telemetry system.TelemetryOptions
+	Metrics   system.MetricsOptions
 }
 
 type Solver struct {

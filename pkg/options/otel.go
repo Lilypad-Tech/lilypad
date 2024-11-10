@@ -16,6 +16,14 @@ func GetDefaultTelemetryOptions() system.TelemetryOptions {
 	}
 }
 
+func GetDefaultMetricsOptions() system.MetricsOptions {
+	return system.MetricsOptions{
+		URL:    GetDefaultServeOptionString("METRICS_URL", ""),
+		Token:  GetDefaultServeOptionString("METRICS_TOKEN", ""),
+		Enable: GetDefaultServeOptionBool("ENABLE_METRICS", false),
+	}
+}
+
 func AddTelemetryCliFlags(cmd *cobra.Command, telemetryOptions *system.TelemetryOptions) {
 	cmd.PersistentFlags().StringVar(
 		&telemetryOptions.URL, "telemetry-url", telemetryOptions.URL,
@@ -28,6 +36,21 @@ func AddTelemetryCliFlags(cmd *cobra.Command, telemetryOptions *system.Telemetry
 	cmd.PersistentFlags().BoolVar(
 		&telemetryOptions.Disable, "disable-telemetry", telemetryOptions.Disable,
 		`Disable telemetry (DISABLE_TELEMETRY)`,
+	)
+}
+
+func AddMetricsCliFlags(cmd *cobra.Command, metricsOptions *system.MetricsOptions) {
+	cmd.PersistentFlags().StringVar(
+		&metricsOptions.URL, "metrics-url", metricsOptions.URL,
+		`The metrics endpoint to connect to (METRICS_URL)`,
+	)
+	cmd.PersistentFlags().StringVar(
+		&metricsOptions.Token, "metrics-token", metricsOptions.Token,
+		`The token to auth with the metrics service (METRICS_TOKEN)`,
+	)
+	cmd.PersistentFlags().BoolVar(
+		&metricsOptions.Enable, "enable-metrics", metricsOptions.Enable,
+		`Enable metrics (ENABLE_METRICS)`,
 	)
 }
 
@@ -56,5 +79,15 @@ func CheckTelemetryOptions(options system.TelemetryOptions) error {
 	if len(options.Token) == 0 {
 		return fmt.Errorf("No telemetry token specified - please use TELEMETRY_TOKEN or --telemetry-token")
 	}
+	return nil
+}
+
+func CheckMetricsOptions(options system.MetricsOptions) error {
+	if options.Enable {
+		if len(options.URL) == 0 {
+			return fmt.Errorf("No metrics endpoint specified - please use METRICS_URL or --metrics-url")
+		}
+	}
+
 	return nil
 }
