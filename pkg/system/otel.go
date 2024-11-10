@@ -63,12 +63,24 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
+	// Set resource with global attributes
+	resource := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String(GetOTelServiceName(config.Service)),
+		semconv.ServiceVersionKey.String(Version),
+		attribute.String("system.os", runtime.GOOS),
+		attribute.String("system.arch", runtime.GOARCH),
+		attribute.StringSlice("system.gpu", config.GPU),
+		attribute.String("chain.network", config.Network),
+		attribute.String("chain.address", config.Address),
+	)
+
 	// TODO(bgins) Investigate a better Noop provider
 	TracerProvider := trace.NewTracerProvider()
 
 	// Set up tracer provider.
 	if config.Enabled {
-		TracerProvider, err = newTracerProvider(ctx, config)
+		TracerProvider, err = newTracerProvider(ctx, resource, config)
 		if err != nil {
 			handleErr(err)
 			return Telemetry{
@@ -91,24 +103,12 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.TracerProvider, error) {
+func newTracerProvider(ctx context.Context, resource *resource.Resource, config TelemetryConfig) (*trace.TracerProvider, error) {
 	exporter, err := newTracerExporter(ctx, config)
 	if err != nil {
 		log.Error().Msgf("failed to configure trace exporter: %v", err)
 		return nil, err
 	}
-
-	// Set resource with global attributes
-	resource := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(GetOTelServiceName(config.Service)),
-		semconv.ServiceVersionKey.String(Version),
-		attribute.String("system.os", runtime.GOOS),
-		attribute.String("system.arch", runtime.GOARCH),
-		attribute.StringSlice("system.gpu", config.GPU),
-		attribute.String("chain.network", config.Network),
-		attribute.String("chain.address", config.Address),
-	)
 
 	// Set tracer provider
 	provider := trace.NewTracerProvider(
