@@ -63,8 +63,10 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
+	// TODO(bgins) Investigate a better Noop provider
+	TracerProvider := trace.NewTracerProvider()
+
 	// Set up tracer provider.
-	var TracerProvider *trace.TracerProvider
 	if config.Enabled {
 		TracerProvider, err = newTracerProvider(ctx, config)
 		if err != nil {
@@ -75,9 +77,6 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 			}, err
 		}
 		shutdownFuncs = append(shutdownFuncs, TracerProvider.Shutdown)
-	} else {
-		// TODO(bgins) Investigate a better Noop provider
-		TracerProvider = trace.NewTracerProvider()
 	}
 
 	// TODO(bgins) Add meter and logger providers
