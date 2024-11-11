@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -52,6 +53,7 @@ type SolverController struct {
 	options         SolverOptions
 	log             *system.ServiceLogger
 	tracer          trace.Tracer
+	meter           metric.Meter
 }
 
 // the background "even if we have not heard of an event" loop
@@ -66,6 +68,7 @@ func NewSolverController(
 	store store.SolverStore,
 	options SolverOptions,
 	tracer trace.Tracer,
+	meter metric.Meter,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
@@ -74,6 +77,7 @@ func NewSolverController(
 		options:    options,
 		log:        system.NewServiceLogger(system.SolverService),
 		tracer:     tracer,
+		meter:      meter,
 	}
 	return controller, nil
 }
