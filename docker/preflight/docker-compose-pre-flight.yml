@@ -55,6 +55,9 @@ services:
     environment:
       - WEB3_PRIVATE_KEY
       - WEB3_RPC_URL
+      - WEB3_CHAIN_ID
+      - WEB3_CONTROLLER_ADDRESS
+      - OFFER_MODULES
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
   watchtower:
     image: containrrr/watchtower

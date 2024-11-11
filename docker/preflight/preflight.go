@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/pelletier/go-toml"
 )
 
 const ERC20TokenABI = `[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}]`
@@ -414,6 +415,35 @@ func main() {
 			"up",
 			"--build")
 		cmd.Env = append(os.Environ(), fmt.Sprintf("ORG=%s", os.Args[2]))
+
+		//https://raw.githubusercontent.com/arsenum/lilypad_network/refs/heads/main/config.toml
+		resp, err := http.Get(fmt.Sprintf("https://raw.githubusercontent.com/%s/lilypad_network/refs/heads/main/config.toml", os.Args[2]))
+		if err != nil || resp.StatusCode != http.StatusOK {
+			fmt.Errorf("failed to download TOML: %v", err)
+		} else {
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Errorf("failed to read TOML content: %v", err)
+			}
+
+			// Parse TOML
+			tree, err := toml.LoadBytes(content)
+			envVars := strings.Split(tomlValueToString(tree, ""), "\n")
+			cmd.Env = append(cmd.Env, envVars...)
+		}
+		defer resp.Body.Close()
+
+		// if err != nil {
+		// 	fmt.Errorf("failed to parse TOML: %v", err)
+		// }
+
+		// // Convert TOML to env vars and append
+		// for _, k := range tree.Keys() {
+		// 	value := tree.Get(k)
+		// 	strValue := tomlValueToString(value)
+		// 	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, strValue))
+		// }
+
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
@@ -428,3 +458,71 @@ func main() {
 		pullAllowList()
 	}
 }
+func tomlValueToString(value interface{}, parentKey string) string {
+	switch v := value.(type) {
+	case *toml.Tree:
+		var envVars []string
+		for _, k := range v.Keys() {
+			key := k
+			if parentKey != "" {
+				key = parentKey + "_" + k
+			}
+			value := v.Get(k)
+			if subTree, ok := value.(*toml.Tree); ok {
+				envVars = append(envVars, tomlValueToString(subTree, strings.ToUpper(key)))
+			} else {
+				envVars = append(envVars, fmt.Sprintf("%s=%v", strings.ToUpper(key), value))
+			}
+		}
+		return strings.Join(envVars, "\n")
+	default:
+		if parentKey != "" {
+			return fmt.Sprintf("%s=%v", strings.ToUpper(parentKey), v)
+		}
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// Flags:
+//       --api-host string                            The api host to connect to (API_HOST)
+//       --bacalhau-api-host string                   The api hostname for the bacalhau cluster to run jobs (default "localhost")
+//       --bacalhau-api-port string                   The api port for the bacalhau cluster to run jobs (default "1234")
+//       --cuda-block-size int                        Cuda block size (CUDA_BLOCK_SIZE) (default 1024)
+//       --cuda-grid-size int                         Cuda grid size (sm*2) (CUDA_GRID_SIZE) (default 128)
+//       --cuda-hash-per-thread int                   Cuda hash per threads (CUDA_HASH_PER_THREAD) (default 1000)
+//       --disable-pow                                Disable pow mining (DISABLE_POW)
+//       --disable-telemetry                          Disable telemetry (DISABLE_TELEMETRY)
+//   -h, --help                                       help for resource-provider
+//       --ipfs-connect string                        The IPFS multiaddress to connect to (IPFS_CONNECT)
+//       --num-worker int                             Pow worker number (NUM_WORKER)
+//       --offer-count int                            How many machines will we offer using the cpu, ram and gpu settings (OFFER_COUNT). (default 1)
+//       --offer-cpu int                              How many milli-cpus to offer the network (OFFER_CPU). (default 1000)
+//       --offer-gpu int                              How many milli-gpus to offer the network (OFFER_GPU).
+//       --offer-modules stringArray                  The modules you are willing to run (OFFER_MODULES).
+//       --offer-ram int                              How many megabytes of RAM to offer the network (OFFER_RAM). (default 1024)
+//       --pricing-instruction-price uint             The price per instruction to offer (PRICING_INSTRUCTION_PRICE) (default 1)
+//       --pricing-mediation-fee uint                 The mediation fee (PRICING_MEDIATION_FEE) (default 1)
+//       --pricing-mode string                        set pricing mode (MarketPrice/FixedPrice) (default "FixedPrice")
+//       --pricing-payment-collateral uint            The payment collateral (PRICING_PAYMENT_COLLATERAL) (default 2)
+//       --pricing-results-collateral-multiple uint   The results collateral multiple (PRICING_RESULTS_COLLATERAL_MULTIPLE) (default 2)
+//       --service-mediators strings                  The mediators we trust (SERVICE_MEDIATORS)
+//       --service-solver string                      The solver to connect to (SERVICE_SOLVER)
+//       --telemetry-token string                     The token to auth with telemetry service (TELEMETRY_TOKEN)
+//       --telemetry-url string                       The telemetry endpoint to connect to (TELEMETRY_URL)
+//       --timeout-agree-collateral uint              The collateral to timeout a deal when agreeing (TIMEOUT_AGREE_COLLATERAL) (default 1)
+//       --timeout-agree-time uint                    The number of seconds to timeout a deal when agreeing (TIMEOUT_AGREE_TIME) (default 3600)
+//       --timeout-judge-results-collateral uint      The collateral to timeout a deal when judging results (TIMEOUT_JUDGE_RESULTS_COLLATERAL) (default 1)
+//       --timeout-judge-results-time uint            The number of seconds to timeout a deal when judging results (TIMEOUT_JUDGE_RESULTS_TIME) (default 3600)
+//       --timeout-mediate-results-collateral uint    The collateral to timeout a deal when mediating results (TIMEOUT_MEDIATE_RESULTS_COLLATERAL) (default 1)
+//       --timeout-mediate-results-time uint          The number of seconds to timeout a deal when mediating results (TIMEOUT_MEDIATE_RESULTS_TIME) (default 3600)
+//       --timeout-submit-results-collateral uint     The collateral to timeout a deal when submitting results (TIMEOUT_SUBMIT_RESULTS_COLLATERAL) (default 1)
+//       --timeout-submit-results-time uint           The number of seconds to timeout a deal when submitting results (TIMEOUT_SUBMIT_RESULTS_TIME) (default 3600)
+//       --web3-chain-id int                          The chain id for the web3 RPC server (WEB3_CHAIN_ID).
+//       --web3-controller-address string             The address of the controller contract (WEB3_CONTROLLER_ADDRESS).
+//       --web3-payments-address string               The address of the payments contract (WEB3_PAYMENTS_ADDRESS).
+//       --web3-pow-address string                    The address of the pow contract (WEB3_POW_ADDRESS).
+//       --web3-private-key string                    The private key to use for signing web3 transactions (WEB3_PRIVATE_KEY).
+//       --web3-rpc-url string                        The URL of the web3 RPC server (WEB3_RPC_URL).
+//       --web3-storage-address string                The address of the storage contract (WEB3_STORAGE_ADDRESS).
+//       --web3-token-address string                  The address of the token contract (WEB3_TOKEN_ADDRESS).
+//       --web3-users-address string                  The address of the users contract (WEB3_USERS_ADDRESS).
