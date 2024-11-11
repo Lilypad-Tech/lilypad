@@ -283,7 +283,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	defer span.End()
 
 	// find out which deals we can make from matching the offers
-	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer)
+	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer, controller.meter)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
 		span.RecordError(err)
