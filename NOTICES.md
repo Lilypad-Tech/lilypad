@@ -75,3 +75,8 @@ Licensee’s name: Mar Quirapas
 Repository system identifier: mcryptographer
 
 ---------------------------------------------------------------------------------
+Licensee’s name: Lindsay Lintereur
+
+Repository system identifier: walkerlj0
+
+---------------------------------------------------------------------------------
