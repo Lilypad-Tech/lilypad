@@ -47,7 +47,12 @@ ENV PATH="/usr/local/bin:${PATH}"
 RUN touch run
 RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
-RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
+
+RUN echo 'if [ -n "$IPFS_CONNECT" ]; then' >> run
+RUN echo '  /usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --ipfs-connect $IPFS_CONNECT &' >> run
+RUN echo 'else' >> run
+RUN echo '  /usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &' >> run
+RUN echo 'fi' >> run
 
 # Wait for Bacalhau to be ready by checking the correct API endpoint
 RUN echo "while ! curl -s http://0.0.0.0:1234/api/v1/agent/alive | grep '\"Status\": \"OK\"'; do echo 'Waiting for Bacalhau...'; sleep 2; done" >> run
