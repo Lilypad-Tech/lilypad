@@ -1,0 +1,22 @@
+[services]
+solver = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+mediator = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
+api_host = "https://api-devnet.hawat.tech/"
+
+[web3]
+rpc_url = "wss://devnet-chain-ws.hawat.tech"
+chain_id = 412346
+controller_address = "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
+payments_address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+storage_address = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+users_address = "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+token_address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+mediation_address = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
+jobcreator_address = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+pow_address = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
+
+[ipfs]
+addr = "/ip4/127.0.0.1/tcp/5001"
+
+[telemetry]
+url = ""
