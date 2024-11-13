@@ -1,0 +1,72 @@
+# This is a docker-compose file for use by Resource Providers
+services:
+  ipfs:
+    image: ipfs/kubo:v0.30.0
+    container_name: ${ORG}_ipfs
+    restart: unless-stopped
+    command: ["daemon", "--enable-pubsub-experiment"]
+
+    # ports:
+    #   - 4001:4001
+    #   - 127.0.0.1:5001:5001
+    #   - 127.0.0.1:8080:8080
+    volumes:
+      - ipfs-data:/data/ipfs
+    depends_on:
+      preflight:
+        condition: service_completed_successfully  
+  preflight:
+    build:
+      context: . 
+      dockerfile: ./Dockerfile 
+      args:
+        - BUILDKIT_PROGRESS=plain
+      # context: ../../   # Point to root project directory
+      # dockerfile: docker/preflight/Dockerfile
+    image: preflight
+    container_name: ${ORG}_preflight
+    environment:
+      - WEB3_PRIVATE_KEY=$WEB3_PRIVATE_KEY
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # command: ["sh", "-c", "echo Running preflight checks... && sleep 5 && echo Preflight checks completed."]
+    command: ["/app/preflight",$ORG]
+    # healthcheck:
+    #   test: ["CMD-SHELL", "exit 1"]
+    #   interval: 10s
+    #   retries: 1
+    #   start_period: 9s
+    #   timeout: 50s      
+  resource-provider:
+    image: ghcr.io/lilypad-tech/resource-provider:latest
+    container_name: ${ORG}_resource-provider
+    restart: unless-stopped
+    depends_on:
+      ipfs:
+        condition: service_started
+      # preflight:
+      #   condition: service_healthy
+    build:
+      context: ../..
+      dockerfile: docker/resource-provider/Dockerfile
+      args:
+        - COMPUTE_MODE=gpu
+    volumes:
+      - bacalhau-data:/tmp/lilypad/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WEB3_PRIVATE_KEY
+      - WEB3_RPC_URL
+      - WEB3_CHAIN_ID
+      - WEB3_CONTROLLER_ADDRESS
+      - OFFER_MODULES
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+  watchtower:
+    image: containrrr/watchtower
+    container_name: ${ORG}_watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+  ipfs-data:
+  bacalhau-data:

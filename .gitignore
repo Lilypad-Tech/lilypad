@@ -20,3 +20,4 @@ bin/
 vendor/
 /data/
 .DS_Store
+chain-data/
