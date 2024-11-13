@@ -4,6 +4,8 @@ services:
     image: ipfs/kubo:v0.30.0
     container_name: ${ORG}_ipfs
     restart: unless-stopped
+    command: ["daemon", "--enable-pubsub-experiment"]
+
     # ports:
     #   - 4001:4001
     #   - 127.0.0.1:5001:5001
