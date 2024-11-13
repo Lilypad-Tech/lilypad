@@ -46,6 +46,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
 
+	unregisterMetrics, err := system.NewMetrics(meter)
+	if err != nil {
+		log.Warn().Msgf("failed to start system metrics: %s", err)
+	}
+	commandCtx.Cm.RegisterCallback(unregisterMetrics)
+
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
 		return err
