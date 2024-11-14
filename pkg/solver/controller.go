@@ -304,6 +304,14 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	}
 	span.AddEvent("add_deals.done")
 
+	span.AddEvent("report_deal_metrics.start")
+	storedDeals, err := controller.store.GetDealsAll()
+	if err != nil {
+		return err
+	}
+	reportDealMetrics(ctx, controller.meter, storedDeals)
+	span.AddEvent("report_deal_metrics.done")
+
 	return nil
 }
 
