@@ -13,7 +13,7 @@ ENV WEB3_PRIVATE_KEY=""
 ENV DISABLE_TELEMETRY=false
 
 # Install necessary dependencies
-RUN apt update && apt install -y wget bash curl && apt clean
+RUN apt update && apt install -y jq wget bash curl && apt clean
 
 # Install Bacalhau
 RUN cd /tmp && \
@@ -44,6 +44,7 @@ RUN mv lilypad /usr/local/bin
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Create a startup script to run both services simultaneously
+COPY ./docker/resource-provider/test.sh .
 RUN touch run
 RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
@@ -56,7 +57,7 @@ RUN echo 'fi' >> run
 
 # Wait for Bacalhau to be ready by checking the correct API endpoint
 RUN echo "while ! curl -s http://0.0.0.0:1234/api/v1/agent/alive | grep '\"Status\": \"OK\"'; do echo 'Waiting for Bacalhau...'; sleep 2; done" >> run
-
+RUN cat ./test.sh >> run
 # Launch Lilypad
 RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
 RUN echo "wait -n" >> run

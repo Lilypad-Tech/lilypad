@@ -368,6 +368,7 @@ func readPrivKeyFromBashrc() string {
 	return ""
 }
 func main() {
+	fmt.Println("Lilypad Pre-Flight Check")
 	// cmd := exec.Command("bash", "-c", "source ~/.bashrc")
 	// if err := cmd.Run(); err != nil {
 	// 	log.Fatalf("Failed to source .bashrc: %v", err)
