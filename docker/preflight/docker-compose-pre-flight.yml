@@ -1,7 +1,7 @@
 # This is a docker-compose file for use by Resource Providers
 services:
   ipfs:
-    image: ipfs/kubo:v0.30.0
+    image: ipfs/kubo:v0.31.0
     container_name: ${ORG}_ipfs
     restart: unless-stopped
     command: ["daemon", "--enable-pubsub-experiment"]
@@ -61,6 +61,7 @@ services:
       - WEB3_CONTROLLER_ADDRESS
       - OFFER_MODULES
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+      - IPFS_ADDR=/dns4/ipfs/tcp/5001
   watchtower:
     image: containrrr/watchtower
     container_name: ${ORG}_watchtower
