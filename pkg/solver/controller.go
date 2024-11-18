@@ -307,9 +307,15 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	span.AddEvent("report_deal_metrics.start")
 	storedDeals, err := controller.store.GetDealsAll()
 	if err != nil {
+		span.SetStatus(codes.Error, "get all deals failed")
+		span.RecordError(err)
 		return err
 	}
-	reportDealMetrics(ctx, controller.meter, storedDeals)
+	err = reportDealMetrics(ctx, controller.meter, storedDeals)
+	if err != nil {
+		span.SetStatus(codes.Error, "report deal metrics failed")
+		span.RecordError(err)
+	}
 	span.AddEvent("report_deal_metrics.done")
 
 	return nil
