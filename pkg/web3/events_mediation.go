@@ -49,12 +49,7 @@ func (m *MediationEventChannels) Start(
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if mediationRequestedSub != nil {
-			mediationRequestedSub.Unsubscribe()
-		}
-	}()
+	cm.RegisterCallback(unsubscribeSub(mediationRequestedSub))
 
 	for {
 		select {

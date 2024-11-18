@@ -49,12 +49,7 @@ func (s *JobCreatorEventChannels) Start(
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if jobAddedSub != nil {
-			jobAddedSub.Unsubscribe()
-		}
-	}()
+	cm.RegisterCallback(unsubscribeSub(jobAddedSub))
 
 	for {
 		select {
