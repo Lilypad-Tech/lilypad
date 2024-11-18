@@ -182,6 +182,8 @@ func (s *SolverStoreMemory) GetDeals(query store.GetDealsQuery) ([]data.DealCont
 }
 
 func (s *SolverStoreMemory) GetDealsAll() ([]data.DealContainer, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	deals := []data.DealContainer{}
 	for _, deal := range s.dealMap {
 		deals = append(deals, *deal)
