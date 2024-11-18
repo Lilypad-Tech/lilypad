@@ -117,6 +117,9 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 			parts := strings.Split(input, "=")
 			if len(parts) == 2 {
 				inputs[parts[0]] = parts[1]
+				if parts[0] == "target" {
+					options.Target.Address = parts[1]
+				}
 			}
 		}
 		options.Inputs = inputs
