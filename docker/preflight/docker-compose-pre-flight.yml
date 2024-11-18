@@ -12,6 +12,12 @@ services:
     #   - 127.0.0.1:8080:8080
     volumes:
       - ipfs-data:/data/ipfs
+    # healthcheck:
+    #   test: ["CMD-SHELL", "docker logs ${ORG}_ipfs 2>&1 | grep -q 'Daemon is ready'"]   
+    #   interval: 1s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 1s  
     depends_on:
       preflight:
         condition: service_completed_successfully  
@@ -43,7 +49,8 @@ services:
     restart: unless-stopped
     depends_on:
       ipfs:
-        condition: service_started
+        condition: service_healthy 
+        # condition: service_started
       # preflight:
       #   condition: service_healthy
     build:
@@ -56,6 +63,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WEB3_PRIVATE_KEY
+      # =$RESOURCE_PROVIDER_PRIVATE_KEY
       - WEB3_RPC_URL
       - WEB3_CHAIN_ID
       - WEB3_CONTROLLER_ADDRESS

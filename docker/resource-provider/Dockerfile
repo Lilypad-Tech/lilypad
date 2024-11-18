@@ -50,7 +50,7 @@ RUN echo "#!/bin/bash" >> run
 # Launch Bacalhau
 
 RUN echo 'if [ -n "$IPFS_CONNECT" ]; then' >> run
-RUN echo '  /usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --ipfs-connect $IPFS_CONNECT &' >> run
+RUN echo '  /usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked --ipfs-connect $IPFS_CONNECT &' >> run
 RUN echo 'else' >> run
 RUN echo '  /usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &' >> run
 RUN echo 'fi' >> run

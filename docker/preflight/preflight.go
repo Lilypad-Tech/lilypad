@@ -413,8 +413,7 @@ func main() {
 		cmd := exec.Command("docker-compose",
 			"-f", "docker-compose-pre-flight.yml",
 			"-p", os.Args[2],
-			"up",
-			"--build")
+			"up")
 		cmd.Env = append(os.Environ(), fmt.Sprintf("ORG=%s", os.Args[2]))
 
 		//https://raw.githubusercontent.com/arsenum/lilypad_network/refs/heads/main/config.toml
