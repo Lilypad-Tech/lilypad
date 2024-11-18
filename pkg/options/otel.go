@@ -83,10 +83,8 @@ func CheckTelemetryOptions(options system.TelemetryOptions) error {
 }
 
 func CheckMetricsOptions(options system.MetricsOptions) error {
-	if options.Enable {
-		if len(options.URL) == 0 {
-			return fmt.Errorf("No metrics endpoint specified - please use METRICS_URL or --metrics-url")
-		}
+	if options.Enable && len(options.URL) == 0 {
+		return fmt.Errorf("No metrics endpoint specified - please use METRICS_URL or --metrics-url")
 	}
 
 	return nil
