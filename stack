@@ -81,6 +81,8 @@ function chain() {
       --http.port 8547 \
       --http.addr 0.0.0.0 \
       --ws.port 8548 \
+      --http.vhosts=\* \
+      --http.corsdomain=\* \
       --ws.addr 0.0.0.0
 }
 
