@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.9.0...v2.9.1) (2024-11-18)
+
+
+### Bug Fixes
+
+* Solver connection errors ([#427](https://github.com/Lilypad-Tech/lilypad/issues/427)) ([52de132](https://github.com/Lilypad-Tech/lilypad/commit/52de132947a60f45fecb6229011b5c22baf54450))
+
 ## [2.9.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.8.0...v2.9.0) (2024-11-05)
 
 
