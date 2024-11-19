@@ -71,7 +71,7 @@ function chain() {
       --node.dangerous.no-l1-listener \
       --node.parent-chain-reader.enable=false \
       --parent-chain.id=1337 \
-      --chain.id=412346 \
+      --chain.id=412349 \
       --persistent.chain /tmp/dev-test \
       --node.sequencer \
       --execution.sequencer.enable \
@@ -89,16 +89,16 @@ function chain-boot() {
   echo "- Install local dependencies"
   cd hardhat && npm install -y
   echo "- Fund services with ether"
-  npx hardhat run scripts/fund-services-ether.ts --network dev
+  npx hardhat run scripts/fund-services-ether.ts --network demonet
   echo "- Compile contracts"
-  npx hardhat compile --network dev
+  npx hardhat compile --network demonet
   cd ..
   go-bindings
   echo "- Deploy contracts"
   cd hardhat
-  npx hardhat deploy --network dev
+  npx hardhat deploy --network demonet
   echo "- Fund services with tokens"
-  npx hardhat run scripts/fund-services-tokens.ts --network dev
+  npx hardhat run scripts/fund-services-tokens.ts --network demonet
   cd ..
   echo "- Done"
 }
@@ -164,7 +164,7 @@ function chain-clean(){
   rm -rf $(pwd)/hardhat/artifacts
   rm -rf $(pwd)/hardhat/cache
   rm -rf $(pwd)/hardhat/deployments/geth
-  rm -rf $(pwd)/hardhat/deployments/dev
+  rm -rf $(pwd)/hardhat/deployments/demonet
   rm -rf $(pwd)/hardhat/.openzeppelin
 }
 

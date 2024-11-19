@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
     },
     demonet:{
       url: 'https://demonet-chain-http.lilypad.tech',
-      chainId: 412347,
+      chainId: 412349,
       accounts: [getAccount('admin').privateKey],
     },
   },

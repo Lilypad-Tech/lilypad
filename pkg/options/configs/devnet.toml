@@ -5,7 +5,7 @@ api_host = "https://api-devnet.lilypad.tech/"
 
 [web3]
 rpc_url = "wss://devnet-chain-ws.lilypad.tech"
-chain_id = 412346
+chain_id = 412349
 controller_address = "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
 payments_address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
 storage_address = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
