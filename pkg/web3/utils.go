@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 func GetPublicKey(privateKey *ecdsa.PrivateKey) ecdsa.PublicKey {
@@ -67,4 +68,11 @@ func ConvertStringToBigInt(st string) big.Int {
 func ConvertStringToInt64(st string) uint64 {
 	bigInt := ConvertStringToBigInt(st)
 	return bigInt.Uint64()
+}
+
+func unsubscribeSub(sub event.Subscription) func() error {
+	return func() error {
+		sub.Unsubscribe()
+		return nil
+	}
 }

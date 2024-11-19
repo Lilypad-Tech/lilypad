@@ -52,12 +52,7 @@ func (t *TokenEventChannels) Start(
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if transferSub != nil {
-			transferSub.Unsubscribe()
-		}
-	}()
+	cm.RegisterCallback(unsubscribeSub(transferSub))
 
 	for {
 		select {
