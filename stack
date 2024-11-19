@@ -71,7 +71,7 @@ function chain() {
       --node.dangerous.no-l1-listener \
       --node.parent-chain-reader.enable=false \
       --parent-chain.id=1337 \
-      --chain.id=412349 \
+      --chain.id=412348 \
       --persistent.chain /tmp/dev-test \
       --node.sequencer \
       --execution.sequencer.enable \
