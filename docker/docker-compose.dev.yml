@@ -37,7 +37,7 @@ services:
       timeout: 10s
       retries: 5
   ipfs:
-    image: ipfs/kubo:v0.32.0
+    image: ipfs/kubo:v0.32.1
     container_name: ipfs
     restart: unless-stopped
     ports:
@@ -56,6 +56,8 @@ services:
       dockerfile: ./docker/bacalhau/Dockerfile
     extra_hosts:
       - "localhost:host-gateway"
+    environment:
+      - BACALHAU_ENVIRONMENT=local
     command:
       [
         "serve",
@@ -119,6 +121,8 @@ services:
     container_name: resource-provider
     restart: unless-stopped
     depends_on:
+      ipfs:
+        condition: service_healthy
       solver:
         condition: service_healthy
       bacalhau:

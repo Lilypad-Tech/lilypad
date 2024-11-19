@@ -208,7 +208,7 @@ func (executor *BacalhauExecutor) getJobID(
 	outputError := strings.Join(strings.Fields(strings.Join(splitOutputs[1:], " ")), " ")
 
 	if outputError != "" {
-		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, outputError, runOutput)
+		log.Error().Msgf("error parsing output %s -> %s, %s", deal.ID, outputError, runOutput)
 	}
 
 	id := strings.TrimSpace(string(runOutput))

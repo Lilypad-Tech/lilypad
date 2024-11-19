@@ -312,6 +312,7 @@ function resource-provider-docker-run() {
 
 function bacalhau-node(){
   export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
+  export BACALHAU_ENVIRONMENT=local
   export LOG_LEVEL=debug
   bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked --ipfs-connect "/ip4/127.0.0.1/tcp/5001"
 }

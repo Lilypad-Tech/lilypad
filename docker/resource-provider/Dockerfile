@@ -47,6 +47,10 @@ ENV PATH="/usr/local/bin:${PATH}"
 RUN touch run
 RUN echo "#!/bin/bash" >> run
 
+# Ensure bacalhau is initialized
+RUN echo "export BACALHAU_ENVIRONMENT=local" >> run
+RUN echo "bacalhau id" >> run
+
 # Launch Lilypad
 RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
 RUN echo "wait -n" >> run

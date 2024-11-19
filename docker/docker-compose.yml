@@ -1,7 +1,7 @@
 # This is a docker-compose file for use by Resource Providers
 services:
   ipfs:
-    image: ipfs/kubo:v0.32.0
+    image: ipfs/kubo:v0.32.1
     container_name: ipfs
     restart: unless-stopped
     ports:
@@ -17,8 +17,8 @@ services:
     depends_on:
       ipfs:
         condition: service_healthy
-    extra_hosts:
-      - "localhost:host-gateway"
+    environment:
+      - BACALHAU_ENVIRONMENT=local
     command:
       [
         "serve",
