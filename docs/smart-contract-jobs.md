@@ -1,6 +1,6 @@
 ## Running jobs from smart contracts
 
-We have deloyed the [LilypadOnChainJobCreator](../hardhat/contracts/LilypadOnChainJobCreator.sol) contract which you can use to trigger running jobs on the lilypad network from other smart contracts.
+We have deployed the [LilypadOnChainJobCreator](../hardhat/contracts/LilypadOnChainJobCreator.sol) contract which you can use to trigger running jobs on the lilypad network from other smart contracts.
 
 It works in tandem with the `lilypad jobcreator` on-chain which will watch the on-chain contract and manage jobs on behalf of contracts that submit them.
 
@@ -18,7 +18,7 @@ Running a job involves 2 phases:
 Now we know the address of the on-chain job controller - we can ask it for 3 things:
 
  * the address of the ERC-20 token contract - `getTokenAddress()`
- * how much the required deposit it - `getRequiredDeposit()`
+ * how much is the required deposit - `getRequiredDeposit()`
  * the address of the solver that will handle running the job for us - `getControllerAddress()`
 
 Knowing these 3 things means we can call the standard ERC-20 `approve` to allow the solver to spend our tokens on our behalf.
@@ -26,7 +26,7 @@ Knowing these 3 things means we can call the standard ERC-20 `approve` to allow 
 Now - we can call the `runJob` method of the on chain controller from another contract.  This will cause the job-creator service to kick in and do the following things:
 
  * check that funds have been approved for the solver
- * transfer those funds to it's wallet
+ * transfer those funds to its wallet
  * run the job on lilypad
  * call the `submitResults` method on the on-chain job creator
  * the on-chain job creator will call the `submitResults` of the original calling contract
