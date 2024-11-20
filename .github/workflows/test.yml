@@ -45,6 +45,7 @@ jobs:
       - name: Run stack
         env:
           DISABLE_TELEMETRY: true
+          API_HOST: ""
         run: ./stack compose-up -d
 
       - name: Run tests
