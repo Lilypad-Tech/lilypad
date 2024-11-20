@@ -10,7 +10,7 @@ A publicly accessible Lilypad network.
 
 ### Resource providers
 
-As is, the network cannot execute jobs, it needs resource providers to connect to the network and these in turn will be the ones running the jobs. Follow this instructions to [run a node in the Lilypad network](https://docs.lilypad.tech/lilypad/lilypad-milky-way-reference/run-a-node).
+As is, the network cannot execute jobs, it needs resource providers to connect to the network and these in turn will be the ones running the jobs. Follow these instructions to [run a node in the Lilypad network](https://docs.lilypad.tech/lilypad/lilypad-milky-way-reference/run-a-node).
 
 ## Deployments
 
@@ -49,7 +49,7 @@ These steps have been used for [AWS](https://aws.amazon.com/) so maybe some chan
 
 ### VM instance
 
-The VM should have a running Docker daemon and should be able to pull an image from the chosen container registry. These instructions asssume an Ubuntu image.
+The VM should have a running Docker daemon and should be able to pull an image from the chosen container registry. These instructions assume an Ubuntu image.
 
 Create a virtual machine to execute the component. When creating the VM, attach an instance profile that gives it access to pull from an ECR registry. In our ops setup, we have a role named `LilypadService` that has the necessary permissions.
 

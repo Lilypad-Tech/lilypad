@@ -25,9 +25,9 @@ Order matters because the `solver`, `job creator` and `resource provider` will r
 
 ### 1. Blockchain node
 
-The node can can run directly from an existing docker image. It will initialize itself to a blank state with the admin address holding the funds to deploy the smart contracts (including the Lilypad token) and fund the accounts used by the different services. The blockchain is ephemeral, meaning every time you restart the node the state will be reset, you can work around this by keeping the node active if needed.
+The node can run directly from an existing docker image. It will initialize itself to a blank state with the admin address holding the funds to deploy the smart contracts (including the Lilypad token) and fund the accounts used by the different services. The blockchain is ephemeral, meaning every time you restart the node the state will be reset, you can work around this by keeping the node active if needed.
 
-These are the commands to run the node and boot the network: `./stack chain-clean` (the first time this won't do anything, but I find it better to get in the habit of resetting artifacts everytime), `./stack chain` to run the node and `./stack chain-boot` to fund the accounts with ETH (for gas fees), compile the contracts, add Golang bindings to use the contracts directly in go code, deploy the contracts and fund the accounts with Lilypad tokens.
+These are the commands to run the node and boot the network: `./stack chain-clean` (the first time this won't do anything, but I find it better to get in the habit of resetting artifacts every time), `./stack chain` to run the node and `./stack chain-boot` to fund the accounts with ETH (for gas fees), compile the contracts, add Golang bindings to use the contracts directly in go code, deploy the contracts and fund the accounts with Lilypad tokens.
 
 #### Summary of command sequence
 
@@ -50,7 +50,7 @@ This process can be executed directly if Golang has been installed or in a docke
 
 ### 4. IPFS node
 
-This process can be run directly using an IPFS Kubo binary. [Download a Kubo binary](https://dist.ipfs.tech/#kubo) for your platform and architecture. Initiliaze an repository where Kubo will store settings and internal data:
+This process can be run directly using an IPFS Kubo binary. [Download a Kubo binary](https://dist.ipfs.tech/#kubo) for your platform and architecture. Initiliaze a repository where Kubo will store settings and internal data:
 
 ```sh
 ipfs init
