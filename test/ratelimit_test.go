@@ -58,7 +58,7 @@ func makeCalls(t *testing.T, path string, ch chan rateResult) {
 
 	// Make 100 requests
 	for range 100 {
-		requestURL := fmt.Sprintf("http://localhost:%d%s", 8080, path)
+		requestURL := fmt.Sprintf("http://localhost:%d%s", 8081, path)
 		res, err := http.Get(requestURL)
 
 		if err != nil {

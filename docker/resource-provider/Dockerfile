@@ -46,11 +46,10 @@ ENV PATH="/usr/local/bin:${PATH}"
 # Create a startup script to run both services simultaneously
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-# Launch Bacalhau
-RUN echo "/usr/local/bin/bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked &" >> run
 
-# Wait for Bacalhau to be ready by checking the correct API endpoint
-RUN echo "while ! curl -s http://0.0.0.0:1234/api/v1/agent/alive | grep '\"Status\": \"OK\"'; do echo 'Waiting for Bacalhau...'; sleep 2; done" >> run
+# Ensure bacalhau is initialized
+RUN echo "export BACALHAU_ENVIRONMENT=local" >> run
+RUN echo "bacalhau id" >> run
 
 # Launch Lilypad
 RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
