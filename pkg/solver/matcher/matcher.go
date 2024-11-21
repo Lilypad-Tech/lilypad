@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -27,7 +28,9 @@ func GetMatchingDeals(
 	db store.SolverStore,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 	tracer trace.Tracer,
+	meter metric.Meter,
 ) ([]data.Deal, error) {
+	metrics, err := newMetrics(meter)
 	ctx, span := tracer.Start(ctx, "get_matching_deals")
 	defer span.End()
 
@@ -178,6 +181,11 @@ func GetMatchingDeals(
 				}))
 		}
 	}
+
+	// Record metrics
+	metrics.jobOffers.Record(ctx, int64(len(jobOffers)))
+	metrics.resourceOffers.Record(ctx, int64(len(resourceOffers)))
+	metrics.deals.Record(ctx, int64(len(deals)))
 
 	log.Debug().
 		Int("jobOffers", len(jobOffers)).
