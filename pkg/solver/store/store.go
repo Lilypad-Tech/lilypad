@@ -1,6 +1,10 @@
 package store
 
-import "github.com/lilypad-tech/lilypad/pkg/data"
+import (
+	"fmt"
+
+	"github.com/lilypad-tech/lilypad/pkg/data"
+)
 
 type GetJobOffersQuery struct {
 	JobCreator string `json:"job_creator"`
@@ -70,4 +74,8 @@ type SolverStore interface {
 	UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error)
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
+}
+
+func GetMatchID(resourceOffer string, jobOffer string) string {
+	return fmt.Sprintf("%s-%s", resourceOffer, jobOffer)
 }
