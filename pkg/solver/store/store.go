@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/jsonl"
 )
 
 type GetJobOffersQuery struct {
@@ -78,4 +80,18 @@ type SolverStore interface {
 
 func GetMatchID(resourceOffer string, jobOffer string) string {
 	return fmt.Sprintf("%s-%s", resourceOffer, jobOffer)
+}
+
+func GetLogWriters(kinds []string) (map[string]jsonl.Writer, error) {
+	logWriters := make(map[string]jsonl.Writer)
+
+	for k := range kinds {
+		logfile, err := os.OpenFile(fmt.Sprintf("/var/tmp/lilypad_%s.jsonl", kinds[k]), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			return nil, err
+		}
+		logWriters[kinds[k]] = jsonl.NewWriter(logfile)
+	}
+
+	return logWriters, nil
 }
