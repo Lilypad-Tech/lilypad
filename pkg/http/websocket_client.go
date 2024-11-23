@@ -20,7 +20,7 @@ const (
 )
 
 // ConnectWebSocket establishes a new WebSocket connection
-func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
+func ConnectWebSocket(ctx context.Context, url string) (chan []byte, error) {
 	connectFactory := func() (*websocket.Conn, error) {
 		currentBackoff := 0.0
 		for attempt := 0; attempt < maxAttempts; attempt++ {
