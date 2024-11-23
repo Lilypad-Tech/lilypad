@@ -23,7 +23,7 @@ const (
 func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
 	connectFactory := func() (*websocket.Conn, error) {
 		currentBackoff := 0.0
-		for attempt := 0; attempt < maxAttempts; attempt++ { // Add condition here
+		for attempt := 0; attempt < maxAttempts; attempt++ {
 			select {
 			case <-ctx.Done():
 				return nil, fmt.Errorf("websocket connection canceled: %w", ctx.Err())
@@ -44,7 +44,9 @@ func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
 
 				select {
 				case <-ctx.Done():
-					timer.Stop()
+					if !timer.Stop() {
+						<-timer.C
+					}
 					return nil, fmt.Errorf("websocket connection canceled during backoff: %w", ctx.Err())
 				case <-timer.C:
 				}
@@ -56,16 +58,19 @@ func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
 			conn.SetPongHandler(nil)
 			return conn, nil
 		}
-		return nil, fmt.Errorf("maximum connection attempts (%d) reached", maxAttempts) // Add this return
+		return nil, fmt.Errorf("maximum connection attempts (%d) reached", maxAttempts)
 	}
 
 	pingInterval := time.NewTicker(time.Second * 5)
 	connLk := &sync.Mutex{}
-	responseCh := make(chan []byte)
-	errCh := make(chan error)
+	responseCh := make(chan []byte, 100)
+	errCh := make(chan error, 1)
 
 	readMessage := func(conn *websocket.Conn) {
-		defer close(responseCh)
+		defer func() {
+			conn.Close()
+			close(responseCh)
+		}()
 		for {
 			select {
 			case <-ctx.Done():
@@ -97,7 +102,14 @@ func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
 	go readMessage(conn)
 
 	go func() {
-		defer pingInterval.Stop()
+		defer func() {
+			pingInterval.Stop()
+			connLk.Lock()
+			if conn != nil {
+				conn.Close()
+			}
+			connLk.Unlock()
+		}()
 		for {
 			select {
 			case <-ctx.Done():
@@ -105,23 +117,31 @@ func ConnectWebSocket(url string, ctx context.Context) (chan []byte, error) {
 				return
 			case <-pingInterval.C:
 				connLk.Lock()
-				log.Trace().Msg("Sending ping message.")
-				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-					log.Err(err).Msg("Error sending ping message.")
-					connLk.Unlock()
-					return
+				if conn != nil {
+					if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+						log.Err(err).Msg("Error sending ping message.")
+						select {
+						case errCh <- err:
+						default:
+						}
+					}
 				}
 				connLk.Unlock()
 			case err := <-errCh:
 				log.Err(err).Msg("WebSocket error detected.")
 				connLk.Lock()
-				conn, err = connectFactory()
-				connLk.Unlock()
+				if conn != nil {
+					conn.Close()
+				}
+				newConn, err := connectFactory()
 				if err != nil {
 					log.Err(err).Msg("Failed to reconnect WebSocket.")
+					connLk.Unlock()
 					return
 				}
-				go readMessage(conn)
+				conn = newConn
+				connLk.Unlock()
+				go readMessage(newConn)
 			}
 		}
 	}()
