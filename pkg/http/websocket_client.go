@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"net"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -33,26 +33,29 @@ func ConnectWebSocket(ctx context.Context, url string) (chan []byte, error) {
 			log.Debug().Msgf("WebSocket connection connecting: %s", url)
 			conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 			if err != nil {
-				var netErr *net.OpError
-				if errors.As(err, &netErr) && netErr.Op == "dial" {
+				switch {
+				case websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure):
+					log.Info().Msg("Solver service closed connection")
+					return nil, fmt.Errorf("solver connection closed: %w", err)
+				case errors.Is(err, syscall.ECONNREFUSED):
 					log.Info().Msg("Solver service appears to be down")
 					return nil, fmt.Errorf("solver service unavailable: %w", err)
-				}
+				default:
+					log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in %.3f seconds...", err, currentBackoff)
+					timer := time.NewTimer(time.Duration(currentBackoff * float64(time.Second)))
 
-				log.Error().Msgf("WebSocket connection failed: %s\nReconnecting in %.3f seconds...", err, currentBackoff)
-				timer := time.NewTimer(time.Duration(currentBackoff * float64(time.Second)))
-
-				select {
-				case <-ctx.Done():
-					if !timer.Stop() {
-						<-timer.C
+					select {
+					case <-ctx.Done():
+						if !timer.Stop() {
+							<-timer.C
+						}
+						return nil, fmt.Errorf("websocket connection canceled during backoff: %w", ctx.Err())
+					case <-timer.C:
 					}
-					return nil, fmt.Errorf("websocket connection canceled during backoff: %w", ctx.Err())
-				case <-timer.C:
-				}
 
-				currentBackoff += initialDelay * math.Pow(exponential, float64(attempt))
-				continue
+					currentBackoff += initialDelay * math.Pow(exponential, float64(attempt))
+					continue
+				}
 			}
 
 			conn.SetPongHandler(nil)
