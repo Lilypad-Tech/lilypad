@@ -85,7 +85,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, options.Web3)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, nil, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}

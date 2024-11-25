@@ -12,6 +12,7 @@ func NewSolverOptions() solver.SolverOptions {
 		Web3:      GetDefaultWeb3Options(),
 		Services:  GetDefaultServicesOptions(),
 		Telemetry: GetDefaultTelemetryOptions(),
+		Metrics:   GetDefaultMetricsOptions(),
 	}
 	options.Web3.Service = system.SolverService
 	return options
@@ -22,6 +23,7 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 	AddServerCliFlags(cmd, &options.Server)
 	AddServicesCliFlags(cmd, &options.Services)
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
+	AddMetricsCliFlags(cmd, &options.Metrics)
 }
 
 func CheckSolverOptions(options solver.SolverOptions) error {
@@ -34,6 +36,10 @@ func CheckSolverOptions(options solver.SolverOptions) error {
 		return err
 	}
 	err = CheckTelemetryOptions(options.Telemetry)
+	if err != nil {
+		return err
+	}
+	err = CheckMetricsOptions(options.Metrics)
 	if err != nil {
 		return err
 	}

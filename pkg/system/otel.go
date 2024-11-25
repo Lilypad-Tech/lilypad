@@ -11,9 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -21,6 +23,7 @@ import (
 
 type Telemetry struct {
 	TracerProvider *trace.TracerProvider
+	MeterProvider  *metric.MeterProvider
 	Shutdown       func(context.Context) error
 }
 
@@ -40,7 +43,19 @@ type TelemetryConfig struct {
 	GPU            []string
 }
 
-func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Telemetry, err error) {
+type MetricsOptions struct {
+	URL    string `json:"url" toml:"url"`
+	Token  string `json:"token" toml:"token"`
+	Enable bool
+}
+
+type MetricsConfig struct {
+	MetricsURL   string
+	MetricsToken string
+	Enabled      bool
+}
+
+func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig MetricsConfig) (telemetry Telemetry, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// Call registered cleanup handlers, calling each
@@ -63,42 +78,6 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig) (telemetry Teleme
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
-	// Set up tracer provider.
-	var TracerProvider *trace.TracerProvider
-	if config.Enabled {
-		TracerProvider, err = newTracerProvider(ctx, config)
-		if err != nil {
-			handleErr(err)
-			return Telemetry{
-				TracerProvider,
-				Shutdown,
-			}, err
-		}
-		shutdownFuncs = append(shutdownFuncs, TracerProvider.Shutdown)
-	} else {
-		// TODO(bgins) Investigate a better Noop provider
-		TracerProvider = trace.NewTracerProvider()
-	}
-
-	// TODO(bgins) Add meter and logger providers
-
-	return Telemetry{TracerProvider, Shutdown}, nil
-}
-
-func newPropagator() propagation.TextMapPropagator {
-	return propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-}
-
-func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.TracerProvider, error) {
-	exporter, err := newTracerExporter(ctx, config)
-	if err != nil {
-		log.Error().Msgf("failed to configure trace exporter: %v", err)
-		return nil, err
-	}
-
 	// Set resource with global attributes
 	resource := resource.NewWithAttributes(
 		semconv.SchemaURL,
@@ -110,6 +89,58 @@ func newTracerProvider(ctx context.Context, config TelemetryConfig) (*trace.Trac
 		attribute.String("chain.network", config.Network),
 		attribute.String("chain.address", config.Address),
 	)
+
+	// TODO(bgins) Investigate a better Noop provider
+	TracerProvider := trace.NewTracerProvider()
+	// Meter provider with no reader performs no operations
+	MeterProvider := metric.NewMeterProvider()
+
+	// Set up tracer provider.
+	if config.Enabled {
+		TracerProvider, err = newTracerProvider(ctx, resource, config)
+		if err != nil {
+			handleErr(err)
+			return Telemetry{
+				TracerProvider,
+				MeterProvider,
+				Shutdown,
+			}, err
+		}
+		shutdownFuncs = append(shutdownFuncs, TracerProvider.Shutdown)
+	}
+
+	// Set up meter provider
+	if metricsConfig.Enabled {
+		MeterProvider, err = newMeterProvider(ctx, resource, metricsConfig)
+		if err != nil {
+			handleErr(err)
+			return Telemetry{
+				TracerProvider,
+				MeterProvider,
+				Shutdown,
+			}, err
+		}
+		shutdownFuncs = append(shutdownFuncs, MeterProvider.Shutdown)
+	}
+
+	// TODO(bgins) Add logger provider
+
+	return Telemetry{TracerProvider, MeterProvider, Shutdown}, nil
+}
+
+func newPropagator() propagation.TextMapPropagator {
+	return propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
+}
+
+func newTracerProvider(ctx context.Context, resource *resource.Resource, config TelemetryConfig) (*trace.TracerProvider, error) {
+	exporter, err := newTracerExporter(ctx, config)
+	if err != nil {
+		log.Error().Msgf("failed to configure trace exporter: %v", err)
+		return nil, err
+	}
 
 	// Set tracer provider
 	provider := trace.NewTracerProvider(
@@ -148,6 +179,53 @@ func newTracerExporter(ctx context.Context, config TelemetryConfig) (*otlptrace.
 	}
 
 	return exporter, nil
+}
+
+func newMeterProvider(
+	ctx context.Context,
+	resource *resource.Resource,
+	config MetricsConfig,
+) (*metric.MeterProvider, error) {
+	exporter, err := newMetricExporter(ctx, config)
+	if err != nil {
+		log.Error().Msgf("failed to configure trace exporter: %v", err)
+		return nil, err
+	}
+
+	meterProvider := metric.NewMeterProvider(
+		metric.WithResource(resource),
+		// Collect and export data every 60 seconds
+		metric.WithReader(metric.NewPeriodicReader(exporter)),
+	)
+
+	return meterProvider, nil
+}
+
+func newMetricExporter(ctx context.Context, config MetricsConfig) (*otlpmetrichttp.Exporter, error) {
+	headers := map[string]string{"Authorization": fmt.Sprintf("Bearer %s", config.MetricsToken)}
+	url, err := url.ParseRequestURI(config.MetricsURL)
+
+	var metricExporter *otlpmetrichttp.Exporter
+	if url.Scheme == "https" {
+		metricExporter, err = otlpmetrichttp.New(ctx,
+			otlpmetrichttp.WithHeaders(headers),
+			otlpmetrichttp.WithEndpointURL(config.MetricsURL),
+		)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		metricExporter, err = otlpmetrichttp.New(ctx,
+			otlpmetrichttp.WithHeaders(headers),
+			otlpmetrichttp.WithEndpointURL(config.MetricsURL),
+			otlpmetrichttp.WithInsecure(),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return metricExporter, nil
 }
 
 // Convert service names to use standardized OTel underscores
