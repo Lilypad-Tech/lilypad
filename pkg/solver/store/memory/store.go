@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -21,20 +20,11 @@ type SolverStoreMemory struct {
 	logWriters       map[string]jsonl.Writer
 }
 
-func getMatchID(resourceOffer string, jobOffer string) string {
-	return fmt.Sprintf("%s-%s", resourceOffer, jobOffer)
-}
-
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
-	logWriters := make(map[string]jsonl.Writer)
-
 	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
-	for k := range kinds {
-		logfile, err := os.OpenFile(fmt.Sprintf("/var/tmp/lilypad_%s.jsonl", kinds[k]), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			return nil, err
-		}
-		logWriters[kinds[k]] = jsonl.NewWriter(logfile)
+	logWriters, err := store.GetLogWriters(kinds)
+	if err != nil {
+		return nil, err
 	}
 
 	return &SolverStoreMemory{
@@ -84,7 +74,7 @@ func (s *SolverStoreMemory) AddResult(result data.Result) (*data.Result, error) 
 func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer string, deal string, result bool) (*data.MatchDecision, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	id := getMatchID(resourceOffer, jobOffer)
+	id := store.GetMatchID(resourceOffer, jobOffer)
 	_, ok := s.matchDecisionMap[id]
 	if ok {
 		return nil, fmt.Errorf("that match already exists")
@@ -245,7 +235,7 @@ func (s *SolverStoreMemory) GetResult(id string) (*data.Result, error) {
 func (s *SolverStoreMemory) GetMatchDecision(resourceOffer string, jobOffer string) (*data.MatchDecision, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	id := getMatchID(resourceOffer, jobOffer)
+	id := store.GetMatchID(resourceOffer, jobOffer)
 	decision, ok := s.matchDecisionMap[id]
 	if !ok {
 		return nil, nil
