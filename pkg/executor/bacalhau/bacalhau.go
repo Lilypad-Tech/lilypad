@@ -1,20 +1,30 @@
 package bacalhau
 
 import (
-	"encoding/json"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
-
 	"path/filepath"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
 	"github.com/lilypad-tech/lilypad/pkg/ipfs"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/rs/zerolog/log"
 
 	"github.com/bacalhau-project/bacalhau/pkg/models"
+	"github.com/ipfs/boxo/blockservice"
+	blockstore "github.com/ipfs/boxo/blockstore"
+	chunker "github.com/ipfs/boxo/chunker"
+	offline "github.com/ipfs/boxo/exchange/offline"
+	"github.com/ipfs/boxo/ipld/merkledag"
+	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
+	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-datastore"
+	dsync "github.com/ipfs/go-datastore/sync"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	multicodec "github.com/multiformats/go-multicodec"
 )
 
 const RESULTS_DIR = "bacalhau-results"
@@ -34,24 +44,27 @@ type BacalhauExecutor struct {
 
 func NewBacalhauExecutor(options BacalhauExecutorOptions, ipfsClient *ipfs.Client) (*BacalhauExecutor, error) {
 
-	apiHost := ""
-	if options.ApiHost != "DO_NOT_SET" {
-		apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
-	}
-	bacalhauEnv := []string{
-		apiHost,
-		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
-	}
-	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
+	// apiHost := ""
+	// if options.ApiHost != "DO_NOT_SET" {
+	// 	apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
+	// }
+	// fmt.Printf("OPTIONS: %s\n", options)
+	// bacalhauEnv := []string{
+	// 	apiHost,
+	// 	fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
+	// }
 
-	client, err := NewBacalhauClient(options.ApiHost)
+	// log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
+	apiHost := fmt.Sprintf("http://%s:%s", "localhost", "20000")
+
+	client, err := NewBacalhauClient(apiHost)
 	if err != nil {
 		return nil, err
 	}
 
 	return &BacalhauExecutor{
-		Options:        options,
-		bacalhauEnv:    bacalhauEnv,
+		Options: options,
+
 		bacalhauClient: *client,
 		ipfsClient:     ipfsClient,
 	}, nil
@@ -93,42 +106,113 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
+	fmt.Printf("Running job: %s\n", deal.ID)
 	id, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
-	jobInfo, err := executor.bacalhauClient.GetJob(id)
+	for {
+		jobInfo, err := executor.bacalhauClient.GetJob(id)
+		if err != nil {
+			return nil, fmt.Errorf("error getting job %s: %s", id, err.Error())
+		}
+
+		if jobInfo.Executions == nil {
+			return nil, fmt.Errorf("no executions retrieved for job %s", id)
+		}
+
+		jobExecutions := jobInfo.Executions.Items
+
+		if len(jobExecutions) > 0 {
+			// Check that the job completed successfully
+			if jobInfo.Job.State.StateType != models.JobStateTypeCompleted {
+				return nil, fmt.Errorf("job %s did not complete yet: %s", id, jobInfo.Job.State.StateType.String())
+			}
+			break
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+
+	system.EnsureDataDir(RESULTS_DIR)
+	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
+
+	cid, resultsDir, err := executor.prepareResults(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error preparing results: %s", err.Error())
 	}
 
-	if len(jobInfo.Executions.Items) <= 0 {
-		return nil, fmt.Errorf("no executions found for job %s", id)
+	results := &executorlib.ExecutorResults{
+		ResultsDir:       resultsDir,
+		ResultsCID:       cid,
+		InstructionCount: 1,
 	}
 
-	// Check that the job completed successfully
-	if jobInfo.Job.State.StateType != models.JobStateTypeCompleted {
-		return nil, fmt.Errorf("job %s did not complete successfully: %s", id, jobInfo.Job.State.StateType.String())
+	return results, nil
+}
+
+func (executor *BacalhauExecutor) prepareResults(jobId string) (cid string, resultsDir string, err error) {
+
+	tmpDir, err := os.MkdirTemp("", "bacalhau-results-*")
+	if err != nil {
+		return "", "", fmt.Errorf("error creating temp dir: %s", err.Error())
 	}
 
-	// TODO! Directly get the results to solver?
-	// system.EnsureDataDir(RESULTS_DIR)
-	// resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
-	// cidString := jobInfo.Executions.Items[0].PublishedResult
-	// err = executor.ipfsClient.Get(context.Background(), cidString, resultsDir)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error getting results from IPFS %s -> %s", deal.ID, err)
-	// }
+	fmt.Printf("extracting results for job %s\n to tmpdir: %s\n", jobId, tmpDir)
 
-	// // TODO: we should think about WASM and instruction count here
-	// results := &executorlib.ExecutorResults{
-	// 	ResultsDir:       resultsDir,
-	// 	ResultsCID:       jobInfo.Executions.Items[0].PublishedResult,
-	// 	InstructionCount: 1,
-	// }
+	tarPath := filepath.Join("/tmp/lp-bacalhau", fmt.Sprintf("%s.tar.gz", jobId))
 
-	return nil, nil
+	err = executorlib.ExtractTarGz(tarPath, tmpDir)
+	if err != nil {
+		return "", "", fmt.Errorf("error extracting tar.gz: %s", err.Error())
+	}
+
+	fmt.Printf("generating CID for job %s\n", jobId)
+
+	cid, err = GenerateCID(tmpDir)
+	if err != nil {
+		return "", "", fmt.Errorf("error generating CID: %s", err.Error())
+	}
+
+	return cid, tmpDir, nil
+
+}
+
+func GenerateCID(path string) (string, error) {
+	fileData, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("error reading file: %s", err.Error())
+	}
+	fileReader := bytes.NewReader(fileData)
+
+	ds := dsync.MutexWrap(datastore.NewNullDatastore())
+	bs := blockstore.NewBlockstore(ds)
+	bs = blockstore.NewIdStore(bs)
+
+	bsrv := blockservice.New(bs, offline.Exchange(bs))
+	dsrv := merkledag.NewDAGService(bsrv)
+
+	ufsImportParams := uih.DagBuilderParams{
+		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
+		RawLeaves: true,                     // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
+		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
+			Codec:    uint64(multicodec.Raw),
+			MhType:   uint64(multicodec.Sha2_256), // Use SHA2-256 as the hash function
+			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
+		},
+		Dagserv: dsrv,
+		NoCopy:  false,
+	}
+	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(fileReader, chunker.DefaultBlockSize)) // Split the file up into fixed sized 256KiB chunks
+	if err != nil {
+		return cid.Undef.String(), fmt.Errorf("error creating builder: %s", err.Error())
+	}
+	nd, err := balanced.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+	if err != nil {
+		return cid.Undef.String(), fmt.Errorf("error creating builder: %s", err.Error())
+	}
+	return nd.Cid().String(), nil
 }
 
 // run the bacalhau job and return the job ID
@@ -136,29 +220,12 @@ func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
-	// get a JSON string of the job
-	jsonBytes, err := json.Marshal(module.Job)
-	if err != nil {
-		return "", fmt.Errorf("error getting job JSON for deal %s -> %s", deal.ID, err.Error())
-	}
-	bacalhauJobSpecDir, err := system.EnsureDataDir(filepath.Join("bacalhau-job-specs", deal.ID))
-	if err != nil {
-		return "", fmt.Errorf("error creating a local folder for job specs %s -> %s", deal.ID, err.Error())
-	}
-	jobPath := filepath.Join(bacalhauJobSpecDir, "job.json")
-	err = system.WriteFile(jobPath, jsonBytes)
-	if err != nil {
-		return "", fmt.Errorf("error writing job JSON %s -> %s", deal.ID, err.Error())
-	}
-
 	putJobResponse, err := executor.bacalhauClient.PostJob(module.Job)
 	if err != nil {
 		return "", fmt.Errorf("error creating job %s -> %s", deal.ID, err.Error())
 	}
 
 	id := putJobResponse.JobID
-
-	fmt.Printf("Got bacalhau job ID: %s\n", id)
 
 	return id, nil
 }
