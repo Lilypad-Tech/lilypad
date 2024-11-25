@@ -44,6 +44,7 @@ func configureTelemetry(ctx context.Context,
 	service system.Service,
 	network string,
 	options system.TelemetryOptions,
+	metricsOptions *system.MetricsOptions,
 	web3Options web3.Web3Options,
 ) (*system.Telemetry, error) {
 	privateKey, err := web3.ParsePrivateKey(web3Options.PrivateKey)
@@ -61,7 +62,23 @@ func configureTelemetry(ctx context.Context,
 		Address:        address.String(),
 		GPU:            system.GetGPUInfo(),
 	}
-	telemetry, err := system.SetupOTelSDK(ctx, tc)
+
+	var mc system.MetricsConfig
+	if metricsOptions != nil {
+		mc = system.MetricsConfig{
+			MetricsURL:   metricsOptions.URL,
+			MetricsToken: metricsOptions.Token,
+			Enabled:      metricsOptions.Enable,
+		}
+	} else {
+		mc = system.MetricsConfig{
+			MetricsURL:   "",
+			MetricsToken: "",
+			Enabled:      false,
+		}
+	}
+
+	telemetry, err := system.SetupOTelSDK(ctx, tc, mc)
 
 	return &telemetry, err
 }

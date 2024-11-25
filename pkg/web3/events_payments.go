@@ -49,12 +49,8 @@ func (p *PaymentEventChannels) Start(
 	if err != nil {
 		return err
 	}
+	cm.RegisterCallback(unsubscribeSub(paymentSub))
 
-	defer func() {
-		if paymentSub != nil {
-			paymentSub.Unsubscribe()
-		}
-	}()
 	for {
 		select {
 		case <-ctx.Done():

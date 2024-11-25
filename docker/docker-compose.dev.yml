@@ -37,13 +37,42 @@ services:
       timeout: 10s
       retries: 5
   ipfs:
-    image: ipfs/kubo:v0.30.0
+    image: ipfs/kubo:v0.32.1
     container_name: ipfs
     restart: unless-stopped
     ports:
       - 5001:5001
     volumes:
       - ipfs-data:/data/ipfs
+  bacalhau:
+    image: ghcr.io/lilypad-tech/bacalhau
+    container_name: bacalhau
+    restart: unless-stopped
+    depends_on:
+      ipfs:
+        condition: service_healthy
+    build:
+      context: ..
+      dockerfile: ./docker/bacalhau/Dockerfile
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      - BACALHAU_ENVIRONMENT=local
+    command:
+      [
+        "serve",
+        "--node-type",
+        "compute,requester",
+        "--peer",
+        "none",
+        "--private-internal-ipfs=false",
+        "--job-selection-accept-networked",
+        "--ipfs-connect",
+        "/dns4/ipfs/tcp/5001",
+      ]
+    volumes:
+      - bacalhau-data:/root/.bacalhau
+      - /var/run/docker.sock:/var/run/docker.sock
   solver:
     image: ghcr.io/lilypad-tech/solver
     container_name: solver
@@ -64,13 +93,12 @@ services:
       - WEB3_RPC_URL=${WEB3_RPC_URL}
       - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
     ports:
-      - 8080:8080
+      - 8081:8081
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/job_offers"]
       interval: 30s
       timeout: 10s
       retries: 5
-
   job-creator:
     image: ghcr.io/lilypad-tech/job-creator
     container_name: job-creator
@@ -93,9 +121,12 @@ services:
     container_name: resource-provider
     restart: unless-stopped
     depends_on:
-      - chain
-      - solver
-      - ipfs
+      ipfs:
+        condition: service_healthy
+      solver:
+        condition: service_healthy
+      bacalhau:
+        condition: service_healthy
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
@@ -107,14 +138,17 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
-      - bacalhau-data:/tmp/lilypad/data
-      - /var/run/docker.sock:/var/run/docker.sock
+      - lilypad-data:/tmp/lilypad/data
     environment:
       - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
       - LOG_LEVEL=debug
       - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
+      - BACALHAU_API_HOST=bacalhau
+      - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
+      - BACALHAU_NODE_CLIENTAPI_PORT=1234
 volumes:
   chain-data:
   ipfs-data:
   bacalhau-data:
+  lilypad-data:

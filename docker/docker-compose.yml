@@ -1,7 +1,7 @@
 # This is a docker-compose file for use by Resource Providers
 services:
   ipfs:
-    image: ipfs/kubo:v0.30.0
+    image: ipfs/kubo:v0.32.1
     container_name: ipfs
     restart: unless-stopped
     ports:
@@ -10,6 +10,30 @@ services:
       - 127.0.0.1:8080:8080
     volumes:
       - ipfs-data:/data/ipfs
+  bacalhau:
+    image: ghcr.io/lilypad-tech/bacalhau
+    container_name: bacalhau
+    restart: unless-stopped
+    depends_on:
+      ipfs:
+        condition: service_healthy
+    environment:
+      - BACALHAU_ENVIRONMENT=local
+    command:
+      [
+        "serve",
+        "--node-type",
+        "compute,requester",
+        "--peer",
+        "none",
+        "--private-internal-ipfs=false",
+        "--job-selection-accept-networked",
+        "--ipfs-connect",
+        "/dns4/ipfs/tcp/5001",
+      ]
+    volumes:
+      - bacalhau-data:/root/.bacalhau
+      - /var/run/docker.sock:/var/run/docker.sock
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider
@@ -22,12 +46,14 @@ services:
       args:
         - COMPUTE_MODE=gpu
     volumes:
-      - bacalhau-data:/tmp/lilypad/data
-      - /var/run/docker.sock:/var/run/docker.sock
+      - lilypad-data:/tmp/lilypad/data
     environment:
       - WEB3_PRIVATE_KEY
       - WEB3_RPC_URL
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+      - BACALHAU_API_HOST=bacalhau
+      - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
+      - BACALHAU_NODE_CLIENTAPI_PORT=1234
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -37,3 +63,4 @@ services:
 volumes:
   ipfs-data:
   bacalhau-data:
+  lilypad-data:

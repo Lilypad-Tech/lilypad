@@ -38,12 +38,19 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, options.Web3)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
+	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+
+	unregisterMetrics, err := system.NewMetrics(meter)
+	if err != nil {
+		log.Warn().Msgf("failed to start system metrics: %s", err)
+	}
+	commandCtx.Cm.RegisterCallback(unregisterMetrics)
 
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {
@@ -55,7 +62,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer)
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer, meter)
 	if err != nil {
 		return err
 	}

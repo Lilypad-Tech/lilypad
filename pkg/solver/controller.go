@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -52,6 +53,7 @@ type SolverController struct {
 	options         SolverOptions
 	log             *system.ServiceLogger
 	tracer          trace.Tracer
+	meter           metric.Meter
 }
 
 // the background "even if we have not heard of an event" loop
@@ -66,6 +68,7 @@ func NewSolverController(
 	store store.SolverStore,
 	options SolverOptions,
 	tracer trace.Tracer,
+	meter metric.Meter,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
@@ -74,6 +77,7 @@ func NewSolverController(
 		options:    options,
 		log:        system.NewServiceLogger(system.SolverService),
 		tracer:     tracer,
+		meter:      meter,
 	}
 	return controller, nil
 }
@@ -279,7 +283,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	defer span.End()
 
 	// find out which deals we can make from matching the offers
-	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer)
+	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer, controller.meter)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
 		span.RecordError(err)
@@ -299,6 +303,20 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		}
 	}
 	span.AddEvent("add_deals.done")
+
+	span.AddEvent("report_deal_metrics.start")
+	storedDeals, err := controller.store.GetDealsAll()
+	if err != nil {
+		span.SetStatus(codes.Error, "get all deals failed")
+		span.RecordError(err)
+		return err
+	}
+	err = reportDealMetrics(ctx, controller.meter, storedDeals)
+	if err != nil {
+		span.SetStatus(codes.Error, "report deal metrics failed")
+		span.RecordError(err)
+	}
+	span.AddEvent("report_deal_metrics.done")
 
 	return nil
 }
@@ -351,17 +369,23 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+		err := fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
+		controller.log.Error("ETH balance check failed", err)
+		return nil, nil
 	}
 
 	// required LP balance
 	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
 	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+		err := fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
+		controller.log.Error("LP Balance error", err)
+		return nil, nil
 	}
 	if balanceLp.Cmp(requiredBalanceLp) < 0 {
-		return nil, fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
+		err := fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
+		controller.log.Error("LP balance check failed", err)
+		return nil, nil
 	}
 
 	controller.log.Info("add resource offer", resourceOffer)

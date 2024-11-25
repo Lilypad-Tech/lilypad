@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"fmt"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -49,12 +50,7 @@ func (s *PowEventChannels) Start(
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if newPowRoundSub != nil {
-			newPowRoundSub.Unsubscribe()
-		}
-	}()
+	cm.RegisterCallback(unsubscribeSub(newPowRoundSub))
 
 	for {
 		select {
