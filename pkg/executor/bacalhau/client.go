@@ -55,6 +55,7 @@ func (c *BacalhauClient) GetVersion() (string, error) {
 }
 
 func (c *BacalhauClient) PostJob(job bacalhau.Job) (*apimodels.PutJobResponse, error) {
+	
 	translatedJob := translateJob(job)
 	
 	putJobRequest := apimodels.PutJobRequest{
@@ -67,13 +68,34 @@ func (c *BacalhauClient) PostJob(job bacalhau.Job) (*apimodels.PutJobResponse, e
 func (c *BacalhauClient) GetJob(jobID string) (*apimodels.GetJobResponse, error) {
 	getJobRequest := apimodels.GetJobRequest{
 		JobID: jobID,
+		Include: "executions",
 	}
+	
 	response, err := c.api.Jobs().Get(context.Background(), &getJobRequest)
 	if err != nil {
 		return nil, err
 	}
+
 	return response, nil
 }
+
+func (c *BacalhauClient) GetJobResult(jobId string ) (string, error) {
+	getJobResultsRequest := apimodels.ListJobResultsRequest{
+		JobID: jobId,
+	}
+
+	response, err := c.api.Jobs().Results(context.Background(), &getJobResultsRequest)
+	if err != nil {
+		return "", err
+	}
+	if len(response.Items) == 0 {
+		return "", fmt.Errorf("no results found for job %s", jobId)
+	}
+
+	return response.Items[0].Params["URL"].(string), nil
+}
+
+
 
 func (c *BacalhauClient) GetNodes() ([]*models.NodeState, error) {
 	
@@ -110,16 +132,7 @@ func (c *BacalhauClient) GetMachineSpecs() ([]data.MachineSpec, error) {
 	return specs, nil
 }
 
-func (c *BacalhauClient) GetJobExecutions(jobID string) ([]*models.Execution, error) {
-	getJobExecutionsRequest := apimodels.ListJobExecutionsRequest{
-		JobID: jobID,
-	}
-	response, err := c.api.Jobs().Executions(context.Background(), &getJobExecutionsRequest)
-	if err != nil {
-		return nil, err
-	}
-	return response.Items, nil
-}
+
 
 func translateJob(job bacalhau.Job) *models.Job {
 	return &models.Job{
@@ -129,24 +142,23 @@ func translateJob(job bacalhau.Job) *models.Job {
 		Type:        models.JobTypeBatch,
 		Priority:    0,
 		Count:       1,
-		Constraints: translateConstraints(job.Spec.NodeSelectors),
 		Meta:        make(map[string]string),
 		Labels:      make(map[string]string),
 		Tasks: []*models.Task{
 			{
 				Name: "main",
 				Engine: &models.SpecConfig{
-					Type:   job.Spec.EngineSpec.Type,
-					Params: job.Spec.EngineSpec.Params,
+					Type:   "docker",
+					Params: map[string]interface{}{
+						"Image": job.Spec.Docker.Image,
+						"Entrypoint": job.Spec.Docker.Entrypoint,
+						"EnvironmentVariables": job.Spec.Docker.EnvironmentVariables,
+					},
 				},
 				Publisher: &models.SpecConfig{
-					Type:   string(job.Spec.PublisherSpec.Type),
-					Params: job.Spec.PublisherSpec.Params,
+					Type: "local",
 				},
-				Env: translateEnvironmentVariables(job.Spec.Docker.EnvironmentVariables),
-				InputSources: translateInputSources(job.Spec.Inputs),
-				ResultPaths:  translateOutputSources(job.Spec.Outputs),
-				
+	
 				ResourcesConfig: &models.ResourcesConfig{
 					CPU:    job.Spec.Resources.CPU,
 					Memory: job.Spec.Resources.Memory,
