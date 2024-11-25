@@ -19,8 +19,14 @@ function compose-init() {
   if docker volume ls -q | grep -q "^lilypad_chain-data$"; then
     docker volume rm lilypad_chain-data
   fi
-  docker compose -f ./docker/docker-compose.dev.yml up chain -d
+  docker compose -f ./docker/docker-compose.base.yml up chain -d
   chain-boot
+}
+
+# Use this for local development - will boot up non-lilypad serives
+function compose-services() {
+  compose-env
+  docker compose -f ./docker/docker-compose.base.yml up "$@"
 }
 
 function compose-build() {
@@ -65,34 +71,6 @@ function get-build-version() {
 ############################################################################
 # chain
 ############################################################################
-
-function chain() {
-  ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
-
-  docker run \
-    --rm \
-    --name chain \
-    -p 0.0.0.0:8547:8547 \
-    -p 0.0.0.0:8548:8548 \
-    offchainlabs/nitro-node:v3.1.1-beta.2-6073359 \
-      --init.dev-init \
-      --init.dev-init-address $ADMIN_ADDRESS \
-      --node.dangerous.no-l1-listener \
-      --node.parent-chain-reader.enable=false \
-      --parent-chain.id=1337 \
-      --chain.id=412346 \
-      --persistent.chain /tmp/dev-test \
-      --node.sequencer \
-      --execution.sequencer.enable \
-      --node.dangerous.no-sequencer-coordinator \
-      --node.staker.enable=false \
-      --init.empty=false \
-      --http.port 8547 \
-      --http.addr 0.0.0.0 \
-      --ws.port 8548 \
-      --ws.addr 0.0.0.0
-}
-
 
 function chain-boot() {
   echo "- Install local dependencies"
@@ -220,25 +198,6 @@ function solver() {
   go run . solver --network dev "$@"
 }
 
-function solver-docker-build() {
-  docker build \
-    -t solver \
-    -f ./docker/solver/Dockerfile \
-    --build-arg arch=${OS_ARCH} \
-    --build-arg network=dev \
-    .
-}
-
-function solver-docker-run() {
-  docker run \
-    --rm \
-    --name solver \
-    --add-host localhost:host-gateway \
-    -p 8080:8080 \
-    -e DOPPLER_TOKEN="$(doppler configs tokens create -p solver -c dev docker --max-age 1m --plain)" \
-    solver
-}
-
 ############################################################################
 # job creator
 #
@@ -252,23 +211,6 @@ function job-creator() {
   go run . jobcreator --network dev
 }
 
-function job-creator-docker-build() {
-  docker build \
-    -t job-creator \
-    -f ./docker/job-creator/Dockerfile \
-    --build-arg network=dev \
-    .
-}
-
-function job-creator-docker-run() {
-  docker run \
-    --rm \
-    --name job-creator \
-    --add-host localhost:host-gateway \
-    -e DOPPLER_TOKEN="$(doppler configs tokens create -p job-creator -c dev docker --max-age 1m --plain)" \
-    job-creator
-}
-
 ############################################################################
 # resource provider
 #
@@ -280,59 +222,6 @@ function resource-provider() {
   export WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
   export LOG_LEVEL=debug
   go run . resource-provider "$@" --network dev --disable-pow true
-}
-
-function resource-provider-docker-build() {
-  get-build-version
-  docker build \
-    -t resource-provider \
-    -f ./docker/resource-provider/Dockerfile \
-    --build-arg NETWORK=dev \
-    --build-arg DISABLE_POW=true \
-    --build-arg VERSION=${VERSION} \
-    --build-arg COMMIT_SHA=${COMMIT_SHA} \
-    .
-}
-
-function resource-provider-docker-run() {
-  docker run \
-    --rm \
-    --name resource-provider \
-    --add-host localhost:host-gateway \
-    --env-file <(doppler -p resource-provider -c dev secrets download --no-file --format docker) \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -e OFFER_GPU=0 \
-    -e BACALHAU_API_HOST="DO_NOT_SET" \
-    resource-provider
-}
-
-############################################################################
-# bacalhau node
-############################################################################
-
-function bacalhau-node(){
-  export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
-  export BACALHAU_ENVIRONMENT=local
-  export LOG_LEVEL=debug
-  bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked --ipfs-connect "/ip4/127.0.0.1/tcp/5001"
-}
-
-function bacalhau-docker-build() {
-  docker build \
-    -t bacalhau \
-    -f ./docker/bacalhau/Dockerfile \
-    .
-}
-
-function bacalhau-docker-run() {
-  docker run \
-    --privileged \
-    --rm \
-    --name bacalhau \
-    --add-host localhost:host-gateway \
-    -v /tmp/lilypad/data:/tmp/lilypad/data \
-    -p 1234:1234 \
-    bacalhau
 }
 
 ############################################################################

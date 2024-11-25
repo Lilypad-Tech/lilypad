@@ -1,0 +1,94 @@
+services:
+  chain:
+    image: offchainlabs/nitro-node:v3.1.1-beta.2-6073359
+    container_name: chain
+    ports:
+      - 8547:8547
+      - 8548:8548
+    command:
+      [
+        "--init.dev-init",
+        "--init.dev-init-address",
+        $ADMIN_ADDRESS,
+        "--node.dangerous.no-l1-listener",
+        "--node.parent-chain-reader.enable=false",
+        "--parent-chain.id=1337",
+        "--chain.id=412346",
+        "--node.sequencer",
+        "--execution.sequencer.enable",
+        "--node.dangerous.no-sequencer-coordinator",
+        "--node.staker.enable=false",
+        "--init.empty=false",
+        "--http.port",
+        "8547",
+        "--http.addr",
+        "0.0.0.0",
+        "--ws.port",
+        "8548",
+        "--ws.addr",
+        "0.0.0.0",
+      ]
+    volumes:
+      - chain-data:/home/user/.arbitrum
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8547/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=lilypad-db
+  ipfs:
+    image: ipfs/kubo:v0.32.1
+    container_name: ipfs
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:5001:5001
+      - 127.0.0.1:8080:8080
+    volumes:
+      - ipfs-data:/data/ipfs
+  bacalhau:
+    image: ghcr.io/lilypad-tech/bacalhau
+    container_name: bacalhau
+    restart: unless-stopped
+    depends_on:
+      ipfs:
+        condition: service_healthy
+    build:
+      context: ..
+      dockerfile: ./docker/bacalhau/Dockerfile
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      - BACALHAU_ENVIRONMENT=local
+    ports:
+      - 1234:1234
+    command:
+      [
+        "serve",
+        "--node-type",
+        "compute,requester",
+        "--peer",
+        "none",
+        "--private-internal-ipfs=false",
+        "--job-selection-accept-networked",
+        "--ipfs-connect",
+        "/dns4/ipfs/tcp/5001",
+      ]
+    volumes:
+      - bacalhau-data:/root/.bacalhau
+      - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+  chain-data:
+  ipfs-data:
+  bacalhau-data:
+  postgres-data:
