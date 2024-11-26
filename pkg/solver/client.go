@@ -1,10 +1,13 @@
 package solver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"os"
+	"io"
+	"compress/gzip"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -145,11 +148,31 @@ func (client *SolverClient) UpdateTransactionsMediator(id string, payload data.D
 }
 
 func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
-	buf, err := system.GetTarBuffer(localPath)
+
+	gzipFile, err := os.Open(localPath)
 	if err != nil {
-		return data.Result{}, err
+		return data.Result{}, fmt.Errorf("failed to open gzip file: %w", err)
 	}
-	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), buf)
+	defer gzipFile.Close()
+
+	gzipReader, err := gzip.NewReader(gzipFile)
+	if err != nil {
+		return data.Result{}, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gzipReader.Close()
+
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, gzipReader); err != nil {
+		return data.Result{}, fmt.Errorf("failed to decompress gzip: %w", err)
+	}
+
+	fmt.Printf("uploading results for deal %s\n", id)
+	return http.PostRequestBuffer[data.Result](
+		client.options, 
+		fmt.Sprintf("/deals/%s/files", id), 
+		&buf,
+	)
 }
 
 func (client *SolverClient) DownloadResultFiles(id string, localPath string) error {

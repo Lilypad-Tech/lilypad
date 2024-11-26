@@ -258,21 +258,31 @@ function integration-tests() {
 # Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 function dev1(){
+  export DISABLE_TELEMETRY=true
   chain-clean
+  echo "========CHAIN CLEANED========"
+  clear
+  echo "========CHAIN========"
   chain
 }
 
-function dev2(){
+function dev2(){  
+  export DISABLE_TELEMETRY=true
+  echo "========BOOTING UP CHAIN========"
   chain-boot
+  echo "========CHAIN BOOTED========"
+  clear
   echo "========SOLVER========"
   solver
 }
 function dev3(){
+  export DISABLE_TELEMETRY=true
   echo "========BACALHAU EXECUTOR========"
   bacalhau-node
 }
 
 function dev4(){
+  export DISABLE_TELEMETRY=true
   echo "========RESOURCE PROVIDER========"
   resource-provider
 }
