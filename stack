@@ -301,7 +301,7 @@ function resource-provider-docker-run() {
 function bacalhau-node(){
   export BACALHAU_SERVE_IPFS_PATH=/tmp/lilypad/data/ipfs
   export LOG_LEVEL=debug
-  bacalhau serve --node-type compute,requester --private-internal-ipfs false --job-selection-accept-networked --ipfs-connect "/ip4/127.0.0.1/tcp/5001"
+  bacalhau serve --orchestrator --compute
 }
 
 function bacalhau-docker-build() {
@@ -346,6 +346,32 @@ function integration-tests() {
   cd test
   go test -v -count 1 .
 }
+
+############################################################################
+# run
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+############################################################################
+function dev1(){
+  chain-clean
+  chain
+}
+
+function dev2(){
+  chain-boot
+  echo "========SOLVER========"
+  solver
+}
+function dev3(){
+  echo "========BACALHAU EXECUTOR========"
+  bacalhau-node
+}
+
+function dev4(){
+  echo "========RESOURCE PROVIDER========"
+  resource-provider
+}
+
 
 ############################################################################
 # run
