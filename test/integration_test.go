@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -84,10 +83,6 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-	// give the solver server a chance to boot before we get all the websockets
-	// up and trying to connect to it
-	time.Sleep(20000 * time.Millisecond)
-
 	mediator, err := getMediator(t, commandCtx, options)
 	if err != nil {
 		return nil, err
