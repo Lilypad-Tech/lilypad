@@ -257,6 +257,32 @@ function integration-tests() {
 #
 # Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
+function dev1(){
+  chain-clean
+  chain
+}
+
+function dev2(){
+  chain-boot
+  echo "========SOLVER========"
+  solver
+}
+function dev3(){
+  echo "========BACALHAU EXECUTOR========"
+  bacalhau-node
+}
+
+function dev4(){
+  echo "========RESOURCE PROVIDER========"
+  resource-provider
+}
+
+
+############################################################################
+# run
+#
+# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+############################################################################
 function run() {
   load-local-env
   export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}

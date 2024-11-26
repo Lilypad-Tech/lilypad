@@ -1,9 +1,10 @@
 package bacalhau
 
 import (
-	"bytes"
+	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -107,27 +108,28 @@ func (executor *BacalhauExecutor) RunJob(
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
 	fmt.Printf("Running job: %s\n", deal.ID)
-	id, err := executor.getJobID(deal, module)
+	jobId, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
+	var jobExecutions []*models.Execution
 	for {
-		jobInfo, err := executor.bacalhauClient.GetJob(id)
+		jobInfo, err := executor.bacalhauClient.GetJob(jobId)
 		if err != nil {
-			return nil, fmt.Errorf("error getting job %s: %s", id, err.Error())
+			return nil, fmt.Errorf("error getting job %s: %s", jobId, err.Error())
 		}
 
 		if jobInfo.Executions == nil {
-			return nil, fmt.Errorf("no executions retrieved for job %s", id)
+			return nil, fmt.Errorf("no executions retrieved for job %s", jobId)
 		}
 
-		jobExecutions := jobInfo.Executions.Items
+		jobExecutions = jobInfo.Executions.Items
 
 		if len(jobExecutions) > 0 {
 			// Check that the job completed successfully
 			if jobInfo.Job.State.StateType != models.JobStateTypeCompleted {
-				return nil, fmt.Errorf("job %s did not complete yet: %s", id, jobInfo.Job.State.StateType.String())
+				return nil, fmt.Errorf("job %s did not complete yet: %s", jobId, jobInfo.Job.State.StateType.String())
 			}
 			break
 		}
@@ -138,7 +140,7 @@ func (executor *BacalhauExecutor) RunJob(
 	system.EnsureDataDir(RESULTS_DIR)
 	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 
-	cid, resultsDir, err := executor.prepareResults(id)
+	cid, resultsDir, err := executor.prepareResults(jobId, jobExecutions[0].ID)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing results: %s", err.Error())
 	}
@@ -152,66 +154,74 @@ func (executor *BacalhauExecutor) RunJob(
 	return results, nil
 }
 
-func (executor *BacalhauExecutor) prepareResults(jobId string) (cid string, resultsDir string, err error) {
+func (executor *BacalhauExecutor) prepareResults(jobId string, executionId string) (cid string, resultsDir string, err error) {
 
-	tmpDir, err := os.MkdirTemp("", "bacalhau-results-*")
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", "", fmt.Errorf("error creating temp dir: %s", err.Error())
+		return "", "", fmt.Errorf("error getting home directory: %s", err.Error())
 	}
 
-	fmt.Printf("extracting results for job %s\n to tmpdir: %s\n", jobId, tmpDir)
+	resultsPath := filepath.Join(home, ".bacalhau", "compute", "results", "local-publisher", fmt.Sprintf("%s.tar.gz", executionId))
 
-	tarPath := filepath.Join("/tmp/lp-bacalhau", fmt.Sprintf("%s.tar.gz", jobId))
-
-	err = executorlib.ExtractTarGz(tarPath, tmpDir)
-	if err != nil {
-		return "", "", fmt.Errorf("error extracting tar.gz: %s", err.Error())
-	}
-
-	fmt.Printf("generating CID for job %s\n", jobId)
-
-	cid, err = GenerateCID(tmpDir)
+	fmt.Printf("generating CID for job %s\n with execution %s\n", jobId, executionId)
+	cid, err = GenerateCID(resultsPath)
 	if err != nil {
 		return "", "", fmt.Errorf("error generating CID: %s", err.Error())
 	}
 
-	return cid, tmpDir, nil
+	fmt.Printf("CID for job %s with execution %s: %s\n", jobId, executionId, cid)
+
+	return cid, resultsPath, nil
 
 }
 
 func GenerateCID(path string) (string, error) {
-	fileData, err := os.ReadFile(path)
+	// Open file for streaming
+	file, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("error reading file: %s", err.Error())
+		return "", fmt.Errorf("failed to open file %s: %w", path, err)
 	}
-	fileReader := bytes.NewReader(fileData)
+	defer file.Close()
 
+	// Create services with cleanup
 	ds := dsync.MutexWrap(datastore.NewNullDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	bs = blockstore.NewIdStore(bs)
-
 	bsrv := blockservice.New(bs, offline.Exchange(bs))
 	dsrv := merkledag.NewDAGService(bsrv)
 
+	// Ensure cleanup
+	defer func() {
+		if err := bsrv.Close(); err != nil {
+			log.Printf("failed to close blockservice: %v", err)
+		}
+	}()
+
 	ufsImportParams := uih.DagBuilderParams{
-		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
-		RawLeaves: true,                     // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
-		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
+		Maxlinks:  uih.DefaultLinksPerBlock,
+		RawLeaves: true,
+		CidBuilder: cid.V1Builder{
 			Codec:    uint64(multicodec.Raw),
-			MhType:   uint64(multicodec.Sha2_256), // Use SHA2-256 as the hash function
-			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
+			MhType:   uint64(multicodec.Sha2_256),
+			MhLength: -1,
 		},
 		Dagserv: dsrv,
 		NoCopy:  false,
 	}
-	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(fileReader, chunker.DefaultBlockSize)) // Split the file up into fixed sized 256KiB chunks
+
+	// Use buffered reader for better performance
+	bufReader := bufio.NewReader(file)
+
+	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(bufReader, chunker.DefaultBlockSize))
 	if err != nil {
-		return cid.Undef.String(), fmt.Errorf("error creating builder: %s", err.Error())
+		return "", fmt.Errorf("failed to create UnixFS builder: %w", err)
 	}
-	nd, err := balanced.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+
+	nd, err := balanced.Layout(ufsBuilder)
 	if err != nil {
-		return cid.Undef.String(), fmt.Errorf("error creating builder: %s", err.Error())
+		return "", fmt.Errorf("failed to create DAG layout: %w", err)
 	}
+
 	return nd.Cid().String(), nil
 }
 
