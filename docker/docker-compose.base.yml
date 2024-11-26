@@ -47,7 +47,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=lilypad-db
+      - POSTGRES_DB=solver-db
   ipfs:
     image: ipfs/kubo:v0.32.1
     container_name: ipfs
