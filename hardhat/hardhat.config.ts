@@ -46,6 +46,11 @@ const config: HardhatUserConfig = {
       chainId: 421614,
       accounts: [getAccount('admin').privateKey],
     },
+    demonet:{
+      url: 'https://demonet-chain-http.lilypad.tech',
+      chainId: 412347,
+      accounts: [getAccount('admin').privateKey],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
