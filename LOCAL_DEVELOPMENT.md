@@ -13,29 +13,24 @@ Running the Lilypad application locally depends on the `.local.dev` file for sec
 A minimal local Lilypad network consists of the following pieces of infrastructure:
 
 - One blockchain node
-- One solver service
-- One job creator service
 - One IPFS node
 - One bacalhau node
+- One postgres database
+- One solver service
+- One job creator service
 - One resource provider service
 
 Order matters because the `solver`, `job creator` and `resource provider` will right away try to connect to the `blockchain node`. First, the `solver` will update the state of a known smart contract to publish a URL where other services can connect to it. Then, the `job creator`, and `resource provider` will fetch from the `blockchain` the URL for the `solver` and try to connect to it.
 
 ## Minimal local setup
 
-### 1. Blockchain node
+### 1. Base services
 
-The node can run directly from an existing docker image. It will initialize itself to a blank state with the admin address holding the funds to deploy the smart contracts (including the Lilypad token) and fund the accounts used by the different services. The blockchain is ephemeral, meaning every time you restart the node the state will be reset, you can work around this by keeping the node active if needed.
-
-These are the commands to run the node and boot the network: `./stack chain-clean` (the first time this won't do anything, but I find it better to get in the habit of resetting artifacts every time), `./stack chain` to run the node and `./stack chain-boot` to fund the accounts with ETH (for gas fees), compile the contracts, add Golang bindings to use the contracts directly in go code, deploy the contracts and fund the accounts with Lilypad tokens.
-
-#### Summary of command sequence
+The first step is to start the 3rd party services. This consists of a blockchain node (nitro), an IPFS node (kubo), a postgres database and a bacalhau node. All of the services can be started via docker compose (see: `./docker/docker-compose.base.yml`). The commands to start these services are:
 
 ```sh
-./stack chain-clean
-./stack chain
-# then in another terminal
-./stack chain-boot
+./stack compose-init # This will clean the chain and boot it
+./stack compose-services
 ```
 
 A helper script is in place to verify balances on the accounts: `cd hardhat && npx hardhat run scripts/balances.ts --network dev`
@@ -48,62 +43,18 @@ This process can be executed directly if Golang has been installed or in a docke
 
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack job-creator`,`./stack job-creator-docker-build` and `./stack job-creator-docker-run` respectively. The `job-creator` service's main function is to listen to events from the blockchain to execute jobs and when it receives such an event it will relay the payload to the `solver`. So think about the `job-creator` as the "on-chain solver".
 
-### 4. IPFS node
-
-This process can be run directly using an IPFS Kubo binary. [Download a Kubo binary](https://dist.ipfs.tech/#kubo) for your platform and architecture. Initiliaze a repository where Kubo will store settings and internal data:
-
-```sh
-ipfs init
-```
-
-Start the IPFS node with the default settings:
-
-```sh
-ipfs daemon
-```
-
-Kubo should report an RPC API server listening on `/ip4/127.0.0.1/tcp/5001`. Our Bacalhau node stores job results on this IPFS node.
-
-### 5. Bacalhau node
-
-For the time being this process has to be executed directly. This means following the instructions to download their cli tool and expose it as a bin that can be used. Here's how to install the `bacalhau` tool:
-
-#### Linux
-```sh
-# install the latest
-wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz
-# extract the downloaded archive and move the `bacalhau` binary to `/usr/local/bin`
-tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz
-mv bacalhau /usr/local/bin
-```
-#### Mac OS
-```sh
-# install the latest
-wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_darwin_amd64.tar.gz
-# extract the downloaded archive and move the `bacalhau` binary to `/usr/local/bin`
-tar xfv bacalhau_v1.3.2_darwin_amd64.tar.gz
-mv bacalhau /usr/local/bin
-```
-
-Once the tool has been installed, the following command can be used to start the node: `./stack bacalhau-node`.
-
-### 6. Resource provider
+### 4. Resource provider
 
 For the time being this process has to be executed directly and needs Golang to be installed. This is the command to execute the service: `./stack resource-provider`. If you have a GPU you can use the following flag to use it: `./stack resource-provider --offer-gpu 1`
 
-#### Bacalhau and Resource provider as one component
-
-There is ongoing work to pack together the `bacalhau` node and `resource provider` service in a docker container as these two are highly coupled and can be abstracted into one component.
-
 ## Using Docker Compose
 
-An alternative to the above for running the local stack is to use [Docker Compose](https://docs.docker.com/compose/).
+An alternative to the above for running the local stack is to use [Docker Compose](https://docs.docker.com/compose/) to run all of the services (including lilypad services contained in this repo).
 
 Benefits of using Docker Compose include:
 
 - Start/stop the full stack with a single command.
 - Runs the docker images for all services (i.e. "closer to prod")
-- Chain and Bacalhau state are maintained between runs (in the `./data` directory).
 
 The main drawback is, for development, you'll need to re-build the images after changes for testing.
 
@@ -142,6 +93,7 @@ In this section we'll address some common problems you might face when trying to
 ### Chain-boot Related issues
 
 If you try and run `./stack compose-init` or `./stack chain-boot` and get the following error
+
 ```bash
 ProviderError: failed with 51333200 gas: insufficient funds for gas * price + value: address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 have 9318991353400000000 want 10000000000000000000
     at HttpProvider.request (/Users/nshahnazarian/Development/git/lilypad/hardhat/node_modules/hardhat/src/internal/core/providers/http.ts:88:21)
@@ -152,12 +104,15 @@ ProviderError: failed with 51333200 gas: insufficient funds for gas * price + va
     at async transferEther (/Users/nshahnazarian/Development/git/lilypad/hardhat/utils/web3.ts:61:14)
     at async /Users/nshahnazarian/Development/git/lilypad/hardhat/scripts/fund-services-ether.ts:15:5
 ```
+
 This can be addressed by doing the following:
+
 - Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
 
 ### Issues running onchain cowsay
 
 If you find that you have issues with the Job Creator not picking up your `run-cowsay-onchain` command while running the Lilypad stack through Docker, do the following:
+
 1. Stop the Docker stack by pressing ctrl+c
 2. Run the following command to clean up your Docker environment: `./stack compose-down && docker system prune -a`
 3. Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions
