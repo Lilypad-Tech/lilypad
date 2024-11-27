@@ -3,12 +3,38 @@ package store
 import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type SolverStoreDatabase struct {
 	// TODO Remove placeholder which we needed to implement the interface with
 	// package name shadowed
 	placeholderDeal *data.DealContainer
+	db              *gorm.DB
+	// TODO Log writers?
+	// logWriters       map[string]jsonl.Writer
+}
+
+func NewSolverStoreDatabase(connStr string, silenceLogs bool) (*SolverStoreDatabase, error) {
+	config := &gorm.Config{}
+	if silenceLogs {
+		config.Logger = logger.Default.LogMode(logger.Silent)
+	}
+
+	db, err := gorm.Open(postgres.Open(connStr), config)
+	if err != nil {
+		return nil, err
+	}
+
+	db.AutoMigrate(&JobOffer{})
+	db.AutoMigrate(&ResourceOffer{})
+	db.AutoMigrate(&Deal{})
+	db.AutoMigrate(&Result{})
+	db.AutoMigrate(&MatchDecision{})
+
+	return &SolverStoreDatabase{&data.DealContainer{}, db}, nil
 }
 
 func (store *SolverStoreDatabase) AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error) {
