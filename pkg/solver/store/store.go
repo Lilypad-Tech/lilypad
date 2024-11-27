@@ -53,7 +53,7 @@ type GetDealsQuery struct {
 
 type SolverStore interface {
 	AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error)
-	AddResourceOffer(jobOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error)
+	AddResourceOffer(resourceOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error)
 	AddDeal(deal data.DealContainer) (*data.DealContainer, error)
 	AddResult(result data.Result) (*data.Result, error)
 	AddMatchDecision(resourceOffer string, jobOffer string, deal string, result bool) (*data.MatchDecision, error)
