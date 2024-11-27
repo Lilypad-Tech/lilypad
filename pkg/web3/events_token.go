@@ -25,9 +25,9 @@ func NewTokenEventChannels() *TokenEventChannels {
 }
 
 func (t *TokenEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {

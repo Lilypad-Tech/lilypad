@@ -24,9 +24,9 @@ func NewMediationEventChannels() *MediationEventChannels {
 }
 
 func (m *MediationEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
