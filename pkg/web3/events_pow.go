@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
@@ -64,7 +65,10 @@ func (s *PowEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-newPowRoundSub.Err():
-			return fmt.Errorf("cancel by pow newPowRound event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by pow newPowRound event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

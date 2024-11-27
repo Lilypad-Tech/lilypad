@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
@@ -62,7 +63,10 @@ func (m *MediationEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-mediationRequestedSub.Err():
-			return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

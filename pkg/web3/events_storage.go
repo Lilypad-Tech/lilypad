@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
@@ -62,7 +63,10 @@ func (s *StorageEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-dealStateChangeSub.Err():
-			return fmt.Errorf("cancel by storage DealStateChange event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by storage DealStateChange event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

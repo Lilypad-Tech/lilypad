@@ -2,6 +2,7 @@ package web3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -65,7 +66,10 @@ func (t *TokenEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-transferSub.Err():
-			return fmt.Errorf("cancel by token Transfer event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by token Transfer event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }
