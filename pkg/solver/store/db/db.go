@@ -3,6 +3,7 @@ package store
 import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -38,6 +39,19 @@ func NewSolverStoreDatabase(connStr string, silenceLogs bool) (*SolverStoreDatab
 }
 
 func (store *SolverStoreDatabase) AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error) {
+	record := JobOffer{
+		CID:        jobOffer.ID,
+		JobCreator: jobOffer.JobCreator,
+		DealID:     jobOffer.DealID,
+		State:      jobOffer.State,
+		Attributes: datatypes.NewJSONType(jobOffer),
+	}
+
+	result := store.db.Create(&record)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return &jobOffer, nil
 }
 
