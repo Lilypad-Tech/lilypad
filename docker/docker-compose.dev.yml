@@ -1,6 +1,6 @@
 name: lilypad
 include:
-  - docker/docker-compose.base.yml
+  - docker-compose.base.yml
 services:
   solver:
     image: ghcr.io/lilypad-tech/solver
