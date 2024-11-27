@@ -2,7 +2,6 @@ package web3
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -57,7 +56,7 @@ func (t *TokenEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-t.transferChan:
 			log.Debug().
 				Str("token->event", "Transfer").

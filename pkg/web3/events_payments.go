@@ -2,7 +2,6 @@ package web3
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
@@ -54,7 +53,7 @@ func (p *PaymentEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-p.paymentChan:
 			log.Debug().
 				Str("payments->event", "Payment").
