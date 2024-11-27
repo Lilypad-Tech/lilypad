@@ -3,6 +3,7 @@ package lilypad
 import (
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
+	db "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -62,7 +63,14 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer, meter)
+	// TODO Set up config to pass in connection string
+	connStr := "postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable"
+	solverDBStore, err := db.NewSolverStoreDatabase(connStr, false)
+	if err != nil {
+		return err
+	}
+
+	solverService, err := solver.NewSolver(options, solverStore, solverDBStore, web3SDK, tracer, meter)
 	if err != nil {
 		return err
 	}

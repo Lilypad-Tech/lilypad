@@ -33,11 +33,12 @@ type Solver struct {
 func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
+	dbStore store.SolverStore,
 	web3SDK *web3.Web3SDK,
 	tracer trace.Tracer,
 	meter metric.Meter,
 ) (*Solver, error) {
-	controller, err := NewSolverController(web3SDK, store, options, tracer, meter)
+	controller, err := NewSolverController(web3SDK, store, dbStore, options, tracer, meter)
 	if err != nil {
 		return nil, err
 	}
