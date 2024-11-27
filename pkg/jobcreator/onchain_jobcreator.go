@@ -59,7 +59,7 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 		return errorChan
 	}
 
-	err = jobCreator.web3Events.Start(jobCreator.web3SDK, ctx, cm)
+	err = jobCreator.web3Events.Start(ctx, cm, jobCreator.web3SDK)
 	if err != nil {
 		errorChan <- err
 		return errorChan

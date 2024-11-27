@@ -182,7 +182,7 @@ func (controller *JobCreatorController) Start(ctx context.Context, cm *system.Cl
 		errorChan <- err
 		return errorChan
 	}
-	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
+	err = controller.web3Events.Start(ctx, cm, controller.web3SDK)
 	if err != nil {
 		errorChan <- err
 		return errorChan

@@ -93,7 +93,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 
 	// activate the web3 event listeners
 	log.Debug().Msgf("controller.web3Events.Start")
-	err = controller.web3Events.Start(controller.web3SDK, ctx, cm)
+	err = controller.web3Events.Start(ctx, cm, controller.web3SDK)
 	if err != nil {
 		errorChan <- err
 		return errorChan

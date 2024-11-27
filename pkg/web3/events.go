@@ -45,9 +45,9 @@ func NewEventChannels() *EventChannels {
 }
 
 func (eventChannels *EventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	for _, collection := range eventChannels.collections {
 		c := collection
