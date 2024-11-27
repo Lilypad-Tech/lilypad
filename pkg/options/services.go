@@ -57,8 +57,6 @@ func CheckServicesOptions(options data.ServiceConfig) error {
 	if len(options.Mediator) == 0 {
 		return fmt.Errorf("No mediators services specified - please use SERVICE_MEDIATORS or --service-mediators")
 	}
-	if len(options.APIHost) == 0 {
-		return fmt.Errorf("No api host specified - please use API_HOST or --api-host")
-	}
 	return nil
+
 }
