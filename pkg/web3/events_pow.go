@@ -24,9 +24,9 @@ func NewPowEventChannels() *PowEventChannels {
 }
 
 func (s *PowEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *PowEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-s.newPowRoundChan:
 			log.Debug().
 				Str("pow->event", "PowNewPowRound").
@@ -65,7 +65,10 @@ func (s *PowEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-newPowRoundSub.Err():
-			return fmt.Errorf("cancel by pow newPowRound event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by pow newPowRound event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

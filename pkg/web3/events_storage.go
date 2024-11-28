@@ -24,9 +24,9 @@ func NewStorageEventChannels() *StorageEventChannels {
 }
 
 func (s *StorageEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *StorageEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-s.dealStateChangeChan:
 			log.Debug().
 				Str("storage->event", "DealStateChange").
@@ -63,7 +63,10 @@ func (s *StorageEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-dealStateChangeSub.Err():
-			return fmt.Errorf("cancel by storage DealStateChange event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by storage DealStateChange event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

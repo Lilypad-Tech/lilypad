@@ -24,9 +24,9 @@ func NewJobCreatorEventChannels() *JobCreatorEventChannels {
 }
 
 func (s *JobCreatorEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *JobCreatorEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-s.jobAddedChan:
 			log.Debug().
 				Str("storage->event", "JobAdded").
@@ -63,7 +63,10 @@ func (s *JobCreatorEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-jobAddedSub.Err():
-			return fmt.Errorf("cancel by job JobAdded event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by job JobAdded event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

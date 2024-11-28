@@ -24,9 +24,9 @@ func NewMediationEventChannels() *MediationEventChannels {
 }
 
 func (m *MediationEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
@@ -54,7 +54,7 @@ func (m *MediationEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-m.mediationRequestedChan:
 			log.Debug().
 				Str("mediation->event", "MediationRequested").
@@ -63,7 +63,10 @@ func (m *MediationEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-mediationRequestedSub.Err():
-			return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by mediation MediationRequested event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

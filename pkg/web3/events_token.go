@@ -25,9 +25,9 @@ func NewTokenEventChannels() *TokenEventChannels {
 }
 
 func (t *TokenEventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	blockNumber, err := sdk.getBlockNumber()
 	if err != nil {
@@ -57,7 +57,7 @@ func (t *TokenEventChannels) Start(
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancel by context")
+			return nil
 		case event := <-t.transferChan:
 			log.Debug().
 				Str("token->event", "Transfer").
@@ -66,7 +66,10 @@ func (t *TokenEventChannels) Start(
 				go handler(*event)
 			}
 		case err := <-transferSub.Err():
-			return fmt.Errorf("cancel by token Transfer event subscribe error %w", err)
+			if err != nil {
+				return fmt.Errorf("cancel by token Transfer event subscribe error %w", err)
+			}
+			return nil
 		}
 	}
 }

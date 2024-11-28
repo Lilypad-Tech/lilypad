@@ -29,8 +29,8 @@ type Web3Options struct {
 
 type EventChannelCollection interface {
 	Start(
-		sdk *Web3SDK,
 		ctx context.Context,
 		cm *system.CleanupManager,
+		sdk *Web3SDK,
 	) error
 }

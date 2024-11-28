@@ -45,15 +45,15 @@ func NewEventChannels() *EventChannels {
 }
 
 func (eventChannels *EventChannels) Start(
-	sdk *Web3SDK,
 	ctx context.Context,
 	cm *system.CleanupManager,
+	sdk *Web3SDK,
 ) error {
 	for _, collection := range eventChannels.collections {
 		c := collection
 		go func() {
 			for {
-				err := c.Start(sdk, ctx, cm)
+				err := c.Start(ctx, cm, sdk)
 				if err != nil {
 					log.Error().Msgf("error starting listeners: %s reconnect in 2 seconds", err.Error())
 				}
