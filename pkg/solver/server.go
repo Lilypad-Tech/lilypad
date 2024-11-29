@@ -1,7 +1,6 @@
 package solver
 
 import (
-	"archive/tar"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,6 +9,7 @@ import (
 	corehttp "net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-chi/httprate"
@@ -481,20 +481,58 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		// check if the filesPath directory exists
 		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
 			return &http.HTTPError{
-				Message:    err.Error(),
+				Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
 				StatusCode: corehttp.StatusNotFound,
 			}
 		}
-		buf, err := system.GetTarBuffer(filesPath)
+
+		// Find the first regular file
+		var targetFile os.DirEntry
+		for _, file := range files {
+			info, err := file.Info()
+			if err != nil {
+				continue
+			}
+			if info.Mode().IsRegular() {
+				targetFile = file
+				break
+			}
+		}
+
+		if targetFile == nil {
+			return &http.HTTPError{
+				Message:    "no regular files found in directory",
+				StatusCode: corehttp.StatusNotFound,
+			}
+		}
+
+		// Get the actual filename
+		filename := targetFile.Name()
+		filePath := filepath.Join(dirPath, filename)
+
+		// Open the file
+		file, err := os.Open(filePath)
 		if err != nil {
 			return &http.HTTPError{
 				Message:    err.Error(),
 				StatusCode: corehttp.StatusInternalServerError,
 			}
 		}
-		res.Header().Set("Content-Disposition", "attachment; filename=archive.tar")
+		defer file.Close()
+
+		// Set appropriate headers using the actual filename
+		res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 		res.Header().Set("Content-Type", "application/x-tar")
-		io.Copy(res, buf)
+
+		// Copy the file directly to the response
+		_, err = io.Copy(res, file)
+		if err != nil {
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
+		}
+
 		return nil
 	}()
 
@@ -528,36 +566,39 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 		if signerAddress != deal.ResourceProvider {
 			return fmt.Errorf("resource provider address does not match signer address")
 		}
-		tr := tar.NewReader(req.Body)
-		uploadPath, err := EnsureDealsFilePath(id)
+
+		// Get the directory path
+		dirPath, err := EnsureDealsFilePath(id)
 		if err != nil {
 			return err
 		}
-		for {
-			header, err := tr.Next()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return err
-			}
-			target := filepath.Join(uploadPath, header.Name)
-			switch header.Typeflag {
-			case tar.TypeDir:
-				if err := os.MkdirAll(target, 0755); err != nil {
-					return err
-				}
-			case tar.TypeReg:
-				f, err := os.Create(target)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if _, err := io.Copy(f, tr); err != nil {
-					return err
-				}
+
+		contentDisposition := req.Header.Get("Content-Disposition")
+		filename := "results.tar" // default filename
+
+		if contentDisposition != "" {
+			// Look for the filename parameter
+			if parts := strings.Split(contentDisposition, "filename="); len(parts) > 1 {
+				filename = strings.Trim(parts[1], `"`)
 			}
 		}
+
+		// Create the file path with original filename
+		filePath := filepath.Join(dirPath, filename)
+
+		// Create the file
+		f, err := os.Create(filePath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		// Copy the data
+		_, err = io.Copy(f, req.Body)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}()
 
@@ -568,7 +609,6 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	}
 
 	err = json.NewEncoder(res).Encode(data.Result{
-		// TODO: we need to be putting this in IPFS and calculating the CID
 		DataID: id,
 	})
 	if err != nil {

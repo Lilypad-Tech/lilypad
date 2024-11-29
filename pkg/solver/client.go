@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"io"
-	"compress/gzip"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -149,30 +148,31 @@ func (client *SolverClient) UpdateTransactionsMediator(id string, payload data.D
 
 func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
 
-	gzipFile, err := os.Open(localPath)
+	file, err := os.Open(localPath)
 	if err != nil {
-		return data.Result{}, fmt.Errorf("failed to open gzip file: %w", err)
+		return data.Result{}, fmt.Errorf("failed to open tar file: %w", err)
 	}
-	defer gzipFile.Close()
-
-	gzipReader, err := gzip.NewReader(gzipFile)
-	if err != nil {
-		return data.Result{}, fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	defer gzipReader.Close()
-
+	defer file.Close()
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, gzipReader); err != nil {
-		return data.Result{}, fmt.Errorf("failed to decompress gzip: %w", err)
+	if _, err := io.Copy(&buf, file); err != nil {
+		return data.Result{}, fmt.Errorf("failed to read tar file: %w", err) 
 	}
 
-	fmt.Printf("uploading results for deal %s\n", id)
-	return http.PostRequestBuffer[data.Result](
+	result, err := http.PostRequestBuffer[data.Result](
 		client.options, 
 		fmt.Sprintf("/deals/%s/files", id), 
 		&buf,
 	)
+
+	// // Remove the file after upload in a goroutine
+	// go func() {
+	// 	if removeErr := os.Remove(localPath); removeErr != nil {
+	// 		log.Error().Err(removeErr).Msgf("failed to remove uploaded file: %s", localPath)
+	// 	}
+	// }()
+
+	return result, err
 }
 
 func (client *SolverClient) DownloadResultFiles(id string, localPath string) error {
