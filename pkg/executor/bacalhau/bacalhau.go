@@ -2,11 +2,14 @@ package bacalhau
 
 import (
 	"bufio"
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -127,7 +130,6 @@ func (executor *BacalhauExecutor) RunJob(
 		jobExecutions = jobInfo.Executions.Items
 
 		if len(jobExecutions) > 0 {
-			// Check that the job completed successfully
 			if jobInfo.Job.State.StateType != models.JobStateTypeCompleted {
 				return nil, fmt.Errorf("job %s did not complete yet: %s", jobId, jobInfo.Job.State.StateType.String())
 			}
@@ -163,34 +165,60 @@ func (executor *BacalhauExecutor) prepareResults(jobId string, executionId strin
 
 	resultsPath := filepath.Join(home, ".bacalhau", "compute", "results", "local-publisher", fmt.Sprintf("%s.tar.gz", executionId))
 
-	fmt.Printf("generating CID for job %s\n with execution %s\n", jobId, executionId)
+	gzipFile, err := os.Open(resultsPath)
+	if err != nil {
+		return "", "", fmt.Errorf("error opening gzip file: %s", err.Error())
+	}
+	defer gzipFile.Close()
+
+	gzipReader, err := gzip.NewReader(gzipFile)
+	if err != nil {
+		return "", "", fmt.Errorf("error creating gzip reader: %s", err.Error())
+	}
+	defer gzipReader.Close()
+
+	tarPath := strings.TrimSuffix(resultsPath, ".gz")
+	tarFile, err := os.Create(tarPath)
+	if err != nil {
+		return "", "", fmt.Errorf("error creating tar file: %s", err.Error())
+	}
+	defer tarFile.Close()
+
+	_, err = io.Copy(tarFile, gzipReader)
+	if err != nil {
+		return "", "", fmt.Errorf("error writing tar file: %s", err.Error())
+	}
+
+	resultsPath = tarPath
+
+	go func() {
+		if err := os.Remove(resultsPath + ".gz"); err != nil {
+			log.Printf("error removing gzip file: %s", err.Error())
+		}
+	}()
+
 	cid, err = GenerateCID(resultsPath)
 	if err != nil {
 		return "", "", fmt.Errorf("error generating CID: %s", err.Error())
 	}
-
-	fmt.Printf("CID for job %s with execution %s: %s\n", jobId, executionId, cid)
 
 	return cid, resultsPath, nil
 
 }
 
 func GenerateCID(path string) (string, error) {
-	// Open file for streaming
 	file, err := os.Open(path)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 	defer file.Close()
 
-	// Create services with cleanup
 	ds := dsync.MutexWrap(datastore.NewNullDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	bs = blockstore.NewIdStore(bs)
 	bsrv := blockservice.New(bs, offline.Exchange(bs))
 	dsrv := merkledag.NewDAGService(bsrv)
 
-	// Ensure cleanup
 	defer func() {
 		if err := bsrv.Close(); err != nil {
 			log.Printf("failed to close blockservice: %v", err)
@@ -209,7 +237,6 @@ func GenerateCID(path string) (string, error) {
 		NoCopy:  false,
 	}
 
-	// Use buffered reader for better performance
 	bufReader := bufio.NewReader(file)
 
 	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(bufReader, chunker.DefaultBlockSize))
@@ -225,7 +252,6 @@ func GenerateCID(path string) (string, error) {
 	return nd.Cid().String(), nil
 }
 
-// run the bacalhau job and return the job ID
 func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
