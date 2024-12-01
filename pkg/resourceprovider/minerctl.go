@@ -209,7 +209,7 @@ out:
 			stopWorkers()
 			cache.Add(result.Id, new(uint256.Int))
 			time.Sleep(time.Second * hpsUpdateSecs) //to ensure data was reported
-			hashrate := float64(m.totalHash) / 1000 / 1000 / dur
+			hashrate := float64(m.totalHash) / 1000 / dur
 			m.submit(result.Nonce.ToBig(), hashrate)
 		case allTask := <-m.task:
 			stopWorkers()
