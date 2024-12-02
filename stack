@@ -237,6 +237,10 @@ function mediator() {
 ############################################################################
 
 function unit-tests() {
+  go test -v -tags="unit" -count 1 ./...
+}
+
+function unit-tests-hardhat() {
   cd hardhat
   npx hardhat test --network hardhat
 }
@@ -245,8 +249,7 @@ function unit-tests() {
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   load-local-env
-  cd test
-  go test -v -count 1 .
+  go test -v -tags="integration" -count 1 ./...
 }
 
 ############################################################################
