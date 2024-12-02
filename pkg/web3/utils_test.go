@@ -1,3 +1,5 @@
+//go:build unit
+
 package web3
 
 import (
