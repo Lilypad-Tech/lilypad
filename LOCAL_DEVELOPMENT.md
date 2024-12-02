@@ -80,7 +80,9 @@ Once all the services are up and running this command can be used to trigger an 
 
 ### Tests
 
-There are two commands that can be used to run existing tests: `./stack unit-tests` and `./stack integration-tests` (bear in mind the latter expects a blockchain node to be running locally).
+Run the Go unit tests with `./stack unit-tests` and the Hardhat unit tests with `./stack unit-tests-hardhat`.
+
+Run the integration tests with `./stack integration-tests`. The integration tests expect all parts of the stack are running, except the request to run a job. See [Using Docker Compose](./LOCAL_DEVELOPMENT.md#using-docker-compose) to run the stack.
 
 ## Notes on tooling
 
