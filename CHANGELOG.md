@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.10.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.9.1...v2.10.0) (2024-12-02)
+
+
+### Features
+
+* Add base services compose file ([#452](https://github.com/Lilypad-Tech/lilypad/issues/452)) ([86a3bc6](https://github.com/Lilypad-Tech/lilypad/commit/86a3bc6fa13fbe636e2492ddc2573748da6e3f33))
+* Add solver metrics ([#435](https://github.com/Lilypad-Tech/lilypad/issues/435)) ([bff3def](https://github.com/Lilypad-Tech/lilypad/commit/bff3deff64a625ed078ff5a8148f059dd4f52b62))
+* Demonet network config ([#453](https://github.com/Lilypad-Tech/lilypad/issues/453)) ([732b5ad](https://github.com/Lilypad-Tech/lilypad/commit/732b5ad1990d06ff693b78f8de528c0881389e90))
+
+
+### Bug Fixes
+
+* Run bacalhau in a separate container ([#438](https://github.com/Lilypad-Tech/lilypad/issues/438)) ([25083a7](https://github.com/Lilypad-Tech/lilypad/commit/25083a70623e7f6c70ef3539deeff5b83ff49080))
+* Silence web3 event listener cancellation errors ([#456](https://github.com/Lilypad-Tech/lilypad/issues/456)) ([d679ea3](https://github.com/Lilypad-Tech/lilypad/commit/d679ea3c7890abd7d7fb0c3f382f79dda94c88bd))
+
 ## [2.9.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.9.0...v2.9.1) (2024-11-18)
 
 
