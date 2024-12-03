@@ -220,6 +220,11 @@ func (store *SolverStoreDatabase) UpdateDealTransactionsMediator(id string, data
 }
 
 func (store *SolverStoreDatabase) RemoveJobOffer(id string) error {
+	var record JobOffer
+	result := store.db.Where("c_id = ?", id).Delete(&record)
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
 
