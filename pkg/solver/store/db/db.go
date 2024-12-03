@@ -81,7 +81,29 @@ func (store *SolverStoreDatabase) AddMatchDecision(resourceOffer string, jobOffe
 }
 
 func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
-	jobOffers := []data.JobOfferContainer{}
+	q := store.db.Where([]JobOffer{})
+
+	// Apply filters
+	if query.JobCreator != "" {
+		q = q.Where("job_creator = ?", query.JobCreator)
+	}
+	if query.NotMatched {
+		q = q.Where("deal_id = ''")
+	}
+	if !query.IncludeCancelled {
+		q = q.Where("state != ?", data.GetAgreementStateIndex("JobOfferCancelled"))
+	}
+
+	var records []JobOffer
+	if err := q.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	jobOffers := make([]data.JobOfferContainer, len(records))
+	for i, record := range records {
+		jobOffers[i] = record.Attributes.Data()
+	}
+
 	return jobOffers, nil
 }
 
