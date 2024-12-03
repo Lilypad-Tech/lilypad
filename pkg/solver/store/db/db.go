@@ -101,8 +101,19 @@ func (store *SolverStoreDatabase) GetDealsAll() ([]data.DealContainer, error) {
 }
 
 func (store *SolverStoreDatabase) GetJobOffer(id string) (*data.JobOfferContainer, error) {
-	jobOffer := &data.JobOfferContainer{}
-	return jobOffer, nil
+	// Offers are unique by CID, so we can query first
+	var record JobOffer
+	result := store.db.Where("c_id = ?", id).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+
+	jobOffer := record.Attributes.Data()
+	return &jobOffer, nil
 }
 
 func (store *SolverStoreDatabase) GetResourceOffer(id string) (*data.ResourceOfferContainer, error) {
