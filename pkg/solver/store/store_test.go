@@ -11,9 +11,12 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	databasestore "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"golang.org/x/exp/rand"
 )
+
+const DB_CONN_STR = "postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable"
 
 type storeConfig struct {
 	name string
@@ -33,8 +36,42 @@ func setupStores(t *testing.T) []storeConfig {
 		}
 	}
 
+	initDatabase := func() func() store.SolverStore {
+		db, err := databasestore.NewSolverStoreDatabase(DB_CONN_STR, true)
+		if err != nil {
+			t.Fatalf("Failed to create database store: %v", err)
+		}
+
+		// Clear data at initialization
+		clearStoreDatabase(t, db)
+
+		// Get store functions clear data and returns
+		// the same store instance
+		return func() store.SolverStore {
+			clearStoreDatabase(t, db)
+			return db
+		}
+	}
+
 	return []storeConfig{
 		{name: "memory", init: initMemory},
+		{name: "database", init: initDatabase},
+	}
+}
+
+func clearStoreDatabase(t *testing.T, s store.SolverStore) {
+	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{
+		IncludeCancelled: true,
+	})
+	if err != nil {
+		t.Fatalf("Failed to get existing job offers: %v", err)
+	}
+
+	for _, result := range jobOffers {
+		err := s.RemoveJobOffer(result.ID)
+		if err != nil {
+			t.Fatalf("Failed to remove existing job offer: %v", err)
+		}
 	}
 }
 
