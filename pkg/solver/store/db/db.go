@@ -1,6 +1,9 @@
 package store
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"gorm.io/datatypes"
@@ -128,8 +131,32 @@ func (store *SolverStoreDatabase) GetMatchDecision(resourceOffer string, jobOffe
 }
 
 func (store *SolverStoreDatabase) UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
-	jobOffer := &data.JobOfferContainer{}
-	return jobOffer, nil
+	var record JobOffer
+	result := store.db.Where("c_id = ?", id).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("job offer not found: %s", id)
+		}
+		return nil, result.Error
+	}
+
+	// Update the jsonb data
+	inner := record.Attributes.Data()
+	inner.DealID = dealID
+	inner.State = state
+
+	if err := store.db.Model(&record).
+		Select("DealID", "State", "Attributes").
+		Updates(JobOffer{
+			DealID:     dealID,
+			State:      state,
+			Attributes: datatypes.NewJSONType(inner),
+		}).Error; err != nil {
+		return nil, err
+	}
+
+	return &inner, nil
 }
 
 func (store *SolverStoreDatabase) UpdateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
