@@ -165,7 +165,36 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 }
 
 func (store *SolverStoreDatabase) GetDeals(query store.GetDealsQuery) ([]data.DealContainer, error) {
-	deals := []data.DealContainer{}
+	q := store.db.Where([]Deal{})
+
+	// Apply filters
+	if query.JobCreator != "" {
+		q = q.Where("job_creator = ?", query.JobCreator)
+	}
+	if query.ResourceProvider != "" {
+		q = q.Where("resource_provider = ?", query.ResourceProvider)
+	}
+	if query.Mediator != "" {
+		q = q.Where("mediator = ?", query.Mediator)
+	}
+	if query.State != "" {
+		parsedState, err := data.GetAgreementState(query.State)
+		if err != nil {
+			return nil, err
+		}
+		q = q.Where("state = ?", parsedState)
+	}
+
+	var records []Deal
+	if err := q.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	deals := make([]data.DealContainer, len(records))
+	for i, record := range records {
+		deals[i] = record.Attributes.Data()
+	}
+
 	return deals, nil
 }
 
