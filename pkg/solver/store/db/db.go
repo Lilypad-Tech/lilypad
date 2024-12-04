@@ -121,7 +121,32 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 }
 
 func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
-	resourceOffers := []data.ResourceOfferContainer{}
+	q := store.db.Where([]ResourceOffer{})
+
+	// Apply filters
+	if query.ResourceProvider != "" {
+		q = q.Where("resource_provider = ?", query.ResourceProvider)
+	}
+	if query.NotMatched {
+		q = q.Where("deal_id = ''")
+	}
+	if query.Active {
+		q = q.Where("state IN (?)", []uint8{
+			data.GetAgreementStateIndex("DealNegotiating"),
+			data.GetAgreementStateIndex("DealAgreed"),
+		})
+	}
+
+	var records []ResourceOffer
+	if err := q.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	resourceOffers := make([]data.ResourceOfferContainer, len(records))
+	for i, record := range records {
+		resourceOffers[i] = record.Attributes.Data()
+	}
+
 	return resourceOffers, nil
 }
 
