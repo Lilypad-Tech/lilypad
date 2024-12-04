@@ -401,7 +401,29 @@ func (store *SolverStoreDatabase) UpdateDealTransactionsResourceProvider(id stri
 }
 
 func (store *SolverStoreDatabase) UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error) {
-	return store.placeholderDeal, nil
+	var record Deal
+	result := store.db.Where("c_id = ?", id).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("deal not found: %s", id)
+		}
+		return nil, result.Error
+	}
+
+	// Update the jsonb data
+	inner := record.Attributes.Data()
+	inner.Transactions.Mediator = data
+
+	if err := store.db.Model(&record).
+		Select("Attributes").
+		Updates(Deal{
+			Attributes: datatypes.NewJSONType(inner),
+		}).Error; err != nil {
+		return nil, err
+	}
+
+	return &inner, nil
 }
 
 func (store *SolverStoreDatabase) RemoveJobOffer(id string) error {
