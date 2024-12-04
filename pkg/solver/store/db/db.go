@@ -76,6 +76,20 @@ func (store *SolverStoreDatabase) AddResourceOffer(resourceOffer data.ResourceOf
 }
 
 func (store *SolverStoreDatabase) AddDeal(deal data.DealContainer) (*data.DealContainer, error) {
+	record := Deal{
+		CID:              deal.ID,
+		JobCreator:       deal.JobCreator,
+		ResourceProvider: deal.ResourceProvider,
+		Mediator:         deal.Mediator,
+		State:            deal.State,
+		Attributes:       datatypes.NewJSONType(deal),
+	}
+
+	result := store.db.Create(&record)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return &deal, nil
 }
 
