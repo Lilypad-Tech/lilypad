@@ -199,7 +199,16 @@ func (store *SolverStoreDatabase) GetDeals(query store.GetDealsQuery) ([]data.De
 }
 
 func (store *SolverStoreDatabase) GetDealsAll() ([]data.DealContainer, error) {
-	deals := []data.DealContainer{}
+	var records []Deal
+	if err := store.db.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	deals := make([]data.DealContainer, len(records))
+	for i, record := range records {
+		deals[i] = record.Attributes.Data()
+	}
+
 	return deals, nil
 }
 
