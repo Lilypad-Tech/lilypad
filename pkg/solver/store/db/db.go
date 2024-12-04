@@ -494,5 +494,10 @@ func (store *SolverStoreDatabase) RemoveResourceOffer(id string) error {
 }
 
 func (store *SolverStoreDatabase) RemoveDeal(id string) error {
+	var record Deal
+	result := store.db.Where("c_id = ?", id).Delete(&record)
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
