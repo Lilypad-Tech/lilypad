@@ -59,6 +59,19 @@ func (store *SolverStoreDatabase) AddJobOffer(jobOffer data.JobOfferContainer) (
 }
 
 func (store *SolverStoreDatabase) AddResourceOffer(resourceOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error) {
+	record := ResourceOffer{
+		CID:              resourceOffer.ID,
+		ResourceProvider: resourceOffer.ResourceProvider,
+		DealID:           resourceOffer.DealID,
+		State:            resourceOffer.State,
+		Attributes:       datatypes.NewJSONType(resourceOffer),
+	}
+
+	result := store.db.Create(&record)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return &resourceOffer, nil
 }
 
