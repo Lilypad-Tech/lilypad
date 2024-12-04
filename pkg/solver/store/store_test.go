@@ -87,6 +87,19 @@ func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 			t.Fatalf("Failed to remove existing resource offer: %v", err)
 		}
 	}
+
+	// Delete deals
+	deals, err := s.GetDealsAll()
+	if err != nil {
+		t.Fatalf("Failed to get existing deals: %v", err)
+	}
+
+	for _, deal := range deals {
+		err := s.RemoveDeal(deal.ID)
+		if err != nil {
+			t.Fatalf("Failed to remove existing deal: %v", err)
+		}
+	}
 }
 
 // Job offers
@@ -583,11 +596,361 @@ func TestResourceOfferQuery(t *testing.T) {
 	}
 }
 
-// Concurrency
+// Deals
+
+func TestDealOps(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		// Test multiple deals in a single test run
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			// Generate multiple deals
+			deals := generateDeals(5, 50)
+
+			for _, deal := range deals {
+				// Add deal
+				added, err := store.AddDeal(deal)
+				if err != nil {
+					t.Fatalf("Failed to add deal: %v", err)
+				}
+				if added.ID != deal.ID {
+					t.Errorf("Expected ID %s, got %s", deal.ID, added.ID)
+				}
+
+				// Get deal
+				retrieved, err := store.GetDeal(deal.ID)
+				if err != nil {
+					t.Fatalf("Failed to get deal: %v", err)
+				}
+				if retrieved == nil {
+					t.Fatalf("Expected deal, got nil")
+				}
+				if retrieved.ID != deal.ID {
+					t.Errorf("Expected ID %s, got %s", deal.ID, retrieved.ID)
+				}
+
+				// Remove deal
+				err = store.RemoveDeal(deal.ID)
+				if err != nil {
+					t.Fatalf("Failed to remove deal: %v", err)
+				}
+
+				// Verify removal
+				removed, err := store.GetDeal(deal.ID)
+				if err != nil {
+					t.Fatalf("Error checking removed deal: %v", err)
+				}
+				if removed != nil {
+					t.Error("Deal still exists after removal")
+				}
+			}
+		})
+	}
+}
+
+func TestDealGetAll(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		// Test batch of deals in a test run
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			// Generate multiple deals or no deals
+			deals := generateDeals(0, 10)
+			addedIDs := make([]string, len(deals))
+
+			// Add deals
+			for i, deal := range deals {
+				added, err := store.AddDeal(deal)
+				if err != nil {
+					t.Fatalf("Failed to add deal: %v", err)
+				}
+				addedIDs[i] = added.ID
+			}
+
+			// Get all deals
+			allDeals, err := store.GetDealsAll()
+			if err != nil {
+				t.Fatalf("Failed to get all deals: %v", err)
+			}
+
+			// Verify count matches
+			if len(allDeals) != len(deals) {
+				t.Errorf("Expected %d deals, got %d", len(deals), len(allDeals))
+			}
+
+			// Verify all added deals are present
+			retrievedIDs := make([]string, len(allDeals))
+			for i, deal := range allDeals {
+				retrievedIDs[i] = deal.ID
+			}
+
+			// Sort both slices for comparison
+			sort.Strings(addedIDs)
+			sort.Strings(retrievedIDs)
+
+			if !slices.Equal(retrievedIDs, addedIDs) {
+				t.Errorf("Retrieved deals don't match added deals.\nAdded: %v\nRetrieved: %v",
+					addedIDs, retrievedIDs)
+			}
+		})
+	}
+}
+
+func TestDealUpdates(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		// Test multiple deals in a single test run
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			// Generate multiple deals
+			deals := generateDeals(5, 50)
+
+			for _, deal := range deals {
+				// Add deal
+				added, err := store.AddDeal(deal)
+				if err != nil {
+					t.Fatalf("Failed to add deal: %v", err)
+				}
+
+				// Update deal state
+				newState := generateState()
+				updated, err := store.UpdateDealState(added.ID, newState)
+				if err != nil {
+					t.Fatalf("Failed to update deal state: %v", err)
+				}
+				if updated.State != newState {
+					t.Errorf("Update state failed: expected state=%d, got state=%d",
+						newState, updated.State)
+				}
+
+				// Update deal mediator
+				newMediator := generateEthAddress()
+				updated, err = store.UpdateDealMediator(added.ID, newMediator)
+				if err != nil {
+					t.Fatalf("Failed to update deal mediator: %v", err)
+				}
+				if updated.Mediator != newMediator {
+					t.Errorf("Update mediator failed: expected mediator=%s, got mediator=%s",
+						newMediator, updated.Mediator)
+				}
+
+				// Update deal job creator transactions
+				jcTxs := data.DealTransactionsJobCreator{
+					Agree:                generateEthTxHash(),
+					AcceptResult:         generateEthTxHash(),
+					CheckResult:          generateEthTxHash(),
+					TimeoutAgree:         generateEthTxHash(),
+					TimeoutSubmitResult:  generateEthTxHash(),
+					TimeoutMediateResult: generateEthTxHash(),
+				}
+				updated, err = store.UpdateDealTransactionsJobCreator(added.ID, jcTxs)
+				if err != nil {
+					t.Fatalf("Failed to update job creator transactions: %v", err)
+				}
+				if updated.Transactions.JobCreator != jcTxs {
+					t.Error("Job creator transactions not updated correctly")
+				}
+
+				// Update deal transactions resource provider
+				rpTxs := data.DealTransactionsResourceProvider{
+					Agree:                generateEthTxHash(),
+					AddResult:            generateEthTxHash(),
+					TimeoutAgree:         generateEthTxHash(),
+					TimeoutJudgeResult:   generateEthTxHash(),
+					TimeoutMediateResult: generateEthTxHash(),
+				}
+				updated, err = store.UpdateDealTransactionsResourceProvider(added.ID, rpTxs)
+				if err != nil {
+					t.Fatalf("Failed to update resource provider transactions: %v", err)
+				}
+				if updated.Transactions.ResourceProvider != rpTxs {
+					t.Error("Resource provider transactions not updated correctly")
+				}
+
+				// Update deal transactions mediator
+				mediatorTxs := data.DealTransactionsMediator{
+					MediationAcceptResult: generateEthTxHash(),
+					MediationRejectResult: generateEthTxHash(),
+				}
+				updatedMediatorTxs, err := store.UpdateDealTransactionsMediator(added.ID, mediatorTxs)
+				if err != nil {
+					t.Fatalf("Failed to update mediator transactions: %v", err)
+				}
+				if updatedMediatorTxs.Transactions.Mediator != mediatorTxs {
+					t.Error("Mediator transactions not updated correctly")
+				}
+			}
+		})
+	}
+}
+
+func TestDealQuery(t *testing.T) {
+	// Test cases set deal fields relevant to querying.
+	// All other fields are left with their zero-values.
+	testCases := []struct {
+		name     string
+		deals    []data.DealContainer
+		query    store.GetDealsQuery
+		expected []string // expected IDs in results
+	}{
+		{
+			name: "filter by job creator",
+			deals: []data.DealContainer{
+				{
+					ID:         "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					State:      data.GetDefaultAgreementState(),
+				},
+				{
+					ID:         "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					JobCreator: "0xabcdef0123456789abcdef0123456789abcdef01",
+					State:      data.GetDefaultAgreementState(),
+				},
+			},
+			query: store.GetDealsQuery{
+				JobCreator: "0x1234567890123456789012345678901234567890",
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+		{
+			name: "filter by resource provider",
+			deals: []data.DealContainer{
+				{
+					ID:               "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					ResourceProvider: "0x1234567890123456789012345678901234567890",
+					State:            data.GetDefaultAgreementState(),
+				},
+				{
+					ID:               "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					ResourceProvider: "0xabcdef0123456789abcdef0123456789abcdef01",
+					State:            data.GetDefaultAgreementState(),
+				},
+			},
+			query: store.GetDealsQuery{
+				ResourceProvider: "0x1234567890123456789012345678901234567890",
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+		{
+			name: "filter by mediator",
+			deals: []data.DealContainer{
+				{
+					ID:       "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					Mediator: "0x1234567890123456789012345678901234567890",
+					State:    data.GetDefaultAgreementState(),
+				},
+				{
+					ID:       "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					Mediator: "0xabcdef0123456789abcdef0123456789abcdef01",
+					State:    data.GetDefaultAgreementState(),
+				},
+			},
+			query: store.GetDealsQuery{
+				Mediator: "0x1234567890123456789012345678901234567890",
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+		{
+			name: "filter by state",
+			deals: []data.DealContainer{
+				{
+					ID:    "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					State: data.GetAgreementStateIndex("DealNegotiating"),
+				},
+				{
+					ID:    "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					State: data.GetAgreementStateIndex("DealAgreed"),
+				},
+			},
+			query: store.GetDealsQuery{
+				State: "DealNegotiating",
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+		{
+			name: "combined filters",
+			deals: []data.DealContainer{
+				{
+					ID:               "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					JobCreator:       "0x1234567890123456789012345678901234567890",
+					ResourceProvider: "0x2234567890123456789012345678901234567890",
+					State:            data.GetAgreementStateIndex("DealNegotiating"),
+				},
+				{
+					ID:               "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					JobCreator:       "0x1234567890123456789012345678901234567890",
+					ResourceProvider: "0x2234567890123456789012345678901234567890",
+					State:            data.GetAgreementStateIndex("DealAgreed"),
+				},
+				{
+					ID:               "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator:       "0x1234567890123456789012345678901234567890",
+					ResourceProvider: "0x3234567890123456789012345678901234567890",
+					State:            data.GetAgreementStateIndex("DealNegotiating"),
+				},
+			},
+			query: store.GetDealsQuery{
+				JobCreator:       "0x1234567890123456789012345678901234567890",
+				ResourceProvider: "0x2234567890123456789012345678901234567890",
+				State:            "DealNegotiating",
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+	}
+
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		getStore := config.init()
+
+		for _, tc := range testCases {
+			// Test each case in a separate test run
+			t.Run(fmt.Sprintf("%s/%s", config.name, tc.name), func(t *testing.T) {
+				store := getStore()
+
+				// Add deals
+				for _, deal := range tc.deals {
+					_, err := store.AddDeal(deal)
+					if err != nil {
+						t.Fatalf("Failed to add deal: %v", err)
+					}
+				}
+
+				// Run query
+				results, err := store.GetDeals(tc.query)
+				if err != nil {
+					t.Fatalf("GetDeals failed: %v", err)
+				}
+
+				// Extract result IDs
+				resultIDs := make([]string, len(results))
+				for i, r := range results {
+					resultIDs[i] = r.ID
+				}
+
+				// Sort both slices for comparison
+				sort.Strings(resultIDs)
+				sort.Strings(tc.expected)
+
+				if !slices.Equal(resultIDs, tc.expected) {
+					t.Errorf("Expected results %v, got %v", tc.expected, resultIDs)
+				}
+			})
+		}
+	}
+}
+
+// Concurrency for all
 
 func TestConcurrentOps(t *testing.T) {
 	jobOffers := generateJobOffers(4, 10)
 	resourceOffers := generateResourceOffers(4, 10)
+	deals := generateDeals(4, 10)
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
@@ -596,7 +959,7 @@ func TestConcurrentOps(t *testing.T) {
 			getStore := config.init()
 			store := getStore()
 
-			errCh := make(chan error, len(jobOffers)+len(resourceOffers))
+			errCh := make(chan error, len(jobOffers)+len(resourceOffers)+len(deals))
 			var wg sync.WaitGroup
 
 			// Add job offers concurrently
@@ -621,6 +984,18 @@ func TestConcurrentOps(t *testing.T) {
 						errCh <- fmt.Errorf("resource offer error: %v", err)
 					}
 				}(offer)
+			}
+
+			// Add deals concurrently
+			for _, deal := range deals {
+				wg.Add(1)
+				go func(d data.DealContainer) {
+					defer wg.Done()
+					_, err := store.AddDeal(d)
+					if err != nil {
+						errCh <- fmt.Errorf("deal error: %v", err)
+					}
+				}(deal)
 			}
 
 			wg.Wait()
@@ -660,6 +1035,20 @@ func TestConcurrentOps(t *testing.T) {
 					t.Errorf("Retrieved resource offer ID mismatch: expected %s, got %s", offer.ID, retrieved.ID)
 				}
 			}
+
+			// Verify all deals were added
+			for _, deal := range deals {
+				retrieved, err := store.GetDeal(deal.ID)
+				if err != nil {
+					t.Errorf("Failed to get deal %s: %v", deal.ID, err)
+				}
+				if retrieved == nil {
+					t.Errorf("Deal %s not found after concurrent add", deal.ID)
+				}
+				if retrieved != nil && retrieved.ID != deal.ID {
+					t.Errorf("Retrieved deal ID mismatch: expected %s, got %s", deal.ID, retrieved.ID)
+				}
+			}
 		})
 	}
 }
@@ -680,6 +1069,14 @@ func generateEthAddress() string {
 
 	// Mock eth address
 	return fmt.Sprintf("0x%40x", randBytes)
+}
+
+func generateEthTxHash() string {
+	randBytes := make([]byte, 32)
+	rand.Read(randBytes)
+
+	// Mock eth transaction hash
+	return fmt.Sprintf("0x%064x", randBytes)
 }
 
 func generateState() uint8 {
@@ -719,4 +1116,30 @@ func generateResourceOffers(min int, max int) []data.ResourceOfferContainer {
 	}
 
 	return offers
+}
+
+func generateDeal() data.DealContainer {
+	return data.DealContainer{
+		ID:               generateCID(),
+		JobCreator:       generateEthAddress(),
+		ResourceProvider: generateEthAddress(),
+		Mediator:         generateEthAddress(),
+		State:            generateState(),
+		Transactions: data.DealTransactions{
+			JobCreator:       data.DealTransactionsJobCreator{},
+			ResourceProvider: data.DealTransactionsResourceProvider{},
+			Mediator:         data.DealTransactionsMediator{},
+		},
+	}
+}
+
+func generateDeals(min int, max int) []data.DealContainer {
+	count := min + rand.Intn(max-min+1)
+	deals := make([]data.DealContainer, count)
+
+	for i := 0; i < count; i++ {
+		deals[i] = generateDeal()
+	}
+
+	return deals
 }
