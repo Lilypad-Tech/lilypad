@@ -14,13 +14,18 @@ services:
     image: ghcr.io/lilypad-tech/bacalhau
     container_name: bacalhau
     restart: unless-stopped
+    privileged: true
     depends_on:
       ipfs:
         condition: service_healthy
+    build:
+      context: ..
+      dockerfile: ./docker/bacalhau/Dockerfile
     environment:
       - BACALHAU_ENVIRONMENT=local
     command:
       [
+        "bacalhau",
         "serve",
         "--node-type",
         "compute,requester",

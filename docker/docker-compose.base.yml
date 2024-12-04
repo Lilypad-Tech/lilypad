@@ -61,6 +61,7 @@ services:
     image: ghcr.io/lilypad-tech/bacalhau
     container_name: bacalhau
     restart: unless-stopped
+    privileged: true
     depends_on:
       ipfs:
         condition: service_healthy
@@ -75,6 +76,7 @@ services:
       - 1234:1234
     command:
       [
+        "bacalhau",
         "serve",
         "--node-type",
         "compute,requester",
@@ -87,7 +89,6 @@ services:
       ]
     volumes:
       - bacalhau-data:/root/.bacalhau
-      - /var/run/docker.sock:/var/run/docker.sock
 volumes:
   chain-data:
   ipfs-data:
