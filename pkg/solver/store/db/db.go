@@ -319,3 +319,7 @@ func (store *SolverStoreDatabase) RemoveResourceOffer(id string) error {
 	}
 	return nil
 }
+
+func (store *SolverStoreDatabase) RemoveDeal(id string) error {
+	return nil
+}

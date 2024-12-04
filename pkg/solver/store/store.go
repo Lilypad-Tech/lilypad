@@ -76,6 +76,7 @@ type SolverStore interface {
 	UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error)
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
+	RemoveDeal(id string) error
 }
 
 func GetMatchID(resourceOffer string, jobOffer string) string {
