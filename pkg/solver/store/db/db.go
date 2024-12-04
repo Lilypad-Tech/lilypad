@@ -13,10 +13,7 @@ import (
 )
 
 type SolverStoreDatabase struct {
-	// TODO Remove placeholder which we needed to implement the interface with
-	// package name shadowed
-	placeholderDeal *data.DealContainer
-	db              *gorm.DB
+	db *gorm.DB
 	// TODO Log writers?
 	// logWriters       map[string]jsonl.Writer
 }
@@ -38,7 +35,7 @@ func NewSolverStoreDatabase(connStr string, silenceLogs bool) (*SolverStoreDatab
 	db.AutoMigrate(&Result{})
 	db.AutoMigrate(&MatchDecision{})
 
-	return &SolverStoreDatabase{&data.DealContainer{}, db}, nil
+	return &SolverStoreDatabase{db}, nil
 }
 
 func (store *SolverStoreDatabase) AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error) {
