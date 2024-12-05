@@ -1,4 +1,6 @@
-package main
+//go:build integration
+
+package solver_test
 
 import (
 	"fmt"

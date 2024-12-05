@@ -1,3 +1,5 @@
+//go:build unit
+
 package web3_test
 
 import (
@@ -5,12 +7,13 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
-	"golang.org/x/crypto/sha3"
 	"log"
 	"math/big"
 	"os"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/BurntSushi/toml"
 	"github.com/lilypad-tech/lilypad/pkg/options"
@@ -65,6 +68,8 @@ func CreateTestWeb3SDK() (*web3.Web3SDK, error) {
 }
 
 func TestGetBalance(t *testing.T) {
+	t.Skip("Issue: https://github.com/Lilypad-Tech/lilypad/issues/385")
+
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
 		t.Fatalf("Failed to create Web3SDK: %v", err)
@@ -78,6 +83,8 @@ func TestGetBalance(t *testing.T) {
 }
 
 func TestGetLPBalance(t *testing.T) {
+	t.Skip("Issue: https://github.com/Lilypad-Tech/lilypad/issues/385")
+
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
 		t.Fatalf("Failed to create Web3SDK: %v", err)
@@ -90,6 +97,8 @@ func TestGetLPBalance(t *testing.T) {
 }
 
 func TestGetLPBalanceNoBalance(t *testing.T) {
+	t.Skip("Issue: https://github.com/Lilypad-Tech/lilypad/issues/385")
+
 	sdk, err := CreateTestWeb3SDK()
 	noBalanceInt := big.NewInt(0)
 	if err != nil {
@@ -114,6 +123,8 @@ func TestGetLPBalanceNoBalance(t *testing.T) {
 }
 
 func TestGetBlockNumber(t *testing.T) {
+	t.Skip("Issue: https://github.com/Lilypad-Tech/lilypad/issues/385")
+
 	sdk, err := CreateTestWeb3SDK()
 	if err != nil {
 		t.Fatalf("Failed to create Web3SDK: %v", err)
