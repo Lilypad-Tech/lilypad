@@ -187,7 +187,7 @@ type ResourceOfferContainer struct {
 	DealID           string        `json:"deal_id"`
 	ResourceProvider string        `json:"resource_provider"`
 	State            uint8         `json:"state"`
-	ResourceOffer    ResourceOffer `json:"job_offer"`
+	ResourceOffer    ResourceOffer `json:"resource_offer"`
 }
 
 type DealMembers struct {
