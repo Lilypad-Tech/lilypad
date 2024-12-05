@@ -498,3 +498,7 @@ func (store *SolverStoreDatabase) RemoveDeal(id string) error {
 	}
 	return nil
 }
+
+func (store *SolverStoreDatabase) RemoveResult(id string) error {
+	return nil
+}
