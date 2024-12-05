@@ -404,5 +404,16 @@ func (s *SolverStoreMemory) RemoveResult(id string) error {
 	return nil
 }
 
+func (s *SolverStoreMemory) RemoveMatchDecision(resourceOffer string, jobOffer string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for k := range s.matchDecisionMap {
+		if strings.Contains(k, jobOffer) || strings.Contains(k, resourceOffer) {
+			delete(s.matchDecisionMap, k)
+		}
+	}
+	return nil
+}
+
 // Compile-time interface check:
 var _ store.SolverStore = (*SolverStoreMemory)(nil)
