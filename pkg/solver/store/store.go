@@ -61,6 +61,7 @@ type SolverStore interface {
 	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOfferContainer, error)
 	GetDeals(query GetDealsQuery) ([]data.DealContainer, error)
 	GetDealsAll() ([]data.DealContainer, error)
+	GetResults() ([]data.Result, error)
 	GetJobOffer(id string) (*data.JobOfferContainer, error)
 	GetResourceOffer(id string) (*data.ResourceOfferContainer, error)
 	GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error)
