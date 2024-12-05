@@ -221,7 +221,16 @@ func (store *SolverStoreDatabase) GetDealsAll() ([]data.DealContainer, error) {
 }
 
 func (store *SolverStoreDatabase) GetResults() ([]data.Result, error) {
-	var results []data.Result
+	var records []Result
+	if err := store.db.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	results := make([]data.Result, len(records))
+	for i, record := range records {
+		results[i] = record.Attributes.Data()
+	}
+
 	return results, nil
 }
 
