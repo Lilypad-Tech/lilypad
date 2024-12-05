@@ -100,6 +100,19 @@ func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 			t.Fatalf("Failed to remove existing deal: %v", err)
 		}
 	}
+
+	// Delete results
+	results, err := s.GetResults()
+	if err != nil {
+		t.Fatalf("Failed to get existing results: %v", err)
+	}
+
+	for _, result := range results {
+		err := s.RemoveResult(result.DealID)
+		if err != nil {
+			t.Fatalf("Failed to remove existing result: %v", err)
+		}
+	}
 }
 
 // Job offers
@@ -945,12 +958,111 @@ func TestDealQuery(t *testing.T) {
 	}
 }
 
+// Results
+
+func TestResultOps(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		// Test multiple results in a single test run
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			// Generate multiple results
+			results := generateResults(5, 50)
+			addedResults := make(map[string]data.Result)
+
+			// Add results
+			for _, result := range results {
+				added, err := store.AddResult(result)
+				if err != nil {
+					t.Fatalf("Failed to add result: %v", err)
+				}
+				if added.DealID != result.DealID {
+					t.Errorf("Expected DealID %s, got %s", result.DealID, added.DealID)
+				}
+				if added.ID != result.ID {
+					t.Errorf("Expected ID %s, got %s", result.ID, added.ID)
+				}
+				addedResults[result.DealID] = result
+			}
+
+			// Get results
+			allResults, err := store.GetResults()
+			if err != nil {
+				t.Fatalf("Failed to get all results: %v", err)
+			}
+
+			// Verify count matches
+			if len(allResults) != len(results) {
+				t.Errorf("Expected %d results, got %d", len(results), len(allResults))
+			}
+
+			// Verify results are present and correct
+			for _, result := range allResults {
+				original, exists := addedResults[result.DealID]
+				if !exists {
+					t.Errorf("Got unexpected result with DealID %s", result.DealID)
+					continue
+				}
+				if result.ID != original.ID {
+					t.Errorf("Result ID mismatch for DealID %s: expected %s, got %s",
+						result.DealID, original.ID, result.ID)
+				}
+			}
+
+			// Test individual result operations
+			for _, result := range results {
+				// Get result by deal ID
+				retrieved, err := store.GetResult(result.DealID)
+				if err != nil {
+					t.Fatalf("Failed to get result: %v", err)
+				}
+				if retrieved == nil {
+					t.Fatalf("Expected result, got nil")
+				}
+				if retrieved.DealID != result.DealID {
+					t.Errorf("Expected DealID %s, got %s", result.DealID, retrieved.DealID)
+				}
+				if retrieved.ID != result.ID {
+					t.Errorf("Expected ID %s, got %s", result.ID, retrieved.ID)
+				}
+
+				// Remove result
+				err = store.RemoveResult(result.DealID)
+				if err != nil {
+					t.Fatalf("Failed to remove result: %v", err)
+				}
+
+				// Verify removal
+				removed, err := store.GetResult(result.DealID)
+				if err != nil {
+					t.Fatalf("Error checking removed result: %v", err)
+				}
+				if removed != nil {
+					t.Error("Result still exists after removal")
+				}
+			}
+
+			// Verify results were removed using GetResults
+			finalResults, err := store.GetResults()
+			if err != nil {
+				t.Fatalf("Failed to get final results: %v", err)
+			}
+			if len(finalResults) != 0 {
+				t.Errorf("Expected 0 results after removal, got %d", len(finalResults))
+			}
+		})
+	}
+}
+
 // Concurrency for all
 
 func TestConcurrentOps(t *testing.T) {
 	jobOffers := generateJobOffers(4, 10)
 	resourceOffers := generateResourceOffers(4, 10)
 	deals := generateDeals(4, 10)
+	results := generateResults(4, 10)
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
@@ -959,7 +1071,8 @@ func TestConcurrentOps(t *testing.T) {
 			getStore := config.init()
 			store := getStore()
 
-			errCh := make(chan error, len(jobOffers)+len(resourceOffers)+len(deals))
+			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results)
+			errCh := make(chan error, count)
 			var wg sync.WaitGroup
 
 			// Add job offers concurrently
@@ -996,6 +1109,18 @@ func TestConcurrentOps(t *testing.T) {
 						errCh <- fmt.Errorf("deal error: %v", err)
 					}
 				}(deal)
+			}
+
+			// Add results concurrently
+			for _, result := range results {
+				wg.Add(1)
+				go func(r data.Result) {
+					defer wg.Done()
+					_, err := store.AddResult(r)
+					if err != nil {
+						errCh <- fmt.Errorf("result error: %v", err)
+					}
+				}(result)
 			}
 
 			wg.Wait()
@@ -1049,6 +1174,26 @@ func TestConcurrentOps(t *testing.T) {
 					t.Errorf("Retrieved deal ID mismatch: expected %s, got %s", deal.ID, retrieved.ID)
 				}
 			}
+
+			// Verify all results were added
+			for _, result := range results {
+				retrieved, err := store.GetResult(result.DealID)
+				if err != nil {
+					t.Errorf("Failed to get result for deal %s: %v", result.DealID, err)
+				}
+				if retrieved == nil {
+					t.Errorf("Result for deal ID %s not found after concurrent add", result.DealID)
+				}
+				if retrieved != nil {
+					if retrieved.DealID != result.DealID {
+						t.Errorf("Retrieved result DealID mismatch: expected %s, got %s", result.DealID, retrieved.DealID)
+					}
+					if retrieved.ID != result.ID {
+						t.Errorf("Retrieved result ID mismatch: expected %s, got %s", result.ID, retrieved.ID)
+					}
+				}
+			}
+
 		})
 	}
 }
@@ -1142,4 +1287,22 @@ func generateDeals(min int, max int) []data.DealContainer {
 	}
 
 	return deals
+}
+
+func generateResult() data.Result {
+	return data.Result{
+		DealID: generateCID(),
+		ID:     generateCID(),
+	}
+}
+
+func generateResults(min int, max int) []data.Result {
+	count := min + rand.Intn(max-min+1)
+	results := make([]data.Result, count)
+
+	for i := 0; i < count; i++ {
+		results[i] = generateResult()
+	}
+
+	return results
 }
