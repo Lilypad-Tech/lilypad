@@ -181,6 +181,16 @@ func (s *SolverStoreMemory) GetDealsAll() ([]data.DealContainer, error) {
 	return deals, nil
 }
 
+func (s *SolverStoreMemory) GetResults() ([]data.Result, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	results := []data.Result{}
+	for _, result := range s.resultMap {
+		results = append(results, *result)
+	}
+	return results, nil
+}
+
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

@@ -209,6 +209,11 @@ func (store *SolverStoreDatabase) GetDealsAll() ([]data.DealContainer, error) {
 	return deals, nil
 }
 
+func (store *SolverStoreDatabase) GetResults() ([]data.Result, error) {
+	var results []data.Result
+	return results, nil
+}
+
 func (store *SolverStoreDatabase) GetJobOffer(id string) (*data.JobOfferContainer, error) {
 	// Offers are unique by CID, so we can query first
 	var record JobOffer
