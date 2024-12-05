@@ -387,5 +387,12 @@ func (s *SolverStoreMemory) RemoveDeal(id string) error {
 	return nil
 }
 
+func (s *SolverStoreMemory) RemoveResult(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	delete(s.resultMap, id)
+	return nil
+}
+
 // Compile-time interface check:
 var _ store.SolverStore = (*SolverStoreMemory)(nil)
