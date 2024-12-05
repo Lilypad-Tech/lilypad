@@ -91,6 +91,17 @@ func (store *SolverStoreDatabase) AddDeal(deal data.DealContainer) (*data.DealCo
 }
 
 func (store *SolverStoreDatabase) AddResult(result data.Result) (*data.Result, error) {
+	record := Result{
+		DealID:     result.DealID,
+		CID:        result.ID,
+		Attributes: datatypes.NewJSONType(result),
+	}
+
+	res := store.db.Create(&record)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
 	return &result, nil
 }
 
