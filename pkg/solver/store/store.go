@@ -77,6 +77,7 @@ type SolverStore interface {
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
 	RemoveDeal(id string) error
+	RemoveResult(id string) error
 }
 
 func GetMatchID(resourceOffer string, jobOffer string) string {
