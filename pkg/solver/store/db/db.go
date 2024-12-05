@@ -537,5 +537,10 @@ func (store *SolverStoreDatabase) RemoveDeal(id string) error {
 }
 
 func (store *SolverStoreDatabase) RemoveResult(id string) error {
+	var record Result
+	result := store.db.Where("deal_id = ?", id).Delete(&record)
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
