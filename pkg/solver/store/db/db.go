@@ -289,8 +289,20 @@ func (store *SolverStoreDatabase) GetDeal(id string) (*data.DealContainer, error
 }
 
 func (store *SolverStoreDatabase) GetResult(id string) (*data.Result, error) {
-	result := &data.Result{}
-	return result, nil
+	// Results are queried by deal ID for now
+	// Deal IDs are unique, so we can query first
+	var record Result
+	res := store.db.Where("deal_id = ?", id).First(&record)
+
+	if res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, res.Error
+	}
+
+	result := record.Attributes.Data()
+	return &result, nil
 }
 
 func (store *SolverStoreDatabase) GetMatchDecision(resourceOffer string, jobOffer string) (*data.MatchDecision, error) {
