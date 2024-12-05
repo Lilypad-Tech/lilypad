@@ -544,3 +544,7 @@ func (store *SolverStoreDatabase) RemoveResult(id string) error {
 	}
 	return nil
 }
+
+func (store *SolverStoreDatabase) RemoveMatchDecision(resourceOffer string, jobOffer string) error {
+	return nil
+}
