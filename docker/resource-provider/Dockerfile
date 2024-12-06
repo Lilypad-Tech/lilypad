@@ -1,6 +1,6 @@
 ARG COMPUTE_MODE=gpu
 
-FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS base
+FROM golang:1.22.4 AS base
 WORKDIR /usr/src/app
 ARG NETWORK=testnet
 ARG VERSION
@@ -12,23 +12,13 @@ ENV BACALHAU_API_HOST="localhost"
 ENV WEB3_PRIVATE_KEY=""
 ENV DISABLE_TELEMETRY=false
 
-# Install necessary dependencies
-RUN apt update && apt install -y wget bash curl && apt clean
-
-# Install Bacalhau
-RUN cd /tmp && \
-    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
-    tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
-    mv bacalhau /usr/local/bin/bacalhau && \
-    rm bacalhau_v1.3.2_linux_amd64.tar.gz
-
-# Build and install Lilypad
-COPY --from=golang:1.22.4-alpine /usr/local/go/ /usr/local/go/
-ENV PATH="/usr/local/go/bin:${PATH}"
-
 COPY . .
 
-FROM base AS build-gpu
+FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS build-gpu
+WORKDIR /usr/src/app
+COPY --from=base /usr/src/app .
+COPY --from=base /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
 RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
 RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=false
@@ -39,6 +29,16 @@ ENV DISABLE_POW=true
 
 FROM build-$COMPUTE_MODE AS final
 RUN mv lilypad /usr/local/bin
+
+# Install necessary dependencies
+RUN apt update && apt install -y wget bash curl && apt clean
+
+# Install Bacalhau
+RUN cd /tmp && \
+    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
+    tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
+    mv bacalhau /usr/local/bin/bacalhau && \
+    rm bacalhau_v1.3.2_linux_amd64.tar.gz
 
 # Add both lilypad and bacalhau executables to PATH
 ENV PATH="/usr/local/bin:${PATH}"
