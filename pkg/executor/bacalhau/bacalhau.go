@@ -11,11 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
-	"github.com/lilypad-tech/lilypad/pkg/ipfs"
-
 	"github.com/bacalhau-project/bacalhau/pkg/models"
 	"github.com/ipfs/boxo/blockservice"
 	blockstore "github.com/ipfs/boxo/blockstore"
@@ -35,47 +32,33 @@ const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
 	ApiHost string
-	ApiPort string
+	ApiPort               string
+	JobStatusPollInterval uint64
 }
 
 type BacalhauExecutor struct {
 	Options     BacalhauExecutorOptions
 	bacalhauEnv []string
-
 	bacalhauClient BacalhauClient
-	ipfsClient     *ipfs.Client
 }
 
-func NewBacalhauExecutor(options BacalhauExecutorOptions, ipfsClient *ipfs.Client) (*BacalhauExecutor, error) {
+func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
 
-	// apiHost := ""
-	// if options.ApiHost != "DO_NOT_SET" {
-	// 	apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
-	// }
-	// fmt.Printf("OPTIONS: %s\n", options)
-	// bacalhauEnv := []string{
-	// 	apiHost,
-	// 	fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
-	// }
+	apiHost := fmt.Sprintf("http://%s:%s", options.ApiHost, options.ApiPort)
 
-	// log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
-	apiHost := fmt.Sprintf("http://%s:%s", "localhost", "20000")
-
-	client, err := NewBacalhauClient(apiHost)
+	client, err := newBacalhauClient(apiHost)
 	if err != nil {
 		return nil, err
 	}
 
 	return &BacalhauExecutor{
 		Options: options,
-
 		bacalhauClient: *client,
-		ipfsClient:     ipfsClient,
 	}, nil
 }
 
 func (executor *BacalhauExecutor) Id() (string, error) {
-	id, err := executor.bacalhauClient.GetID()
+	id, err := executor.bacalhauClient.getID()
 	if err != nil {
 		return "", fmt.Errorf("error getting bacalhau ID %s", err.Error())
 	}
@@ -84,18 +67,17 @@ func (executor *BacalhauExecutor) Id() (string, error) {
 
 // Checks that Bacalhau is installed, correctly configured, and available
 func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
-	alive, err := executor.bacalhauClient.Alive()
+	alive, err := executor.bacalhauClient.alive()
 	if !alive || err != nil {
 		return false, fmt.Errorf("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again. %w", err)
 	}
 
-	// Check that we have the right version of Bacalhau
-	version, err := executor.bacalhauClient.GetVersion()
+	version, err := executor.bacalhauClient.getVersion()
 	if err != nil {
 		return false, fmt.Errorf("error getting bacalhau version %s", err.Error())
 	}
-	// TODO: we may want to relax this
-	if version != "v1.5.1" {
+
+	if version < "v1.5.1" {
 		return false, errors.New("Bacalhau version must be v1.5.1")
 	}
 
@@ -103,7 +85,28 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 }
 
 func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
-	return executor.bacalhauClient.GetMachineSpecs()
+	nodes, err := executor.bacalhauClient.getNodes()
+	var specs []data.MachineSpec
+	for _, node := range nodes {
+		spec := data.MachineSpec{
+			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "milli-CPU"
+			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
+			GPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
+			Disk: int(node.Info.ComputeNodeInfo.MaxCapacity.Disk),
+		}
+		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
+			spec.GPUs = append(spec.GPUs, data.GPUSpec{
+				Name:   gpu.Name,
+				Vendor: string(gpu.Vendor),
+				VRAM:   int(gpu.Memory),
+			})
+		}
+		specs = append(specs, spec)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return specs, nil
 }
 
 func (executor *BacalhauExecutor) RunJob(
@@ -118,7 +121,7 @@ func (executor *BacalhauExecutor) RunJob(
 
 	var jobExecutions []*models.Execution
 	for {
-		jobInfo, err := executor.bacalhauClient.GetJob(jobId)
+		jobInfo, err := executor.bacalhauClient.getJob(jobId)
 		if err != nil {
 			return nil, fmt.Errorf("error getting job %s: %s", jobId, err.Error())
 		}
@@ -130,20 +133,18 @@ func (executor *BacalhauExecutor) RunJob(
 		jobExecutions = jobInfo.Executions.Items
 
 		if len(jobExecutions) > 0 {
-			if jobInfo.Job.State.StateType != models.JobStateTypeCompleted {
-				return nil, fmt.Errorf("job %s did not complete yet: %s", jobId, jobInfo.Job.State.StateType.String())
+			if jobInfo.Job.State.StateType == models.JobStateTypeCompleted {
+				break
 			}
-			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Duration(executor.Options.JobStatusPollInterval) * time.Second)
 	}
 
 	system.EnsureDataDir(RESULTS_DIR)
 	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 
-
-	cid,resultsDir, err := executor.prepareResults(jobId,jobExecutions[0].ID)
+	cid, resultsDir, err := executor.prepareResults(jobId, jobExecutions[0].ID)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing results: %s", err.Error())
 	}
@@ -158,18 +159,17 @@ func (executor *BacalhauExecutor) RunJob(
 }
 
 func (executor *BacalhauExecutor) prepareResults(jobId string, executionId string) (cid string, resultsDir string, err error) {
-	
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", "", fmt.Errorf("error getting home directory: %s", err.Error())
 	}
 
 	resultsPath := filepath.Join(home, ".bacalhau", "compute", "results", "local-publisher", fmt.Sprintf("%s.tar.gz", executionId))
-	
-	
+
 	gzipFile, err := os.Open(resultsPath)
 	if err != nil {
-		return "", "", fmt.Errorf("error opening gzip file: %s", err.Error()) 
+		return "", "", fmt.Errorf("error opening gzip file: %s", err.Error())
 	}
 	defer gzipFile.Close()
 
@@ -178,7 +178,6 @@ func (executor *BacalhauExecutor) prepareResults(jobId string, executionId strin
 		return "", "", fmt.Errorf("error creating gzip reader: %s", err.Error())
 	}
 	defer gzipReader.Close()
-
 
 	tarPath := strings.TrimSuffix(resultsPath, ".gz")
 	tarFile, err := os.Create(tarPath)
@@ -216,13 +215,11 @@ func GenerateCID(path string) (string, error) {
 	}
 	defer file.Close()
 
-
 	ds := dsync.MutexWrap(datastore.NewNullDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	bs = blockstore.NewIdStore(bs)
 	bsrv := blockservice.New(bs, offline.Exchange(bs))
 	dsrv := merkledag.NewDAGService(bsrv)
-	
 
 	defer func() {
 		if err := bsrv.Close(); err != nil {
@@ -242,9 +239,8 @@ func GenerateCID(path string) (string, error) {
 		NoCopy:  false,
 	}
 
-
 	bufReader := bufio.NewReader(file)
-	
+
 	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(bufReader, chunker.DefaultBlockSize))
 	if err != nil {
 		return "", fmt.Errorf("failed to create UnixFS builder: %w", err)
@@ -258,12 +254,11 @@ func GenerateCID(path string) (string, error) {
 	return nd.Cid().String(), nil
 }
 
-
 func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
-	putJobResponse, err := executor.bacalhauClient.PostJob(module.Job)
+	putJobResponse, err := executor.bacalhauClient.postJob(module.Job)
 	if err != nil {
 		return "", fmt.Errorf("error creating job %s -> %s", deal.ID, err.Error())
 	}

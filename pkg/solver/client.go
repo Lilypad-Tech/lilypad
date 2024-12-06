@@ -165,13 +165,6 @@ func (client *SolverClient) UploadResultFiles(id string, localPath string) (data
 		&buf,
 	)
 
-	// // Remove the file after upload in a goroutine
-	// go func() {
-	// 	if removeErr := os.Remove(localPath); removeErr != nil {
-	// 		log.Error().Err(removeErr).Msgf("failed to remove uploaded file: %s", localPath)
-	// 	}
-	// }()
-
 	return result, err
 }
 
