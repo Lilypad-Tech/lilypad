@@ -11,6 +11,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	solverstore "github.com/lilypad-tech/lilypad/pkg/solver/store"
 	databasestore "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"golang.org/x/exp/rand"
@@ -111,6 +112,19 @@ func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 		err := s.RemoveResult(result.DealID)
 		if err != nil {
 			t.Fatalf("Failed to remove existing result: %v", err)
+		}
+	}
+
+	// Delete match decisions
+	decisions, err := s.GetMatchDecisions()
+	if err != nil {
+		t.Fatalf("Failed to get existing match decisions: %v", err)
+	}
+
+	for _, decision := range decisions {
+		err := s.RemoveMatchDecision(decision.ResourceOffer, decision.JobOffer)
+		if err != nil {
+			t.Fatalf("Failed to remove existing match decision: %v", err)
 		}
 	}
 }
@@ -1056,6 +1070,188 @@ func TestResultOps(t *testing.T) {
 	}
 }
 
+// Match decisions
+
+func TestMatchDecisionOps(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		// Test multiple match decisions in a single test run
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			// Generate match decisions
+			decisions := generateMatchDecisions(5, 50)
+			addedDecisions := make(map[string]*data.MatchDecision)
+
+			// Add match decisions
+			for _, decision := range decisions {
+				// Add match decision
+				added, err := store.AddMatchDecision(
+					decision.ResourceOffer,
+					decision.JobOffer,
+					decision.Deal,
+					decision.Result,
+				)
+				if err != nil {
+					t.Fatalf("Failed to add match decision: %v", err)
+				}
+				if added.ResourceOffer != decision.ResourceOffer {
+					t.Errorf("Expected ResourceOffer %s, got %s",
+						decision.ResourceOffer, added.ResourceOffer)
+				}
+				if added.JobOffer != decision.JobOffer {
+					t.Errorf("Expected JobOffer %s, got %s",
+						decision.JobOffer, added.JobOffer)
+				}
+				if added.Deal != decision.Deal {
+					t.Errorf("Expected Deal %s, got %s",
+						decision.Deal, added.Deal)
+				}
+				if added.Result != decision.Result {
+					t.Errorf("Expected Result %v, got %v",
+						decision.Result, added.Result)
+				}
+
+				// Store for later verification
+				matchID := solverstore.GetMatchID(decision.ResourceOffer, decision.JobOffer)
+				addedDecisions[matchID] = added
+			}
+
+			// Get match decisions
+			allDecisions, err := store.GetMatchDecisions()
+			if err != nil {
+				t.Fatalf("Failed to get all match decisions: %v", err)
+			}
+
+			// Verify count matches
+			if len(allDecisions) != len(addedDecisions) {
+				t.Errorf("Expected %d match decisions, got %d",
+					len(addedDecisions), len(allDecisions))
+			}
+
+			// Verify decisions are present and correct
+			for _, decision := range allDecisions {
+				matchID := solverstore.GetMatchID(decision.ResourceOffer, decision.JobOffer)
+				original, exists := addedDecisions[matchID]
+				if !exists {
+					t.Errorf("Got unexpected match decision for resource offer %s and job offer %s",
+						decision.ResourceOffer, decision.JobOffer)
+					continue
+				}
+				// Check deal and result. JobOffer and ResourceOffer in individual checks below.
+				if decision.Deal != original.Deal {
+					t.Errorf("Match decision Deal mismatch for ID %s: expected %s, got %s",
+						matchID, original.Deal, decision.Deal)
+				}
+				if decision.Result != original.Result {
+					t.Errorf("Match decision Result mismatch for ID %s: expected %v, got %v",
+						matchID, original.Result, decision.Result)
+				}
+			}
+
+			// Test individual match decision operations
+			for _, decision := range decisions {
+				// Get match decision
+				retrieved, err := store.GetMatchDecision(
+					decision.ResourceOffer,
+					decision.JobOffer,
+				)
+				if err != nil {
+					t.Fatalf("Failed to get match decision: %v", err)
+				}
+				if retrieved == nil {
+					t.Fatal("Expected match decision, got nil")
+				}
+				if retrieved.ResourceOffer != decision.ResourceOffer {
+					t.Errorf("Expected ResourceOffer %s, got %s",
+						decision.ResourceOffer, retrieved.ResourceOffer)
+				}
+				if retrieved.JobOffer != decision.JobOffer {
+					t.Errorf("Expected JobOffer %s, got %s",
+						decision.JobOffer, retrieved.JobOffer)
+				}
+
+				// Remove match decision by job offer
+				err = store.RemoveMatchDecision(decision.ResourceOffer, decision.JobOffer)
+				if err != nil {
+					t.Fatalf("Failed to remove match decision: %v", err)
+				}
+
+				// Verify removal
+				removed, err := store.GetMatchDecision(
+					decision.ResourceOffer,
+					decision.JobOffer,
+				)
+				if err != nil {
+					t.Fatalf("Error checking removed match decision: %v", err)
+				}
+				if removed != nil {
+					t.Error("Match decision still exists after removal")
+				}
+			}
+		})
+	}
+}
+
+func TestMatchDecisionRemove(t *testing.T) {
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		t.Run(config.name, func(t *testing.T) {
+			getStore := config.init()
+			store := getStore()
+
+			matchDecision := data.MatchDecision{
+				ResourceOffer: generateCID(),
+				JobOffer:      generateCID(),
+				Deal:          generateCID(),
+				Result:        rand.Intn(2) == 1, // Generate random bool
+			}
+
+			testCases := []struct {
+				name          string
+				matchDecision data.MatchDecision
+				removeBy      []string
+			}{
+				{
+					name:          "remove by job offer",
+					matchDecision: matchDecision,
+					removeBy:      []string{"", matchDecision.JobOffer},
+				},
+				{
+					name:          "remove by resource offer",
+					matchDecision: matchDecision,
+					removeBy:      []string{matchDecision.ResourceOffer, ""},
+				},
+				{
+					name:          "remove by job offer and resource offer",
+					matchDecision: matchDecision,
+					removeBy:      []string{matchDecision.ResourceOffer, matchDecision.JobOffer},
+				},
+			}
+
+			// Test removal by job creator, resource provider, or both
+			for _, tc := range testCases {
+				// Remove match decision
+				err := store.RemoveMatchDecision(tc.removeBy[0], tc.removeBy[1])
+				if err != nil {
+					t.Fatalf("Failed to remove match decision: %v", err)
+				}
+
+				// Check removal
+				retrieved, err := store.GetMatchDecision(tc.matchDecision.ResourceOffer, tc.matchDecision.JobOffer)
+				if err != nil {
+					t.Fatalf("Failed to get match decision: %v", err)
+				}
+				if retrieved != nil {
+					t.Errorf("Match decision %s shouldn't exist but does",
+						solverstore.GetMatchID(tc.matchDecision.ResourceOffer, tc.matchDecision.JobOffer))
+				}
+			}
+		})
+	}
+}
+
 // Concurrency for all
 
 func TestConcurrentOps(t *testing.T) {
@@ -1063,6 +1259,7 @@ func TestConcurrentOps(t *testing.T) {
 	resourceOffers := generateResourceOffers(4, 10)
 	deals := generateDeals(4, 10)
 	results := generateResults(4, 10)
+	matchDecisions := generateMatchDecisions(4, 10)
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
@@ -1071,7 +1268,7 @@ func TestConcurrentOps(t *testing.T) {
 			getStore := config.init()
 			store := getStore()
 
-			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results)
+			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results) + len(matchDecisions)
 			errCh := make(chan error, count)
 			var wg sync.WaitGroup
 
@@ -1121,6 +1318,18 @@ func TestConcurrentOps(t *testing.T) {
 						errCh <- fmt.Errorf("result error: %v", err)
 					}
 				}(result)
+			}
+
+			// Add match decisions concurrently
+			for _, decision := range matchDecisions {
+				wg.Add(1)
+				go func(d data.MatchDecision) {
+					defer wg.Done()
+					_, err := store.AddMatchDecision(d.ResourceOffer, d.JobOffer, d.Deal, d.Result)
+					if err != nil {
+						errCh <- fmt.Errorf("match decision error: %v", err)
+					}
+				}(decision)
 			}
 
 			wg.Wait()
@@ -1190,6 +1399,37 @@ func TestConcurrentOps(t *testing.T) {
 					}
 					if retrieved.ID != result.ID {
 						t.Errorf("Retrieved result ID mismatch: expected %s, got %s", result.ID, retrieved.ID)
+					}
+				}
+			}
+
+			// Verify all match decisions were added
+			for _, decision := range matchDecisions {
+				retrieved, err := store.GetMatchDecision(decision.ResourceOffer, decision.JobOffer)
+				if err != nil {
+					t.Errorf("Failed to get match decision for resource offer %s and job offer %s: %v",
+						decision.ResourceOffer, decision.JobOffer, err)
+				}
+				if retrieved == nil {
+					t.Errorf("Match decision for resource offer %s and job offer %s not found after concurrent add",
+						decision.ResourceOffer, decision.JobOffer)
+				}
+				if retrieved != nil {
+					if retrieved.ResourceOffer != decision.ResourceOffer {
+						t.Errorf("Retrieved match decision ResourceOffer mismatch: expected %s, got %s",
+							decision.ResourceOffer, retrieved.ResourceOffer)
+					}
+					if retrieved.JobOffer != decision.JobOffer {
+						t.Errorf("Retrieved match decision JobOffer mismatch: expected %s, got %s",
+							decision.JobOffer, retrieved.JobOffer)
+					}
+					if retrieved.Deal != decision.Deal {
+						t.Errorf("Retrieved match decision Deal mismatch: expected %s, got %s",
+							decision.Deal, retrieved.Deal)
+					}
+					if retrieved.Result != decision.Result {
+						t.Errorf("Retrieved match decision Result mismatch: expected %v, got %v",
+							decision.Result, retrieved.Result)
 					}
 				}
 			}
@@ -1305,4 +1545,24 @@ func generateResults(min int, max int) []data.Result {
 	}
 
 	return results
+}
+
+func generateMatchDecision() data.MatchDecision {
+	return data.MatchDecision{
+		ResourceOffer: generateCID(),
+		JobOffer:      generateCID(),
+		Deal:          generateCID(),
+		Result:        rand.Intn(2) == 1, // Generate random bool
+	}
+}
+
+func generateMatchDecisions(min int, max int) []data.MatchDecision {
+	count := min + rand.Intn(max-min+1)
+	decisions := make([]data.MatchDecision, count)
+
+	for i := 0; i < count; i++ {
+		decisions[i] = generateMatchDecision()
+	}
+
+	return decisions
 }
