@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	// "github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/executor/noop"
 	"github.com/lilypad-tech/lilypad/pkg/jobcreator"
@@ -128,5 +127,4 @@ func TestNoModeration(t *testing.T) {
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
 	fmt.Printf("local path: %s\n", localPath)
 	fmt.Printf("result --------------------------------------\n")
-	// spew.Dump(localPath)
 }
