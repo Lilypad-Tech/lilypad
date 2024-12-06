@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.10.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.10.0...v2.10.1) (2024-12-06)
+
+
+### Bug Fixes
+
+* Bacalhau dind w/ nvidia ([#463](https://github.com/Lilypad-Tech/lilypad/issues/463)) ([2767106](https://github.com/Lilypad-Tech/lilypad/commit/2767106384d288094cadde8ce3c6b815a66e6409))
+* Fix resource offer JSON field name ([#464](https://github.com/Lilypad-Tech/lilypad/issues/464)) ([cee261d](https://github.com/Lilypad-Tech/lilypad/commit/cee261d928bb4f1a5cfe04ce11a2ed8bf2e1ed19))
+* Update resource offer JSON field name ([cee261d](https://github.com/Lilypad-Tech/lilypad/commit/cee261d928bb4f1a5cfe04ce11a2ed8bf2e1ed19))
+
 ## [2.10.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.9.1...v2.10.0) (2024-12-02)
 
 
