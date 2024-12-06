@@ -31,6 +31,7 @@ VOLUME /var/lib/docker
 
 RUN touch run
 RUN echo "#!/bin/bash" >> run
+RUN echo "find /run /var/run -iname 'docker*.pid' -delete" >> run
 RUN echo "dind dockerd &" >> run
 RUN echo 'until pgrep "dockerd" >/dev/null; do sleep 0.5; done' >> run
 RUN echo 'exec "$@"' >> run

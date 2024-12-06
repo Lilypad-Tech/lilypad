@@ -38,7 +38,6 @@ services:
       ]
     volumes:
       - bacalhau-data:/root/.bacalhau
-      - /var/run/docker.sock:/var/run/docker.sock
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider

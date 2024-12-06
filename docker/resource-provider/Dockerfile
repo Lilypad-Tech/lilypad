@@ -14,7 +14,7 @@ ENV DISABLE_TELEMETRY=false
 
 COPY . .
 
-FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04  AS build-gpu
+FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS build-gpu
 WORKDIR /usr/src/app
 COPY --from=base /usr/src/app .
 COPY --from=base /usr/local/go/ /usr/local/go/
