@@ -18,13 +18,13 @@ type BacalhauClient struct {
 	api clientv2.API
 }
 
-func NewBacalhauClient(apiHost string) (*BacalhauClient, error) {
+func newBacalhauClient(apiHost string) (*BacalhauClient, error) {
 	client := clientv2.NewHTTPClient(apiHost)
 	apiClient := clientv2.NewAPI(client)
 	return &BacalhauClient{api: apiClient}, nil
 }
 
-func (c *BacalhauClient) GetID() (string, error) {
+func (c *BacalhauClient) getID() (string, error) {
 	
 	getNodeRequest := apimodels.GetAgentNodeRequest{}
 	response, err := c.api.Agent().Node(context.Background(), &getNodeRequest)
@@ -35,7 +35,7 @@ func (c *BacalhauClient) GetID() (string, error) {
 
 }
 
-func (c *BacalhauClient) Alive() (bool, error) {
+func (c *BacalhauClient) alive() (bool, error) {
 
 	response, err := c.api.Agent().Alive(context.Background())
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *BacalhauClient) Alive() (bool, error) {
 	return response.IsReady(), nil
 }
 
-func (c *BacalhauClient) GetVersion() (string, error) {
+func (c *BacalhauClient) getVersion() (string, error) {
 	response, err := c.api.Agent().Version(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("error getting bacalhau version %s", err.Error())
@@ -54,7 +54,7 @@ func (c *BacalhauClient) GetVersion() (string, error) {
 	return response.BuildVersionInfo.GitVersion, nil
 }
 
-func (c *BacalhauClient) PostJob(job bacalhau.Job) (*apimodels.PutJobResponse, error) {
+func (c *BacalhauClient) postJob(job bacalhau.Job) (*apimodels.PutJobResponse, error) {
 	
 	translatedJob := translateJob(job)
 	
@@ -65,7 +65,7 @@ func (c *BacalhauClient) PostJob(job bacalhau.Job) (*apimodels.PutJobResponse, e
 	return c.api.Jobs().Put(context.Background(), &putJobRequest)
 }
 
-func (c *BacalhauClient) GetJob(jobID string) (*apimodels.GetJobResponse, error) {
+func (c *BacalhauClient) getJob(jobID string) (*apimodels.GetJobResponse, error) {
 	getJobRequest := apimodels.GetJobRequest{
 		JobID: jobID,
 		Include: "executions",
@@ -79,7 +79,7 @@ func (c *BacalhauClient) GetJob(jobID string) (*apimodels.GetJobResponse, error)
 	return response, nil
 }
 
-func (c *BacalhauClient) GetJobResult(jobId string ) (string, error) {
+func (c *BacalhauClient) getJobResult(jobId string ) (string, error) {
 	getJobResultsRequest := apimodels.ListJobResultsRequest{
 		JobID: jobId,
 	}
@@ -97,7 +97,7 @@ func (c *BacalhauClient) GetJobResult(jobId string ) (string, error) {
 
 
 
-func (c *BacalhauClient) GetNodes() ([]*models.NodeState, error) {
+func (c *BacalhauClient) getNodes() ([]*models.NodeState, error) {
 	
 	getNodesRequest := apimodels.ListNodesRequest{}
 	response, err := c.api.Nodes().List(context.Background(), &getNodesRequest)
@@ -107,8 +107,8 @@ func (c *BacalhauClient) GetNodes() ([]*models.NodeState, error) {
 	return response.Nodes, nil
 }
 
-func (c *BacalhauClient) GetMachineSpecs() ([]data.MachineSpec, error) {
-	nodes, err := c.GetNodes()
+func (c *BacalhauClient) getMachineSpecs() ([]data.MachineSpec, error) {
+	nodes, err := c.getNodes()
 	var specs []data.MachineSpec
 	for _, node := range nodes {
 		spec := data.MachineSpec{
@@ -173,6 +173,7 @@ func translateJob(job bacalhau.Job) *models.Job {
 					ExecutionTimeout: job.Spec.Timeout,
 					// TODO: add queue timeout and total timeout
 				},
+				ResultPaths: translateOutputSources(job.Spec.Outputs),
 			},
 		},
 		State:      models.NewJobState(models.JobStateTypePending),

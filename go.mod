@@ -7,7 +7,6 @@ toolchain go1.23.2
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/bacalhau-project/bacalhau v1.5.1
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
 	github.com/go-chi/httprate v0.14.1
@@ -69,6 +68,7 @@ require (
 	github.com/crackcomm/go-gitignore v0.0.0-20231225121904-e25f5bc08668 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
