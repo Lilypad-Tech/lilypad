@@ -246,8 +246,17 @@ func (store *SolverStoreDatabase) GetResults() ([]data.Result, error) {
 }
 
 func (store *SolverStoreDatabase) GetMatchDecisions() ([]data.MatchDecision, error) {
-	var results []data.MatchDecision
-	return results, nil
+	var records []MatchDecision
+	if err := store.db.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	decisions := make([]data.MatchDecision, len(records))
+	for i, record := range records {
+		decisions[i] = record.Attributes.Data()
+	}
+
+	return decisions, nil
 }
 
 func (store *SolverStoreDatabase) GetJobOffer(id string) (*data.JobOfferContainer, error) {
