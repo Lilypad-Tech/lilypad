@@ -583,5 +583,25 @@ func (store *SolverStoreDatabase) RemoveResult(id string) error {
 }
 
 func (store *SolverStoreDatabase) RemoveMatchDecision(resourceOffer string, jobOffer string) error {
+	if resourceOffer == "" && jobOffer == "" {
+		return fmt.Errorf("resource offer or job offer must be set")
+	}
+
+	// Build the query based on which parameters are provided
+	query := store.db.Where([]MatchDecision{})
+
+	if resourceOffer != "" {
+		query = query.Where("resource_offer = ?", resourceOffer)
+	}
+	if jobOffer != "" {
+		query = query.Where("job_offer = ?", jobOffer)
+	}
+
+	// Execute the delete
+	result := query.Delete(&MatchDecision{})
+	if result.Error != nil {
+		return result.Error
+	}
+
 	return nil
 }
