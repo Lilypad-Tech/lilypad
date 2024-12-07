@@ -331,8 +331,20 @@ func (store *SolverStoreDatabase) GetResult(id string) (*data.Result, error) {
 }
 
 func (store *SolverStoreDatabase) GetMatchDecision(resourceOffer string, jobOffer string) (*data.MatchDecision, error) {
-	decision := &data.MatchDecision{}
-	return decision, nil
+	// The resource offer and job offer are unique
+	// CIDs, so we can query first
+	var record MatchDecision
+	result := store.db.Where("resource_offer = ? AND job_offer = ?", resourceOffer, jobOffer).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+
+	decision := record.Attributes.Data()
+	return &decision, nil
 }
 
 func (store *SolverStoreDatabase) UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
