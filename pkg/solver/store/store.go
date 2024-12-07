@@ -53,7 +53,7 @@ type GetDealsQuery struct {
 
 type SolverStore interface {
 	AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error)
-	AddResourceOffer(jobOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error)
+	AddResourceOffer(resourceOffer data.ResourceOfferContainer) (*data.ResourceOfferContainer, error)
 	AddDeal(deal data.DealContainer) (*data.DealContainer, error)
 	AddResult(result data.Result) (*data.Result, error)
 	AddMatchDecision(resourceOffer string, jobOffer string, deal string, result bool) (*data.MatchDecision, error)
@@ -61,6 +61,8 @@ type SolverStore interface {
 	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOfferContainer, error)
 	GetDeals(query GetDealsQuery) ([]data.DealContainer, error)
 	GetDealsAll() ([]data.DealContainer, error)
+	GetResults() ([]data.Result, error)
+	GetMatchDecisions() ([]data.MatchDecision, error)
 	GetJobOffer(id string) (*data.JobOfferContainer, error)
 	GetResourceOffer(id string) (*data.ResourceOfferContainer, error)
 	GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error)
@@ -76,6 +78,9 @@ type SolverStore interface {
 	UpdateDealTransactionsMediator(id string, data data.DealTransactionsMediator) (*data.DealContainer, error)
 	RemoveJobOffer(id string) error
 	RemoveResourceOffer(id string) error
+	RemoveDeal(id string) error
+	RemoveResult(id string) error
+	RemoveMatchDecision(resourceOffer string, jobOffer string) error
 }
 
 func GetMatchID(resourceOffer string, jobOffer string) string {

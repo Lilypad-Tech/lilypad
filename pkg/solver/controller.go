@@ -48,6 +48,7 @@ type SolverController struct {
 	web3SDK         *web3.Web3SDK
 	web3Events      *web3.EventChannels
 	store           store.SolverStore
+	dbStore         store.SolverStore
 	loop            *system.ControlLoop
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
@@ -66,6 +67,7 @@ const REQUIRED_BALANCE_IN_WEI = 0.0006
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
+	dbStore store.SolverStore,
 	options SolverOptions,
 	tracer trace.Tracer,
 	meter metric.Meter,
@@ -74,6 +76,7 @@ func NewSolverController(
 		web3SDK:    web3SDK,
 		web3Events: web3.NewEventChannels(),
 		store:      store,
+		dbStore:    dbStore,
 		options:    options,
 		log:        system.NewServiceLogger(system.SolverService),
 		tracer:     tracer,

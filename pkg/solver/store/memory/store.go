@@ -181,6 +181,26 @@ func (s *SolverStoreMemory) GetDealsAll() ([]data.DealContainer, error) {
 	return deals, nil
 }
 
+func (s *SolverStoreMemory) GetResults() ([]data.Result, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	results := []data.Result{}
+	for _, result := range s.resultMap {
+		results = append(results, *result)
+	}
+	return results, nil
+}
+
+func (s *SolverStoreMemory) GetMatchDecisions() ([]data.MatchDecision, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	results := []data.MatchDecision{}
+	for _, decision := range s.matchDecisionMap {
+		results = append(results, *decision)
+	}
+	return results, nil
+}
+
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -377,6 +397,31 @@ func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	delete(s.resourceOfferMap, id)
+	return nil
+}
+
+func (s *SolverStoreMemory) RemoveDeal(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	delete(s.dealMap, id)
+	return nil
+}
+
+func (s *SolverStoreMemory) RemoveResult(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	delete(s.resultMap, id)
+	return nil
+}
+
+func (s *SolverStoreMemory) RemoveMatchDecision(resourceOffer string, jobOffer string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for k := range s.matchDecisionMap {
+		if strings.Contains(k, jobOffer) || strings.Contains(k, resourceOffer) {
+			delete(s.matchDecisionMap, k)
+		}
+	}
 	return nil
 }
 
