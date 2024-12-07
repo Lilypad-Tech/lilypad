@@ -112,6 +112,17 @@ func (store *SolverStoreDatabase) AddMatchDecision(resourceOffer string, jobOffe
 		Deal:          deal,
 		Result:        result,
 	}
+	record := MatchDecision{
+		ResourceOffer: resourceOffer,
+		JobOffer:      jobOffer,
+		Attributes:    datatypes.NewJSONType(*decision),
+	}
+
+	res := store.db.Create(&record)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
 	return decision, nil
 }
 
