@@ -162,10 +162,12 @@ async function main() {
   console.log(`Job ID: ${jobID}`)
   console.log(`Waiting for job to be completed...`)
 
-  let result = ''
+  // let result = ''
 
   while(!result) {
-    result = await client.getJobResult(jobID)
+     console.log("before",result)
+    result =  client.getJobResult(jobID)
+    console.log("after",result)
     if(!result) {
       await bluebird.delay(1000)
     }

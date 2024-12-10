@@ -2,7 +2,7 @@
 services:
   ipfs:
     image: ipfs/kubo:v0.31.0
-    container_name: ${ORG}_ipfs
+    container_name: ${ORG:-default_org}_ipfs
     restart: unless-stopped
     command: ["daemon", "--enable-pubsub-experiment"]
 
@@ -18,9 +18,24 @@ services:
     #   timeout: 5s
     #   retries: 5
     #   start_period: 1s  
-    depends_on:
-      preflight:
-        condition: service_completed_successfully  
+    # depends_on:
+    #   preflight:
+    #     condition: service_completed_successfully
+    environment:
+      - WEB3_PRIVATE_KEY=${WEB3_PRIVATE_KEY}
+      - WEB3_RPC_URL=${WEB3_RPC_URL}
+      - WEB3_CHAIN_ID=${WEB3_CHAIN_ID}
+      - WEB3_CONTROLLER_ADDRESS=${WEB3_CONTROLLER_ADDRESS}
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+      - IPFS_ADDR=/dns4/ipfs/tcp/5001
+      - DISABLE_TELEMETRY=1
+      - OFFER_GPU=1
+      - WEB3_PAYMENTS_ADDRESS=${WEB3_PAYMENTS_ADDRESS}
+      - WEB3_POW_ADDRESS=${WEB3_POW_ADDRESS}
+      - WEB3_STORAGE_ADDRESS=${WEB3_STORAGE_ADDRESS}
+      - WEB3_TOKEN_ADDRESS=${WEB3_TOKEN_ADDRESS}
+      - WEB3_USERS_ADDRESS=${WEB3_USERS_ADDRESS}
+      - SERVICE_SOLVER=${SERVICE_SOLVER}
   preflight:
     build:
       context: . 
@@ -30,9 +45,24 @@ services:
       # context: ../../   # Point to root project directory
       # dockerfile: docker/preflight/Dockerfile
     image: preflight
-    container_name: ${ORG}_preflight
+    container_name: ${ORG:-default_org}_preflight
     environment:
-      - WEB3_PRIVATE_KEY=$WEB3_PRIVATE_KEY
+      - WEB3_PRIVATE_KEY=${WEB3_PRIVATE_KEY}
+      - WEB3_RPC_URL=${WEB3_RPC_URL}
+      - WEB3_CHAIN_ID=${WEB3_CHAIN_ID}
+      - WEB3_CONTROLLER_ADDRESS=${WEB3_CONTROLLER_ADDRESS}
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+      - IPFS_ADDR=/dns4/ipfs/tcp/5001
+      - DISABLE_TELEMETRY=1
+      - OFFER_GPU=1
+      - WEB3_PAYMENTS_ADDRESS=${WEB3_PAYMENTS_ADDRESS}
+      - WEB3_POW_ADDRESS=${WEB3_POW_ADDRESS}
+      - WEB3_STORAGE_ADDRESS=${WEB3_STORAGE_ADDRESS}
+      - WEB3_TOKEN_ADDRESS=${WEB3_TOKEN_ADDRESS}
+      - WEB3_USERS_ADDRESS=${WEB3_USERS_ADDRESS}
+      - SERVICE_SOLVER=${SERVICE_SOLVER}
+    env_file:
+      - .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     # command: ["sh", "-c", "echo Running preflight checks... && sleep 5 && echo Preflight checks completed."]
@@ -42,40 +72,98 @@ services:
     #   interval: 10s
     #   retries: 1
     #   start_period: 9s
-    #   timeout: 50s      
-  resource-provider:
+    #   timeout: 50s
+  bacalhau:
     image: ghcr.io/lilypad-tech/resource-provider:latest
-    container_name: ${ORG}_resource-provider
-    restart: unless-stopped
+    container_name: ${ORG:-default_org}_bacalhau
+    # restart: unless-stopped
     depends_on:
       ipfs:
         condition: service_healthy 
         # condition: service_started
       # preflight:
       #   condition: service_healthy
-    build:
-      context: ../..
-      dockerfile: docker/resource-provider/Dockerfile
-      args:
-        - COMPUTE_MODE=gpu
+    # build:
+    #   context: ../..
+    #   dockerfile: docker/resource-provider/Dockerfile
+    #   args:
+    #     - COMPUTE_MODE=gpu
+    # command: ["sh", "-c", "echo Running preflight checks... && sleep 5 && echo Preflight checks completed."]
+    command : ["sh", "-c", "bacalhau serve --node-type compute,requester --peer none --private-internal-ipfs=false --job-selection-accept-networked"]
     volumes:
       - bacalhau-data:/tmp/lilypad/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - WEB3_PRIVATE_KEY
-      # =$RESOURCE_PROVIDER_PRIVATE_KEY
-      - WEB3_RPC_URL
-      - WEB3_CHAIN_ID
-      - WEB3_CONTROLLER_ADDRESS
-      - OFFER_MODULES
+      - LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1234/"]
+      interval: 5s
+      timeout: 5s
+      retries: 15           
+  resource-provider:
+    image: ghcr.io/lilypad-tech/resource-provider:latest
+    container_name:  ${ORG:-default_org}_resource-provider
+    # restart: unless-stopped
+    depends_on:
+      ipfs:
+        condition: service_healthy 
+      bacalhau:
+        condition: service_healthy   
+        # condition: service_started
+      # preflight:
+      #   condition: service_healthy
+    # build:
+    #   context: ../..
+    #   dockerfile: docker/resource-provider/Dockerfile
+    #   args:
+    #     - COMPUTE_MODE=gpu
+    volumes:
+      - bacalhau-data:/tmp/lilypad/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - BACALHAU_API_HOST=${ORG:-default_org}_bacalhau
+      - WEB3_PRIVATE_KEY=${WEB3_PRIVATE_KEY}
+      - WEB3_RPC_URL=${WEB3_RPC_URL}
+      - WEB3_CHAIN_ID=${WEB3_CHAIN_ID}
+      - WEB3_CONTROLLER_ADDRESS=${WEB3_CONTROLLER_ADDRESS}
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
       - IPFS_ADDR=/dns4/ipfs/tcp/5001
+      - DISABLE_TELEMETRY=1
+      - OFFER_GPU=1
+      - WEB3_PAYMENTS_ADDRESS=${WEB3_PAYMENTS_ADDRESS}
+      - WEB3_POW_ADDRESS=${WEB3_POW_ADDRESS}
+      - WEB3_STORAGE_ADDRESS=${WEB3_STORAGE_ADDRESS}
+      - WEB3_TOKEN_ADDRESS=${WEB3_TOKEN_ADDRESS}
+      - WEB3_USERS_ADDRESS=${WEB3_USERS_ADDRESS}
+      - SERVICE_SOLVER=${SERVICES_SOLVER}
+      - LOG_LEVEL=debug
+      - SERVICE_MEDIATORS=${SERVICES_MEDIATOR}
+
+    env_file:
+      - .env 
   watchtower:
     image: containrrr/watchtower
-    container_name: ${ORG}_watchtower
+    container_name: ${ORG:-default_org}_watchtower
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WEB3_PRIVATE_KEY=${WEB3_PRIVATE_KEY}
+      - WEB3_RPC_URL=${WEB3_RPC_URL}
+      - WEB3_CHAIN_ID=${WEB3_CHAIN_ID}
+      - WEB3_CONTROLLER_ADDRESS=${WEB3_CONTROLLER_ADDRESS}
+      - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+      - IPFS_ADDR=/dns4/ipfs/tcp/5001
+      - DISABLE_TELEMETRY=1
+      - OFFER_GPU=1
+      - WEB3_PAYMENTS_ADDRESS=${WEB3_PAYMENTS_ADDRESS}
+      - WEB3_POW_ADDRESS=${WEB3_POW_ADDRESS}
+      - WEB3_STORAGE_ADDRESS=${WEB3_STORAGE_ADDRESS}
+      - WEB3_TOKEN_ADDRESS=${WEB3_TOKEN_ADDRESS}
+      - WEB3_USERS_ADDRESS=${WEB3_USERS_ADDRESS}
+      - SERVICE_SOLVER=${SERVICE_SOLVER}
+    env_file:
+      - .env
 volumes:
   ipfs-data:
   bacalhau-data:

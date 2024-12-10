@@ -20,7 +20,7 @@ const NETWORK = process.env.NETWORK || "dev";
 const NETWORK_URL = process.env.WEB3_HTTP_URL || 'http://localhost:8547';
 const CHAIN_ID = Number(process.env.CHAIN_ID) || 412346;
 const INFURA_KEY = process.env.INFURA_KEY || "";
-
+console.log(NETWORK_URL,NETWORK,CHAIN_ID,INFURA_KEY)
 const config: HardhatUserConfig = {
   solidity: '0.8.21',
   defaultNetwork: NETWORK,
@@ -44,6 +44,12 @@ const config: HardhatUserConfig = {
     testnet:{
       url: 'https://sepolia-rollup.arbitrum.io/rpc',
       chainId: 421614,
+      accounts: [getAccount('admin').privateKey],
+    },
+    
+    orbit:{
+      url: 'https://rpc.orbit.arsenum.com/',
+      chainId: 68283778764,
       accounts: [getAccount('admin').privateKey],
     },
   },

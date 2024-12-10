@@ -277,7 +277,9 @@ func getBalances() {
 
 	fmt.Printf("Public Address: %s\n", walletAddress.Hex())
 
-	client, err := ethclient.Dial("wss://rpc.ankr.com/arbitrum_sepolia")
+	// client, err := ethclient.Dial("wss://rpc.ankr.com/arbitrum_sepolia")
+	client, err := ethclient.Dial(os.Getenv("WEB3_RPC_URL"))
+
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
 	}
@@ -293,7 +295,7 @@ func getBalances() {
 	if ethBalance.Cmp(big.NewFloat(.01)) < 0 {
 		log.Fatalf("Insufficient ETH balance: minimum 0.01 ETH required")
 	}
-	tokenAddress := common.HexToAddress("0x0352485f8a3cB6d305875FaC0C40ef01e0C06535")
+	tokenAddress := common.HexToAddress(os.Getenv("WEB3_TOKEN_ADDRESS")) //"0x0352485f8a3cB6d305875FaC0C40ef01e0C06535")
 
 	parsedABI, err := abi.JSON(strings.NewReader(ERC20TokenABI))
 	if err != nil {
@@ -409,29 +411,29 @@ func main() {
 			log.Fatalf("Failed to write to .env file: %v", err)
 		}
 	}
+	repo := "lilypad_network"
+	if len(os.Args) > 1 {
+		repo = os.Args[len(os.Args)-1]
+	}
 	if len(os.Args) > 1 && os.Args[1] == "docker" {
 		cmd := exec.Command("docker-compose",
 			"-f", "docker-compose-pre-flight.yml",
-			"-p", os.Args[2],
-			"up")
+			"-p", os.Args[2]+"-"+os.Args[3],
+			"up",
+			"--build")
+		// ,
+		// "--build")
 		cmd.Env = append(os.Environ(), fmt.Sprintf("ORG=%s", os.Args[2]))
 
+		cmd.Env = append(cmd.Env, fmt.Sprintf("ORG=%s", repo))
 		//https://raw.githubusercontent.com/arsenum/lilypad_network/refs/heads/main/config.toml
-		resp, err := http.Get(fmt.Sprintf("https://raw.githubusercontent.com/%s/lilypad_network/refs/heads/main/config.toml", os.Args[2]))
-		if err != nil || resp.StatusCode != http.StatusOK {
-			fmt.Errorf("failed to download TOML: %v", err)
-		} else {
-			content, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Errorf("failed to read TOML content: %v", err)
-			}
+		// Parse TOML
+		envVars := getVarsFromRepo(repo)
+		cmd.Env = append(cmd.Env, envVars...)
+		for _, envVar := range cmd.Env {
+			fmt.Println("ENV Var:", envVar)
 
-			// Parse TOML
-			tree, err := toml.LoadBytes(content)
-			envVars := strings.Split(tomlValueToString(tree, ""), "\n")
-			cmd.Env = append(cmd.Env, envVars...)
 		}
-		defer resp.Body.Close()
 
 		// if err != nil {
 		// 	fmt.Errorf("failed to parse TOML: %v", err)
@@ -452,11 +454,36 @@ func main() {
 		}
 		return
 	} else {
+		envVars := getVarsFromRepo(repo)
+		for _, envVar := range envVars {
+			fmt.Println("ENV Var:", envVar)
+			os.Setenv(strings.Split(envVar, "=")[0], strings.Split(envVar, "=")[1])
+
+		}
 		getMemoryUtilization()
 		getCoreUtilization()
 		getBalances()
-		pullAllowList()
+		// pullAllowList()
 	}
+}
+
+func getVarsFromRepo(repo string) []string {
+	resp, err := http.Get(fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/refs/heads/main/config.toml", os.Args[len(os.Args)-2], repo))
+
+	if err != nil || resp.StatusCode != http.StatusOK {
+		fmt.Errorf("failed to download TOML: %v", err)
+	} else {
+		defer resp.Body.Close()
+		content, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Errorf("failed to read TOML content: %v", err)
+		}
+
+		tree, err := toml.LoadBytes(content)
+		envVars := strings.Split(tomlValueToString(tree, ""), "\n")
+		return envVars
+	}
+	return nil
 }
 func tomlValueToString(value interface{}, parentKey string) string {
 	switch v := value.(type) {

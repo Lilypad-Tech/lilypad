@@ -51,7 +51,7 @@ function load-local-env() {
     if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
       export $line
     fi
-  done < .local.dev
+  done < .local.orbit
 }
 
 ############################################################################
@@ -98,16 +98,16 @@ function chain-boot() {
   echo "- Install local dependencies"
   cd hardhat && npm install -y
   echo "- Fund services with ether"
-  npx hardhat run scripts/fund-services-ether.ts --network dev
+  npx hardhat run scripts/fund-services-ether.ts --network orbit
   echo "- Compile contracts"
-  npx hardhat compile --network dev
+  npx hardhat compile --network orbit
   cd ..
   go-bindings
   echo "- Deploy contracts"
   cd hardhat
-  npx hardhat deploy --network dev
+  npx hardhat deploy --network orbit
   echo "- Fund services with tokens"
-  npx hardhat run scripts/fund-services-tokens.ts --network dev
+  npx hardhat run scripts/fund-services-tokens.ts --network orbit
   cd ..
   echo "- Done"
 }
@@ -204,6 +204,10 @@ function print-local-dev-env() {
 function run-cowsay-onchain() {
   load-local-env
   cd hardhat
+  # WEB3_HTTP_URL=https://rpc.orbit.arsenum.com \
+  # CHAIN_ID=68283778764 \
+  NETWORK=orbit \
+  API_HOST=\
   npx hardhat run scripts/run-cowsay-onchain.ts
 }
 
@@ -370,5 +374,82 @@ function run() {
   export LOG_LEVEL=info
   go run . run --network dev "$@"
 }
-
+function cow() {
+  # load-local-env
+  # export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
+  # export LOG_LEVEL=info
+  #  MODULE_PATH="github.com/Lilypad-Tech/lilypad-module-cowsay:v0.0.4" \
+  # WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY} \
+   DISABLE_TELEMETRY=true \
+   WEB3_PRIVATE_KEY=b3994e7660abe5f65f729bb64163c6cd6b7d0b1a8c67881a7346e3e8c7f026f5 \
+  WEB3_CHAIN_ID=68283778764 \
+  WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f \
+  WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6 \
+  WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e \
+  WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 \
+  WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 \
+  WEB3_MEDIATION_ADDRESS=0x0B306BF915C4d645ff596e518fAf3F9669b97016 \
+  WEB3_JOBCREATOR_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE \
+  POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1 \
+  WEB3_RPC_URL=wss://wss.orbit.arsenum.com \
+  SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC \
+  API_HOST=\
+  go run . run  cowsay:v0.0.4 "$@"
+  # go run . run  github.com/Lilypad-Tech/lilypad-module-cowsay:main "$@"
+}
+function rp() {
+  # load-local-env
+  # export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
+  # export LOG_LEVEL=info
+  #  MODULE_PATH="github.com/Lilypad-Tech/lilypad-module-cowsay:v0.0.4" \
+  # WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY} \
+   DISABLE_TELEMETRY=true \
+   WEB3_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a \
+  WEB3_CHAIN_ID=68283778764 \
+  WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f \
+  WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6 \
+  WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e \
+  WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 \
+  WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 \
+  WEB3_MEDIATION_ADDRESS=0x0B306BF915C4d645ff596e518fAf3F9669b97016 \
+  WEB3_JOBCREATOR_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE \
+  POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1 \
+  WEB3_RPC_URL=wss://wss.orbit.arsenum.com \
+  SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC \
+  API_HOST=\
+  OFFER_GPU=1 \
+  go run . resource-provider "$@"
+  # go run . run  github.com/Lilypad-Tech/lilypad-module-cowsay:main "$@"
+}
+function jc_orbit() {
+  # load-local-env
+  # export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
+  # export LOG_LEVEL=info
+  #  MODULE_PATH="github.com/Lilypad-Tech/lilypad-module-cowsay:v0.0.4" \
+  # WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY} \
+   DISABLE_TELEMETRY=true \
+   WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a \
+  WEB3_CHAIN_ID=68283778764 \
+  WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f \
+  WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6 \
+  WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e \
+  WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 \
+  WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 \
+  WEB3_MEDIATION_ADDRESS=0x0B306BF915C4d645ff596e518fAf3F9669b97016 \
+  WEB3_JOBCREATOR_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE \
+  POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1 \
+  WEB3_RPC_URL=wss://wss.orbit.arsenum.com \
+  SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC \
+  API_HOST=\
+  go run . jobcreator "$@"
+  # go run . run  github.com/Lilypad-Tech/lilypad-module-cowsay:main "$@"
+}
 eval "$@"
+  #  WEB3_CHAIN_ID=95873066572\
+  #  WEB3_CONTROLLER_ADDRESS=0xdF2bc8d64A869eF4605BA821cE7183A702D5Bf72\
+  #  WEB3_PAYMENTS_ADDRESS=0xE7FdFfD56797a6E6024a09bd168effCa6C5208cE\
+  #  WEB3_POW_ADDRESS=0x7cFA21dB253afBcD9AaCf2dE58FC3C0e9D1a9149\
+  #  WEB3_STORAGE_ADDRESS=0xDf9EAf5f1020d75c502DC66FFCC43a634E10017b\
+  #  WEB3_TOKEN_ADDRESS=0x2B0722b2C623b19aDA2ec56D50487203a7475C38\
+  #  WEB3_USERS_ADDRESS=0x3f4048eBDB5C853EDBe30843f8e8e6CC9aFfAbFe\
+  #  SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC\
