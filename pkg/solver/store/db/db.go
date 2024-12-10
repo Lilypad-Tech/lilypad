@@ -605,3 +605,8 @@ func (store *SolverStoreDatabase) RemoveMatchDecision(resourceOffer string, jobO
 
 	return nil
 }
+
+// Strictly speaking, the compiler will check the interface
+// implementation without this check. But some code editors
+// report errors more effectively when we have it.
+var _ store.SolverStore = (*SolverStoreDatabase)(nil)
