@@ -1,0 +1,177 @@
+name: lilypad_orbit
+services:
+  ipfs:
+    image: ipfs/kubo:v0.32.1
+    container_name: orbit_ipfs
+    restart: unless-stopped
+    # ports:
+    #   - 5001:5001
+    volumes:
+      - ipfs-data:/data/ipfs
+  # bacalhau:
+  #   image: ghcr.io/lilypad-tech/bacalhau
+  #   container_name: bacalhau
+  #   restart: unless-stopped
+  #   depends_on:
+  #     ipfs:
+  #       condition: service_healthy
+  #   build:
+  #     context: ..
+  #     dockerfile: ./docker/bacalhau/Dockerfile
+  #   extra_hosts:
+  #     - "localhost:host-gateway"
+  #   environment:
+  #     - BACALHAU_ENVIRONMENT=local
+  #   command:
+  #     [
+  #       "serve",
+  #       "--node-type",
+  #       "compute,requester",
+  #       "--peer",
+  #       "none",
+  #       "--private-internal-ipfs=false",
+  #       "--job-selection-accept-networked",
+  #       "--ipfs-connect",
+  #       "/dns4/ipfs/tcp/5001",
+  #     ]
+  #   volumes:
+  #     - bacalhau-data:/root/.bacalhau
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  solver:
+    image: ghcr.io/lilypad-tech/solver
+    container_name: orbit_solver
+    # depends_on:
+    #   - chain
+    # build:
+    #   context: ..
+    #   dockerfile: ./docker/solver/Dockerfile
+    #   args:
+    #     - network=dev
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      
+      - LOG_LEVEL=debug
+      - SERVER_PORT=8002
+      - API_HOST=
+      # - SERVER_URL=https://solver.orbit.arsenum.com
+      # - WEB3_RPC_URL=ws://local.switch:8448
+      - SERVER_URL=https://solver.orbit.arsenum.com
+      # https://solver.orbit.arsenum.com
+      # - WEB3_RPC_URL=ws://local.switch:8448
+      - WEB3_RPC_URL=wss://wss.orbit.arsenum.com
+       #wss://wss.orbit.arsenum.com
+      - DISABLE_TELEMETRY=1 # Disable telemetry for local development
+      - WEB3_CHAIN_ID=68283778764
+      - WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+      - WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
+      - WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+      - WEB3_POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1
+      - WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
+      - WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+      - WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+
+      # - WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+      # - WEB3_CONTROLLER_ADDRESS=0xdF2bc8d64A869eF4605BA821cE7183A702D5Bf72
+      # - WEB3_PAYMENTS_ADDRESS=0xE7FdFfD56797a6E6024a09bd168effCa6C5208cE
+      # - WEB3_POW_ADDRESS=0x7cFA21dB253afBcD9AaCf2dE58FC3C0e9D1a9149
+      # - WEB3_STORAGE_ADDRESS=0xDf9EAf5f1020d75c502DC66FFCC43a634E10017b
+      # - WEB3_TOKEN_ADDRESS=0x2B0722b2C623b19aDA2ec56D50487203a7475C38
+      # - WEB3_USERS_ADDRESS=0x3f4048eBDB5C853EDBe30843f8e8e6CC9aFfAbFe
+    # ports:
+    #   - 8081:8081
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/job_offers"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    networks:
+      - localnet
+  job-creator:
+    networks:
+      - localnet
+    image: ghcr.io/lilypad-tech/job-creator
+    container_name: orbit_job-creator
+    restart: unless-stopped
+    depends_on:
+      # - chain
+      - solver
+    build:
+      context: ..
+      dockerfile: ./docker/job-creator/Dockerfile
+    #   args:
+    #     - network=dev
+    extra_hosts:
+      - "localhost:host-gateway"
+    environment:
+      # - WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+      - LOG_LEVEL=debug
+      - SERVER_PORT=8002
+      - API_HOST=
+      # - SERVER_URL=http://solver:8002
+      - SERVER_URL=https://solver.orbit.arsenum.com
+      # https://solver.orbit.arsenum.com
+      # - WEB3_RPC_URL=ws://local.switch:8448
+      - WEB3_RPC_URL=wss://wss.orbit.arsenum.com
+       #wss://wss.orbit.arsenum.com
+      - DISABLE_TELEMETRY=1 # Disable telemetry for local development
+      - WEB3_CHAIN_ID=68283778764
+      - WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+      - WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
+      - WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+      - WEB3_POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1
+      - WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
+      - WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+      - WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+      - WEB3_JOBCREATOR_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+      - SERVICE_MEDIATORS=[0x7B49d6ee530B0A538D26E344f3B02E79ACa96De2]
+      # - WEB3_CHAIN_ID=68283778764
+      # - WEB3_CONTROLLER_ADDRESS=0xdF2bc8d64A869eF4605BA821cE7183A702D5Bf72
+      # - WEB3_PAYMENTS_ADDRESS=0xE7FdFfD56797a6E6024a09bd168effCa6C5208cE
+      # - WEB3_POW_ADDRESS=0x7cFA21dB253afBcD9AaCf2dE58FC3C0e9D1a9149
+      # - WEB3_STORAGE_ADDRESS=0xDf9EAf5f1020d75c502DC66FFCC43a634E10017b
+      # - WEB3_TOKEN_ADDRESS=0x2B0722b2C623b19aDA2ec56D50487203a7475C38
+      # - WEB3_USERS_ADDRESS=0x3f4048eBDB5C853EDBe30843f8e8e6CC9aFfAbFe
+      # - SERVICE_SOLVER=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+      # - WEB3_JOBCREATOR_ADDRESS=0x5a6d1D3E7e16Dc69d61232A395773301b4580849
+      # - WEB3_PRIVATE_KEY=${JOB_CREATOR_PRIVATE_KEY}
+      # - LOG_LEVEL=debug
+  # resource-provider:
+  #   image: ghcr.io/lilypad-tech/resource-provider
+  #   container_name: resource-provider
+  #   restart: unless-stopped
+  #   depends_on:
+  #     ipfs:
+  #       condition: service_healthy
+  #     solver:
+  #       condition: service_healthy
+  #     bacalhau:
+  #       condition: service_healthy
+  #   build:
+  #     context: ..
+  #     dockerfile: ./docker/resource-provider/Dockerfile
+  #     args:
+  #       - NETWORK=dev
+  #       - COMPUTE_MODE=cpu
+  #       - VERSION=${VERSION}
+  #       - COMMIT_SHA=${COMMIT_SHA}
+  #   extra_hosts:
+  #     - "localhost:host-gateway"
+  #   volumes:
+  #     - lilypad-data:/tmp/lilypad/data
+  #   environment:
+  #     - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
+  #     - IPFS_CONNECT=/dns4/ipfs/tcp/5001
+  #     - LOG_LEVEL=debug
+  #     - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
+  #     - BACALHAU_API_HOST=bacalhau
+  #     - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
+  #     - BACALHAU_NODE_CLIENTAPI_PORT=1234
+volumes:
+  # chain-data:
+  ipfs-data:
+  bacalhau-data:
+  lilypad-data:
+networks:
+  localnet:
+    external: true

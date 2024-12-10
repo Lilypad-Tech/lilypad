@@ -1,0 +1,12 @@
+{
+  "deployToken": 1732663462,
+  "deployPayments": 1732663462,
+  "deployStorage": 1732663463,
+  "deployUsers": 1732663463,
+  "deployMediation": 1732663464,
+  "deployJobCreator": 1732663465,
+  "deployPow": 1732663465,
+  "deployController": 1732663467,
+  "upgradePowV2": 1732663468,
+  "updatePowV2": 1732663468
+}
