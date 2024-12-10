@@ -14,8 +14,6 @@ import (
 
 type SolverStoreDatabase struct {
 	db *gorm.DB
-	// TODO Log writers?
-	// logWriters       map[string]jsonl.Writer
 }
 
 func NewSolverStoreDatabase(connStr string, silenceLogs bool) (*SolverStoreDatabase, error) {
