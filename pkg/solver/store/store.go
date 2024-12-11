@@ -6,6 +6,12 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 )
 
+type StoreOptions struct {
+	Type         string
+	ConnStr      string
+	GormLogLevel string
+}
+
 type GetJobOffersQuery struct {
 	JobCreator string `json:"job_creator"`
 	// this means job offers that have not been matched at all yet

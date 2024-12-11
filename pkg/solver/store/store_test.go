@@ -1349,7 +1349,7 @@ func setupStores(t *testing.T) []storeConfig {
 	}
 
 	initDatabase := func() func() store.SolverStore {
-		db, err := databasestore.NewSolverStoreDatabase(DB_CONN_STR, true)
+		db, err := databasestore.NewSolverStoreDatabase(DB_CONN_STR, "silent")
 		if err != nil {
 			t.Fatalf("Failed to create database store: %v", err)
 		}
