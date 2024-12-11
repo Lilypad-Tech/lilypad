@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/bacalhau-project/bacalhau v1.5.1
+	github.com/bacalhau-project/bacalhau v1.5.2
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/fatih/color v1.15.0
 	github.com/go-chi/httprate v0.14.1
@@ -169,7 +169,7 @@ require (
 	github.com/rs/cors v1.10.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/samber/lo v1.46.0 // indirect
+	github.com/samber/lo v1.47.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
