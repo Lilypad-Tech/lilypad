@@ -76,7 +76,7 @@ type Result struct {
 	ID     string `json:"id"`
 	DealID string `json:"deal_id"`
 	// the CID of the actual results
-	DataID           string `json:"results_id"`
+	DataID           string `json:"data_id"`
 	Error            string `json:"error"`
 	InstructionCount uint64 `json:"instruction_count"`
 }
