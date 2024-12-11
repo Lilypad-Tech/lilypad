@@ -34,6 +34,7 @@ type BacalhauExecutorOptions struct {
 	ApiHost string
 	ApiPort               string
 	JobStatusPollInterval uint64
+	ResultsDirectory      string
 }
 
 type BacalhauExecutor struct {
@@ -160,12 +161,7 @@ func (executor *BacalhauExecutor) RunJob(
 
 func (executor *BacalhauExecutor) prepareResults(jobId string, executionId string) (cid string, resultsDir string, err error) {
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", "", fmt.Errorf("error getting home directory: %s", err.Error())
-	}
-
-	resultsPath := filepath.Join(home, ".bacalhau", "compute", "results", "local-publisher", fmt.Sprintf("%s.tar.gz", executionId))
+	resultsPath := filepath.Join(executor.Options.ResultsDirectory, fmt.Sprintf("%s.tar.gz", executionId))
 
 	gzipFile, err := os.Open(resultsPath)
 	if err != nil {
