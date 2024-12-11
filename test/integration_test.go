@@ -122,7 +122,7 @@ func TestNoModeration(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "there was an error running the job")
-	assert.Equal(t, "QmbCi3yoKzckff24rUJML1ZesVb35cd2LUNMiMYksEGkWv", result.Result.DataID, "the data ID was correct")
+	assert.Equal(t, "bafkreiha5hvgjgjufi4ecc4enp7bpq3jwxiha465nmibyuljnpw4rs2d5m", result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
 	fmt.Printf("local path: %s\n", localPath)

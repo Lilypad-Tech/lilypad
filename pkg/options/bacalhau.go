@@ -17,13 +17,9 @@ func GetDefaultBacalhauOptions() bacalhau.BacalhauExecutorOptions {
 
 	resultsPath := filepath.Join(home, ".bacalhau", "compute", "results", "local-publisher")
 
-
-
-
-
 	return bacalhau.BacalhauExecutorOptions{
-		ApiHost: GetDefaultServeOptionString("BACALHAU_API_HOST", "localhost"),
-		ApiPort: GetDefaultServeOptionString("BACALHAU_API_PORT", "20000"),
+		ApiHost:               GetDefaultServeOptionString("BACALHAU_API_HOST", "localhost"),
+		ApiPort:               GetDefaultServeOptionString("BACALHAU_API_PORT", "1234"),
 		JobStatusPollInterval: GetDefaultServeOptionUint64("JOB_STATUS_POLL_INTERVAL", 5),
 		ResultsDirectory:      GetDefaultServeOptionString("BACALHAU_RESULTS_DIRECTORY", resultsPath),
 	}

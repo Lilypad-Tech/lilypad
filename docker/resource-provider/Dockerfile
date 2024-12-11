@@ -1,6 +1,6 @@
 ARG COMPUTE_MODE=gpu
 
-FROM golang:1.22.4 AS base
+FROM golang:latest AS base
 WORKDIR /usr/src/app
 ARG NETWORK=testnet
 ARG VERSION
@@ -33,23 +33,12 @@ RUN mv lilypad /usr/local/bin
 # Install necessary dependencies
 RUN apt update && apt install -y wget bash curl && apt clean
 
-# Install Bacalhau
-RUN cd /tmp && \
-    wget https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz && \
-    tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz && \
-    mv bacalhau /usr/local/bin/bacalhau && \
-    rm bacalhau_v1.3.2_linux_amd64.tar.gz
-
 # Add both lilypad and bacalhau executables to PATH
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Create a startup script to run both services simultaneously
 RUN touch run
 RUN echo "#!/bin/bash" >> run
-
-# Ensure bacalhau is initialized
-RUN echo "export BACALHAU_ENVIRONMENT=local" >> run
-RUN echo "bacalhau id" >> run
 
 # Launch Lilypad
 RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
