@@ -1,41 +1,16 @@
 # This is a docker-compose file for use by Resource Providers
 services:
-  ipfs:
-    image: ipfs/kubo:v0.32.1
-    container_name: ipfs
-    restart: unless-stopped
-    ports:
-      - 4001:4001
-      - 127.0.0.1:5001:5001
-      - 127.0.0.1:8080:8080
-    volumes:
-      - ipfs-data:/data/ipfs
   bacalhau:
     image: ghcr.io/lilypad-tech/bacalhau
     container_name: bacalhau
     restart: unless-stopped
     privileged: true
-    depends_on:
-      ipfs:
-        condition: service_healthy
     build:
       context: ..
       dockerfile: ./docker/bacalhau/Dockerfile
     environment:
       - BACALHAU_ENVIRONMENT=local
-    command:
-      [
-        "bacalhau",
-        "serve",
-        "--node-type",
-        "compute,requester",
-        "--peer",
-        "none",
-        "--private-internal-ipfs=false",
-        "--job-selection-accept-networked",
-        "--ipfs-connect",
-        "/dns4/ipfs/tcp/5001",
-      ]
+    command: ["bacalhau", "serve", "--orchestrator", "--compute"]
     volumes:
       - bacalhau-data:/root/.bacalhau
   resource-provider:
@@ -51,6 +26,7 @@ services:
         - COMPUTE_MODE=gpu
     volumes:
       - lilypad-data:/tmp/lilypad/data
+      - bacalhau-data:/root/.bacalhau
     environment:
       - WEB3_PRIVATE_KEY
       - WEB3_RPC_URL

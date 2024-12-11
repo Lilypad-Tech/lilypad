@@ -17,8 +17,8 @@ RUN mkdir -pm755 /etc/apt/keyrings && curl -o /etc/apt/keyrings/docker.asc -fsSL
 RUN nvidia-ctk runtime configure --runtime=docker --set-as-default
 
 # Install Bacalhau
-ADD https://github.com/bacalhau-project/bacalhau/releases/download/v1.3.2/bacalhau_v1.3.2_linux_amd64.tar.gz .
-RUN tar xfv bacalhau_v1.3.2_linux_amd64.tar.gz
+ADD https://github.com/bacalhau-project/bacalhau/releases/download/v1.5.1/bacalhau_v1.5.1_linux_amd64.tar.gz .
+RUN tar xfv bacalhau_v1.5.1_linux_amd64.tar.gz
 RUN mv bacalhau /usr/local/bin
 
 ADD https://raw.githubusercontent.com/moby/moby/refs/heads/master/hack/dind /usr/local/bin/dind

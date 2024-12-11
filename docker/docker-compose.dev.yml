@@ -50,8 +50,6 @@ services:
     container_name: resource-provider
     restart: unless-stopped
     depends_on:
-      ipfs:
-        condition: service_healthy
       solver:
         condition: service_healthy
       bacalhau:
@@ -68,6 +66,7 @@ services:
       - "localhost:host-gateway"
     volumes:
       - lilypad-data:/tmp/lilypad/data
+      - ${HOME}/.bacalhau:/root/.bacalhau
     environment:
       - WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
       - IPFS_CONNECT=/dns4/ipfs/tcp/5001
