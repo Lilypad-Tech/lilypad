@@ -19,11 +19,6 @@ import (
 
 const DB_CONN_STR = "postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable"
 
-type storeConfig struct {
-	name string
-	init func() (getStore func() store.SolverStore)
-}
-
 // Job offers
 
 func TestJobOfferOps(t *testing.T) {
@@ -31,8 +26,9 @@ func TestJobOfferOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple job offers in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple job offers
 			jobOffers := generateJobOffers(5, 50)
@@ -226,7 +222,8 @@ func TestJobOfferQuery(t *testing.T) {
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
-		getStore := config.init()
+		getStore, clearStore := config.init()
+		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
@@ -272,8 +269,9 @@ func TestResourceOfferOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple resource offers in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple resource offers
 			resourceOffers := generateResourceOffers(5, 50)
@@ -479,7 +477,8 @@ func TestResourceOfferQuery(t *testing.T) {
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
-		getStore := config.init()
+		getStore, clearStore := config.init()
+		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
@@ -525,8 +524,9 @@ func TestDealOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple deals in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple deals
 			deals := generateDeals(5, 50)
@@ -577,8 +577,9 @@ func TestDealGetAll(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test batch of deals in a test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple deals or no deals
 			deals := generateDeals(0, 10)
@@ -627,8 +628,9 @@ func TestDealUpdates(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple deals in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple deals
 			deals := generateDeals(5, 50)
@@ -828,7 +830,8 @@ func TestDealQuery(t *testing.T) {
 
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
-		getStore := config.init()
+		getStore, clearStore := config.init()
+		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
@@ -874,8 +877,9 @@ func TestResultOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple results in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate multiple results
 			results := generateResults(5, 50)
@@ -972,8 +976,9 @@ func TestMatchDecisionOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test multiple match decisions in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			// Generate match decisions
 			decisions := generateMatchDecisions(5, 50)
@@ -1093,8 +1098,9 @@ func TestMatchDecisionRemove(t *testing.T) {
 	storeConfigs := setupStores(t)
 	for _, config := range storeConfigs {
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			matchDecision := data.MatchDecision{
 				ResourceOffer: generateCID(),
@@ -1160,8 +1166,9 @@ func TestConcurrentOps(t *testing.T) {
 	for _, config := range storeConfigs {
 		// Test concurrent adds in a single test run
 		t.Run(config.name, func(t *testing.T) {
-			getStore := config.init()
+			getStore, clearStore := config.init()
 			store := getStore()
+			defer clearStore()
 
 			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results) + len(matchDecisions)
 			errCh := make(chan error, count)
@@ -1335,20 +1342,28 @@ func TestConcurrentOps(t *testing.T) {
 
 // Utilities
 
+type storeConfig struct {
+	name string
+	init func() (getStore func() store.SolverStore, clearStore func())
+}
+
 func setupStores(t *testing.T) []storeConfig {
-	initMemory := func() func() store.SolverStore {
+	initMemory := func() (func() store.SolverStore, func()) {
 		// Get store function creates a new memory store
 		// which effectively clears data between runs
-		return func() store.SolverStore {
+		getStore := func() store.SolverStore {
 			s, err := memorystore.NewSolverStoreMemory()
 			if err != nil {
 				t.Fatalf("Failed to create memory store: %v", err)
 			}
 			return s
 		}
+		clearStore := func() {}
+
+		return getStore, clearStore
 	}
 
-	initDatabase := func() func() store.SolverStore {
+	initDatabase := func() (func() store.SolverStore, func()) {
 		db, err := databasestore.NewSolverStoreDatabase(DB_CONN_STR, "silent")
 		if err != nil {
 			t.Fatalf("Failed to create database store: %v", err)
@@ -1359,10 +1374,13 @@ func setupStores(t *testing.T) []storeConfig {
 
 		// Get store functions clear data and returns
 		// the same store instance
-		return func() store.SolverStore {
+		getStore := func() store.SolverStore {
 			clearStoreDatabase(t, db)
 			return db
 		}
+		clearStore := func() { clearStoreDatabase(t, db) }
+
+		return getStore, clearStore
 	}
 
 	return []storeConfig{
