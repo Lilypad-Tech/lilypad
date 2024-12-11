@@ -201,6 +201,9 @@ function solver() {
   load-local-env
   export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
   export LOG_LEVEL=debug
+  export STORE_TYPE=database
+  export STORE_CONN_STR=postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable
+  export STORE_GORM_LOG_LEVEL=silent
   export SERVER_VALIDATION_TOKEN_SECRET=912dd001a6613632c066ca10a19254430db2986a84612882a18f838a6360880e
   go run . solver --network dev "$@"
 }

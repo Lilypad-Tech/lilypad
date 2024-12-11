@@ -16,10 +16,19 @@ type SolverStoreDatabase struct {
 	db *gorm.DB
 }
 
-func NewSolverStoreDatabase(connStr string, silenceLogs bool) (*SolverStoreDatabase, error) {
+func NewSolverStoreDatabase(connStr string, gormLogLevel string) (*SolverStoreDatabase, error) {
 	config := &gorm.Config{}
-	if silenceLogs {
+	switch gormLogLevel {
+	case "silent":
 		config.Logger = logger.Default.LogMode(logger.Silent)
+	case "info":
+		config.Logger = logger.Default.LogMode(logger.Info)
+	case "error":
+		config.Logger = logger.Default.LogMode(logger.Error)
+	case "warn":
+		config.Logger = logger.Default.LogMode(logger.Warn)
+	default:
+		return nil, fmt.Errorf("expected solver store gorm log level silent, info, error, or warn, but received: %s", gormLogLevel)
 	}
 
 	db, err := gorm.Open(postgres.Open(connStr), config)
