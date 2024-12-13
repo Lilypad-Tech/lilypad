@@ -319,7 +319,7 @@ func TestMatchOffers(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result := matchOffers(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
 			if result.matched() != tc.shouldMatch {
-				t.Errorf("Expected match to be %v, but got %v", tc.shouldMatch, result)
+				t.Errorf("Expected match to be %v, but got %+v", tc.shouldMatch, result)
 			}
 		})
 	}
