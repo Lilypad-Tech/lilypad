@@ -292,6 +292,13 @@ func matchOffers(
 		}
 	}
 
+	if resourceOffer.Spec.Disk < jobOffer.Spec.Disk {
+		return &diskSpaceMismatch{
+			jobOffer:      jobOffer,
+			resourceOffer: resourceOffer,
+		}
+	}
+
 	moduleID, err := data.GetModuleID(jobOffer.Module)
 	if err != nil {
 		return &moduleIDError{
