@@ -81,6 +81,33 @@ func (result ramMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
+type vramMismatch struct {
+	resourceOffer data.ResourceOffer
+	jobOffer      data.JobOffer
+}
+
+func (_ vramMismatch) matched() bool   { return false }
+func (_ vramMismatch) message() string { return "did not match VRAM" }
+func (result vramMismatch) attributes() []attribute.KeyValue {
+	var resourceOfferVRAMs []int
+	for _, gpu := range result.resourceOffer.Spec.GPUs {
+		resourceOfferVRAMs = append(resourceOfferVRAMs, gpu.VRAM)
+	}
+
+	var jobOfferVRAMS []int
+	for _, gpu := range result.jobOffer.Spec.GPUs {
+		jobOfferVRAMS = append(jobOfferVRAMS, gpu.VRAM)
+	}
+
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.IntSlice("match_result.resource_offer.spec.gpus.vram", resourceOfferVRAMs),
+		attribute.IntSlice("match_result.job_offer.spec.gpus.vram", jobOfferVRAMS),
+	}
+}
+
 type moduleIDError struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
