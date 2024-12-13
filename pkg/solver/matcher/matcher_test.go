@@ -26,6 +26,7 @@ func TestMatchOffers(t *testing.T) {
 					VRAM:   24576, // MB
 				},
 			},
+			Disk: 2924295844659, // Bytes
 		},
 		DefaultPricing: data.DealPricing{
 			InstructionPrice: 10,
@@ -40,6 +41,7 @@ func TestMatchOffers(t *testing.T) {
 			GPU:  1000,
 			RAM:  1024,
 			GPUs: []data.GPUSpec{},
+			Disk: 0, // Bytes
 		},
 		Mode:     data.MarketPrice,
 		Services: services,
@@ -163,6 +165,44 @@ func TestMatchOffers(t *testing.T) {
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				offer.Module = sdxlModuleConfig
 				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 49152}}
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Disk space match when job creator specifies disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.Disk = 1000000000000
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Disk space match when job creator does not specify disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.Disk = 0 // zero-value
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Disk space requested is more than resource offer disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Spec.Disk = 4000000000000
 				return offer
 			},
 			shouldMatch: false,
