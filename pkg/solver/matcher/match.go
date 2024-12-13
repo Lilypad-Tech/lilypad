@@ -271,6 +271,27 @@ func matchOffers(
 		}
 	}
 
+	// Skip VRAM check when job offer does not request VRAM
+	if len(jobOffer.Spec.GPUs) > 0 {
+		// Mismatch if job offer requests VRAM but resource provider has none
+		if len(resourceOffer.Spec.GPUs) == 0 {
+			return &vramMismatch{
+				jobOffer:      jobOffer,
+				resourceOffer: resourceOffer,
+			}
+		}
+
+		// Mismatch if job offer largest VRAM is greater than resource offer largest VRAM
+		largestResourceOfferVRAM := getLargestVRAM(resourceOffer.Spec.GPUs)
+		largestJobOfferVRAM := getLargestVRAM(jobOffer.Spec.GPUs)
+		if largestResourceOfferVRAM < largestJobOfferVRAM {
+			return &vramMismatch{
+				jobOffer:      jobOffer,
+				resourceOffer: resourceOffer,
+			}
+		}
+	}
+
 	moduleID, err := data.GetModuleID(jobOffer.Module)
 	if err != nil {
 		return &moduleIDError{
@@ -337,6 +358,16 @@ func matchOffers(
 		jobOffer:      jobOffer,
 		resourceOffer: resourceOffer,
 	}
+}
+
+func getLargestVRAM(gpus []data.GPUSpec) int {
+	largestVRAM := 0
+	for _, gpu := range gpus {
+		if gpu.VRAM > largestVRAM {
+			largestVRAM = gpu.VRAM
+		}
+	}
+	return largestVRAM
 }
 
 func logMatch(result matchResult) {
