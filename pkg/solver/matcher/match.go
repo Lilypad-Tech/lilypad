@@ -108,6 +108,23 @@ func (result vramMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
+type diskSpaceMismatch struct {
+	resourceOffer data.ResourceOffer
+	jobOffer      data.JobOffer
+}
+
+func (_ diskSpaceMismatch) matched() bool   { return false }
+func (_ diskSpaceMismatch) message() string { return "did not match disk space" }
+func (result diskSpaceMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.spec.disk", result.jobOffer.Spec.Disk),
+		attribute.Int("match_result.resource_offer.spec.disk", result.resourceOffer.Spec.Disk),
+	}
+}
+
 type moduleIDError struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
