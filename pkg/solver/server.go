@@ -277,7 +277,7 @@ func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *co
 *
 */
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -298,7 +298,7 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	versionHeader, _ := http.GetVersionFromHeaders(req)
 	log.Debug().Msgf("resource provider adding offer with version header %s", versionHeader)
 
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -326,7 +326,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -367,7 +367,7 @@ func (solverServer *solverServer) updateTransactionsResourceProvider(payload dat
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -391,7 +391,7 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -415,7 +415,7 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("have error parsing user address")
 		return nil, err
@@ -500,7 +500,7 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 			log.Error().Msgf("deal not found")
 			return err
 		}
-		signerAddress, err := http.GetAddressFromHeaders(req)
+		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
 			log.Error().Err(err).Msgf("have error parsing user address")
 			return err

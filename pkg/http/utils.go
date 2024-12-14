@@ -109,12 +109,12 @@ func AddHeaders(
 	return nil
 }
 
-// this will use the client headers to ensure that a message was signed
-// by the holder of a private key for a specific address
-// there is a "X-Lilypad-User" header that will contain the address
-// there is a "X-Lilypad-Signature" header that will contain the signature
-// we use the signature to verify that the message was signed by the private key
-func GetAddressFromHeaders(req *http.Request) (string, error) {
+// Use the client headers to ensure that a message was signed
+// by the holder of a private key for a specific address.
+// The "X-Lilypad-User" header contains the address.
+// The "X-Lilypad-Signature" header contains the signature.
+// We use the signature to verify that the message was signed by the private key.
+func CheckSignature(req *http.Request) (string, error) {
 	userHeader := req.Header.Get(X_LILYPAD_USER_HEADER)
 	if userHeader == "" {
 		return "", HTTPError{
