@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	corehttp "net/http"
@@ -458,6 +459,24 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 				StatusCode: corehttp.StatusNotFound,
 			}
 		}
+
+		signerAddress, err := http.CheckSignature(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("error checking signature")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+		// Only the job creator in a deal can download job outputs
+		if signerAddress != deal.JobCreator {
+			log.Error().Err(err).Msgf("resource provider address does not match signer address")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
 		filesPath := GetDealsFilePath(id)
 		// check if the filesPath directory exists
 		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
