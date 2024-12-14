@@ -319,6 +319,8 @@ func GetRequestBuffer(
 	if err != nil {
 		return nil, err
 	}
+	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
+	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
 
 	resp, err := client.Do(req)
 	if err != nil {
