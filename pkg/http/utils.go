@@ -321,6 +321,7 @@ func GetRequestBuffer(
 	}
 	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
 	AddHeaders(req, privateKey, web3.GetAddress(privateKey).String())
+	// AddHeaders(req, privateKey, "whoops-wrong-address")
 
 	resp, err := client.Do(req)
 	if err != nil {
