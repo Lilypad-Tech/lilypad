@@ -258,6 +258,12 @@ function integration-tests() {
   go test -v -tags="integration" -count 1 ./...
 }
 
+# Base services and the solver must be running
+function integration-tests-solver() {
+  load-local-env
+  go test -v -tags="integration,solver" -count 1 ./...
+}
+
 ############################################################################
 # run
 #
