@@ -251,11 +251,11 @@ function unit-tests-hardhat() {
   npx hardhat test --network hardhat
 }
 
-# this assumes stack is running
+# Base services, solver, and resource provider must be running
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   load-local-env
-  go test -v -tags="integration" -count 1 ./...
+  go test -v -tags="integration,main" -count 1 ./...
 }
 
 # Base services and the solver must be running
