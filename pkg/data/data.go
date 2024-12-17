@@ -1,6 +1,8 @@
 package data
 
 import (
+	"encoding/json"
+
 	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
 )
 
@@ -76,9 +78,60 @@ type Result struct {
 	ID     string `json:"id"`
 	DealID string `json:"deal_id"`
 	// the CID of the actual results
-	DataID           string `json:"results_id"`
+	DataID           string `json:"data_id"`
 	Error            string `json:"error"`
 	InstructionCount uint64 `json:"instruction_count"`
+}
+
+// Provides compatibility for older clients that expect the results_id field
+func (r Result) MarshalJSON() ([]byte, error) {
+	// TODO(bgins) Remove when older clients have been deprecated
+
+	// Create an auxiliary type to avoid recursively calling json.Marshal
+	// https://stackoverflow.com/a/23046869
+	type ResultAux Result
+
+	// Add results_id field to the existing Result fields and marshal
+	return json.Marshal(struct {
+		ResultAux
+		ResultsID string `json:"results_id"`
+	}{
+		ResultAux: ResultAux(r),
+		ResultsID: r.DataID,
+	})
+}
+
+// Provides compatibility for newer clients that expect the data_id field
+func (r *Result) UnmarshalJSON(data []byte) error {
+	// TODO(bgins) Remove when older clients have been deprecated
+
+	// Create an auxiliary type to avoid recursively calling json.Unmarshal
+	// https://stackoverflow.com/a/52433660
+	type ResultAux Result
+
+	// Unmarshal into auxiliary type
+	var aux ResultAux
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Cast the auxilliary type to Result
+	*r = Result(aux)
+
+	// Create a raw map to capture the results_id field
+	var rawMap map[string]interface{}
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return err
+	}
+
+	// Check if results_id exists and assign it to DataID if so
+	if resultsID, ok := rawMap["results_id"]; ok {
+		if strID, ok := resultsID.(string); ok {
+			r.DataID = strID
+		}
+	}
+
+	return nil
 }
 
 // MarketPrice means - get me the best deal
