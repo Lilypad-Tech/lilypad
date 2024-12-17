@@ -1,4 +1,4 @@
-//go:build integration
+//go:build integration && main
 
 package main_test
 

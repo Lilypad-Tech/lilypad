@@ -11,6 +11,9 @@ OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 
 function compose-env() {
   export ADMIN_ADDRESS=${@:-"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"}
   export DISABLE_TELEMETRY=false
+  export STORE_TYPE=database
+  export STORE_CONN_STR=postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable
+  export STORE_GORM_LOG_LEVEL=silent
 }
 
 function compose-init() {
@@ -195,6 +198,9 @@ function solver() {
   load-local-env
   export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
   export LOG_LEVEL=debug
+  export STORE_TYPE=database
+  export STORE_CONN_STR=postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable
+  export STORE_GORM_LOG_LEVEL=silent
   go run . solver --network dev "$@"
 }
 
@@ -245,11 +251,17 @@ function unit-tests-hardhat() {
   npx hardhat test --network hardhat
 }
 
-# this assumes stack is running
+# Base services, solver, and resource provider must be running
 # see LOCAL_DEVELOPMENT.md
 function integration-tests() {
   load-local-env
-  go test -v -tags="integration" -count 1 ./...
+  go test -v -tags="integration,main" -count 1 ./...
+}
+
+# Base services and the solver must be running
+function integration-tests-solver() {
+  load-local-env
+  go test -v -tags="integration,solver" -count 1 ./...
 }
 
 ############################################################################

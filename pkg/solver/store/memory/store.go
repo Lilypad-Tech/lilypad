@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/jsonl"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 )
 
@@ -17,23 +16,15 @@ type SolverStoreMemory struct {
 	resultMap        map[string]*data.Result
 	matchDecisionMap map[string]*data.MatchDecision
 	mutex            sync.RWMutex
-	logWriters       map[string]jsonl.Writer
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
-	kinds := []string{"job_offers", "resource_offers", "deals", "decisions", "results"}
-	logWriters, err := store.GetLogWriters(kinds)
-	if err != nil {
-		return nil, err
-	}
-
 	return &SolverStoreMemory{
 		jobOfferMap:      map[string]*data.JobOfferContainer{},
 		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
 		dealMap:          map[string]*data.DealContainer{},
 		resultMap:        map[string]*data.Result{},
 		matchDecisionMap: map[string]*data.MatchDecision{},
-		logWriters:       logWriters,
 	}, nil
 }
 
@@ -42,7 +33,6 @@ func (s *SolverStoreMemory) AddJobOffer(jobOffer data.JobOfferContainer) (*data.
 	defer s.mutex.Unlock()
 	s.jobOfferMap[jobOffer.ID] = &jobOffer
 
-	s.logWriters["job_offers"].Write(jobOffer)
 	return &jobOffer, nil
 }
 
@@ -51,7 +41,6 @@ func (s *SolverStoreMemory) AddResourceOffer(resourceOffer data.ResourceOfferCon
 	defer s.mutex.Unlock()
 	s.resourceOfferMap[resourceOffer.ID] = &resourceOffer
 
-	s.logWriters["resource_offers"].Write(resourceOffer)
 	return &resourceOffer, nil
 }
 
@@ -59,7 +48,7 @@ func (s *SolverStoreMemory) AddDeal(deal data.DealContainer) (*data.DealContaine
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.dealMap[deal.ID] = &deal
-	s.logWriters["deals"].Write(deal)
+
 	return &deal, nil
 }
 
@@ -67,7 +56,7 @@ func (s *SolverStoreMemory) AddResult(result data.Result) (*data.Result, error) 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.resultMap[result.DealID] = &result
-	s.logWriters["results"].Write(result)
+
 	return &result, nil
 }
 
@@ -86,7 +75,7 @@ func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer stri
 		Result:        result,
 	}
 	s.matchDecisionMap[id] = decision
-	s.logWriters["decisions"].Write(decision)
+
 	return decision, nil
 }
 
@@ -179,6 +168,26 @@ func (s *SolverStoreMemory) GetDealsAll() ([]data.DealContainer, error) {
 		deals = append(deals, *deal)
 	}
 	return deals, nil
+}
+
+func (s *SolverStoreMemory) GetResults() ([]data.Result, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	results := []data.Result{}
+	for _, result := range s.resultMap {
+		results = append(results, *result)
+	}
+	return results, nil
+}
+
+func (s *SolverStoreMemory) GetMatchDecisions() ([]data.MatchDecision, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	results := []data.MatchDecision{}
+	for _, decision := range s.matchDecisionMap {
+		results = append(results, *decision)
+	}
+	return results, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
@@ -380,5 +389,32 @@ func (s *SolverStoreMemory) RemoveResourceOffer(id string) error {
 	return nil
 }
 
-// Compile-time interface check:
+func (s *SolverStoreMemory) RemoveDeal(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	delete(s.dealMap, id)
+	return nil
+}
+
+func (s *SolverStoreMemory) RemoveResult(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	delete(s.resultMap, id)
+	return nil
+}
+
+func (s *SolverStoreMemory) RemoveMatchDecision(resourceOffer string, jobOffer string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for k := range s.matchDecisionMap {
+		if strings.Contains(k, jobOffer) || strings.Contains(k, resourceOffer) {
+			delete(s.matchDecisionMap, k)
+		}
+	}
+	return nil
+}
+
+// Strictly speaking, the compiler will check the interface
+// implementation without this check. But some code editors
+// report errors more effectively when we have it.
 var _ store.SolverStore = (*SolverStoreMemory)(nil)
