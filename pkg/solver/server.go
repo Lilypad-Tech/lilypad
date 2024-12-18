@@ -169,7 +169,7 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 			CountryCode: connParams.CountryCode,
 			IP:          connParams.IP,
 		})
-		solverServer.controller.removeResourceOfferByResourceProvider(connParams.ID)
+		solverServer.controller.removeUnmatchedResourceOffers(connParams.ID)
 	}
 }
 

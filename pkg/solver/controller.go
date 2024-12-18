@@ -404,7 +404,8 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	return ret, nil
 }
 
-func (controller *SolverController) removeResourceOfferByResourceProvider(ID string) error {
+// Remove resource offers in an unmatched DealNegotiating[0] state
+func (controller *SolverController) removeUnmatchedResourceOffers(ID string) error {
 	controller.log.Info("remove resource offer", ID)
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: ID,
