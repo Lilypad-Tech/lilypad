@@ -413,6 +413,8 @@ func (controller *SolverController) removeUnmatchedResourceOffers(ID string) err
 	if err != nil {
 		return err
 	}
+	// TODO Remove before merge
+	fmt.Printf("+++ resource offers before removal: %+v\n", resourceOffers)
 
 	for _, offer := range resourceOffers {
 		if offer.State == 0 {
@@ -422,6 +424,15 @@ func (controller *SolverController) removeUnmatchedResourceOffers(ID string) err
 			}
 		}
 	}
+
+	// TODO Remove before merge
+	offersAfter, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: ID,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("+++ resource offers after removal: %+v\n", offersAfter)
 
 	controller.writeEvent(SolverEvent{
 		EventType:     ResourceOfferRemoved,
