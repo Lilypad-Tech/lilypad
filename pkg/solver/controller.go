@@ -413,13 +413,13 @@ func (controller *SolverController) removeResourceOfferByResourceProvider(ID str
 		return err
 	}
 
-	if len(resourceOffers) == 0 {
-		return nil
-	}
-
-	err = controller.store.RemoveResourceOffer(resourceOffers[0].ID)
-	if err != nil {
-		return err
+	for _, offer := range resourceOffers {
+		if offer.State == 0 {
+			err = controller.store.RemoveResourceOffer(offer.ID)
+			if err != nil {
+				controller.log.Error("remove resource offer failed: %s", err)
+			}
+		}
 	}
 
 	controller.writeEvent(SolverEvent{
