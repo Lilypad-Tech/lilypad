@@ -142,6 +142,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 		return err
 	}
 	spinner.Stop()
+	fmt.Printf("🆔  Data ID: %s\n", result.Result.DataID)
 	fmt.Printf("\n🍂 Lilypad job completed, try 👇\n    open %s\n    cat %s/stdout\n    cat %s/stderr\n",
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
 		solver.GetDownloadsFilePath(result.JobOffer.DealID),
