@@ -19,6 +19,14 @@ func TestMatchOffers(t *testing.T) {
 			CPU: 1000,
 			GPU: 1000,
 			RAM: 1024,
+			GPUs: []data.GPUSpec{
+				{
+					Name:   "NVIDIA RTX 4090",
+					Vendor: "NVIDIA",
+					VRAM:   24576, // MB
+				},
+			},
+			Disk: 2924295844659, // Bytes
 		},
 		DefaultPricing: data.DealPricing{
 			InstructionPrice: 10,
@@ -29,9 +37,11 @@ func TestMatchOffers(t *testing.T) {
 
 	basicJobOffer := data.JobOffer{
 		Spec: data.MachineSpec{
-			CPU: 1000,
-			GPU: 1000,
-			RAM: 1024,
+			CPU:  1000,
+			GPU:  1000,
+			RAM:  1024,
+			GPUs: []data.GPUSpec{},
+			Disk: 0, // Bytes
 		},
 		Mode:     data.MarketPrice,
 		Services: services,
@@ -48,6 +58,13 @@ func TestMatchOffers(t *testing.T) {
 		Name: "lilysay",
 		Repo: "https://github.com/Lilypad-Tech/lilypad-module-lilysay",
 		Hash: "v0.5.2",
+		Path: "/lilypad_module.json.tmpl",
+	}
+
+	sdxlModuleConfig := data.ModuleConfig{
+		Name: "",
+		Repo: "https://github.com/Lilypad-Tech/lilypad-module-sdxl",
+		Hash: "v0.9-lilypad1",
 		Path: "/lilypad_module.json.tmpl",
 	}
 
@@ -96,6 +113,96 @@ func TestMatchOffers(t *testing.T) {
 			},
 			jobOffer: func(offer data.JobOffer) data.JobOffer {
 				offer.Spec.GPU = 2048
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "VRAM match when job creator specifies VRAM",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 20000}}
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "VRAM match when job creator does not specify VRAM",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.GPUs = []data.GPUSpec{}
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "VRAM requested is more than resource offer VRAM",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 40000}}
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "VRAM requested but resource offer has none",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.GPUs = []data.GPUSpec{}
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 49152}}
+				return offer
+			},
+			shouldMatch: false,
+		},
+		{
+			name: "Disk space match when job creator specifies disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.Disk = 1000000000000
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Disk space match when job creator does not specify disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Module = sdxlModuleConfig
+				offer.Spec.Disk = 0 // zero-value
+				return offer
+			},
+			shouldMatch: true,
+		},
+		{
+			name: "Disk space requested is more than resource offer disk space",
+			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
+				offer.Spec.Disk = 2924295844659 // Bytes
+				return offer
+			},
+			jobOffer: func(offer data.JobOffer) data.JobOffer {
+				offer.Spec.Disk = 4000000000000
 				return offer
 			},
 			shouldMatch: false,
@@ -212,7 +319,7 @@ func TestMatchOffers(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result := matchOffers(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
 			if result.matched() != tc.shouldMatch {
-				t.Errorf("Expected match to be %v, but got %v", tc.shouldMatch, result)
+				t.Errorf("Expected match to be %v, but got %+v", tc.shouldMatch, result)
 			}
 		})
 	}
