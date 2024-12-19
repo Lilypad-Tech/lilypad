@@ -17,10 +17,9 @@ A minimal local Lilypad network consists of the following pieces of infrastructu
 - One bacalhau node
 - One postgres database
 - One solver service
-- One job creator service
 - One resource provider service
 
-Order matters because the `solver`, `job creator` and `resource provider` will right away try to connect to the `blockchain node`. First, the `solver` will update the state of a known smart contract to publish a URL where other services can connect to it. Then, the `job creator`, and `resource provider` will fetch from the `blockchain` the URL for the `solver` and try to connect to it.
+Order matters because the `solver` and `resource provider` will right away try to connect to the `blockchain node`. First, the `solver` will update the state of a known smart contract to publish a URL where other services can connect to it. Then, the `resource provider` will fetch from the `blockchain` the URL for the `solver` and try to connect to it.
 
 ## Minimal local setup
 
@@ -39,11 +38,7 @@ A helper script is in place to verify balances on the accounts: `cd hardhat && n
 
 This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack solver`,`./stack solver-docker-build` and `./stack solver-docker-run` respectively. The `solver` service will output a log line that reads that "the solver has been registered successfully" or "the solver already exists". It is best to wait for this output before starting the services that will try to connect to the `solver`.
 
-### 3. Job creator
-
-This process can be executed directly if Golang has been installed or in a docker container. The commands are `./stack job-creator`,`./stack job-creator-docker-build` and `./stack job-creator-docker-run` respectively. The `job-creator` service's main function is to listen to events from the blockchain to execute jobs and when it receives such an event it will relay the payload to the `solver`. So think about the `job-creator` as the "on-chain solver".
-
-### 4. Resource provider
+### 3. Resource provider
 
 For the time being this process has to be executed directly and needs Golang to be installed. This is the command to execute the service: `./stack resource-provider`. If you have a GPU you can use the following flag to use it: `./stack resource-provider --offer-gpu 1`
 
@@ -76,7 +71,23 @@ Run `./stack compose-down`.
 
 ## Running a job
 
-Once all the services are up and running this command can be used to trigger an on-chain job: `./stack run-cowsay-onchain`
+Once all the services are up, run a cowsay job with:
+
+```sh
+./stack run cowsay:v0.0.4 -i Message="Hello!"
+```
+
+The `cowsay:v0.0.4` specifies the module to run with a short code and tag, but a module URL and tag can also be used:
+
+```sh
+./stack run github.com/Lilypad-Tech/lilypad-module-cowsay:v0.0.4 -i Message="Hello!"
+```
+
+Lastly, a module URL and git hash can be used:
+
+```sh
+./stack run github.com/Lilypad-Tech/lilypad-module-cowsay:cb8b670805b06206bd63603a8ba582638a619fe5 -i Message="Hello!"
+```
 
 ### Tests
 
@@ -110,6 +121,12 @@ ProviderError: failed with 51333200 gas: insufficient funds for gas * price + va
 This can be addressed by doing the following:
 
 - Open your Docker Desktop app, go to `Volumes` and delete `lilypad_chain-data` as there might be stale data in the volume not allowing you to properly execute all the transactions `chain-boot` executes
+
+## Onchain job creator
+
+This onchain job creator can be run directly if Golang has been installed. Run the onchain job creator with `./stack job-creator`. The onchain job creator service's main function is to listen to events from the blockchain to execute jobs and when it receives such an event it will relay the payload to the solver.
+
+We have an example script that submits a job the blockchain for the onchain job creator to pick up and run. Use `./stack run-cowsay-onchain` to run an onchain job. Note that all the services listed above must also be running.
 
 ### Issues running onchain cowsay
 
