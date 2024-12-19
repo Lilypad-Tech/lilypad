@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -51,6 +50,7 @@ func SetupLogging() {
 		logLevel = parsedLogLevel
 	}
 	zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
+	zerolog.SetGlobalLevel(logLevel)
 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
 }
 
@@ -80,19 +80,19 @@ func Trace(service Service, title string, data interface{}) {
 }
 
 func DumpObject(d interface{}) {
-	spew.Dump(d)
+	// spew.Dump(d)
 }
 
 func DumpObjectDebug(d interface{}) {
 	currentLogLevel := log.Logger.GetLevel()
 	if currentLogLevel <= zerolog.DebugLevel {
-		spew.Dump(d)
+		// spew.Dump(d)
 	}
 }
 
 func DumpObjectInfo(d interface{}) {
 	currentLogLevel := log.Logger.GetLevel()
 	if currentLogLevel <= zerolog.InfoLevel {
-		spew.Dump(d)
+		// spew.Dump(d)
 	}
 }

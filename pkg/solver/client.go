@@ -1,10 +1,12 @@
 package solver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"os"
+	"io"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -145,11 +147,25 @@ func (client *SolverClient) UpdateTransactionsMediator(id string, payload data.D
 }
 
 func (client *SolverClient) UploadResultFiles(id string, localPath string) (data.Result, error) {
-	buf, err := system.GetTarBuffer(localPath)
+
+	file, err := os.Open(localPath)
 	if err != nil {
-		return data.Result{}, err
+		return data.Result{}, fmt.Errorf("failed to open tar file: %w", err)
 	}
-	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), buf)
+	defer file.Close()
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, file); err != nil {
+		return data.Result{}, fmt.Errorf("failed to read tar file: %w", err) 
+	}
+
+	result, err := http.PostRequestBuffer[data.Result](
+		client.options, 
+		fmt.Sprintf("/deals/%s/files", id), 
+		&buf,
+	)
+
+	return result, err
 }
 
 func (client *SolverClient) DownloadResultFiles(id string, localPath string) error {
