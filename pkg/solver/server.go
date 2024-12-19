@@ -470,7 +470,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		}
 		// Only the job creator in a deal can download job outputs
 		if signerAddress != deal.JobCreator {
-			log.Error().Err(err).Msgf("resource provider address does not match signer address")
+			log.Error().Err(err).Msgf("job creator address does not match signer address")
 			return &http.HTTPError{
 				Message:    errors.New("not authorized").Error(),
 				StatusCode: corehttp.StatusUnauthorized,
