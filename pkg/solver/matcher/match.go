@@ -81,6 +81,50 @@ func (result ramMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
+type vramMismatch struct {
+	resourceOffer data.ResourceOffer
+	jobOffer      data.JobOffer
+}
+
+func (_ vramMismatch) matched() bool   { return false }
+func (_ vramMismatch) message() string { return "did not match VRAM" }
+func (result vramMismatch) attributes() []attribute.KeyValue {
+	var resourceOfferVRAMs []int
+	for _, gpu := range result.resourceOffer.Spec.GPUs {
+		resourceOfferVRAMs = append(resourceOfferVRAMs, gpu.VRAM)
+	}
+
+	var jobOfferVRAMS []int
+	for _, gpu := range result.jobOffer.Spec.GPUs {
+		jobOfferVRAMS = append(jobOfferVRAMS, gpu.VRAM)
+	}
+
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.IntSlice("match_result.resource_offer.spec.gpus.vram", resourceOfferVRAMs),
+		attribute.IntSlice("match_result.job_offer.spec.gpus.vram", jobOfferVRAMS),
+	}
+}
+
+type diskSpaceMismatch struct {
+	resourceOffer data.ResourceOffer
+	jobOffer      data.JobOffer
+}
+
+func (_ diskSpaceMismatch) matched() bool   { return false }
+func (_ diskSpaceMismatch) message() string { return "did not match disk space" }
+func (result diskSpaceMismatch) attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("match_result", fmt.Sprintf("%T", result)),
+		attribute.Bool("match_result.matched", result.matched()),
+		attribute.String("match_result.message", result.message()),
+		attribute.Int("match_result.job_offer.spec.disk", result.jobOffer.Spec.Disk),
+		attribute.Int("match_result.resource_offer.spec.disk", result.resourceOffer.Spec.Disk),
+	}
+}
+
 type moduleIDError struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
@@ -227,6 +271,34 @@ func matchOffers(
 		}
 	}
 
+	// Skip VRAM check when job offer does not request VRAM
+	if len(jobOffer.Spec.GPUs) > 0 {
+		// Mismatch if job offer requests VRAM but resource provider has none
+		if len(resourceOffer.Spec.GPUs) == 0 {
+			return &vramMismatch{
+				jobOffer:      jobOffer,
+				resourceOffer: resourceOffer,
+			}
+		}
+
+		// Mismatch if job offer largest VRAM is greater than resource offer largest VRAM
+		largestResourceOfferVRAM := getLargestVRAM(resourceOffer.Spec.GPUs)
+		largestJobOfferVRAM := getLargestVRAM(jobOffer.Spec.GPUs)
+		if largestResourceOfferVRAM < largestJobOfferVRAM {
+			return &vramMismatch{
+				jobOffer:      jobOffer,
+				resourceOffer: resourceOffer,
+			}
+		}
+	}
+
+	if resourceOffer.Spec.Disk < jobOffer.Spec.Disk {
+		return &diskSpaceMismatch{
+			jobOffer:      jobOffer,
+			resourceOffer: resourceOffer,
+		}
+	}
+
 	moduleID, err := data.GetModuleID(jobOffer.Module)
 	if err != nil {
 		return &moduleIDError{
@@ -293,6 +365,16 @@ func matchOffers(
 		jobOffer:      jobOffer,
 		resourceOffer: resourceOffer,
 	}
+}
+
+func getLargestVRAM(gpus []data.GPUSpec) int {
+	largestVRAM := 0
+	for _, gpu := range gpus {
+		if gpu.VRAM > largestVRAM {
+			largestVRAM = gpu.VRAM
+		}
+	}
+	return largestVRAM
 }
 
 func logMatch(result matchResult) {
