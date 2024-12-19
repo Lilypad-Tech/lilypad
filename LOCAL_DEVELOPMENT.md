@@ -89,6 +89,8 @@ Lastly, a module URL and git hash can be used:
 ./stack run github.com/Lilypad-Tech/lilypad-module-cowsay:cb8b670805b06206bd63603a8ba582638a619fe5 -i Message="Hello!"
 ```
 
+The `-i Message="Hello!"` states the input to the module. `Message="Hello!"` is an input expected by the cowsay module. Other modules may expect a different set of input key-value pairs.
+
 ### Tests
 
 Run the Go unit tests with `./stack unit-tests` and the Hardhat unit tests with `./stack unit-tests-hardhat`.
