@@ -418,7 +418,8 @@ func (controller *SolverController) removeUnmatchedResourceOffers(ID string) err
 		if offer.State == 0 {
 			err = controller.store.RemoveResourceOffer(offer.ID)
 			if err != nil {
-				controller.log.Error("remove resource offer failed: %s", err)
+				controller.log.Error("remove resource offer failed",
+					fmt.Errorf("resource provider: %s, offer ID: %s, error: %s", ID, offer.ID, err))
 			}
 		}
 	}
