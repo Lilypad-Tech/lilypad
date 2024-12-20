@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	corehttp "net/http"
@@ -277,12 +278,12 @@ func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *co
 *
 */
 func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the job creator can post a job offer
+	// Only the job creator can post their job offer
 	if signerAddress != jobOffer.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
@@ -298,12 +299,12 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	versionHeader, _ := http.GetVersionFromHeaders(req)
 	log.Debug().Msgf("resource provider adding offer with version header %s", versionHeader)
 
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the job creator can post a job offer
+	// Only the resource provider can post their resource offer
 	if signerAddress != resourceOffer.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
@@ -326,12 +327,12 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the resource provider can add a result
+	// Only the resource provider in a deal can add a result
 	if signerAddress != deal.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
@@ -367,12 +368,12 @@ func (solverServer *solverServer) updateTransactionsResourceProvider(payload dat
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the job creator can post a job offer
+	// Only the resource provider in a deal can update its transactions
 	if signerAddress != deal.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
@@ -391,12 +392,12 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the job creator can post a job offer
+	// Only the job creator in a deal can update its transactions
 	if signerAddress != deal.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
@@ -415,12 +416,12 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 		log.Error().Err(err).Msgf("deal not found")
 		return nil, fmt.Errorf("deal not found")
 	}
-	signerAddress, err := http.GetAddressFromHeaders(req)
+	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("have error parsing user address")
+		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
-	// only the job creator can post a job offer
+	// Only the mediator in a deal can update its transactions
 	if signerAddress != deal.Mediator {
 		return nil, fmt.Errorf("job creator address does not match mediator address")
 	}
@@ -458,6 +459,24 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 				StatusCode: corehttp.StatusNotFound,
 			}
 		}
+
+		signerAddress, err := http.CheckSignature(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("error checking signature")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+		// Only the job creator in a deal can download job outputs
+		if signerAddress != deal.JobCreator {
+			log.Error().Err(err).Msgf("job creator address does not match signer address")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
 		filesPath := GetDealsFilePath(id)
 		// check if the filesPath directory exists
 		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
@@ -500,12 +519,12 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 			log.Error().Msgf("deal not found")
 			return err
 		}
-		signerAddress, err := http.GetAddressFromHeaders(req)
+		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
-			log.Error().Err(err).Msgf("have error parsing user address")
+			log.Error().Err(err).Msgf("error checking signature")
 			return err
 		}
-		// only the resource provider can add a result
+		// Only the resource provider in a deal can upload job outputs
 		if signerAddress != deal.ResourceProvider {
 			return fmt.Errorf("resource provider address does not match signer address")
 		}
