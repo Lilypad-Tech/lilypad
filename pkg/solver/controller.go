@@ -404,22 +404,24 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	return ret, nil
 }
 
-func (controller *SolverController) removeResourceOfferByResourceProvider(ID string) error {
-	controller.log.Info("remove resource offer", ID)
+// Remove resource offers in an unmatched DealNegotiating[0] state
+func (controller *SolverController) removeUnmatchedResourceOffers(resourceProviderID string) error {
+	controller.log.Info("remove resource offer", resourceProviderID)
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
-		ResourceProvider: ID,
+		ResourceProvider: resourceProviderID,
 	})
 	if err != nil {
 		return err
 	}
 
-	if len(resourceOffers) == 0 {
-		return nil
-	}
-
-	err = controller.store.RemoveResourceOffer(resourceOffers[0].ID)
-	if err != nil {
-		return err
+	for _, offer := range resourceOffers {
+		if offer.State == 0 {
+			err = controller.store.RemoveResourceOffer(offer.ID)
+			if err != nil {
+				controller.log.Error("remove resource offer failed",
+					fmt.Errorf("resource provider: %s, offer ID: %s, error: %s", resourceProviderID, offer.ID, err))
+			}
+		}
 	}
 
 	controller.writeEvent(SolverEvent{
