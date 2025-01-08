@@ -90,8 +90,7 @@ func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
 		common.HexToAddress(address),
 	)
 	if err != nil {
-		log.Error().Msgf("GetUser error")
-		log.Error().Msgf("error: %s", err)
+		log.Error().Msgf("Failed to discover solver URL: %s", err)
 		return "", err
 	}
 
