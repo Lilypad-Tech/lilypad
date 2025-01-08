@@ -477,9 +477,12 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 			}
 		}
 
-		filesPath := GetDealsFilePath(id)
-		// check if the filesPath directory exists
-		if _, err := os.Stat(filesPath); os.IsNotExist(err) {
+		// Get the directory path
+		dirPath := GetDealsFilePath(id)
+
+		// Read directory contents
+		files, err := os.ReadDir(dirPath)
+		if err != nil {
 			return &http.HTTPError{
 				Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
 				StatusCode: corehttp.StatusNotFound,
