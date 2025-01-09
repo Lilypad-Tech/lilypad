@@ -1,45 +1,38 @@
 package bacalhau
 
 import (
-	"bufio"
-	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
+
+	"github.com/bacalhau-project/bacalhau/pkg/models"
+	"github.com/ipfs/boxo/files"
+	"github.com/ipfs/kubo/core"
+	"github.com/ipfs/kubo/core/coreapi"
+	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
-	"github.com/bacalhau-project/bacalhau/pkg/models"
-	"github.com/ipfs/boxo/blockservice"
-	blockstore "github.com/ipfs/boxo/blockstore"
-	chunker "github.com/ipfs/boxo/chunker"
-	offline "github.com/ipfs/boxo/exchange/offline"
-	"github.com/ipfs/boxo/ipld/merkledag"
-	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
-	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
-	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-datastore"
-	dsync "github.com/ipfs/go-datastore/sync"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	multicodec "github.com/multiformats/go-multicodec"
 )
 
 const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
-	ApiHost string
+	ApiHost               string
 	ApiPort               string
 	JobStatusPollInterval uint64
 	ResultsDirectory      string
 }
 
 type BacalhauExecutor struct {
-	Options     BacalhauExecutorOptions
-	bacalhauEnv []string
+	Options        BacalhauExecutorOptions
+	bacalhauEnv    []string
 	bacalhauClient BacalhauClient
 }
 
@@ -53,7 +46,7 @@ func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, er
 	}
 
 	return &BacalhauExecutor{
-		Options: options,
+		Options:        options,
 		bacalhauClient: *client,
 	}, nil
 }
@@ -142,16 +135,22 @@ func (executor *BacalhauExecutor) RunJob(
 		time.Sleep(time.Duration(executor.Options.JobStatusPollInterval) * time.Second)
 	}
 
-	system.EnsureDataDir(RESULTS_DIR)
-	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
+	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, deal.ID))
+	if err != nil {
+		return nil, fmt.Errorf("error creating results directory: %s", err.Error())
+	}
+	outputDir, err := executor.fetchResults(jobId, resultsDir)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching results: %s", err.Error())
+	}
 
-	cid, resultsDir, err := executor.prepareResults(jobId, jobExecutions[0].ID)
+	cid, err := executor.prepareResults(outputDir)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing results: %s", err.Error())
 	}
 
 	results := &executorlib.ExecutorResults{
-		ResultsDir:       resultsDir,
+		ResultsDir:       outputDir,
 		ResultsCID:       cid,
 		InstructionCount: 1,
 	}
@@ -159,95 +158,95 @@ func (executor *BacalhauExecutor) RunJob(
 	return results, nil
 }
 
-func (executor *BacalhauExecutor) prepareResults(jobId string, executionId string) (cid string, resultsDir string, err error) {
-
-	resultsPath := filepath.Join(executor.Options.ResultsDirectory, fmt.Sprintf("%s.tar.gz", executionId))
-
-	gzipFile, err := os.Open(resultsPath)
+func (executor *BacalhauExecutor) fetchResults(jobId string, resultsDir string) (string, error) {
+	resultsUrl, err := executor.bacalhauClient.getJobResult(jobId)
 	if err != nil {
-		return "", "", fmt.Errorf("error opening gzip file: %s", err.Error())
-	}
-	defer gzipFile.Close()
-
-	gzipReader, err := gzip.NewReader(gzipFile)
-	if err != nil {
-		return "", "", fmt.Errorf("error creating gzip reader: %s", err.Error())
-	}
-	defer gzipReader.Close()
-
-	tarPath := strings.TrimSuffix(resultsPath, ".gz")
-	tarFile, err := os.Create(tarPath)
-	if err != nil {
-		return "", "", fmt.Errorf("error creating tar file: %s", err.Error())
-	}
-	defer tarFile.Close()
-
-	_, err = io.Copy(tarFile, gzipReader)
-	if err != nil {
-		return "", "", fmt.Errorf("error writing tar file: %s", err.Error())
+		return "", fmt.Errorf("error fetching results: %s", err.Error())
 	}
 
-	resultsPath = tarPath
-
-	go func() {
-		if err := os.Remove(resultsPath + ".gz"); err != nil {
-			log.Printf("error removing gzip file: %s", err.Error())
-		}
-	}()
-
-	cid, err = GenerateCID(resultsPath)
+	// We need to make sure we use BACALHAU_HOST to get the correct URL
+	u, err := url.Parse(resultsUrl)
 	if err != nil {
-		return "", "", fmt.Errorf("error generating CID: %s", err.Error())
+		return "", fmt.Errorf("error parsing URL: %s", err.Error())
+	}
+	u.Host = fmt.Sprintf("%s:%s", executor.Options.ApiHost, u.Port())
+	resultsUrl = u.String()
+
+	// Create the file
+	tarballPath := filepath.Join(resultsDir, fmt.Sprintf("%s.tar.gz", jobId))
+	out, err := os.Create(tarballPath)
+	if err != nil {
+		return "", fmt.Errorf("error creating file: %s", err.Error())
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(resultsUrl)
+	if err != nil {
+		return "", fmt.Errorf("error making GET request: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	return cid, resultsPath, nil
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error writing to file: %s", err.Error())
+	}
 
+	// Extract the tar.gz file
+	outputPath := filepath.Join(resultsDir, jobId)
+	err = executorlib.ExtractTarGz(tarballPath, outputPath)
+	if err != nil {
+		return "", fmt.Errorf("error extracting tar.gz file: %s", err.Error())
+	}
+	return outputPath, nil
 }
 
-func GenerateCID(path string) (string, error) {
-	file, err := os.Open(path)
+func (executor *BacalhauExecutor) prepareResults(resultsDir string) (string, error) {
+	cid, err := generateCID(resultsDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to open file %s: %w", path, err)
-	}
-	defer file.Close()
-
-	ds := dsync.MutexWrap(datastore.NewNullDatastore())
-	bs := blockstore.NewBlockstore(ds)
-	bs = blockstore.NewIdStore(bs)
-	bsrv := blockservice.New(bs, offline.Exchange(bs))
-	dsrv := merkledag.NewDAGService(bsrv)
-
-	defer func() {
-		if err := bsrv.Close(); err != nil {
-			log.Printf("failed to close blockservice: %v", err)
-		}
-	}()
-
-	ufsImportParams := uih.DagBuilderParams{
-		Maxlinks:  uih.DefaultLinksPerBlock,
-		RawLeaves: true,
-		CidBuilder: cid.V1Builder{
-			Codec:    uint64(multicodec.Raw),
-			MhType:   uint64(multicodec.Sha2_256),
-			MhLength: -1,
-		},
-		Dagserv: dsrv,
-		NoCopy:  false,
+		return "", fmt.Errorf("error generating CID: %s", err.Error())
 	}
 
-	bufReader := bufio.NewReader(file)
+	return cid, nil
+}
 
-	ufsBuilder, err := ufsImportParams.New(chunker.NewSizeSplitter(bufReader, chunker.DefaultBlockSize))
+// generateCID generates a CID for a given path
+// This mimics the behavior of `ipfs add -Qrn /path`
+func generateCID(path string) (string, error) {
+	ctx := context.Background()
+
+	stat, err := os.Stat(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to create UnixFS builder: %w", err)
+		return "", fmt.Errorf("error getting file info: %s", err.Error())
 	}
-
-	nd, err := balanced.Layout(ufsBuilder)
+	fsNode, err := files.NewSerialFile(path, false, stat)
 	if err != nil {
-		return "", fmt.Errorf("failed to create DAG layout: %w", err)
+		return "", fmt.Errorf("error creating serial file: %s", err.Error())
 	}
 
-	return nd.Cid().String(), nil
+	node, err := core.NewNode(ctx, &core.BuildCfg{
+		Online: false,
+	})
+	api, err := coreapi.NewCoreAPI(node)
+	if err != nil {
+		return "", fmt.Errorf("error creating core API: %s", err.Error())
+	}
+
+	opts := []options.UnixfsAddOption{
+		options.Unixfs.HashOnly(true),
+	}
+	root, err := api.Unixfs().Add(ctx, fsNode, opts...)
+	if err != nil {
+		return "", fmt.Errorf("error adding to UnixFS: %s", err.Error())
+	}
+
+	return root.RootCid().String(), nil
 }
 
 func (executor *BacalhauExecutor) getJobID(
