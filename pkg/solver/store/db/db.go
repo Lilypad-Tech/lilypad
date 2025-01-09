@@ -43,6 +43,7 @@ func NewSolverStoreDatabase(connStr string, gormLogLevel string) (*SolverStoreDa
 	db.AutoMigrate(&Deal{})
 	db.AutoMigrate(&Result{})
 	db.AutoMigrate(&MatchDecision{})
+	db.AutoMigrate(&AllowedResourceProvider{})
 
 	return &SolverStoreDatabase{db}, nil
 }

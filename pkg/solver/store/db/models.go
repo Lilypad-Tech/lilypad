@@ -47,3 +47,8 @@ type MatchDecision struct {
 	JobOffer      string `gorm:"primaryKey"`
 	Attributes    datatypes.JSONType[data.MatchDecision]
 }
+
+type AllowedResourceProvider struct {
+	gorm.Model
+	ResourceProvider string `gorm:"index"`
+}
