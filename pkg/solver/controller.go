@@ -611,4 +611,3 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 	})
 	return dealContainer, nil
 }
-

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -78,7 +80,9 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 			return
 		}
 
-		
+		fmt.Printf("result --------------------------------------\n")
+		spew.Dump(result)
+		spew.Dump(int64(onChainID))
 
 		tx, err := jobCreator.web3SDK.Contracts.JobCreator.SubmitResults(jobCreator.web3SDK.TransactOpts, big.NewInt(int64(onChainID)), evOffer.DealID, result.DataID)
 		if err != nil {

@@ -72,7 +72,7 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	}
 
 	if version < "v1.5.1" {
-		return false, errors.New("Bacalhau version must be v1.5.1")
+		return false, errors.New("Bacalhau version must be greater than v1.5.1")
 	}
 
 	return true, nil
@@ -107,7 +107,6 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
-	fmt.Printf("Running job: %s\n", deal.ID)
 	jobId, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err

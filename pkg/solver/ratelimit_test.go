@@ -1,4 +1,4 @@
-//go:build integration
+//go:build integration && solver
 
 package solver_test
 
