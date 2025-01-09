@@ -29,11 +29,11 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 }
 
 func CheckSolverOptions(options solver.SolverOptions) error {
-	err := CheckServerOptions(options.Server)
+	err := CheckStoreOptions(options.Store)
 	if err != nil {
 		return err
 	}
-	err = CheckStoreOptions(options.Store)
+	err = CheckServerOptions(options.Server, options.Store.Type)
 	if err != nil {
 		return err
 	}
