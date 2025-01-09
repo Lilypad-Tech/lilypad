@@ -48,7 +48,7 @@ jobs:
       - name: Start base services
         run: |
           ./stack compose-services -d
-          sleep 5
+          sleep 30
 
       - name: Start solver
         run: |
