@@ -27,7 +27,6 @@ type BacalhauExecutorOptions struct {
 	ApiHost               string
 	ApiPort               string
 	JobStatusPollInterval uint64
-	ResultsDirectory      string
 }
 
 type BacalhauExecutor struct {

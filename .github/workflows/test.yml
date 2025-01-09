@@ -64,7 +64,7 @@ jobs:
           sleep 5
 
       - name: Run main integration tests
-        run: ./stack integration-tests || true
+        run: ./stack integration-tests
 
       - name: Display solver logs
         run: cat solver.log
