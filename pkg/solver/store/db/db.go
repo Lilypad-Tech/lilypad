@@ -136,6 +136,19 @@ func (store *SolverStoreDatabase) AddMatchDecision(resourceOffer string, jobOffe
 	return decision, nil
 }
 
+func (store *SolverStoreDatabase) AddAllowedResourceProvider(resourceProvider string) (string, error) {
+	record := AllowedResourceProvider{
+		ResourceProvider: resourceProvider,
+	}
+
+	result := store.db.Create(&record)
+	if result.Error != nil {
+		return "", result.Error
+	}
+
+	return resourceProvider, nil
+}
+
 func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
 	q := store.db.Where([]JobOffer{})
 
@@ -273,6 +286,20 @@ func (store *SolverStoreDatabase) GetMatchDecisions() ([]data.MatchDecision, err
 	}
 
 	return decisions, nil
+}
+
+func (store *SolverStoreDatabase) GetAllowedResourceProviders() ([]string, error) {
+	var records []AllowedResourceProvider
+	if err := store.db.Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	providers := make([]string, len(records))
+	for i, record := range records {
+		providers[i] = record.ResourceProvider
+	}
+
+	return providers, nil
 }
 
 func (store *SolverStoreDatabase) GetJobOffer(id string) (*data.JobOfferContainer, error) {
@@ -619,6 +646,14 @@ func (store *SolverStoreDatabase) RemoveMatchDecision(resourceOffer string, jobO
 		return result.Error
 	}
 
+	return nil
+}
+
+func (store *SolverStoreDatabase) RemoveAllowedResourceProvider(resourceProvider string) error {
+	result := store.db.Where("resource_provider = ?", resourceProvider).Delete(&AllowedResourceProvider{})
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
 
