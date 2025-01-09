@@ -85,13 +85,6 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-	mediator, err := getMediator(t, commandCtx, options)
-	if err != nil {
-		return nil, err
-	}
-
-	mediator.Start(commandCtx.Ctx, commandCtx.Cm)
-
 	jobCreatorOptions, err := getJobCreatorOptions(options)
 	if err != nil {
 		return nil, err
