@@ -106,20 +106,20 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
-	jobId, err := executor.getJobID(deal, module)
+	jobID, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
 	var jobExecutions []*models.Execution
 	for {
-		jobInfo, err := executor.bacalhauClient.getJob(jobId)
+		jobInfo, err := executor.bacalhauClient.getJob(jobID)
 		if err != nil {
-			return nil, fmt.Errorf("error getting job %s: %s", jobId, err.Error())
+			return nil, fmt.Errorf("error getting job %s: %s", jobID, err.Error())
 		}
 
 		if jobInfo.Executions == nil {
-			return nil, fmt.Errorf("no executions retrieved for job %s", jobId)
+			return nil, fmt.Errorf("no executions retrieved for job %s", jobID)
 		}
 
 		jobExecutions = jobInfo.Executions.Items
@@ -137,7 +137,7 @@ func (executor *BacalhauExecutor) RunJob(
 	if err != nil {
 		return nil, fmt.Errorf("error creating results directory: %s", err.Error())
 	}
-	outputDir, err := executor.fetchResults(jobId, resultsDir)
+	outputDir, err := executor.fetchResults(jobID, resultsDir)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching results: %s", err.Error())
 	}
@@ -156,22 +156,22 @@ func (executor *BacalhauExecutor) RunJob(
 	return results, nil
 }
 
-func (executor *BacalhauExecutor) fetchResults(jobId string, resultsDir string) (string, error) {
-	resultsUrl, err := executor.bacalhauClient.getJobResult(jobId)
+func (executor *BacalhauExecutor) fetchResults(jobID string, resultsDir string) (string, error) {
+	resultsURL, err := executor.bacalhauClient.getJobResult(jobID)
 	if err != nil {
 		return "", fmt.Errorf("error fetching results: %s", err.Error())
 	}
 
 	// We need to make sure we use BACALHAU_HOST to get the correct URL
-	u, err := url.Parse(resultsUrl)
+	u, err := url.Parse(resultsURL)
 	if err != nil {
 		return "", fmt.Errorf("error parsing URL: %s", err.Error())
 	}
 	u.Host = fmt.Sprintf("%s:%s", executor.Options.ApiHost, u.Port())
-	resultsUrl = u.String()
+	resultsURL = u.String()
 
 	// Create the file
-	tarballPath := filepath.Join(resultsDir, fmt.Sprintf("%s.tar.gz", jobId))
+	tarballPath := filepath.Join(resultsDir, fmt.Sprintf("%s.tar.gz", jobID))
 	out, err := os.Create(tarballPath)
 	if err != nil {
 		return "", fmt.Errorf("error creating file: %s", err.Error())
@@ -179,7 +179,7 @@ func (executor *BacalhauExecutor) fetchResults(jobId string, resultsDir string) 
 	defer out.Close()
 
 	// Get the data
-	resp, err := http.Get(resultsUrl)
+	resp, err := http.Get(resultsURL)
 	if err != nil {
 		return "", fmt.Errorf("error making GET request: %s", err.Error())
 	}
@@ -197,7 +197,7 @@ func (executor *BacalhauExecutor) fetchResults(jobId string, resultsDir string) 
 	}
 
 	// Extract the tar.gz file
-	outputPath := filepath.Join(resultsDir, jobId)
+	outputPath := filepath.Join(resultsDir, jobID)
 	err = executorlib.ExtractTarGz(tarballPath, outputPath)
 	if err != nil {
 		return "", fmt.Errorf("error extracting tar.gz file: %s", err.Error())
