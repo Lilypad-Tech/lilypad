@@ -39,28 +39,38 @@ jobs:
       - name: Install node
         uses: actions/setup-node@v4
 
-      - name: Build Docker Images
-        run: ./stack compose-build
+      - name: Build Base Docker Images
+        run: ./stack compose-build-services
 
       - name: Initialize chain
         run: ./stack compose-init
 
-      - name: Run stack
-        env:
-          DISABLE_TELEMETRY: true
-          API_HOST: ""
-        run: ./stack compose-up -d
+      - name: Start base services
+        run: |
+          ./stack compose-services -d
+          sleep 5
 
-      - name: Run tests
-        env:
-          LOG_LEVEL: debug
+      - name: Start solver
+        run: |
+          ./stack solver --disable-telemetry=true --api-host="" > solver.log &
+          sleep 5
+
+      - name: Run solver integration tests
+        run: ./stack integration-tests-solver
+
+      - name: Start resource provider
+        run: |
+          ./stack resource-provider --disable-telemetry=true --api-host="" > resource-provider.log &
+          sleep 5
+
+      - name: Run main integration tests
         run: ./stack integration-tests
 
-      - name: Display resource provider logs
-        run: docker logs resource-provider
-
       - name: Display solver logs
-        run: docker logs solver
+        run: cat solver.log
+
+      - name: Display resource provider logs
+        run: cat resource-provider.log
 
       - name: Display chain logs
         run: docker logs chain

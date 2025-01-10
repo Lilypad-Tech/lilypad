@@ -2,115 +2,85 @@ package bacalhau
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
+	"time"
 
+	"github.com/bacalhau-project/bacalhau/pkg/models"
+	"github.com/ipfs/boxo/files"
+	"github.com/ipfs/kubo/core"
+	"github.com/ipfs/kubo/core/coreapi"
+	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/data/bacalhau"
 	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
-	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/rs/zerolog/log"
 )
 
 const RESULTS_DIR = "bacalhau-results"
 
 type BacalhauExecutorOptions struct {
-	ApiHost string
-	ApiPort string
+	ApiHost               string
+	ApiPort               string
+	JobStatusPollInterval uint64
 }
 
 type BacalhauExecutor struct {
 	Options        BacalhauExecutorOptions
 	bacalhauEnv    []string
 	bacalhauClient BacalhauClient
-	ipfsClient     *ipfs.Client
 }
 
-func NewBacalhauExecutor(options BacalhauExecutorOptions, ipfsClient *ipfs.Client) (*BacalhauExecutor, error) {
-	client, err := newClient(options)
+func NewBacalhauExecutor(options BacalhauExecutorOptions) (*BacalhauExecutor, error) {
+
+	apiHost := fmt.Sprintf("http://%s:%s", options.ApiHost, options.ApiPort)
+
+	client, err := newBacalhauClient(apiHost)
 	if err != nil {
 		return nil, err
 	}
 
-	apiHost := ""
-	if options.ApiHost != "DO_NOT_SET" {
-		apiHost = fmt.Sprintf("BACALHAU_API_HOST=%s", options.ApiHost)
-	}
-	bacalhauEnv := []string{
-		apiHost,
-		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
-	}
-	log.Debug().Msgf("bacalhauEnv: %s", bacalhauEnv)
-
 	return &BacalhauExecutor{
 		Options:        options,
-		bacalhauEnv:    bacalhauEnv,
 		bacalhauClient: *client,
-		ipfsClient:     ipfsClient,
 	}, nil
 }
 
 func (executor *BacalhauExecutor) Id() (string, error) {
-	nodeIdCmd := exec.Command(
-		"bacalhau",
-		"id",
-	)
-	nodeIdCmd.Env = executor.bacalhauEnv
-
-	runOutputRaw, err := nodeIdCmd.CombinedOutput()
+	id, err := executor.bacalhauClient.getID()
 	if err != nil {
-		return "", fmt.Errorf("error calling get id results %s, %s", err.Error(), runOutputRaw)
+		return "", fmt.Errorf("error getting bacalhau ID %s", err.Error())
 	}
-
-	splitOutputs := strings.Split(strings.Trim(string(runOutputRaw), " \t\n"), "\n")
-	runOutput := splitOutputs[len(splitOutputs)-1]
-
-	var idResult struct {
-		ID       string
-		ClientID string
-	}
-	err = json.Unmarshal([]byte(runOutput), &idResult)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshalling job JSON %s %s", err.Error(), runOutputRaw)
-	}
-
-	return idResult.ID, nil
+	return id, nil
 }
 
 // Checks that Bacalhau is installed, correctly configured, and available
 func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
-	isAlive, err := executor.bacalhauClient.alive()
-	if !isAlive || err != nil {
+	alive, err := executor.bacalhauClient.alive()
+	if !alive || err != nil {
 		return false, fmt.Errorf("Bacalhau is not currently available. Please ensure that Bacalhau is running, then try again. %w", err)
 	}
 
-	// Check that we have the right version of Bacalhau
 	version, err := executor.bacalhauClient.getVersion()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error getting bacalhau version %s", err.Error())
 	}
-	// TODO: we may want to relax this
-	if version.GitVersion != "v1.3.2" {
-		return false, errors.New("Bacalhau version must be v1.3.2")
+
+	if version < "v1.5.1" {
+		return false, errors.New("Bacalhau version must be greater than v1.5.1")
 	}
 
 	return true, nil
 }
 
 func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
+	nodes, err := executor.bacalhauClient.getNodes()
 	var specs []data.MachineSpec
-	result, err := executor.bacalhauClient.getNodes()
-	if err != nil {
-		return specs, err
-	}
-
-	for _, node := range result.Nodes {
+	for _, node := range nodes {
 		spec := data.MachineSpec{
 			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "milli-CPU"
 			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
@@ -126,6 +96,9 @@ func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) 
 		}
 		specs = append(specs, spec)
 	}
+	if err != nil {
+		return nil, err
+	}
 	return specs, nil
 }
 
@@ -133,114 +106,159 @@ func (executor *BacalhauExecutor) RunJob(
 	deal data.DealContainer,
 	module data.Module,
 ) (*executorlib.ExecutorResults, error) {
-	id, err := executor.getJobID(deal, module)
+	jobID, err := executor.getJobID(deal, module)
 	if err != nil {
 		return nil, err
 	}
 
-	jobState, err := executor.getJobState(deal.ID, id)
+	var jobExecutions []*models.Execution
+	for {
+		jobInfo, err := executor.bacalhauClient.getJob(jobID)
+		if err != nil {
+			return nil, fmt.Errorf("error getting job %s: %s", jobID, err.Error())
+		}
+
+		if jobInfo.Executions == nil {
+			return nil, fmt.Errorf("no executions retrieved for job %s", jobID)
+		}
+
+		jobExecutions = jobInfo.Executions.Items
+
+		if len(jobExecutions) > 0 {
+			if jobInfo.Job.State.StateType == models.JobStateTypeCompleted {
+				break
+			}
+		}
+
+		time.Sleep(time.Duration(executor.Options.JobStatusPollInterval) * time.Second)
+	}
+
+	resultsDir, err := system.EnsureDataDir(filepath.Join(RESULTS_DIR, deal.ID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating results directory: %s", err.Error())
 	}
-
-	if len(jobState.State.Executions) <= 0 {
-		return nil, fmt.Errorf("no executions found for job %s", id)
-	}
-
-	// Check that the job completed successfully
-	if jobState.State.State != bacalhau.JobStateCompleted {
-		return nil, fmt.Errorf("job %s did not complete successfully: %s", id, jobState.State.State.String())
-	}
-
-	system.EnsureDataDir(RESULTS_DIR)
-	resultsDir := system.GetDataDir(filepath.Join(RESULTS_DIR, deal.ID))
-	cidString := jobState.State.Executions[0].PublishedResult.CID
-	err = executor.ipfsClient.Get(context.Background(), cidString, resultsDir)
+	outputDir, err := executor.fetchResults(jobID, resultsDir)
 	if err != nil {
-		return nil, fmt.Errorf("error getting results from IPFS %s -> %s", deal.ID, err)
+		return nil, fmt.Errorf("error fetching results: %s", err.Error())
 	}
 
-	// TODO: we should think about WASM and instruction count here
+	cid, err := executor.prepareResults(outputDir)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing results: %s", err.Error())
+	}
+
 	results := &executorlib.ExecutorResults{
-		ResultsDir:       resultsDir,
-		ResultsCID:       jobState.State.Executions[0].PublishedResult.CID,
+		ResultsDir:       outputDir,
+		ResultsCID:       cid,
 		InstructionCount: 1,
 	}
 
 	return results, nil
 }
 
-// run the bacalhau job and return the job ID
+func (executor *BacalhauExecutor) fetchResults(jobID string, resultsDir string) (string, error) {
+	resultsURL, err := executor.bacalhauClient.getJobResult(jobID)
+	if err != nil {
+		return "", fmt.Errorf("error fetching results: %s", err.Error())
+	}
+
+	// We need to make sure we use BACALHAU_HOST to get the correct URL
+	u, err := url.Parse(resultsURL)
+	if err != nil {
+		return "", fmt.Errorf("error parsing URL: %s", err.Error())
+	}
+	u.Host = fmt.Sprintf("%s:%s", executor.Options.ApiHost, u.Port())
+	resultsURL = u.String()
+
+	// Create the file
+	tarballPath := filepath.Join(resultsDir, fmt.Sprintf("%s.tar.gz", jobID))
+	out, err := os.Create(tarballPath)
+	if err != nil {
+		return "", fmt.Errorf("error creating file: %s", err.Error())
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(resultsURL)
+	if err != nil {
+		return "", fmt.Errorf("error making GET request: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error writing to file: %s", err.Error())
+	}
+
+	// Extract the tar.gz file
+	outputPath := filepath.Join(resultsDir, jobID)
+	err = executorlib.ExtractTarGz(tarballPath, outputPath)
+	if err != nil {
+		return "", fmt.Errorf("error extracting tar.gz file: %s", err.Error())
+	}
+	return outputPath, nil
+}
+
+func (executor *BacalhauExecutor) prepareResults(resultsDir string) (string, error) {
+	cid, err := generateCID(resultsDir)
+	if err != nil {
+		return "", fmt.Errorf("error generating CID: %s", err.Error())
+	}
+
+	return cid, nil
+}
+
+// generateCID generates a CID for a given path
+// This mimics the behavior of `ipfs add -Qrn /path`
+func generateCID(path string) (string, error) {
+	ctx := context.Background()
+
+	stat, err := os.Stat(path)
+	if err != nil {
+		return "", fmt.Errorf("error getting file info: %s", err.Error())
+	}
+	fsNode, err := files.NewSerialFile(path, false, stat)
+	if err != nil {
+		return "", fmt.Errorf("error creating serial file: %s", err.Error())
+	}
+
+	node, err := core.NewNode(ctx, &core.BuildCfg{
+		Online: false,
+	})
+	api, err := coreapi.NewCoreAPI(node)
+	if err != nil {
+		return "", fmt.Errorf("error creating core API: %s", err.Error())
+	}
+
+	opts := []options.UnixfsAddOption{
+		options.Unixfs.HashOnly(true),
+	}
+	root, err := api.Unixfs().Add(ctx, fsNode, opts...)
+	if err != nil {
+		return "", fmt.Errorf("error adding to UnixFS: %s", err.Error())
+	}
+
+	return root.RootCid().String(), nil
+}
+
 func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
-	// get a JSON string of the job
-	jsonBytes, err := json.Marshal(module.Job)
+	putJobResponse, err := executor.bacalhauClient.postJob(module.Job)
 	if err != nil {
-		return "", fmt.Errorf("error getting job JSON for deal %s -> %s", deal.ID, err.Error())
-	}
-	bacalhauJobSpecDir, err := system.EnsureDataDir(filepath.Join("bacalhau-job-specs", deal.ID))
-	if err != nil {
-		return "", fmt.Errorf("error creating a local folder for job specs %s -> %s", deal.ID, err.Error())
-	}
-	jobPath := filepath.Join(bacalhauJobSpecDir, "job.json")
-	err = system.WriteFile(jobPath, jsonBytes)
-	if err != nil {
-		return "", fmt.Errorf("error writing job JSON %s -> %s", deal.ID, err.Error())
+		return "", fmt.Errorf("error creating job %s -> %s", deal.ID, err.Error())
 	}
 
-	runCmd := exec.Command(
-		"bacalhau",
-		"create",
-		"--id-only",
-		"--wait",
-		jobPath,
-	)
-	runCmd.Env = executor.bacalhauEnv
-
-	runOutputRaw, err := runCmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("error running command %s -> %s, %s", deal.ID, err.Error(), runOutputRaw)
-	}
-	splitOutputs := strings.Split(string(runOutputRaw), "\n")
-	runOutput := splitOutputs[0]
-	outputError := strings.Join(strings.Fields(strings.Join(splitOutputs[1:], " ")), " ")
-
-	if outputError != "" {
-		log.Error().Msgf("error parsing output %s -> %s, %s", deal.ID, outputError, runOutput)
-	}
-
-	id := strings.TrimSpace(string(runOutput))
-	fmt.Printf("Got bacalhau job ID: %s\n", id)
+	id := putJobResponse.JobID
 
 	return id, nil
-}
-
-func (executor *BacalhauExecutor) getJobState(dealID string, jobID string) (*bacalhau.JobWithInfo, error) {
-	var job bacalhau.JobWithInfo
-
-	for len(job.State.Executions) == 0 {
-		describeCmd := exec.Command(
-			"bacalhau",
-			"describe",
-			"--json",
-			jobID,
-		)
-		describeCmd.Env = executor.bacalhauEnv
-
-		output, err := describeCmd.CombinedOutput()
-		if err != nil {
-			return nil, fmt.Errorf("error calling describe command results %s -> %s", dealID, err.Error())
-		}
-
-		err = json.Unmarshal(output, &job)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshalling job JSON %s -> %s", dealID, err.Error())
-		}
-	}
-
-	return &job, nil
 }
 
 // Compile-time interface check:

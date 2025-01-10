@@ -1,10 +1,7 @@
 package lilypad
 
 import (
-	"fmt"
-
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
-	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -53,12 +50,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	ipfsClient, err := ipfs.NewClient(commandCtx.Ctx, options.IPFS.Addr)
-	if err != nil {
-		return fmt.Errorf("error creating IPFS client: %s", err.Error())
-	}
-
-	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau, ipfsClient)
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
 	if err != nil {
 		return err
 	}

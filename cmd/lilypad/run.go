@@ -132,9 +132,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 			os.Exit(1)
 		}
 
-		// UPDATE FUNCTION
-		// fmt.Printf("evOffer: %s --------------------------------------\n")
-		// spew.Dump(evOffer)
+	
 
 	})
 	if err != nil {

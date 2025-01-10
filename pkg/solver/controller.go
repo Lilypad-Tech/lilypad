@@ -611,24 +611,3 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 	})
 	return dealContainer, nil
 }
-
-/*
-*
-*
-*
-
-# Run onchain job
-
-*
-*
-*
-*/
-
-// func (controller *SolverController) runJob(ev jobcreatorweb3.JobcreatorJobAdded) (*data.DealContainer, error) {
-// 	options := optionsfactory.NewJobCreatorOptions()
-// 	fmt.Printf("options --------------------------------------\n")
-// 	spew.Dump(options)
-// 	fmt.Printf("ev --------------------------------------\n")
-// 	spew.Dump(ev)
-// 	return nil, nil
-// }

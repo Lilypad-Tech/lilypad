@@ -48,23 +48,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=solver-db
-  ipfs:
-    image: ipfs/kubo:v0.32.1
-    container_name: ipfs
-    restart: unless-stopped
-    ports:
-      - 127.0.0.1:5001:5001
-      - 127.0.0.1:8080:8080
-    volumes:
-      - ipfs-data:/data/ipfs
   bacalhau:
     image: ghcr.io/lilypad-tech/bacalhau
     container_name: bacalhau
     restart: unless-stopped
     privileged: true
-    depends_on:
-      ipfs:
-        condition: service_healthy
     build:
       context: ..
       dockerfile: ./docker/bacalhau/Dockerfile
@@ -74,23 +62,12 @@ services:
       - BACALHAU_ENVIRONMENT=local
     ports:
       - 1234:1234
-    command:
-      [
-        "bacalhau",
-        "serve",
-        "--node-type",
-        "compute,requester",
-        "--peer",
-        "none",
-        "--private-internal-ipfs=false",
-        "--job-selection-accept-networked",
-        "--ipfs-connect",
-        "/dns4/ipfs/tcp/5001",
-      ]
+      - 6001:6001
+    command: ["bacalhau", "serve", "--orchestrator", "--compute"]
     volumes:
       - bacalhau-data:/root/.bacalhau
 volumes:
+  bacalhau-data:
   chain-data:
   ipfs-data:
-  bacalhau-data:
   postgres-data:

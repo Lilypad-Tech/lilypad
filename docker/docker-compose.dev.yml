@@ -50,8 +50,6 @@ services:
     container_name: resource-provider
     restart: unless-stopped
     depends_on:
-      ipfs:
-        condition: service_healthy
       solver:
         condition: service_healthy
       bacalhau:

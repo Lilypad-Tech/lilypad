@@ -1,4 +1,4 @@
-//go:build integration
+//go:build integration && main
 
 package main_test
 
@@ -85,13 +85,6 @@ func testStackWithOptions(
 	commandCtx *system.CommandContext,
 	options testOptions,
 ) (*jobcreator.RunJobResults, error) {
-	mediator, err := getMediator(t, commandCtx, options)
-	if err != nil {
-		return nil, err
-	}
-
-	mediator.Start(commandCtx.Ctx, commandCtx.Cm)
-
 	jobCreatorOptions, err := getJobCreatorOptions(options)
 	if err != nil {
 		return nil, err
@@ -126,7 +119,6 @@ func TestNoModeration(t *testing.T) {
 	assert.Equal(t, "QmbCi3yoKzckff24rUJML1ZesVb35cd2LUNMiMYksEGkWv", result.Result.DataID, "the data ID was correct")
 
 	localPath := solver.GetDownloadsFilePath(result.Result.DealID)
-
 	fmt.Printf("result --------------------------------------\n")
 	spew.Dump(localPath)
 }

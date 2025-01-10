@@ -51,6 +51,7 @@ func SetupLogging() {
 		logLevel = parsedLogLevel
 	}
 	zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
+	zerolog.SetGlobalLevel(logLevel)
 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
 }
 

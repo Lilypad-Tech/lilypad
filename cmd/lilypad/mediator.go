@@ -1,10 +1,7 @@
 package lilypad
 
 import (
-	"fmt"
-
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
-	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/mediator"
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/system"
@@ -48,12 +45,8 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 		return err
 	}
 
-	ipfsClient, err := ipfs.NewClient(commandCtx.Ctx, options.IPFS.Addr)
-	if err != nil {
-		return fmt.Errorf("error creating IPFS client: %s", err.Error())
-	}
 
-	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau, ipfsClient)
+	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
 	if err != nil {
 		return err
 	}
