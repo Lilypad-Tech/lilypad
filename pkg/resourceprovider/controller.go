@@ -470,7 +470,7 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		if err != nil {
 			span.SetStatus(codes.Error, "load module failed")
 			span.RecordError(err)
-			return fmt.Errorf("error loading module rp: %s", err.Error())
+			return fmt.Errorf("error loading module: %s", err.Error())
 		}
 		controller.log.Info("module loaded", module)
 		span.AddEvent("module.loaded")
