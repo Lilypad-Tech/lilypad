@@ -69,5 +69,4 @@ services:
 volumes:
   bacalhau-data:
   chain-data:
-  ipfs-data:
   postgres-data:
