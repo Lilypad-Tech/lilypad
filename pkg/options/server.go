@@ -19,7 +19,8 @@ func GetDefaultServerOptions() http.ServerOptions {
 
 func GetDefaultAccessControlOptions() http.AccessControlOptions {
 	return http.AccessControlOptions{
-		ValidationTokenSecret: GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
+		ValidationTokenSecret:     GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
+		ValidationTokenExpiration: GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
 	}
 }
 
@@ -47,6 +48,11 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 		&serverOptions.AccessControl.ValidationTokenSecret, "server-validation-token-secret",
 		serverOptions.AccessControl.ValidationTokenSecret,
 		`Secret for generating validation service JWTs (SERVER_VALIDATION_TOKEN_SECRET).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.AccessControl.ValidationTokenExpiration, "server-validation-token-expiration",
+		serverOptions.AccessControl.ValidationTokenExpiration,
+		`Validation service JWT expiration in seconds (SERVER_VALIDATION_TOKEN_EXPIRATION).`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.RateLimiter.RequestLimit, "server-rate-request-limit", serverOptions.RateLimiter.RequestLimit,

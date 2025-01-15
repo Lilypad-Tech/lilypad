@@ -9,7 +9,8 @@ type ServerOptions struct {
 }
 
 type AccessControlOptions struct {
-	ValidationTokenSecret string
+	ValidationTokenSecret     string
+	ValidationTokenExpiration int
 }
 
 type RateLimiterOptions struct {
