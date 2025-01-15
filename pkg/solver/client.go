@@ -159,3 +159,9 @@ func (client *SolverClient) DownloadResultFiles(id string, localPath string) err
 	}
 	return system.ExpandTarBuffer(buf, localPath)
 }
+
+// Validation service
+
+func (client *SolverClient) GetValidationToken() (http.ValidationToken, error) {
+	return http.GetRequest[http.ValidationToken](client.options, fmt.Sprintf("/validation_token"), map[string]string{})
+}
