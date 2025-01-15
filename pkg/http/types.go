@@ -13,6 +13,10 @@ type AccessControlOptions struct {
 	ValidationTokenExpiration int
 }
 
+type ValidationToken struct {
+	JWT string
+}
+
 type RateLimiterOptions struct {
 	RequestLimit int
 	WindowLength int

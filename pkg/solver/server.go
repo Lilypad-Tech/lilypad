@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/go-chi/httprate"
+	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
@@ -91,6 +93,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
 	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
+
+	subrouter.HandleFunc("/validation_token", http.GetHandler(solverServer.getValidationToken)).Methods("GET")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -619,4 +623,40 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
 		return
 	}
+}
+
+// Validation Service
+
+func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter, req *corehttp.Request) (*http.ValidationToken, error) {
+	// Check signature
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		log.Warn().Err(err).Msgf("error checking signature")
+		return nil, err
+	}
+
+	// Create token with signer address sub
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":   "rp_" + signerAddress,
+		"iss":   "kafka-auth",
+		"aud":   "kafka-broker",
+		"scope": "kafka-cluster",
+		"iat":   time.Now().Unix(),
+		"exp":   time.Now().Add(time.Duration(solverServer.options.AccessControl.ValidationTokenExpiration) * time.Second).Unix(),
+		"jti":   uuid.New().String(),
+	})
+
+	// Add the key ID to the token header
+	token.Header["kid"] = "key-1"
+
+	// Sign the token
+	secret := []byte(solverServer.options.AccessControl.ValidationTokenSecret)
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to sign token")
+		return nil, errors.New("failed to sign token")
+	}
+
+	// Respond with the JWT
+	return &http.ValidationToken{JWT: tokenString}, nil
 }
