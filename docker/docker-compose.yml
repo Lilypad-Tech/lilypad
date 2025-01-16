@@ -1,7 +1,7 @@
 # This is a docker-compose file for use by Resource Providers
 services:
   bacalhau:
-    image: ghcr.io/lilypad-tech/bacalhau
+    image: ghcr.io/lilypad-tech/bacalhau:latest
     container_name: bacalhau
     restart: unless-stopped
     privileged: true
@@ -17,6 +17,9 @@ services:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider
     restart: unless-stopped
+    depends_on:
+      bacalhau:
+        condition: service_healthy
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile

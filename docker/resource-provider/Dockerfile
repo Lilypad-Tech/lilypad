@@ -2,15 +2,8 @@ ARG COMPUTE_MODE=gpu
 
 FROM golang:latest AS base
 WORKDIR /usr/src/app
-ARG NETWORK=testnet
 ARG VERSION
 ARG COMMIT_SHA
-
-# Default environment variables
-ENV LOG_LEVEL=info
-ENV BACALHAU_API_HOST="localhost"
-ENV WEB3_PRIVATE_KEY=""
-ENV DISABLE_TELEMETRY=false
 
 COPY . .
 
@@ -28,8 +21,14 @@ RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version
 ENV DISABLE_POW=true
 
 FROM build-$COMPUTE_MODE AS final
-RUN mv lilypad /usr/local/bin
+# Default environment variables
+ARG NETWORK=testnet
+ARG DISABLE_TELEMETRY=false
+ENV LOG_LEVEL=info
+ENV BACALHAU_API_HOST="localhost"
+ENV WEB3_PRIVATE_KEY=""
 
+RUN mv lilypad /usr/local/bin
 # Install necessary dependencies
 RUN apt update && apt install -y wget bash curl && apt clean
 
