@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.11.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.10.0...v2.11.0) (2025-01-16)
+
+
+### Features
+
+* Add download files signature check ([#472](https://github.com/Lilypad-Tech/lilypad/issues/472)) ([6b880ec](https://github.com/Lilypad-Tech/lilypad/commit/6b880ec7ae6e09c61ff37ed500fa25bf31117427))
+* Add VRAM and disk space matching ([#471](https://github.com/Lilypad-Tech/lilypad/issues/471)) ([552d8e1](https://github.com/Lilypad-Tech/lilypad/commit/552d8e1351a08adeda62a1ad44bb7b491a1cad54))
+* Upgrade to bacalhau 1.6 ([#441](https://github.com/Lilypad-Tech/lilypad/issues/441)) ([94d7812](https://github.com/Lilypad-Tech/lilypad/commit/94d7812e4a4ad4802f688f245bc6f535653edda4))
+
+
+### Bug Fixes
+
+* Bacalhau dind w/ nvidia ([#463](https://github.com/Lilypad-Tech/lilypad/issues/463)) ([2767106](https://github.com/Lilypad-Tech/lilypad/commit/2767106384d288094cadde8ce3c6b815a66e6409))
+* Bacalhau getID ([#488](https://github.com/Lilypad-Tech/lilypad/issues/488)) ([8db49b5](https://github.com/Lilypad-Tech/lilypad/commit/8db49b5c025cc50330010ecd27365733f87593f9))
+* Docker setup for RPs ([#489](https://github.com/Lilypad-Tech/lilypad/issues/489)) ([7033acb](https://github.com/Lilypad-Tech/lilypad/commit/7033acb306d529a1ad841e61c51bde100976acfe))
+* Fix resource offer JSON field name ([#464](https://github.com/Lilypad-Tech/lilypad/issues/464)) ([cee261d](https://github.com/Lilypad-Tech/lilypad/commit/cee261d928bb4f1a5cfe04ce11a2ed8bf2e1ed19))
+* Remove ipfs from docker compose ([#484](https://github.com/Lilypad-Tech/lilypad/issues/484)) ([ea290d7](https://github.com/Lilypad-Tech/lilypad/commit/ea290d744fc628d7dc49038c38174161478478f1))
+* Remove resource offers in DealNegotiating[0] state on disconnect ([#475](https://github.com/Lilypad-Tech/lilypad/issues/475)) ([77b86af](https://github.com/Lilypad-Tech/lilypad/commit/77b86afddc3fc9867c2810b2e148c467c8409250))
+* Rename Result results_id JSON field name to deal_id ([#469](https://github.com/Lilypad-Tech/lilypad/issues/469)) ([0050f2c](https://github.com/Lilypad-Tech/lilypad/commit/0050f2c77dd4f0db68b4cbc3b8563f216c746477))
+* Update resource offer JSON field name ([cee261d](https://github.com/Lilypad-Tech/lilypad/commit/cee261d928bb4f1a5cfe04ce11a2ed8bf2e1ed19))
+
 ## [2.10.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.9.1...v2.10.0) (2024-12-02)
 
 
