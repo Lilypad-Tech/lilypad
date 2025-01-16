@@ -1,0 +1,65 @@
+name: lilypad_orbit
+services:
+  preflight:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: preflight
+    container_name: orbit_preflight
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    networks:
+      - localnet
+    command: ["/app/preflight", "check-gpu"]
+
+  resource-provider:
+    image: ghcr.io/lilypad-tech/resource-provider:latest
+    container_name: orbit_resource-provider
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - lilypad-data:/tmp/lilypad/data
+    environment:
+      - BACALHAU_API_HOST=orbit_bacalhau
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OFFER_GPU=1
+      # Keeping original orbit environment variables
+      - WEB3_RPC_URL=wss://wss.orbit.arsenum.com
+      - WEB3_CHAIN_ID=68283778764
+      - WEB3_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+      - WEB3_CONTROLLER_ADDRESS=0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
+      - WEB3_PAYMENTS_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+      - WEB3_POW_ADDRESS=0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1
+      - WEB3_STORAGE_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
+      - WEB3_TOKEN_ADDRESS=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+      - WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+      - LOG_LEVEL=debug
+    networks:
+      - localnet
+
+volumes:
+  bacalhau-data:
+  lilypad-data:
+
+networks:
+  localnet:
+    external: true
