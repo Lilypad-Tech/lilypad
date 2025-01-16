@@ -1,10 +1,20 @@
 package http
 
 type ServerOptions struct {
-	URL         string
-	Host        string
-	Port        int
-	RateLimiter RateLimiterOptions
+	URL           string
+	Host          string
+	Port          int
+	AccessControl AccessControlOptions
+	RateLimiter   RateLimiterOptions
+}
+
+type AccessControlOptions struct {
+	ValidationTokenSecret     string
+	ValidationTokenExpiration int
+}
+
+type ValidationToken struct {
+	JWT string
 }
 
 type RateLimiterOptions struct {

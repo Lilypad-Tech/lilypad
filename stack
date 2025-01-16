@@ -194,13 +194,14 @@ function run-cowsay-onchain() {
 ############################################################################
 # solver
 #
-# Note: The presence of the WEB3_PRIVATE_KEY here is only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
+# Note: The presence of the WEB3_PRIVATE_KEY and SERVER_VALIDATION_TOKEN_SECRET are only necessary for local development. You are advised not to import this key into a wallet nor use it for anything other for testing Lilypad locally
 ############################################################################
 
 function solver() {
   load-local-env
   export WEB3_PRIVATE_KEY=${SOLVER_PRIVATE_KEY}
   export LOG_LEVEL=debug
+  export SERVER_VALIDATION_TOKEN_SECRET=912dd001a6613632c066ca10a19254430db2986a84612882a18f838a6360880e
   go run . solver --network dev "$@"
 }
 
