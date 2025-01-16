@@ -25,14 +25,12 @@ func newBacalhauClient(apiHost string) (*BacalhauClient, error) {
 }
 
 func (c *BacalhauClient) getID() (string, error) {
-
 	getNodeRequest := apimodels.GetAgentNodeRequest{}
 	response, err := c.api.Agent().Node(context.Background(), &getNodeRequest)
 	if err != nil {
 		return "", err
 	}
-	return response.NodeState.Info.ID(), nil
-
+	return response.NodeInfo.ID(), nil
 }
 
 func (c *BacalhauClient) alive() (bool, error) {
