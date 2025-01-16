@@ -205,7 +205,7 @@ func (s *SolverStoreMemory) GetResourceOfferByAddress(address string) (*data.Res
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, resourceOffer := range s.resourceOfferMap {
-		if strings.ToLower(resourceOffer.ResourceProvider) == strings.ToLower(address) {
+		if strings.EqualFold(resourceOffer.ResourceProvider, address) {
 			return resourceOffer, nil
 		}
 	}
