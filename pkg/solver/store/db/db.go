@@ -28,7 +28,9 @@ func NewSolverStoreDatabase(connStr string, gormLogLevel string) (*SolverStoreDa
 	case "warn":
 		config.Logger = logger.Default.LogMode(logger.Warn)
 	default:
-		return nil, fmt.Errorf("expected solver store gorm log level silent, info, error, or warn, but received: %s", gormLogLevel)
+		// The option is validated for a correct log level string,
+		// so we should not enter the default case.
+		config.Logger = logger.Default.LogMode(logger.Silent)
 	}
 
 	db, err := gorm.Open(postgres.Open(connStr), config)
