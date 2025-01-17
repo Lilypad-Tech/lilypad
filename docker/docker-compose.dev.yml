@@ -7,6 +7,7 @@ services:
     container_name: solver
     depends_on:
       - chain
+      - postgres
     build:
       context: ..
       dockerfile: ./docker/solver/Dockerfile
@@ -21,6 +22,9 @@ services:
       - SERVER_URL=${SERVER_URL}
       - WEB3_RPC_URL=${WEB3_RPC_URL}
       - DISABLE_TELEMETRY=${DISABLE_TELEMETRY}
+      - STORE_TYPE=${STORE_TYPE}
+      - STORE_CONN_STR=${STORE_CONN_STR}
+      - STORE_GORM_LOG_LEVEL=${STORE_GORM_LOG_LEVEL}
     ports:
       - 8081:8081
     healthcheck:

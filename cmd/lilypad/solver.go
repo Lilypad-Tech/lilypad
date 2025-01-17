@@ -1,8 +1,12 @@
 package lilypad
 
 import (
+	"fmt"
+
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
+	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	db "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -19,7 +23,6 @@ func newSolverCmd() *cobra.Command {
 		Long:    "Start the lilypad solver service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
 			if err != nil {
@@ -57,7 +60,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverStore, err := memorystore.NewSolverStoreMemory()
+	solverStore, err := getSolverStore(options.Store)
 	if err != nil {
 		return err
 	}
@@ -78,4 +81,26 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 			return nil
 		}
 	}
+}
+
+func getSolverStore(options store.StoreOptions) (store.SolverStore, error) {
+	var solverStore store.SolverStore
+	var err error
+
+	switch options.Type {
+	case "database":
+		solverStore, err = db.NewSolverStoreDatabase(options.ConnStr, options.GormLogLevel)
+		if err != nil {
+			return nil, err
+		}
+	case "memory":
+		solverStore, err = memorystore.NewSolverStoreMemory()
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("expected solver store type database or memory, but received: %s", options.Type)
+	}
+
+	return solverStore, nil
 }
