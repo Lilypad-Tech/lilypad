@@ -26,7 +26,6 @@ import (
 )
 
 type ResourceProviderOfferOptions struct {
-	// ... [keep existing fields]
 	OfferSpec       data.MachineSpec
 	OfferCount      int
 	Specs           []data.MachineSpec
@@ -40,7 +39,6 @@ type ResourceProviderOfferOptions struct {
 }
 
 type ResourceProviderPowOptions struct {
-	// ... [keep existing fields]
 	DisablePow         bool
 	NumWorkers         int
 	CudaGridSize       int
@@ -55,7 +53,7 @@ type ResourceProviderOptions struct {
 	Pow       ResourceProviderPowOptions
 	IPFS      ipfs.IPFSOptions
 	Telemetry system.TelemetryOptions
-	Preflight preflight.PreflightConfig // Add preflight config
+	Preflight preflight.PreflightConfig
 }
 
 type ResourceProvider struct {
@@ -90,8 +88,25 @@ func NewResourceProvider(
 }
 
 func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) error {
+	log.Info().Msg("Starting preflight checks...")
 	checker := preflight.NewPreflightChecker()
-	return checker.RunAllChecks(ctx, config)
+
+	// Logging GPU requirements
+	if config.GPU.Enabled {
+		log.Info().
+			Int("min_gpus", config.GPU.MinGPUs).
+			Int64("min_memory_gb", config.GPU.MinMemoryGB).
+			Msg("GPU requirements")
+	}
+
+	err := checker.RunAllChecks(ctx, config)
+	if err != nil {
+		log.Error().Err(err).Msg("Preflight checks failed")
+		return err
+	}
+
+	log.Info().Msg("All preflight checks passed successfully")
+	return nil
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
