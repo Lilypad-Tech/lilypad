@@ -16,12 +16,22 @@ type nvidiaSmiResponse struct {
 	} `json:"gpu"`
 }
 
+type preflightChecker struct {
+	gpuInfo []GPUInfo
+}
+
+type GPUCheckConfig struct {
+	MinGPUs      int
+	MinMemory    int64
+	Capabilities []string
+}
+
 func checkNvidiaSMI() error {
 	_, err := exec.LookPath("nvidia-smi")
 	return err
 }
 
-func (v *preflight) GetAvailableGPUs(ctx context.Context) ([]GPUInfo, error) {
+func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 	if err := checkNvidiaSMI(); err != nil {
 		return nil, fmt.Errorf("nvidia-smi not found: %w", err)
 	}
@@ -50,27 +60,25 @@ func (v *preflight) GetAvailableGPUs(ctx context.Context) ([]GPUInfo, error) {
 	return gpus, nil
 }
 
-func (v *preflight) PreflightGPU(ctx context.Context, req *GPURequirements) PreflightResult {
-	gpus, err := v.GetAvailableGPUs(ctx)
+func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
+	gpus, err := p.GetGPUInfo(ctx)
 	if err != nil {
-		return PreflightResult{
-			Success: false,
+		return CheckResult{
+			Passed:  false,
 			Error:   err,
-			Details: "Failed to get GPU information",
+			Message: "Failed to get GPU information",
 		}
 	}
 
-	if len(gpus) < req.MinGPUs {
-		return PreflightResult{
-			Success: false,
-			Details: fmt.Sprintf("Insufficient GPUs. Required: %d, Available: %d", req.MinGPUs, len(gpus)),
+	if len(gpus) < config.MinGPUs {
+		return CheckResult{
+			Passed:  false,
+			Message: fmt.Sprintf("Insufficient GPUs. Required: %d, Available: %d", config.MinGPUs, len(gpus)),
 		}
 	}
 
-	// Additional validation logic for memory and capabilities can be added here
-
-	return PreflightResult{
-		Success: true,
-		Details: fmt.Sprintf("Found %d suitable GPUs", len(gpus)),
+	return CheckResult{
+		Passed:  true,
+		Message: fmt.Sprintf("Found %d suitable GPUs", len(gpus)),
 	}
 }
