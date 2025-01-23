@@ -1,0 +1,58 @@
+name: Benchmarks
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  deployments: write
+  contents: write
+
+jobs:
+  run-solver-benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install golang
+        uses: actions/setup-go@v5
+
+      - name: Run benchmarks
+        run: ./stack benchmarks-solver | tee assets/benchmark-output.txt
+
+      - name: Download previous benchmark data
+        uses: actions/cache@v4
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-benchmark
+
+      - name: Report benchmark results
+        if: github.event_name == 'pull_request'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tool: 'go'
+          output-file-path: assets/benchmark-output.txt
+          external-data-json-path: ./cache/benchmark-data.json
+          # Comment when performance degrades >2x
+          comment-on-alert: true
+          # Add summary to action run
+          summary-always: true
+          auto-push: false
+
+      - name: Publish benchmark results
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tool: 'go'
+          output-file-path: assets/benchmark-output.txt
+          # Add summary to action run
+          summary-always: true
+          # Publish gh-pages chart
+          auto-push: true
