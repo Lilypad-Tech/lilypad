@@ -647,7 +647,7 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 	})
 
 	// Add the key ID to the token header
-	token.Header["kid"] = "key-1"
+	token.Header["kid"] = solverServer.options.AccessControl.ValidationTokenKid
 
 	// Sign the token
 	secret := []byte(solverServer.options.AccessControl.ValidationTokenSecret)

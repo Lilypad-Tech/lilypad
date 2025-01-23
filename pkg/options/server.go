@@ -21,6 +21,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 	return http.AccessControlOptions{
 		ValidationTokenSecret:     GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
 		ValidationTokenExpiration: GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
+		ValidationTokenKid:        GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
 	}
 }
 
@@ -54,6 +55,11 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 		serverOptions.AccessControl.ValidationTokenExpiration,
 		`Validation service JWT expiration in seconds (SERVER_VALIDATION_TOKEN_EXPIRATION).`,
 	)
+	cmd.PersistentFlags().StringVar(
+		&serverOptions.AccessControl.ValidationTokenKid, "server-validation-token-kid",
+		serverOptions.AccessControl.ValidationTokenKid,
+		`Key ID header for validation service JWTs (SERVER_VALIDATION_TOKEN_KID).`,
+	)
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.RateLimiter.RequestLimit, "server-rate-request-limit", serverOptions.RateLimiter.RequestLimit,
 		`The max requests over the rate window length (SERVER_RATE_REQUEST_LIMIT).`,
@@ -70,6 +76,9 @@ func CheckServerOptions(options http.ServerOptions) error {
 	}
 	if options.AccessControl.ValidationTokenSecret == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_SECRET is required")
+	}
+	if options.AccessControl.ValidationTokenKid == "" {
+		return fmt.Errorf("SERVER_VALIDATION_TOKEN_KID is required")
 	}
 	return nil
 }

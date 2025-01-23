@@ -11,6 +11,7 @@ type ServerOptions struct {
 type AccessControlOptions struct {
 	ValidationTokenSecret     string
 	ValidationTokenExpiration int
+	ValidationTokenKid        string
 }
 
 type ValidationToken struct {
