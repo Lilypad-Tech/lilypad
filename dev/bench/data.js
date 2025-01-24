@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1737677518761,
+  "lastUpdate": 1737677602450,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -192,6 +192,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78972 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gins@brianginsburg.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "gins@brianginsburg.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "distinct": true,
+          "id": "ffc2216277817abaae99c61c466512ad0a11defc",
+          "message": "test: Add benchmark GH action",
+          "timestamp": "2025-01-23T16:06:33-08:00",
+          "tree_id": "f14bda35747657a6c3c948c7a3a8714a19dab424",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/ffc2216277817abaae99c61c466512ad0a11defc"
+        },
+        "date": 1737677602106,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45452,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "74427 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45452,
+            "unit": "ns/op",
+            "extra": "74427 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "74427 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "74427 times\n4 procs"
           }
         ]
       }
