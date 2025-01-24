@@ -97,6 +97,21 @@ Run the Go unit tests with `./stack unit-tests` and the Hardhat unit tests with 
 
 Run the integration tests with `./stack integration-tests`. The integration tests expect all parts of the stack are running, except the request to run a job. See [Using Docker Compose](./LOCAL_DEVELOPMENT.md#using-docker-compose) to run the stack.
 
+#### Benchmarks
+
+We perform relative benchmarking on our solver matching algorithm to avoid performance degradation. The results over time are displayed in charts here: https://lilypad-tech.github.io/lilypad/dev/bench/.
+
+Each CI benchmark test run displays results in the GitHub action summary for the previous and current commit. An [example run](https://github.com/Lilypad-Tech/lilypad/actions/runs/12942901815) shows four measurements that are also reflected in the charts:
+
+- BenchmarkMatchOffers: A summary of overall measurements
+- BenchmarkMatchOffers - ns/op: Nanoseconds per operation
+- BenchmarkMatchOffers - B/op: Number of bytes allocated per operation
+- BenchmarkMatchOffers - allocs/op: Number of allocations per operation
+
+Each op is a run of the matching algorithm over a set of job and resource offers designed to exercise the possible matching decisions.
+
+When the benchmark detects a 2x or greater performance degradation, it displays a commit comment with a perforance alert. See this [example commit](https://github.com/Lilypad-Tech/lilypad/commit/249cca9fe568ecfc6f04813b48ad46ccc0c76258) that intentionally introduces a performance degradation.
+
 ## Notes on tooling
 
 Things should work right out-of-the-box, no extra configuration should be needed as Doppler provides the environment variables that are required with the current setup.
