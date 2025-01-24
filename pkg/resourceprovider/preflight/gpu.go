@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+
+	"github.com/rs/zerolog/log"
 )
 
 type nvidiaSmiResponse struct {
@@ -21,6 +23,7 @@ type preflightChecker struct {
 }
 
 type GPUCheckConfig struct {
+	Required     bool
 	MinGPUs      int
 	MinMemory    int64
 	Capabilities []string
@@ -61,22 +64,60 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 }
 
 func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
-	gpus, err := p.GetGPUInfo(ctx)
-	if err != nil {
+	if !config.Required {
+		log.Info().Msg("GPU checks skipped - not required")
 		return CheckResult{
-			Passed:  false,
-			Error:   err,
-			Message: "Failed to get GPU information",
+			Passed:  true,
+			Message: "GPU not required for this configuration",
 		}
 	}
 
+	log.Info().Msg("Starting GPU preflight check")
+
+	gpus, err := p.GetGPUInfo(ctx)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get GPU information")
+		// If GPUs are required but not found, return failure
+		if config.Required {
+			return CheckResult{
+				Passed:  false,
+				Error:   err,
+				Message: "Failed to get GPU information",
+			}
+		}
+		// If GPUs aren't required, pass even if we can't find them
+		return CheckResult{
+			Passed:  true,
+			Message: "No GPUs found but none required",
+		}
+	}
+
+	log.Info().
+		Int("gpu_count", len(gpus)).
+		Int("required_gpus", config.MinGPUs).
+		Msg("Found GPUs")
+
+	for i, gpu := range gpus {
+		log.Info().
+			Str("uuid", gpu.UUID).
+			Str("name", gpu.Name).
+			Int64("memory", gpu.MemoryTotal).
+			Int("index", i).
+			Msg("GPU details")
+	}
+
 	if len(gpus) < config.MinGPUs {
+		log.Warn().
+			Int("available", len(gpus)).
+			Int("required", config.MinGPUs).
+			Msg("Insufficient GPUs")
 		return CheckResult{
 			Passed:  false,
 			Message: fmt.Sprintf("Insufficient GPUs. Required: %d, Available: %d", config.MinGPUs, len(gpus)),
 		}
 	}
 
+	log.Info().Msg("GPU check passed successfully")
 	return CheckResult{
 		Passed:  true,
 		Message: fmt.Sprintf("Found %d suitable GPUs", len(gpus)),

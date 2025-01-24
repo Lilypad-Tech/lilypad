@@ -10,19 +10,6 @@ func NewPreflightChecker() PreflightChecker {
 	return &preflightChecker{}
 }
 
-// PreflightConfig holds all configuration for preflight checks
-type PreflightConfig struct {
-	GPU struct {
-		Enabled      bool
-		MinGPUs      int
-		MinMemoryGB  int64
-		Capabilities []string
-	}
-	Docker struct {
-		CheckRuntime bool
-	}
-}
-
 // RunAllChecks performs all configured preflight checks
 func (p *preflightChecker) RunAllChecks(ctx context.Context, config PreflightConfig) error {
 	if config.GPU.Enabled {
