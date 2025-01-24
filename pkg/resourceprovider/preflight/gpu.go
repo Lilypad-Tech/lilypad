@@ -2,21 +2,13 @@ package preflight
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
-
-type nvidiaSmiResponse struct {
-	GPU []struct {
-		UUID          string `json:"uuid"`
-		ProductName   string `json:"product_name"`
-		Memory        int64  `json:"memory_total"`
-		DriverVersion string `json:"driver_version"`
-	} `json:"gpu"`
-}
 
 type preflightChecker struct {
 	gpuInfo []GPUInfo
@@ -34,30 +26,58 @@ func checkNvidiaSMI() error {
 	return err
 }
 
+type nvidiaSmiResponse struct {
+	UUID          string
+	Name          string
+	MemoryTotal   string // Set to a string since CSV doesn't parse numbers
+	DriverVersion string
+}
+
+// GetGPUInfo runs nvidia-smi to get information about available GPUs
 func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
+	log.Info().Msg("Attempting to run nvidia-smi check")
+
 	if err := checkNvidiaSMI(); err != nil {
-		return nil, fmt.Errorf("nvidia-smi not found: %w", err)
+		return nil, err
 	}
 
-	cmd := exec.CommandContext(ctx, "nvidia-smi", "--query-gpu=gpu_uuid,gpu_name,memory.total,driver_version", "--format=json")
-	output, err := cmd.Output()
+	log.Info().Msg("Running nvidia-smi command")
+	cmd := exec.CommandContext(ctx, "nvidia-smi",
+		"--query-gpu=gpu_uuid,gpu_name,memory.total,driver_version",
+		"--format=csv,noheader")
+	output, err := cmd.CombinedOutput()
 	if err != nil {
+		log.Error().Str("output", string(output)).Err(err).Msg("nvidia-smi command failed")
 		return nil, fmt.Errorf("error running nvidia-smi: %w", err)
 	}
 
-	var response nvidiaSmiResponse
-	if err := json.Unmarshal(output, &response); err != nil {
-		return nil, fmt.Errorf("error parsing nvidia-smi output: %w", err)
-	}
+	// Parse CSV output
+	records := strings.Split(strings.TrimSpace(string(output)), "\n")
+	gpus := make([]GPUInfo, 0)
 
-	gpus := make([]GPUInfo, len(response.GPU))
-	for i, gpu := range response.GPU {
-		gpus[i] = GPUInfo{
-			UUID:          gpu.UUID,
-			Name:          gpu.ProductName,
-			MemoryTotal:   gpu.Memory,
-			DriverVersion: gpu.DriverVersion,
+	for _, record := range records {
+		fields := strings.Split(record, ", ")
+		if len(fields) != 4 {
+			continue
 		}
+
+		// Parse memory string (e.g. "12282 MiB" -> 12282)
+		memoryStr := strings.Split(fields[2], " ")[0]
+		memoryMiB, _ := strconv.ParseInt(memoryStr, 10, 64)
+
+		gpu := GPUInfo{
+			UUID:          strings.TrimSpace(fields[0]),
+			Name:          strings.TrimSpace(fields[1]),
+			MemoryTotal:   memoryMiB,
+			DriverVersion: strings.TrimSpace(fields[3]),
+		}
+		gpus = append(gpus, gpu)
+
+		log.Info().
+			Str("name", gpu.Name).
+			Str("uuid", gpu.UUID).
+			Int64("memory_mb", gpu.MemoryTotal).
+			Msgf("🎮 GPU %d details", len(gpus))
 	}
 
 	return gpus, nil

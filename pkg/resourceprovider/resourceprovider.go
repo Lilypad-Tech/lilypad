@@ -107,6 +107,9 @@ func NewResourceProvider(
 	return solver, nil
 }
 
+// This is where we run the preflight checks!
+// I put it before the startMineLoop because if the preflight checks fail, we don't want to start the miner
+
 func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) error {
 	log.Info().Msg("Starting preflight checks...")
 	checker := preflight.NewPreflightChecker()
@@ -132,7 +135,6 @@ func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) e
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error, 1)
 
-	// Update GPU info if enabled
 	if resourceProvider.options.Preflight.GPU.Enabled {
 		checker := preflight.NewPreflightChecker()
 		gpuInfo, err := checker.GetGPUInfo(ctx)
