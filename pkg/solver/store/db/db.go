@@ -178,6 +178,9 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 			data.GetAgreementStateIndex("DealAgreed"),
 		})
 	}
+	if query.OrderOldestFirst {
+		q = q.Order("created_at ASC")
+	}
 
 	var records []ResourceOffer
 	if err := q.Find(&records).Error; err != nil {

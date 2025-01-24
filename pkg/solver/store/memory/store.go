@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -106,6 +107,7 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
+
 	resourceOffers := []data.ResourceOfferContainer{}
 	for _, resourceOffer := range s.resourceOfferMap {
 		matching := true
@@ -124,6 +126,14 @@ func (s *SolverStoreMemory) GetResourceOffers(query store.GetResourceOffersQuery
 			resourceOffers = append(resourceOffers, *resourceOffer)
 		}
 	}
+
+	// Sort oldest first
+	if query.OrderOldestFirst {
+		sort.Slice(resourceOffers, func(i, j int) bool {
+			return resourceOffers[i].ResourceOffer.CreatedAt < resourceOffers[j].ResourceOffer.CreatedAt
+		})
+	}
+
 	return resourceOffers, nil
 }
 

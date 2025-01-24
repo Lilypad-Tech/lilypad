@@ -44,6 +44,9 @@ type GetResourceOffersQuery struct {
 
 	// we use the DealID property of the resourceOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
+
+	// Sort resource offers oldest first
+	OrderOldestFirst bool `json:"order_oldest_first"`
 }
 
 type GetDealsQuery struct {

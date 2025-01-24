@@ -8,6 +8,7 @@ import (
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -514,6 +515,59 @@ func TestResourceOfferQuery(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestResourceOfferSort(t *testing.T) {
+	const delay = 50 * time.Millisecond
+	numOffers := 3 + rand.Intn(5) // Random offers between 3 and 7
+
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		getStore, clearStore := config.init()
+		defer clearStore()
+
+		t.Run(config.name, func(t *testing.T) {
+			store := getStore()
+
+			// Track IDs in insertion order
+			var insertedIDs []string
+
+			// The database GetResourceOffers implementation sorts by database timestamp,
+			// so we insert with a small delay to create an ordering. The memory implementation
+			// sorts by resource offer created time, so we assign one.
+			for i := 0; i < numOffers; i++ {
+				offer := generateResourceOfferWithTime(i)
+				_, err := store.AddResourceOffer(offer)
+				if err != nil {
+					t.Fatalf("Failed to add resource offer: %v", err)
+				}
+				insertedIDs = append(insertedIDs, offer.ID)
+
+				if i < numOffers-1 {
+					time.Sleep(delay)
+				}
+			}
+
+			// Run query sorting oldest offer first
+			results, err := store.GetResourceOffers(solverstore.GetResourceOffersQuery{
+				OrderOldestFirst: true,
+			})
+			if err != nil {
+				t.Fatalf("GetResourceOffers failed: %v", err)
+			}
+
+			// Extract IDs from results
+			resultIDs := make([]string, len(results))
+			for i, result := range results {
+				resultIDs[i] = result.ID
+			}
+
+			// Expect same order as insertion (oldest first)
+			if !slices.Equal(resultIDs, insertedIDs) {
+				t.Errorf("Expected order %v, got %v", insertedIDs, resultIDs)
+			}
+		})
 	}
 }
 
@@ -1506,9 +1560,16 @@ func generateJobOffers(min int, max int) []data.JobOfferContainer {
 }
 
 func generateResourceOffer() data.ResourceOfferContainer {
+	return generateResourceOfferWithTime(rand.Intn(1000000))
+}
+
+func generateResourceOfferWithTime(createdAt int) data.ResourceOfferContainer {
 	return data.ResourceOfferContainer{
 		ID:               generateCID(),
 		ResourceProvider: generateEthAddress(),
+		ResourceOffer: data.ResourceOffer{
+			CreatedAt: createdAt,
+		},
 	}
 }
 
