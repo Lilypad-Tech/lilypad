@@ -263,6 +263,59 @@ func TestJobOfferQuery(t *testing.T) {
 	}
 }
 
+func TestJobOfferSort(t *testing.T) {
+	const delay = 50 * time.Millisecond
+	numOffers := 3 + rand.Intn(5) // Random offers between 3 and 7
+
+	storeConfigs := setupStores(t)
+	for _, config := range storeConfigs {
+		getStore, clearStore := config.init()
+		defer clearStore()
+
+		t.Run(config.name, func(t *testing.T) {
+			store := getStore()
+
+			// Track IDs in insertion order
+			var insertedIDs []string
+
+			// The database GetJobOffers implementation sorts by database timestamp,
+			// so we insert with a small delay to create an ordering. The memory implementation
+			// sorts by job offer created time, so we assign one.
+			for i := 0; i < numOffers; i++ {
+				offer := generateJobOfferWithTime(i)
+				_, err := store.AddJobOffer(offer)
+				if err != nil {
+					t.Fatalf("Failed to add job offer: %v", err)
+				}
+				insertedIDs = append(insertedIDs, offer.ID)
+
+				if i < numOffers-1 {
+					time.Sleep(delay)
+				}
+			}
+
+			// Run query sorting oldest offer first
+			results, err := store.GetJobOffers(solverstore.GetJobOffersQuery{
+				OrderOldestFirst: true,
+			})
+			if err != nil {
+				t.Fatalf("GetJobOffers failed: %v", err)
+			}
+
+			// Extract IDs from results
+			resultIDs := make([]string, len(results))
+			for i, result := range results {
+				resultIDs[i] = result.ID
+			}
+
+			// Expect same order as insertion (oldest first)
+			if !slices.Equal(resultIDs, insertedIDs) {
+				t.Errorf("Expected order %v, got %v", insertedIDs, resultIDs)
+			}
+		})
+	}
+}
+
 // Resource Offer
 
 func TestResourceOfferOps(t *testing.T) {
@@ -1543,8 +1596,16 @@ func generateState() uint8 {
 }
 
 func generateJobOffer() data.JobOfferContainer {
+	return generateJobOfferWithTime(rand.Intn(1000000))
+}
+
+func generateJobOfferWithTime(createdAt int) data.JobOfferContainer {
 	return data.JobOfferContainer{
-		ID: generateCID(),
+		ID:         generateCID(),
+		JobCreator: generateEthAddress(),
+		JobOffer: data.JobOffer{
+			CreatedAt: createdAt,
+		},
 	}
 }
 

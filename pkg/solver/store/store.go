@@ -22,6 +22,9 @@ type GetJobOffersQuery struct {
 
 	// this will include cancelled job offers in the results
 	IncludeCancelled bool `json:"include_cancelled"`
+
+	// Sort job offers oldest first
+	OrderOldestFirst bool `json:"order_oldest_first"`
 }
 
 type GetResourceOffersQuery struct {

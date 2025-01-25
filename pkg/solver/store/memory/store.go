@@ -83,6 +83,7 @@ func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer stri
 func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
+
 	jobOffers := []data.JobOfferContainer{}
 	for _, jobOffer := range s.jobOfferMap {
 		matching := true
@@ -101,6 +102,14 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 			jobOffers = append(jobOffers, *jobOffer)
 		}
 	}
+
+	// Sort oldest first
+	if query.OrderOldestFirst {
+		sort.Slice(jobOffers, func(i, j int) bool {
+			return jobOffers[i].JobOffer.CreatedAt < jobOffers[j].JobOffer.CreatedAt
+		})
+	}
+
 	return jobOffers, nil
 }
 
