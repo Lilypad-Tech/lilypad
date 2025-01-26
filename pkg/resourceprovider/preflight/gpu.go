@@ -29,16 +29,16 @@ func checkNvidiaSMI() error {
 type nvidiaSmiResponse struct {
 	UUID          string
 	Name          string
-	MemoryTotal   string // Set to a string since CSV doesn't parse numbers
+	MemoryTotal   string
 	DriverVersion string
 }
 
-// GetGPUInfo runs nvidia-smi to get information about available GPUs
 func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
-	log.Info().Msg("Attempting to run nvidia-smi check")
+	log.Debug().Msg("Checking for nvidia-smi")
 
 	if err := checkNvidiaSMI(); err != nil {
-		return nil, err
+		log.Warn().Msg("⚠️  nvidia-smi not found - system appears to have no NVIDIA GPU")
+		return nil, fmt.Errorf("nvidia-smi not available: %w", err)
 	}
 
 	log.Info().Msg("Running nvidia-smi command")
@@ -51,7 +51,6 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 		return nil, fmt.Errorf("error running nvidia-smi: %w", err)
 	}
 
-	// Parse CSV output
 	records := strings.Split(strings.TrimSpace(string(output)), "\n")
 	gpus := make([]GPUInfo, 0)
 
@@ -61,7 +60,6 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 			continue
 		}
 
-		// Parse memory string (e.g. "12282 MiB" -> 12282)
 		memoryStr := strings.Split(fields[2], " ")[0]
 		memoryMiB, _ := strconv.ParseInt(memoryStr, 10, 64)
 
@@ -85,59 +83,52 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 
 func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
 	if !config.Required {
-		log.Info().Msg("GPU checks skipped - not required")
+		// Try to get GPU info
+		gpus, err := p.GetGPUInfo(ctx)
+		if err != nil {
+			log.Warn().Msg("⚠️  Running without GPU support - Resource Provider will operate in CPU-only mode")
+			return CheckResult{
+				Passed:  true,
+				Message: "Operating in CPU-only mode",
+			}
+		}
+
+		// If we found GPUs, log them but still continue
+		log.Info().Msgf("🎮 Found %d optional GPUs available for use", len(gpus))
 		return CheckResult{
 			Passed:  true,
-			Message: "GPU not required for this configuration",
+			Message: fmt.Sprintf("Found %d GPUs (optional)", len(gpus)),
 		}
 	}
 
-	log.Info().Msg("Starting GPU preflight check")
-
+	// Required GPU checks
+	log.Info().Msg("Starting required GPU checks")
 	gpus, err := p.GetGPUInfo(ctx)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get GPU information")
-		// If GPUs are required but not found, return failure
-		if config.Required {
-			return CheckResult{
-				Passed:  false,
-				Error:   err,
-				Message: "Failed to get GPU information",
-			}
-		}
-		// If GPUs aren't required, pass even if we can't find them
 		return CheckResult{
-			Passed:  true,
-			Message: "No GPUs found but none required",
+			Passed:  false,
+			Error:   err,
+			Message: "Required GPU check failed - no NVIDIA GPUs detected",
 		}
 	}
 
 	log.Info().
 		Int("gpu_count", len(gpus)).
 		Int("required_gpus", config.MinGPUs).
-		Msg("Found GPUs")
-
-	for i, gpu := range gpus {
-		log.Info().
-			Str("uuid", gpu.UUID).
-			Str("name", gpu.Name).
-			Int64("memory", gpu.MemoryTotal).
-			Int("index", i).
-			Msg("GPU details")
-	}
+		Msg("Checking GPU requirements")
 
 	if len(gpus) < config.MinGPUs {
 		log.Warn().
 			Int("available", len(gpus)).
 			Int("required", config.MinGPUs).
-			Msg("Insufficient GPUs")
+			Msg("Insufficient GPUs for requirements")
 		return CheckResult{
 			Passed:  false,
 			Message: fmt.Sprintf("Insufficient GPUs. Required: %d, Available: %d", config.MinGPUs, len(gpus)),
 		}
 	}
 
-	log.Info().Msg("GPU check passed successfully")
+	log.Info().Msg("✅ GPU requirements satisfied")
 	return CheckResult{
 		Passed:  true,
 		Message: fmt.Sprintf("Found %d suitable GPUs", len(gpus)),
