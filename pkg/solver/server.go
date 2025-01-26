@@ -79,7 +79,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 
 	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	subrouter.HandleFunc("/job_offers/{id}/result", solverServer.getJobOfferResult).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/results", solverServer.getJobOfferResult).Methods("GET")
 
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
