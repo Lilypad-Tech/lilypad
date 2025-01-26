@@ -415,7 +415,6 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 		log.Error().Err(err).Msgf("Error checking job offer")
 		return nil, err
 	}
-
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
