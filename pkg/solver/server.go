@@ -78,6 +78,9 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 
+	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/result", solverServer.getJobOfferResult).Methods("GET")
+
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
 
@@ -244,6 +247,17 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 *
 *
 */
+
+func (solverServer *solverServer) getJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (data.JobOfferContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	jobOffer, err := solverServer.store.GetJobOffer(id)
+	if err != nil {
+		return data.JobOfferContainer{}, err
+	}
+	return *jobOffer, nil
+}
+
 func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
@@ -268,6 +282,111 @@ func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *co
 		return data.Result{}, fmt.Errorf("result not found")
 	}
 	return *result, nil
+}
+
+func (solverServer *solverServer) getJobOfferResult(res corehttp.ResponseWriter, req *corehttp.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := func() *http.HTTPError {
+		jobOffer, err := solverServer.store.GetJobOffer(id)
+		if err != nil {
+			log.Error().Err(err).Msgf("error loading job offer")
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
+		}
+		if jobOffer == nil {
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusNotFound,
+			}
+		}
+
+		signerAddress, err := http.CheckSignature(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("error checking signature")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
+		if signerAddress != jobOffer.JobCreator {
+			log.Error().Err(err).Msgf("job creator address does not match signer address")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
+		// Get the directory path
+		dirPath := GetDealsFilePath(jobOffer.DealID)
+
+		// Read directory contents
+		files, err := os.ReadDir(dirPath)
+		if err != nil {
+			return &http.HTTPError{
+				Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
+				StatusCode: corehttp.StatusNotFound,
+			}
+		}
+
+		// Find the first regular file
+		var targetFile os.DirEntry
+		for _, file := range files {
+			info, err := file.Info()
+			if err != nil {
+				continue
+			}
+			if info.Mode().IsRegular() {
+				targetFile = file
+				break
+			}
+		}
+
+		if targetFile == nil {
+			return &http.HTTPError{
+				Message:    "no regular files found in directory",
+				StatusCode: corehttp.StatusNotFound,
+			}
+		}
+
+		// Get the actual filename
+		filename := targetFile.Name()
+		filePath := filepath.Join(dirPath, filename)
+
+		// Open the file
+		file, err := os.Open(filePath)
+		if err != nil {
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
+		}
+		defer file.Close()
+
+		// Set appropriate headers using the actual filename
+		res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+		res.Header().Set("Content-Type", "application/x-tar")
+
+		// Copy the file directly to the response
+		_, err = io.Copy(res, file)
+		if err != nil {
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
+		}
+
+		return nil
+	}()
+
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		corehttp.Error(res, err.Error(), err.StatusCode)
+	}
 }
 
 /*
@@ -296,6 +415,7 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 		log.Error().Err(err).Msgf("Error checking job offer")
 		return nil, err
 	}
+
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
