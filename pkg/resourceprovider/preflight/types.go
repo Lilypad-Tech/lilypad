@@ -22,7 +22,6 @@ type PreflightConfig struct {
 	GPU struct {
 		Required     bool
 		Enabled      bool
-		MinGPUs      int
 		MinMemoryGB  int64
 		Capabilities []string
 	}

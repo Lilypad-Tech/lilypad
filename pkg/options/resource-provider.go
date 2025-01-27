@@ -23,13 +23,11 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 			GPU: struct {
 				Required     bool
 				Enabled      bool
-				MinGPUs      int
 				MinMemoryGB  int64
 				Capabilities []string
 			}{
 				Required: false, // Don't require GPU
 				Enabled:  true,  // Enable checks to detect if GPU exists
-				MinGPUs:  0,     // Don't require minimum GPUs
 			},
 		},
 	}

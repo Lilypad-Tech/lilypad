@@ -14,7 +14,6 @@ func NewPreflightChecker() PreflightChecker {
 func (p *preflightChecker) RunAllChecks(ctx context.Context, config PreflightConfig) error {
 	if config.GPU.Enabled {
 		gpuResult := p.CheckGPU(ctx, &GPUCheckConfig{
-			MinGPUs:      config.GPU.MinGPUs,
 			MinMemory:    config.GPU.MinMemoryGB * 1024 * 1024 * 1024,
 			Capabilities: config.GPU.Capabilities,
 		})

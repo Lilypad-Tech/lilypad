@@ -115,7 +115,6 @@ func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) e
 	// Logging GPU requirements
 	if config.GPU.Enabled {
 		log.Info().
-			Int("min_gpus", config.GPU.MinGPUs).
 			Int64("min_memory_gb", config.GPU.MinMemoryGB).
 			Msg("GPU requirements")
 	}
