@@ -108,9 +108,6 @@ func NewResourceProvider(
 	return solver, nil
 }
 
-// This is where we run the preflight checks!
-// I put it before the startMineLoop because if the preflight checks fail, we don't want to start the miner
-
 func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) error {
 	log.Info().Msg("Starting preflight checks...")
 	checker := preflight.NewPreflightChecker()
