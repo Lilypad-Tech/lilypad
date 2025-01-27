@@ -36,10 +36,11 @@ func GetMatchingDeals(
 
 	deals := []data.Deal{}
 
-	// Get resource offers
+	// Get resource offers oldest first
 	span.AddEvent("db.get_resource_offers.start")
 	resourceOffers, err := db.GetResourceOffers(store.GetResourceOffersQuery{
-		NotMatched: true,
+		NotMatched:       true,
+		OrderOldestFirst: true,
 	})
 	if err != nil {
 		span.SetStatus(codes.Error, "get resource offers failed")
@@ -52,10 +53,11 @@ func GetMatchingDeals(
 	})
 	span.AddEvent("db.get_resource_offers.done")
 
-	// Get job offers
+	// Get job offers oldest first
 	span.AddEvent("db.get_job_offers.start")
 	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
-		NotMatched: true,
+		NotMatched:       true,
+		OrderOldestFirst: true,
 	})
 	if err != nil {
 		span.SetStatus(codes.Error, "get job offers failed")
@@ -70,7 +72,6 @@ func GetMatchingDeals(
 
 	// loop over job offers
 	for _, jobOffer := range jobOffers {
-
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
 			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer)
