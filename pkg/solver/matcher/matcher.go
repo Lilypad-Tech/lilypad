@@ -197,6 +197,17 @@ func GetMatchingDeals(
 	return deals, nil
 }
 
+// Returns true if first offer is cheaper, or has same price but is older
+func isCheaperOrOlder(a, b data.ResourceOffer) bool {
+	priceA := a.DefaultPricing.InstructionPrice
+	priceB := b.DefaultPricing.InstructionPrice
+
+	if priceA != priceB {
+		return priceA < priceB // Choose cheaper price
+	}
+	return a.CreatedAt < b.CreatedAt // Choose older offer
+}
+
 // See if our jobOffer targets a specific address. If so, we will create a deal automatically
 // with the matcing resourceOffer.
 func getTargetedDeal(
