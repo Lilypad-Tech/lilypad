@@ -25,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// this configures the resource offers we will keep track of
 type ResourceProviderOfferOptions struct {
 	// if we are configuring a single machine then
 	// these values are populated by the flags
