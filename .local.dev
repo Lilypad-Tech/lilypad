@@ -1,12 +1,13 @@
-# Running the Lilypad application locally depends on the `.local.dev` file for secrets injection. 
-# This file contains a series of private keys (with no funds on them) that are ONLY meant to be used 
-# for testing this app locally. You are free to replace these keys with your own if you wish; however, 
-# be warned that the `.local.dev` file is not included in the `.gitignore`. Therefore, you must be 
-# vigilant not to commit this file in your PRs. We are not responsible for lost funds as a result of 
-# posting your private keys in your commits/PRs. Unless you have a very good reason to do so, 
+# Running the Lilypad application locally depends on the `.local.dev` file for secrets injection.
+# This file contains a series of private keys (with no funds on them) that are ONLY meant to be used
+# for testing this app locally. You are free to replace these keys with your own if you wish; however,
+# be warned that the `.local.dev` file is not included in the `.gitignore`. Therefore, you must be
+# vigilant not to commit this file in your PRs. We are not responsible for lost funds as a result of
+# posting your private keys in your commits/PRs. Unless you have a very good reason to do so,
 # leave the `.local.dev` file unchanged.
 
-API_HOST=http://localhost:8002/
+API_HOST=
+DISABLE_TELEMETRY=true
 WEB3_RPC_URL=ws://localhost:8548
 SERVER_PORT=8081
 SERVER_URL=http://localhost:8081
@@ -29,4 +30,3 @@ WEB3_TOKEN_ADDRESS_=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
 WEB3_USERS_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
 BACALHAU_API_HOST=localhost
 BACALHAU_API_PORT=1234
-
