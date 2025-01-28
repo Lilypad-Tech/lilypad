@@ -28,6 +28,8 @@ func newSolverCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			cmd.SilenceUsage = true
+
 			return runSolver(cmd, options, network)
 		},
 	}
