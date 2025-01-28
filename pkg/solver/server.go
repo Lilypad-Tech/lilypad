@@ -362,6 +362,11 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 
+	_, err = solverServer.controller.updateResourceOfferState(deal.ResourceOffer, deal.ID, data.GetAgreementStateIndex("ResultsSubmitted"))
+	if err != nil {
+		return nil, err
+	}
+
 	return storedResult, nil
 }
 
