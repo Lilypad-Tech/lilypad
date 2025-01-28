@@ -83,7 +83,7 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 
 func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
 	if !config.Required {
-		// Try to get GPU info
+		// Attempt to retrieve GPU info
 		gpus, err := p.GetGPUInfo(ctx)
 		if err != nil {
 			log.Warn().Msg("⚠️  Running without GPU support - Resource Provider will operate in CPU-only mode")
@@ -97,7 +97,7 @@ func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig)
 		log.Info().Msgf("🎮 Found %d optional GPUs available for use", len(gpus))
 		return CheckResult{
 			Passed:  true,
-			Message: fmt.Sprintf("Found %d GPUs (optional)", len(gpus)),
+			Message: fmt.Sprintf("Found %d NVIDIA GPUs (optional)", len(gpus)),
 		}
 	}
 

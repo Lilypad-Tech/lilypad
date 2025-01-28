@@ -26,8 +26,9 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 				MinMemoryGB  int64
 				Capabilities []string
 			}{
-				Required: false, // Don't require GPU
-				Enabled:  true,  // Enable checks to detect if GPU exists
+				Required:    false, // Enable to require GPU
+				Enabled:     true,  // Enable checks to detect if GPU exists
+				MinMemoryGB: 1,     // Minimum memory required for GPU (we can match this with the resourceOffer)
 			},
 		},
 	}
