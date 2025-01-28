@@ -79,7 +79,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 
 	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	subrouter.HandleFunc("/job_offers/{id}/files", solverServer.getJobOfferFiles).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
 
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
@@ -580,7 +580,7 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	}
 }
 
-func (solverServer *solverServer) getJobOfferFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
