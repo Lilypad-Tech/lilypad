@@ -387,19 +387,22 @@ func (controller *JobCreatorController) downloadResult(dealContainer data.DealCo
 
 func (controller *JobCreatorController) acceptResult(deal data.DealContainer) error {
 	controller.log.Debug("Accepting results for job", deal.ID)
-	txHash, err := controller.web3SDK.AcceptResult(deal.ID)
-	if err != nil {
-		return fmt.Errorf("error calling accept result tx for deal: %s", err.Error())
-	}
-	controller.log.Debug("accept result tx", txHash)
+	// txHash, err := controller.web3SDK.AcceptResult(deal.ID)
+	// if err != nil {
+	// 	return fmt.Errorf("error calling accept result tx for deal: %s", err.Error())
+	// }
+	// controller.log.Debug("accept result tx", txHash)
+	txHash := "0x"
 
 	// we have agreed to the deal so we need to update the tx in the solver
-	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
+	_, err := controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
 		AcceptResult: txHash,
 	})
 	if err != nil {
 		return fmt.Errorf("error adding AcceptResult tx hash for deal: %s", err.Error())
 	}
+
+	
 	return nil
 }
 
