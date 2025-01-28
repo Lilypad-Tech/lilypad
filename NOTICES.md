@@ -102,3 +102,9 @@ Licensee’s name: ZhuHaiCheng
 Repository system identifier: zhuhaicity
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: Jeff De La Mare
+
+Repository system identifier: jdelamare
+
+---------------------------------------------------------------------------------
