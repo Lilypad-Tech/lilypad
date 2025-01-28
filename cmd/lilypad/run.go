@@ -28,12 +28,13 @@ func newRunCmd() *cobra.Command {
 		Long:    "Run a job on the Lilypad network.",
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args, network)
 			if err != nil {
 				return err
 			}
+			cmd.SilenceUsage = true
+
 			return runJob(cmd, options, network)
 		},
 	}
@@ -131,8 +132,6 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 			fmt.Printf("failed to start spinner: %s", err)
 			os.Exit(1)
 		}
-
-	
 
 	})
 	if err != nil {
