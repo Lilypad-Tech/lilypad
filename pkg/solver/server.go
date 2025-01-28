@@ -346,7 +346,23 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 	results.DealID = id
-	return solverServer.store.AddResult(results)
+    
+	storedResult,err := solverServer.store.AddResult(results)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = solverServer.controller.updateDealState(id, data.GetAgreementStateIndex("ResultsSubmitted"))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = solverServer.controller.updateJobOfferState(deal.JobOffer, deal.ID, data.GetAgreementStateIndex("ResultsSubmitted"))
+	if err != nil {
+		return nil, err
+	}
+
+	return storedResult, nil
 }
 
 /*
