@@ -30,6 +30,8 @@ func newPowSignalCmd() *cobra.Command {
 				log.Error().Err(err).Msg("Failed to process PowSignal options")
 				return err
 			}
+			cmd.SilenceUsage = true
+
 			return runPowSignal(cmd, options)
 		},
 	}
