@@ -19,12 +19,13 @@ func newResourceProviderCmd() *cobra.Command {
 		Long:    "Start the lilypad resource-provider service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessResourceProviderOptions(options, network)
 			if err != nil {
 				return err
 			}
+			cmd.SilenceUsage = true
+
 			return runResourceProvider(cmd, options, network)
 		},
 	}

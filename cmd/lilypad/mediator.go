@@ -20,12 +20,13 @@ func newMediatorCmd() *cobra.Command {
 		Long:    "Start the lilypad mediator service.",
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			network, _ := cmd.Flags().GetString("network")
 			options, err := optionsfactory.ProcessMediatorOptions(options, network)
 			if err != nil {
 				return err
 			}
+			cmd.SilenceUsage = true
+
 			return runMediator(cmd, options)
 		},
 	}
@@ -44,7 +45,6 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 	if err != nil {
 		return err
 	}
-
 
 	executor, err := bacalhau.NewBacalhauExecutor(options.Bacalhau)
 	if err != nil {
