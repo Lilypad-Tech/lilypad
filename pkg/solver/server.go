@@ -346,23 +346,13 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 	results.DealID = id
-    
-	storedResult,err := solverServer.store.AddResult(results)
+
+	storedResult, err := solverServer.store.AddResult(results)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = solverServer.controller.updateDealState(id, data.GetAgreementStateIndex("ResultsSubmitted"))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = solverServer.controller.updateJobOfferState(deal.JobOffer, deal.ID, data.GetAgreementStateIndex("ResultsSubmitted"))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = solverServer.controller.updateResourceOfferState(deal.ResourceOffer, deal.ID, data.GetAgreementStateIndex("ResultsSubmitted"))
+	err = solverServer.updateJobstates(id, "ResultsSubmitted")
 	if err != nil {
 		return nil, err
 	}
@@ -561,6 +551,14 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 			}
 		}
 
+		// err = solverServer.updateJobstates(deal.ID, "ResultsAccepted")
+		// if err != nil {
+		// 	return &http.HTTPError{
+		// 		Message:    err.Error(),
+		// 		StatusCode: corehttp.StatusInternalServerError,
+		// 	}
+		// }
+
 		return nil
 	}()
 
@@ -681,3 +679,36 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 	// Respond with the JWT
 	return &http.ValidationToken{JWT: tokenString}, nil
 }
+
+
+
+func (solverServer *solverServer) updateJobstates(dealID string, state string) (error) {
+	deal, err := solverServer.store.GetDeal(dealID)
+	if err != nil {
+		return err
+	}
+
+   _, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
+   if err != nil {
+	return err
+   }
+
+   // update the job offer state
+   _, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+   if err != nil {
+	return err
+   }
+
+   // update the resource offer state
+	_, err = solverServer.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+
+	solverServer.controller.writeEvent(SolverEvent{
+		EventType: DealStateUpdated,
+		Deal:      deal,
+	})
+
+	return nil
+}	

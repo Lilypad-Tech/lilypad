@@ -596,6 +596,9 @@ func (controller *SolverController) updateDealTransactionsJobCreator(id string, 
 	if err != nil {
 		return nil, err
 	}
+	if payload.AcceptResult != "" {
+		return controller.updateDealState(id, data.GetAgreementStateIndex("ResultsAccepted"))
+	}
 	controller.writeEvent(SolverEvent{
 		EventType: JobCreatorTransactionsUpdated,
 		Deal:      dealContainer,

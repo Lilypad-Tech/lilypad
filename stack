@@ -278,7 +278,7 @@ function integration-tests-solver() {
 function run() {
   load-local-env
   export WEB3_PRIVATE_KEY=${RUN_PRIVATE_KEY}
-  export LOG_LEVEL=info
+  export LOG_LEVEL=debug
   go run . run --network dev "$@"
 }
 
