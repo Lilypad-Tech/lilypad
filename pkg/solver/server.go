@@ -366,7 +366,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 
-	err = solverServer.updateJobstates(id, "ResultsSubmitted")
+	err = solverServer.updateJobStates(id, "ResultsSubmitted")
 	if err != nil {
 		return nil, err
 	}
@@ -627,7 +627,7 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 			}
 		}
         
-		solverServer.updateJobstates(jobOffer.DealID, "ResultsAccepted")
+		solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
 	}()
@@ -734,7 +734,7 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 
 
 
-func (solverServer *solverServer) updateJobstates(dealID string, state string) (error) {
+func (solverServer *solverServer) updateJobStates(dealID string, state string) (error) {
 	deal, err := solverServer.store.GetDeal(dealID)
 	if err != nil {
 		return err
