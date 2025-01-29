@@ -626,6 +626,8 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
+        
+		solverServer.updateJobstates(jobOffer.DealID, "ResultsAccepted")
 
 		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
 	}()
