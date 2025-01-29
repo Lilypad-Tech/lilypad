@@ -526,12 +526,8 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	span.AddEvent("solver.result.added", trace.WithAttributes(attribute.String("result.id", createdResult.ID)))
 
 	span.AddEvent("chain.result.add")
-	txHash, err := controller.web3SDK.AddResult(
-		deal.Deal.ID,
-		createdResult.ID,
-		createdResult.DataID,
-		result.InstructionCount,
-	)
+	// !TODO MAINNET: get txHash for submittinng results on chain
+	txHash := "0x"
 	if err != nil {
 		controller.log.Error("error calling add result tx for job", err)
 		span.SetStatus(codes.Error, "add result to chain failed")

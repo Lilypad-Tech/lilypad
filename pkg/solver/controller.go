@@ -448,8 +448,12 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 
 	controller.log.Info("add deal", deal)
 
+	//creates deal container and sets state to agreed
+	dealContainer := data.GetDealContainer(deal)
+	dealContainer.State = data.GetAgreementStateIndex("DealAgreed")
+
 	span.AddEvent("store.add_deal.start")
-	ret, err := controller.store.AddDeal(data.GetDealContainer(deal))
+	ret, err := controller.store.AddDeal(dealContainer)
 	if err != nil {
 		span.SetStatus(codes.Error, "add deal to store failed")
 		span.RecordError(err)
@@ -591,6 +595,9 @@ func (controller *SolverController) updateDealTransactionsJobCreator(id string, 
 	dealContainer, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err
+	}
+	if payload.AcceptResult != "" {
+		return controller.updateDealState(id, data.GetAgreementStateIndex("ResultsAccepted"))
 	}
 	controller.writeEvent(SolverEvent{
 		EventType: JobCreatorTransactionsUpdated,

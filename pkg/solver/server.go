@@ -360,7 +360,18 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 	results.DealID = id
-	return solverServer.store.AddResult(results)
+
+	storedResult, err := solverServer.store.AddResult(results)
+	if err != nil {
+		return nil, err
+	}
+
+	err = solverServer.updateJobStates(id, "ResultsSubmitted")
+	if err != nil {
+		return nil, err
+	}
+
+	return storedResult, nil
 }
 
 /*
@@ -494,7 +505,6 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
-
 		return solverServer.handleFileDownload(GetDealsFilePath(deal.ID), res)
 	}()
 
@@ -616,6 +626,8 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
+        
+		solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
 	}()
@@ -719,3 +731,36 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 	// Respond with the JWT
 	return &http.ValidationToken{JWT: tokenString}, nil
 }
+
+
+
+func (solverServer *solverServer) updateJobStates(dealID string, state string) (error) {
+	deal, err := solverServer.store.GetDeal(dealID)
+	if err != nil {
+		return err
+	}
+
+   _, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
+   if err != nil {
+	return err
+   }
+
+   // update the job offer state
+   _, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+   if err != nil {
+	return err
+   }
+
+   // update the resource offer state
+	_, err = solverServer.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+
+	solverServer.controller.writeEvent(SolverEvent{
+		EventType: DealStateUpdated,
+		Deal:      deal,
+	})
+
+	return nil
+}	
