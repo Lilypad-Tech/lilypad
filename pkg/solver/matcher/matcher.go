@@ -3,7 +3,6 @@ package matcher
 import (
 	"context"
 	"errors"
-	"sort"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -14,14 +13,6 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
-
-type ListOfResourceOffers []data.ResourceOffer
-
-func (a ListOfResourceOffers) Len() int { return len(a) }
-func (a ListOfResourceOffers) Less(i, j int) bool {
-	return a[i].DefaultPricing.InstructionPrice < a[j].DefaultPricing.InstructionPrice
-}
-func (a ListOfResourceOffers) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 func GetMatchingDeals(
 	ctx context.Context,
@@ -70,7 +61,7 @@ func GetMatchingDeals(
 	})
 	span.AddEvent("db.get_resource_offers.done")
 
-	// loop over job offers
+	// Loop over job offers attempting to match with resource offers
 	for _, jobOffer := range jobOffers {
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
@@ -85,7 +76,7 @@ func GetMatchingDeals(
 			continue
 		}
 
-		// loop over resource offers
+		// Build list of matching resource offers
 		matchingResourceOffers := []data.ResourceOffer{}
 		for _, resourceOffer := range resourceOffers {
 			_, matchSpan := tracer.Start(ctx, "match",
@@ -102,7 +93,7 @@ func GetMatchingDeals(
 			}
 			matchSpan.AddEvent("db.get_match_decision.done")
 
-			// if this exists it means we've already tried to match the two elements and should not try again
+			// If a decision exists it means we've already tried to match the offers and should not try again
 			if decision != nil {
 				matchSpan.AddEvent("decision_already_checked",
 					trace.WithAttributes(attribute.Bool("decision.result", decision.Result)))
@@ -110,12 +101,14 @@ func GetMatchingDeals(
 				continue
 			}
 
+			// Check for a match
 			matchSpan.AddEvent("match_offers.start")
 			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
 			logMatch(result)
 			matchSpan.AddEvent("match_offers.done", trace.WithAttributes(result.attributes()...))
 
 			if result.matched() {
+				// Match found, add it to the matched list
 				matchingResourceOffers = append(matchingResourceOffers, resourceOffer.ResourceOffer)
 				matchSpan.AddEvent("append_match",
 					trace.WithAttributes(attribute.KeyValue{
@@ -123,6 +116,7 @@ func GetMatchingDeals(
 						Value: attribute.StringSliceValue(data.GetResourceOfferIDs(matchingResourceOffers)),
 					}))
 			} else {
+				// No match, add a decision without a deal ID and a false result
 				matchSpan.AddEvent("add_match_decision.start")
 				_, err := db.AddMatchDecision(resourceOffer.ID, jobOffer.ID, "", false)
 				if err != nil {
@@ -137,49 +131,74 @@ func GetMatchingDeals(
 		}
 
 		// yay - we've got some matching resource offers
-		// let's choose the cheapest one
+		// Now let's match the by pricing and age preference.
 		if len(matchingResourceOffers) > 0 {
-			// now let's order the matching resource offers by price
-			sort.Sort(ListOfResourceOffers(matchingResourceOffers))
-			cheapestResourceOffer := matchingResourceOffers[0]
-
-			span.AddEvent("get_deal.start", trace.WithAttributes(attribute.String("cheapest_resource_offer", cheapestResourceOffer.ID),
-				attribute.KeyValue{
-					Key:   "matching_resource_offers",
-					Value: attribute.StringSliceValue(data.GetResourceOfferIDs(matchingResourceOffers)),
-				}))
-			deal, err := data.GetDeal(jobOffer.JobOffer, cheapestResourceOffer)
-			if err != nil {
-				span.SetStatus(codes.Error, "unable to get deal")
-				span.RecordError(err)
-				return nil, err
-			}
-			span.AddEvent("get_deal.done", trace.WithAttributes(attribute.String("deal.id", deal.ID)))
-
-			// add the match decision for this job offer
-			for _, matchingResourceOffer := range matchingResourceOffers {
-
-				addDealID := ""
-				if cheapestResourceOffer.ID == matchingResourceOffer.ID {
-					addDealID = deal.ID
+			var selectedResourceOffer data.ResourceOffer
+			if jobOffer.JobOffer.Mode == data.MarketPrice {
+				// For market price jobs, select the cheapest offer, breaking ties with age
+				selectedResourceOffer = matchingResourceOffers[0]
+				for _, offer := range matchingResourceOffers[1:] {
+					if isCheaperOrOlder(offer, selectedResourceOffer) {
+						selectedResourceOffer = offer
+					}
 				}
+			} else {
+				// For fixed price jobs, select the first (oldest) offer that meets the price requirement
+				for _, offer := range matchingResourceOffers {
+					if offer.DefaultPricing.InstructionPrice <= jobOffer.JobOffer.Pricing.InstructionPrice {
+						selectedResourceOffer = offer
+						break
+					}
+				}
+			}
 
-				span.AddEvent("add_match_decision.start")
-				_, err := db.AddMatchDecision(matchingResourceOffer.ID, jobOffer.ID, addDealID, true)
+			// Selected resource offer ID will be set when we selected a resource offer.
+			// Otherwise it will be a zero-value empty string.
+			if selectedResourceOffer.ID != "" {
+				span.AddEvent("get_deal.start",
+					trace.WithAttributes(
+						attribute.String("selected_resource_offer", selectedResourceOffer.ID),
+						attribute.KeyValue{
+							Key:   "matching_resource_offers",
+							Value: attribute.StringSliceValue(data.GetResourceOfferIDs(matchingResourceOffers)),
+						}))
+
+				// Make a deal with the job offer and selected resource offer
+				deal, err := data.GetDeal(jobOffer.JobOffer, selectedResourceOffer)
 				if err != nil {
-					span.SetStatus(codes.Error, "unable to add match decision")
+					span.SetStatus(codes.Error, "unable to get deal")
 					span.RecordError(err)
 					return nil, err
 				}
-				span.AddEvent("add_match_decision.done")
-			}
+				span.AddEvent("get_deal.done", trace.WithAttributes(attribute.String("deal.id", deal.ID)))
 
-			deals = append(deals, deal)
-			span.AddEvent("append_deal",
-				trace.WithAttributes(attribute.KeyValue{
-					Key:   "deals",
-					Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
-				}))
+				// Add match decisions for all matching offers
+				for _, matchingOffer := range matchingResourceOffers {
+					addDealID := ""
+					if selectedResourceOffer.ID == matchingOffer.ID {
+						addDealID = deal.ID
+					}
+
+					// All match decisions had matching resource offers, set the result to true.
+					// The match decision has a deal ID if it's resource offer was selected.
+					span.AddEvent("add_match_decision.start")
+					_, err := db.AddMatchDecision(matchingOffer.ID, jobOffer.ID, addDealID, true)
+					if err != nil {
+						span.SetStatus(codes.Error, "unable to add match decision")
+						span.RecordError(err)
+						return nil, err
+					}
+					span.AddEvent("add_match_decision.done")
+				}
+
+				// Add deal to overall deals list
+				deals = append(deals, deal)
+				span.AddEvent("append_deal",
+					trace.WithAttributes(attribute.KeyValue{
+						Key:   "deals",
+						Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
+					}))
+			}
 		}
 	}
 
