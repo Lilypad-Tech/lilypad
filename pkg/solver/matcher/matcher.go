@@ -238,6 +238,9 @@ func addMatchDecisions(
 			)
 		}
 	}
+	zerolog.Debug().
+		Int("decisions", len(matchingResourceOffers)).
+		Msg(system.GetServiceString(system.SolverService, "Solver adding matched resource offer decisions"))
 
 	return nil
 }
