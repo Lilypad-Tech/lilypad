@@ -3,6 +3,7 @@ package matcher
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
@@ -177,24 +178,15 @@ func GetMatchingDeals(
 				span.AddEvent("get_deal.done", trace.WithAttributes(attribute.String("deal.id", deal.ID)))
 
 				// Add match decisions for all matching offers
-				for _, matchingOffer := range matchingResourceOffers {
-					addDealID := ""
-					if selectedResourceOffer.ID == matchingOffer.ID {
-						addDealID = deal.ID
-					}
-
-					// All match decisions had matching resource offers, set the result to true.
-					// The match decision has a deal ID if it's resource offer was selected.
-					span.AddEvent("add_match_decision.start")
-					_, err := db.AddMatchDecision(matchingOffer.ID, jobOffer.ID, addDealID, true)
-					if err != nil {
-						log.Error("unable to add match decision", err)
-						span.SetStatus(codes.Error, "unable to add match decision")
-						span.RecordError(err)
-						return nil, err
-					}
-					span.AddEvent("add_match_decision.done")
+				span.AddEvent("add_match_decisions.start")
+				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers)
+				if err != nil {
+					log.Error("addMatchDecisions failed", err)
+					span.SetStatus(codes.Error, "unable to add match decision")
+					span.RecordError(err)
+					return nil, err
 				}
+				span.AddEvent("add_match_decisions.done")
 
 				// Add deal to overall deals list
 				deals = append(deals, deal)
@@ -219,6 +211,35 @@ func GetMatchingDeals(
 		Msg(system.GetServiceString(system.SolverService, "Solver solving"))
 
 	return deals, nil
+}
+
+func addMatchDecisions(
+	db store.SolverStore,
+	jobOfferID string,
+	dealID string,
+	selectedResourceOffer data.ResourceOffer,
+	matchingResourceOffers []data.ResourceOffer,
+) error {
+	for _, matchingOffer := range matchingResourceOffers {
+		addDealID := ""
+		if selectedResourceOffer.ID == matchingOffer.ID {
+			addDealID = dealID
+		}
+
+		// All match decisions had matching resource offers, set the result to true.
+		// The match decision has a deal ID if it's resource offer was selected.
+		_, err := db.AddMatchDecision(matchingOffer.ID, jobOfferID, addDealID, true)
+		if err != nil {
+			return fmt.Errorf(
+				"unable to add match decision for job offer %s and matched resource offer %s: %s",
+				jobOfferID,
+				matchingOffer.ID,
+				err,
+			)
+		}
+	}
+
+	return nil
 }
 
 // Returns true if first offer is cheaper, or has same price but is older
