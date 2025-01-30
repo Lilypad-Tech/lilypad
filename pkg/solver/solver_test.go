@@ -11,6 +11,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/matcher"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"go.opentelemetry.io/otel"
 )
 
@@ -96,6 +97,7 @@ func TestMatchingSortingLogic(t *testing.T) {
 					context.Background(),
 					store,
 					func(string, string, uint8) (*data.JobOfferContainer, error) { return nil, nil },
+					system.NewServiceLogger("solver"),
 					otel.Tracer("test"),
 					otel.Meter("test"),
 				)

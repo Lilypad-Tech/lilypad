@@ -8,6 +8,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
+	zerolog "github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -18,6 +19,7 @@ func GetMatchingDeals(
 	ctx context.Context,
 	db store.SolverStore,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
+	log *system.ServiceLogger,
 	tracer trace.Tracer,
 	meter metric.Meter,
 ) ([]data.Deal, error) {
@@ -207,11 +209,11 @@ func GetMatchingDeals(
 	metrics.resourceOffers.Record(ctx, int64(len(resourceOffers)))
 	metrics.deals.Record(ctx, int64(len(deals)))
 
-	log.Debug().
+	zerolog.Debug().
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
-		Msgf(system.GetServiceString(system.SolverService, "Solver solving"))
+		Msg(system.GetServiceString(system.SolverService, "Solver solving"))
 
 	return deals, nil
 }
