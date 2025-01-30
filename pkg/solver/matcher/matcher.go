@@ -36,6 +36,7 @@ func GetMatchingDeals(
 		OrderOldestFirst: true,
 	})
 	if err != nil {
+		log.Error("get resource offers failed", err)
 		span.SetStatus(codes.Error, "get resource offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -53,6 +54,7 @@ func GetMatchingDeals(
 		OrderOldestFirst: true,
 	})
 	if err != nil {
+		log.Error("get job offers failed", err)
 		span.SetStatus(codes.Error, "get job offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -186,6 +188,7 @@ func GetMatchingDeals(
 					span.AddEvent("add_match_decision.start")
 					_, err := db.AddMatchDecision(matchingOffer.ID, jobOffer.ID, addDealID, true)
 					if err != nil {
+						log.Error("unable to add match decision", err)
 						span.SetStatus(codes.Error, "unable to add match decision")
 						span.RecordError(err)
 						return nil, err
