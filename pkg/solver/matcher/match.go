@@ -211,6 +211,7 @@ func (result priceMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
+// TODO(bgins) Rename to validator
 type mediatorMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
@@ -346,6 +347,7 @@ func matchOffers(
 		}
 	}
 
+	// TODO(bgins) Rename to validator
 	mutualMediators := data.GetMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
 	if len(mutualMediators) == 0 {
 		return mediatorMismatch{
