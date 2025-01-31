@@ -7,7 +7,7 @@ import (
 )
 
 type JobOffer struct {
-	gorm.Model
+	gorm.Model `gorm:"type:timestamp(3) with time zone"`
 	CID        string `gorm:"index"`
 	JobCreator string `gorm:"index"`
 	DealID     string `gorm:"index"`
@@ -16,7 +16,7 @@ type JobOffer struct {
 }
 
 type ResourceOffer struct {
-	gorm.Model
+	gorm.Model       `gorm:"type:timestamp(3) with time zone"`
 	CID              string `gorm:"index"`
 	ResourceProvider string `gorm:"index"`
 	DealID           string `gorm:"index"`
@@ -25,7 +25,7 @@ type ResourceOffer struct {
 }
 
 type Deal struct {
-	gorm.Model
+	gorm.Model       `gorm:"type:timestamp(3) with time zone"`
 	CID              string `gorm:"index"`
 	JobCreator       string `gorm:"index"`
 	ResourceProvider string `gorm:"index"`
@@ -35,14 +35,14 @@ type Deal struct {
 }
 
 type Result struct {
-	gorm.Model
+	gorm.Model `gorm:"type:timestamp(3) with time zone"`
 	DealID     string `gorm:"index"` // We query with deal ID for now
 	CID        string
 	Attributes datatypes.JSONType[data.Result]
 }
 
 type MatchDecision struct {
-	gorm.Model
+	gorm.Model    `gorm:"type:timestamp(3) with time zone"`
 	ResourceOffer string `gorm:"primaryKey"`
 	JobOffer      string `gorm:"primaryKey"`
 	Attributes    datatypes.JSONType[data.MatchDecision]
