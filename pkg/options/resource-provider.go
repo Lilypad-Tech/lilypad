@@ -23,10 +23,7 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 			GPU: struct {
 				MinMemoryGB int64
 			}{
-				MinMemoryGB: 1, // Minimum memory(we can match this with the resourceOffer)
-
-				// Remove the "Required" and "Enabled" toggles above
-				// teh place where you do the check, dont just just put the number, assign to variable so it has a name - gives you iform
+				MinMemoryGB: preflight.RequiredGPUMemoryGB,
 			},
 		},
 	}

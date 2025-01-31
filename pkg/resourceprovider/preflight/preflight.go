@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const RequiredGPUMemoryGB = 1
+
 type GPUInfo struct {
 	UUID          string
 	Name          string
