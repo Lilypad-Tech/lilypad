@@ -113,17 +113,21 @@ func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) e
 	checker := preflight.NewPreflightChecker()
 
 	// Logging GPU requirements
-	log.Info().
-		Int64("min_memory_gb", config.GPU.MinMemoryGB).
-		Msg("GPU requirements")
-
-	err := checker.RunAllChecks(ctx, config)
+	gpuInfo, err := checker.GetGPUInfo(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("Preflight checks failed")
-		return err
+		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
+	} else {
+		log.Info().
+			Int("gpu_count", len(gpuInfo)).
+			Int64("min_memory_gb", config.GPU.MinMemoryGB).
+			Msg("🎮 GPU requirements")
 	}
 
-	log.Info().Msg("All preflight checks passed successfully")
+	err = checker.RunAllChecks(ctx, config)
+	if err != nil {
+		log.Error().Err(err).Msg("❌ Preflight checks failed")
+		return err
+	}
 	return nil
 }
 
@@ -135,7 +139,6 @@ func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.
 	if err != nil {
 		// Instead of returning error, just log warning and continue
 		log.Warn().Err(err).Msg("⚠️  GPU capabilities will not be available - continuing in CPU-only mode")
-		// Set empty GPU info
 		resourceProvider.gpuInfo = []preflight.GPUInfo{}
 	} else {
 		resourceProvider.gpuInfo = gpuInfo

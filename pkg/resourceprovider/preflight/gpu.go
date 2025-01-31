@@ -34,14 +34,11 @@ type nvidiaSmiResponse struct {
 }
 
 func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
-	log.Debug().Msg("Checking for nvidia-smi")
 
 	if err := checkNvidiaSMI(); err != nil {
-		log.Warn().Msg("⚠️  nvidia-smi not found - system appears to have no NVIDIA GPU")
 		return nil, fmt.Errorf("nvidia-smi not available: %w", err)
 	}
 
-	log.Info().Msg("Running nvidia-smi command")
 	cmd := exec.CommandContext(ctx, "nvidia-smi",
 		"--query-gpu=gpu_uuid,gpu_name,memory.total,driver_version",
 		"--format=csv,noheader")
@@ -109,22 +106,6 @@ func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig)
 			Passed:  false,
 			Error:   err,
 			Message: "Required GPU check failed - no NVIDIA GPUs detected",
-		}
-	}
-
-	log.Info().
-		Int("gpu_count", len(gpus)).
-		Int("required_gpus", config.MinGPUs).
-		Msg("Checking GPU requirements")
-
-	if len(gpus) < config.MinGPUs {
-		log.Warn().
-			Int("available", len(gpus)).
-			Int("required", config.MinGPUs).
-			Msg("Insufficient GPUs for requirements")
-		return CheckResult{
-			Passed:  false,
-			Message: fmt.Sprintf("Insufficient GPUs. Required: %d, Available: %d", config.MinGPUs, len(gpus)),
 		}
 	}
 
