@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1737690311102,
+  "lastUpdate": 1738356817353,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -288,6 +288,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79531 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c31083901fb7f25794faad5d7da43af94f3aa2d0",
+          "message": "feat: Add matching sorts (#497)\n\n* test: Separate match test cases into a testing file\r\n\r\n* test: Add match offers benchmark\r\n\r\n* test: Add benchmark GH action\r\n\r\n* docs: Add benchmarking docs\r\n\r\n* feat: Add GetResourceOffers query oldest first\r\n\r\n* feat: Add GetJobOffers query oldest first\r\n\r\n* fix: Return match result values instead of refs\r\n\r\n* test: Lift test store helpers to solver package\r\n\r\n* feat: Matcher retrieve offers oldest first\r\n\r\n* feat: Add isCheaperOrOlder matching helper\r\n\r\n* test: Add TestIsCheaperOrOlder unit test\r\n\r\n* feat: Add pricing and age sorting preferences\r\n\r\n* test: Add matching and sorting integration test\r\n\r\nWe integrate at the solver to test matcher and store functionality\r\ntogether.\r\n\r\n* feat: Add service logger to matcher\r\n\r\n* chore: Add lookup and match decision add error logs\r\n\r\n* refactor: Move adding match decisions into a helper function\r\n\r\n* chore: Log matched resource offer decisions count",
+          "timestamp": "2025-01-31T12:51:57-08:00",
+          "tree_id": "617438ed6dd2e8acba2ae8b2428e277a8f671a16",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/c31083901fb7f25794faad5d7da43af94f3aa2d0"
+        },
+        "date": 1738356816435,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46300,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "76999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46300,
+            "unit": "ns/op",
+            "extra": "76999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "76999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "76999 times\n4 procs"
           }
         ]
       }
