@@ -4,6 +4,7 @@ package store_test
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"sort"
 	"sync"
@@ -308,6 +309,55 @@ func TestJobOfferSort(t *testing.T) {
 			// Expect same order as insertion (oldest first)
 			if !slices.Equal(resultIDs, insertedIDs) {
 				t.Errorf("Expected order %v, got %v", insertedIDs, resultIDs)
+			}
+		})
+	}
+}
+
+func TestJobOfferCreatedAtQuery(t *testing.T) {
+	storeConfigs := solver.SetupTestStores(t)
+	for _, config := range storeConfigs {
+		getStore, clearStore := config.Init()
+		store := getStore()
+		defer clearStore()
+
+		t.Run(config.Name, func(t *testing.T) {
+			// Create a timestamp for the job offer
+			now := time.Now().UnixMilli()
+			jobOffer := generateJobOffer()
+			jobOffer.JobOffer.CreatedAt = int(now)
+
+			// Add the job offer
+			added, err := store.AddJobOffer(jobOffer)
+			if err != nil {
+				t.Fatalf("Failed to add job offer: %v", err)
+			}
+
+			// Get the creation time
+			createdAt, err := store.GetJobOfferCreatedAt(added.ID)
+			if err != nil {
+				t.Fatalf("Failed to get job offer creation time: %v", err)
+			}
+
+			// For memory store, the timestamp should match exactly
+			// For database store, the timestamp should be close to now
+			if config.Name == "memory" {
+				if createdAt != now {
+					t.Errorf("Expected creation time %d, got %d", now, createdAt)
+				}
+			} else {
+				// Allow for small time differences in database timestamp
+				diff := math.Abs(float64(createdAt - now))
+				if diff > 5000 { // Allow 5 seconds difference
+					t.Errorf("Creation time %d too far from expected time %d (diff: %f seconds)",
+						createdAt, now, diff)
+				}
+			}
+
+			// Test non-existent job offer
+			_, err = store.GetJobOfferCreatedAt("non-existent-id")
+			if err == nil {
+				t.Error("Expected error for non-existent job offer, got nil")
 			}
 		})
 	}
