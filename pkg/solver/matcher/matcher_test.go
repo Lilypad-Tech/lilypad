@@ -9,317 +9,80 @@ import (
 )
 
 func TestMatchOffers(t *testing.T) {
-	services := data.ServiceConfig{
-		Solver:   "oranges",
-		Mediator: []string{"apples"},
+	testCases := getMatchTestCases()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := matchOffers(tc.resourceOffer, tc.jobOffer)
+			if result.matched() != tc.shouldMatch {
+				t.Errorf("Expected match to be %v, but got %+v", tc.shouldMatch, result)
+			}
+		})
 	}
+}
 
-	basicResourceOffer := data.ResourceOffer{
-		Spec: data.MachineSpec{
-			CPU: 1000,
-			GPU: 1000,
-			RAM: 1024,
-			GPUs: []data.GPUSpec{
-				{
-					Name:   "NVIDIA RTX 4090",
-					Vendor: "NVIDIA",
-					VRAM:   24576, // MB
-				},
-			},
-			Disk: 2924295844659, // Bytes
-		},
-		DefaultPricing: data.DealPricing{
-			InstructionPrice: 10,
-		},
-		Mode:     data.FixedPrice,
-		Services: services,
-	}
-
-	basicJobOffer := data.JobOffer{
-		Spec: data.MachineSpec{
-			CPU:  1000,
-			GPU:  1000,
-			RAM:  1024,
-			GPUs: []data.GPUSpec{},
-			Disk: 0, // Bytes
-		},
-		Mode:     data.MarketPrice,
-		Services: services,
-	}
-
-	cowsayModuleConfig := data.ModuleConfig{
-		Name: "cowsay",
-		Repo: "https://github.com/Lilypad-Tech/lilypad-module-cowsay",
-		Hash: "v0.0.4",
-		Path: "/lilypad_module.json.tmpl",
-	}
-
-	lilysayModuleConfig := data.ModuleConfig{
-		Name: "lilysay",
-		Repo: "https://github.com/Lilypad-Tech/lilypad-module-lilysay",
-		Hash: "v0.5.2",
-		Path: "/lilypad_module.json.tmpl",
-	}
-
-	sdxlModuleConfig := data.ModuleConfig{
-		Name: "",
-		Repo: "https://github.com/Lilypad-Tech/lilypad-module-sdxl",
-		Hash: "v0.9-lilypad1",
-		Path: "/lilypad_module.json.tmpl",
-	}
-
+func TestIsCheaperOrOlder(t *testing.T) {
 	testCases := []struct {
-		name          string
-		resourceOffer func(offer data.ResourceOffer) data.ResourceOffer
-		jobOffer      func(offer data.JobOffer) data.JobOffer
-		shouldMatch   bool
+		name     string
+		offerA   data.ResourceOffer
+		offerB   data.ResourceOffer
+		expected bool
 	}{
 		{
-			name: "Basic match",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
+			name: "cheaper wins",
+			offerA: data.ResourceOffer{
+				CreatedAt: 2,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 100,
+				},
 			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
+			offerB: data.ResourceOffer{
+				CreatedAt: 1,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 200,
+				},
 			},
-			shouldMatch: true,
+			expected: true,
 		},
 		{
-			name: "CPU mismatch",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
+			name: "older wins when same price",
+			offerA: data.ResourceOffer{
+				CreatedAt: 1,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 100,
+				},
 			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Spec.CPU = 2000
-				return offer
+			offerB: data.ResourceOffer{
+				CreatedAt: 2,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 100,
+				},
 			},
-			shouldMatch: false,
+			expected: true,
 		},
 		{
-			name: "GPU mismatch",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
+			name: "more expensive loses regardless of age",
+			offerA: data.ResourceOffer{
+				CreatedAt: 1,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 200,
+				},
 			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Spec.GPU = 2000
-				return offer
+			offerB: data.ResourceOffer{
+				CreatedAt: 2,
+				DefaultPricing: data.DealPricing{
+					InstructionPrice: 100,
+				},
 			},
-			shouldMatch: false,
-		},
-		{
-			name: "RAM mismatch",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Spec.GPU = 2048
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "VRAM match when job creator specifies VRAM",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 20000}}
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "VRAM match when job creator does not specify VRAM",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.GPUs = []data.GPUSpec{}
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "VRAM requested is more than resource offer VRAM",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 24576}}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 40000}}
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "VRAM requested but resource offer has none",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.GPUs = []data.GPUSpec{}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.GPUs = []data.GPUSpec{{VRAM: 49152}}
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Disk space match when job creator specifies disk space",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.Disk = 2924295844659 // Bytes
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.Disk = 1000000000000
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Disk space match when job creator does not specify disk space",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.Disk = 2924295844659 // Bytes
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = sdxlModuleConfig
-				offer.Spec.Disk = 0 // zero-value
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Disk space requested is more than resource offer disk space",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Spec.Disk = 2924295844659 // Bytes
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Spec.Disk = 4000000000000
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Resource provider supports module",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
-				offer.Modules = []string{moduleID}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = cowsayModuleConfig
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Resource provider does not support module",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
-				offer.Modules = []string{moduleID}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Module = lilysayModuleConfig
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Empty mediators",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Mediator = []string{}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Services.Mediator = []string{}
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Fixed price - too expensive",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Mode = data.FixedPrice
-				offer.Pricing.InstructionPrice = 9
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Fixed price - can afford",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				offer.Mode = data.FixedPrice
-				offer.Pricing.InstructionPrice = 11
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Resource provider using unimplemented market pricing",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Mode = data.MarketPrice
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Mismatched mediators",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Mediator = []string{"apples2"}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: false,
-		},
-		{
-			name: "Different mediators with one matching mediator",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Mediator = []string{"apples2", "apples"}
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: true,
-		},
-		{
-			name: "Different solver",
-			resourceOffer: func(offer data.ResourceOffer) data.ResourceOffer {
-				offer.Services.Solver = "pears"
-				return offer
-			},
-			jobOffer: func(offer data.JobOffer) data.JobOffer {
-				return offer
-			},
-			shouldMatch: false,
+			expected: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := matchOffers(tc.resourceOffer(basicResourceOffer), tc.jobOffer(basicJobOffer))
-			if result.matched() != tc.shouldMatch {
-				t.Errorf("Expected match to be %v, but got %+v", tc.shouldMatch, result)
+			result := isCheaperOrOlder(tc.offerA, tc.offerB)
+			if result != tc.expected {
+				t.Errorf("isCheaperOrOlder(%+v, %+v) = %v, expected %v",
+					tc.offerA, tc.offerB, result, tc.expected)
 			}
 		})
 	}

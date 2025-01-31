@@ -1,4 +1,4 @@
-LIKE THIS PROJECT? 
+LIKE THIS PROJECT?
 
 PLEASE STAR US AND HELP US GROW! <3
 
@@ -18,7 +18,7 @@ lilypad run cowsay:v0.0.4 -i Message="moo"
 
 [![Watch the video](https://img.youtube.com/vi/Ep9ML9h8DTE/0.jpg)](https://www.youtube.com/watch?v=Ep9ML9h8DTE)
 
-The current list of modules can be found in the following repositories: 
+The current list of modules can be found in the following repositories:
 
 
 * [lilysay](https://github.com/Lilypad-Tech/lilypad-module-lilysay)
@@ -31,9 +31,13 @@ Containerised job modules can be built and added to the available module list; f
 
 ## Getting started running a Node on Lilypad Network
 
-As a distributed network Lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up. 
+As a distributed network Lilypad also brings with it the ability to run as a node and contribute to the GPU and compute capabilities. See the documentation on [running a node](https://lilypad.team/node) which contains more details instructions and overview for getting set up.
 
-## The Lilypad Community 
+## Performance
+
+We benchmark our solver job matching algorithm: https://lilypad-tech.github.io/lilypad/dev/bench/. See our [benchmark guide](./LOCAL_DEVELOPMENT.md#benchmarks) for more details.
+
+## The Lilypad Community
 
 [Read our Blog](https://lilypad.team/blog)
 
@@ -42,4 +46,3 @@ As a distributed network Lilypad also brings with it the ability to run as a nod
 [Follow us on Twitter/X](https://lilypad.team/x)
 
 [Check out our videos on YouTube](https://lilypad.team/youtube)
-

@@ -8,25 +8,23 @@ import (
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	solverstore "github.com/lilypad-tech/lilypad/pkg/solver/store"
-	databasestore "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
-	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"golang.org/x/exp/rand"
 )
-
-const DB_CONN_STR = "postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable"
 
 // Job offers
 
 func TestJobOfferOps(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple job offers in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -220,14 +218,14 @@ func TestJobOfferQuery(t *testing.T) {
 		},
 	}
 
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
-		getStore, clearStore := config.init()
+		getStore, clearStore := config.Init()
 		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
-			t.Run(fmt.Sprintf("%s/%s", config.name, tc.name), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s/%s", config.Name, tc.name), func(t *testing.T) {
 				store := getStore()
 
 				// Add test job offers
@@ -262,14 +260,67 @@ func TestJobOfferQuery(t *testing.T) {
 	}
 }
 
+func TestJobOfferSort(t *testing.T) {
+	const delay = 50 * time.Millisecond
+	numOffers := 3 + rand.Intn(5) // Random offers between 3 and 7
+
+	storeConfigs := solver.SetupTestStores(t)
+	for _, config := range storeConfigs {
+		getStore, clearStore := config.Init()
+		defer clearStore()
+
+		t.Run(config.Name, func(t *testing.T) {
+			store := getStore()
+
+			// Track IDs in insertion order
+			var insertedIDs []string
+
+			// The database GetJobOffers implementation sorts by database timestamp,
+			// so we insert with a small delay to create an ordering. The memory implementation
+			// sorts by job offer created time, so we assign one.
+			for i := 0; i < numOffers; i++ {
+				offer := generateJobOfferWithTime(i)
+				_, err := store.AddJobOffer(offer)
+				if err != nil {
+					t.Fatalf("Failed to add job offer: %v", err)
+				}
+				insertedIDs = append(insertedIDs, offer.ID)
+
+				if i < numOffers-1 {
+					time.Sleep(delay)
+				}
+			}
+
+			// Run query sorting oldest offer first
+			results, err := store.GetJobOffers(solverstore.GetJobOffersQuery{
+				OrderOldestFirst: true,
+			})
+			if err != nil {
+				t.Fatalf("GetJobOffers failed: %v", err)
+			}
+
+			// Extract IDs from results
+			resultIDs := make([]string, len(results))
+			for i, result := range results {
+				resultIDs[i] = result.ID
+			}
+
+			// Expect same order as insertion (oldest first)
+			if !slices.Equal(resultIDs, insertedIDs) {
+				t.Errorf("Expected order %v, got %v", insertedIDs, resultIDs)
+			}
+		})
+	}
+}
+
 // Resource Offer
 
 func TestResourceOfferOps(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple resource offers in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -475,14 +526,14 @@ func TestResourceOfferQuery(t *testing.T) {
 		},
 	}
 
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
-		getStore, clearStore := config.init()
+		getStore, clearStore := config.Init()
 		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
-			t.Run(fmt.Sprintf("%s/%s", config.name, tc.name), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s/%s", config.Name, tc.name), func(t *testing.T) {
 				store := getStore()
 
 				// Add test resource offers
@@ -517,14 +568,67 @@ func TestResourceOfferQuery(t *testing.T) {
 	}
 }
 
+func TestResourceOfferSort(t *testing.T) {
+	const delay = 50 * time.Millisecond
+	numOffers := 3 + rand.Intn(5) // Random offers between 3 and 7
+
+	storeConfigs := solver.SetupTestStores(t)
+	for _, config := range storeConfigs {
+		getStore, clearStore := config.Init()
+		defer clearStore()
+
+		t.Run(config.Name, func(t *testing.T) {
+			store := getStore()
+
+			// Track IDs in insertion order
+			var insertedIDs []string
+
+			// The database GetResourceOffers implementation sorts by database timestamp,
+			// so we insert with a small delay to create an ordering. The memory implementation
+			// sorts by resource offer created time, so we assign one.
+			for i := 0; i < numOffers; i++ {
+				offer := generateResourceOfferWithTime(i)
+				_, err := store.AddResourceOffer(offer)
+				if err != nil {
+					t.Fatalf("Failed to add resource offer: %v", err)
+				}
+				insertedIDs = append(insertedIDs, offer.ID)
+
+				if i < numOffers-1 {
+					time.Sleep(delay)
+				}
+			}
+
+			// Run query sorting oldest offer first
+			results, err := store.GetResourceOffers(solverstore.GetResourceOffersQuery{
+				OrderOldestFirst: true,
+			})
+			if err != nil {
+				t.Fatalf("GetResourceOffers failed: %v", err)
+			}
+
+			// Extract IDs from results
+			resultIDs := make([]string, len(results))
+			for i, result := range results {
+				resultIDs[i] = result.ID
+			}
+
+			// Expect same order as insertion (oldest first)
+			if !slices.Equal(resultIDs, insertedIDs) {
+				t.Errorf("Expected order %v, got %v", insertedIDs, resultIDs)
+			}
+		})
+	}
+}
+
 // Deals
 
 func TestDealOps(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple deals in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -573,11 +677,11 @@ func TestDealOps(t *testing.T) {
 }
 
 func TestDealGetAll(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test batch of deals in a test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -624,11 +728,11 @@ func TestDealGetAll(t *testing.T) {
 }
 
 func TestDealUpdates(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple deals in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -828,14 +932,14 @@ func TestDealQuery(t *testing.T) {
 		},
 	}
 
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
-		getStore, clearStore := config.init()
+		getStore, clearStore := config.Init()
 		defer clearStore()
 
 		for _, tc := range testCases {
 			// Test each case in a separate test run
-			t.Run(fmt.Sprintf("%s/%s", config.name, tc.name), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s/%s", config.Name, tc.name), func(t *testing.T) {
 				store := getStore()
 
 				// Add deals
@@ -873,11 +977,11 @@ func TestDealQuery(t *testing.T) {
 // Results
 
 func TestResultOps(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple results in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -972,11 +1076,11 @@ func TestResultOps(t *testing.T) {
 // Match decisions
 
 func TestMatchDecisionOps(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test multiple match decisions in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -1095,10 +1199,10 @@ func TestMatchDecisionOps(t *testing.T) {
 }
 
 func TestMatchDecisionRemove(t *testing.T) {
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -1162,11 +1266,11 @@ func TestConcurrentOps(t *testing.T) {
 	results := generateResults(4, 10)
 	matchDecisions := generateMatchDecisions(4, 10)
 
-	storeConfigs := setupStores(t)
+	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
 		// Test concurrent adds in a single test run
-		t.Run(config.name, func(t *testing.T) {
-			getStore, clearStore := config.init()
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
 			store := getStore()
 			defer clearStore()
 
@@ -1340,124 +1444,6 @@ func TestConcurrentOps(t *testing.T) {
 	}
 }
 
-// Utilities
-
-type storeConfig struct {
-	name string
-	init func() (getStore func() store.SolverStore, clearStore func())
-}
-
-func setupStores(t *testing.T) []storeConfig {
-	initMemory := func() (func() store.SolverStore, func()) {
-		// Get store function creates a new memory store
-		// which effectively clears data between runs
-		getStore := func() store.SolverStore {
-			s, err := memorystore.NewSolverStoreMemory()
-			if err != nil {
-				t.Fatalf("Failed to create memory store: %v", err)
-			}
-			return s
-		}
-		clearStore := func() {}
-
-		return getStore, clearStore
-	}
-
-	initDatabase := func() (func() store.SolverStore, func()) {
-		db, err := databasestore.NewSolverStoreDatabase(DB_CONN_STR, "silent")
-		if err != nil {
-			t.Fatalf("Failed to create database store: %v", err)
-		}
-
-		// Clear data at initialization
-		clearStoreDatabase(t, db)
-
-		// Get store functions clear data and returns
-		// the same store instance
-		getStore := func() store.SolverStore {
-			clearStoreDatabase(t, db)
-			return db
-		}
-		clearStore := func() { clearStoreDatabase(t, db) }
-
-		return getStore, clearStore
-	}
-
-	return []storeConfig{
-		{name: "memory", init: initMemory},
-		{name: "database", init: initDatabase},
-	}
-}
-
-func clearStoreDatabase(t *testing.T, s store.SolverStore) {
-	// Delete job offers
-	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{
-		IncludeCancelled: true,
-	})
-	if err != nil {
-		t.Fatalf("Failed to get existing job offers: %v", err)
-	}
-
-	for _, result := range jobOffers {
-		err := s.RemoveJobOffer(result.ID)
-		if err != nil {
-			t.Fatalf("Failed to remove existing job offer: %v", err)
-		}
-	}
-
-	// Delete resource offers
-	resourceOffers, err := s.GetResourceOffers(store.GetResourceOffersQuery{})
-	if err != nil {
-		t.Fatalf("Failed to get existing resource offers: %v", err)
-	}
-
-	for _, result := range resourceOffers {
-		err := s.RemoveResourceOffer(result.ID)
-		if err != nil {
-			t.Fatalf("Failed to remove existing resource offer: %v", err)
-		}
-	}
-
-	// Delete deals
-	deals, err := s.GetDealsAll()
-	if err != nil {
-		t.Fatalf("Failed to get existing deals: %v", err)
-	}
-
-	for _, deal := range deals {
-		err := s.RemoveDeal(deal.ID)
-		if err != nil {
-			t.Fatalf("Failed to remove existing deal: %v", err)
-		}
-	}
-
-	// Delete results
-	results, err := s.GetResults()
-	if err != nil {
-		t.Fatalf("Failed to get existing results: %v", err)
-	}
-
-	for _, result := range results {
-		err := s.RemoveResult(result.DealID)
-		if err != nil {
-			t.Fatalf("Failed to remove existing result: %v", err)
-		}
-	}
-
-	// Delete match decisions
-	decisions, err := s.GetMatchDecisions()
-	if err != nil {
-		t.Fatalf("Failed to get existing match decisions: %v", err)
-	}
-
-	for _, decision := range decisions {
-		err := s.RemoveMatchDecision(decision.ResourceOffer, decision.JobOffer)
-		if err != nil {
-			t.Fatalf("Failed to remove existing match decision: %v", err)
-		}
-	}
-}
-
 // Generators
 
 func generateCID() string {
@@ -1489,8 +1475,16 @@ func generateState() uint8 {
 }
 
 func generateJobOffer() data.JobOfferContainer {
+	return generateJobOfferWithTime(rand.Intn(1000000))
+}
+
+func generateJobOfferWithTime(createdAt int) data.JobOfferContainer {
 	return data.JobOfferContainer{
-		ID: generateCID(),
+		ID:         generateCID(),
+		JobCreator: generateEthAddress(),
+		JobOffer: data.JobOffer{
+			CreatedAt: createdAt,
+		},
 	}
 }
 
@@ -1506,9 +1500,16 @@ func generateJobOffers(min int, max int) []data.JobOfferContainer {
 }
 
 func generateResourceOffer() data.ResourceOfferContainer {
+	return generateResourceOfferWithTime(rand.Intn(1000000))
+}
+
+func generateResourceOfferWithTime(createdAt int) data.ResourceOfferContainer {
 	return data.ResourceOfferContainer{
 		ID:               generateCID(),
 		ResourceProvider: generateEthAddress(),
+		ResourceOffer: data.ResourceOffer{
+			CreatedAt: createdAt,
+		},
 	}
 }
 

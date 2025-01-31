@@ -211,6 +211,7 @@ func (result priceMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
+// TODO(bgins) Rename to validator
 type mediatorMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
@@ -253,19 +254,19 @@ func matchOffers(
 	jobOffer data.JobOffer,
 ) matchResult {
 	if resourceOffer.Spec.CPU < jobOffer.Spec.CPU {
-		return &cpuMismatch{
+		return cpuMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
 	}
 	if resourceOffer.Spec.GPU < jobOffer.Spec.GPU {
-		return &gpuMismatch{
+		return gpuMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
 	}
 	if resourceOffer.Spec.RAM < jobOffer.Spec.RAM {
-		return &ramMismatch{
+		return ramMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
@@ -275,7 +276,7 @@ func matchOffers(
 	if len(jobOffer.Spec.GPUs) > 0 {
 		// Mismatch if job offer requests VRAM but resource provider has none
 		if len(resourceOffer.Spec.GPUs) == 0 {
-			return &vramMismatch{
+			return vramMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
 			}
@@ -285,7 +286,7 @@ func matchOffers(
 		largestResourceOfferVRAM := getLargestVRAM(resourceOffer.Spec.GPUs)
 		largestJobOfferVRAM := getLargestVRAM(jobOffer.Spec.GPUs)
 		if largestResourceOfferVRAM < largestJobOfferVRAM {
-			return &vramMismatch{
+			return vramMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
 			}
@@ -293,7 +294,7 @@ func matchOffers(
 	}
 
 	if resourceOffer.Spec.Disk < jobOffer.Spec.Disk {
-		return &diskSpaceMismatch{
+		return diskSpaceMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
@@ -301,7 +302,7 @@ func matchOffers(
 
 	moduleID, err := data.GetModuleID(jobOffer.Module)
 	if err != nil {
-		return &moduleIDError{
+		return moduleIDError{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 			err:           err,
@@ -320,7 +321,7 @@ func matchOffers(
 		}
 
 		if !hasModule {
-			return &moduleMismatch{
+			return moduleMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
 				moduleID:      moduleID,
@@ -330,7 +331,7 @@ func matchOffers(
 
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
-		return &marketPriceUnavailable{
+		return marketPriceUnavailable{
 			resourceOffer: resourceOffer,
 		}
 	}
@@ -338,7 +339,7 @@ func matchOffers(
 	// if both are fixed price then we filter out "cannot afford"
 	if resourceOffer.Mode == data.FixedPrice && jobOffer.Mode == data.FixedPrice {
 		if resourceOffer.DefaultPricing.InstructionPrice > jobOffer.Pricing.InstructionPrice {
-			return &priceMismatch{
+			return priceMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
 				moduleID:      moduleID,
@@ -346,22 +347,23 @@ func matchOffers(
 		}
 	}
 
+	// TODO(bgins) Rename to validator
 	mutualMediators := data.GetMutualServices(resourceOffer.Services.Mediator, jobOffer.Services.Mediator)
 	if len(mutualMediators) == 0 {
-		return &mediatorMismatch{
+		return mediatorMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
 	}
 
 	if resourceOffer.Services.Solver != jobOffer.Services.Solver {
-		return &solverMismatch{
+		return solverMismatch{
 			jobOffer:      jobOffer,
 			resourceOffer: resourceOffer,
 		}
 	}
 
-	return &offersMatched{
+	return offersMatched{
 		jobOffer:      jobOffer,
 		resourceOffer: resourceOffer,
 	}

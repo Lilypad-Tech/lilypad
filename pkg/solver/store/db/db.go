@@ -148,6 +148,9 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 	if !query.IncludeCancelled {
 		q = q.Where("state != ?", data.GetAgreementStateIndex("JobOfferCancelled"))
 	}
+	if query.OrderOldestFirst {
+		q = q.Order("created_at ASC")
+	}
 
 	var records []JobOffer
 	if err := q.Find(&records).Error; err != nil {
@@ -177,6 +180,9 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 			data.GetAgreementStateIndex("DealNegotiating"),
 			data.GetAgreementStateIndex("DealAgreed"),
 		})
+	}
+	if query.OrderOldestFirst {
+		q = q.Order("created_at ASC")
 	}
 
 	var records []ResourceOffer

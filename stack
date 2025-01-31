@@ -268,8 +268,15 @@ function integration-tests() {
 # Base services and the solver must be running
 function integration-tests-solver() {
   load-local-env
-  go test -v -tags="integration,solver" -count 1 ./...
+  # Run integration tests for each package serially to isolate database interactions
+  go test -tags="integration,solver" ./.../solver -v -count 1
+  go test -tags="integration,solver" ./.../store -v -count 1
 }
+
+function benchmarks-solver() {
+  go test -tags="bench,solver" -bench=MatchOffers -benchtime=3s -benchmem ./...
+}
+
 ############################################################################
 # run
 #

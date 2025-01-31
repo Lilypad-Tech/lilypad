@@ -22,6 +22,9 @@ type GetJobOffersQuery struct {
 
 	// this will include cancelled job offers in the results
 	IncludeCancelled bool `json:"include_cancelled"`
+
+	// Sort job offers oldest first
+	OrderOldestFirst bool `json:"order_oldest_first"`
 }
 
 type GetResourceOffersQuery struct {
@@ -44,6 +47,9 @@ type GetResourceOffersQuery struct {
 
 	// we use the DealID property of the resourceOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
+
+	// Sort resource offers oldest first
+	OrderOldestFirst bool `json:"order_oldest_first"`
 }
 
 type GetDealsQuery struct {
