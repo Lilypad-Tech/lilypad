@@ -219,6 +219,19 @@ func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, err
 	return jobOffer, nil
 }
 
+func (s *SolverStoreMemory) GetJobOfferCreatedAt(id string) (int64, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	jobOffer, ok := s.jobOfferMap[id]
+	if !ok {
+		return 0, fmt.Errorf("job offer not found: %s", id)
+	}
+
+	// Job offer timestamp is in milliseconds
+	return int64(jobOffer.JobOffer.CreatedAt), nil
+}
+
 func (s *SolverStoreMemory) GetResourceOffer(id string) (*data.ResourceOfferContainer, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

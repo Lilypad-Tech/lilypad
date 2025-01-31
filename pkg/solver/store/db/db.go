@@ -290,6 +290,22 @@ func (store *SolverStoreDatabase) GetJobOffer(id string) (*data.JobOfferContaine
 	return &jobOffer, nil
 }
 
+func (store *SolverStoreDatabase) GetJobOfferCreatedAt(id string) (int64, error) {
+	// Offers are unique by CID, so we can query first
+	var record JobOffer
+	result := store.db.Where("c_id = ?", id).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("job offer not found: %s", id)
+		}
+		return 0, result.Error
+	}
+
+	// Convert the CreatedAt time to Unix millis timestamp
+	return record.CreatedAt.UnixMilli(), nil
+}
+
 func (store *SolverStoreDatabase) GetResourceOffer(id string) (*data.ResourceOfferContainer, error) {
 	// Offers are unique by CID, so we can query first
 	var record ResourceOffer
