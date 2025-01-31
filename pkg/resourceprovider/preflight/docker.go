@@ -36,6 +36,7 @@ func (p *preflightChecker) CheckDockerRuntime(ctx context.Context) CheckResult {
 	if !hasNvidia {
 		return CheckResult{
 			Passed:  false,
+			Error:   fmt.Errorf("nvidia runtime not found in Docker configuration"),
 			Message: "NVIDIA runtime not found in Docker",
 		}
 	}
@@ -45,8 +46,8 @@ func (p *preflightChecker) CheckDockerRuntime(ctx context.Context) CheckResult {
 	if err := testCmd.Run(); err != nil {
 		return CheckResult{
 			Passed:  false,
+			Error:   fmt.Errorf("failed to run NVIDIA runtime test: %w", err),
 			Message: "NVIDIA runtime test failed",
-			Error:   err,
 		}
 	}
 

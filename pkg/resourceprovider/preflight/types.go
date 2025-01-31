@@ -9,7 +9,6 @@ type GPUInfo struct {
 	Name          string
 	MemoryTotal   int64
 	DriverVersion string
-	Capabilities  []string
 }
 
 type CheckResult struct {
@@ -20,10 +19,7 @@ type CheckResult struct {
 
 type PreflightConfig struct {
 	GPU struct {
-		Required     bool
-		Enabled      bool
-		MinMemoryGB  int64
-		Capabilities []string
+		MinMemoryGB int64
 	}
 	Docker struct {
 		CheckRuntime bool

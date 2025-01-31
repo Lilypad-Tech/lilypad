@@ -21,14 +21,12 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 		Telemetry: GetDefaultTelemetryOptions(),
 		Preflight: preflight.PreflightConfig{
 			GPU: struct {
-				Required     bool
-				Enabled      bool
-				MinMemoryGB  int64
-				Capabilities []string
+				MinMemoryGB int64
 			}{
-				Required:    false, // Enable to require GPU
-				Enabled:     true,  // Enable checks to detect if GPU exists
-				MinMemoryGB: 1,     // Minimum memory required for GPU (we can match this with the resourceOffer)
+				MinMemoryGB: 1, // Minimum memory(we can match this with the resourceOffer)
+
+				// Remove the "Required" and "Enabled" toggles above
+				// teh place where you do the check, dont just just put the number, assign to variable so it has a name - gives you iform
 			},
 		},
 	}
