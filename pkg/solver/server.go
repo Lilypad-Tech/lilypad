@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	corehttp "net/http"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,6 +63,24 @@ func NewSolverServer(
  *
 */
 
+func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
+	return func(r *corehttp.Request) (string, error) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			ip = r.RemoteAddr
+		}
+		
+
+		for _, exemptIP := range exemptIPs {
+			if ip == exemptIP {
+				return "", nil
+			}
+		}
+		
+		return ip, nil
+	}
+}
+
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
 	router := mux.NewRouter()
 
@@ -69,10 +88,19 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.Use(http.CorsMiddleware)
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
+
+
+	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
+
+	log.Debug().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
+
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
+		httprate.WithKeyFuncs(
+			exemptIPKeyFunc(exemptIPs),
+			httprate.KeyByEndpoint,
+		),
 	))
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")

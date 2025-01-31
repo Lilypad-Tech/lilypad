@@ -29,6 +29,7 @@ func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
 	return http.RateLimiterOptions{
 		RequestLimit: GetDefaultServeOptionInt("SERVER_RATE_REQUEST_LIMIT", 5),
 		WindowLength: GetDefaultServeOptionInt("SERVER_RATE_WINDOW_LENGTH", 10),
+		ExemptedIPs:  GetDefaultServeOptionStringArray("SERVER_RATE_EXEMPTED_IPS", []string{}),
 	}
 }
 
