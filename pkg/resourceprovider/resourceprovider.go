@@ -132,39 +132,12 @@ func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) e
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
-	errorChan := make(chan error, 1)
-
-	checker := &preflight.PreflightChecker{}
-	gpuInfo, err := checker.GetGPUInfo(ctx)
-	if err != nil {
-		// Instead of returning error, just log warning and continue
-		log.Warn().Err(err).Msg("⚠️  GPU capabilities will not be available - continuing in CPU-only mode")
-		resourceProvider.gpuInfo = []preflight.GPUInfo{}
-	} else {
-		resourceProvider.gpuInfo = gpuInfo
-		log.Info().Msgf("🎮 Successfully initialized with %d GPUs", len(gpuInfo))
-	}
-
 	if !resourceProvider.options.Pow.DisablePow {
 		if errCh := resourceProvider.StartMineLoop(ctx); errCh != nil {
-			// Forward any mining errors to the main error channel
-			go func() {
-				if err := <-errCh; err != nil {
-					errorChan <- fmt.Errorf("mining error: %w", err)
-				}
-			}()
+			return errCh
 		}
 	}
-
-	// Start the controller and forward any errors
-	controllerErrChan := resourceProvider.controller.Start(ctx, cm)
-	go func() {
-		if err := <-controllerErrChan; err != nil {
-			errorChan <- err
-		}
-	}()
-
-	return errorChan
+	return resourceProvider.controller.Start(ctx, cm)
 }
 
 func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) chan error {
