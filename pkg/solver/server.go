@@ -84,7 +84,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
 
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.downloadFiles).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", http.GetHandler(solverServer.downloadFiles)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
 
 	subrouter.HandleFunc("/deals/{id}/result", http.GetHandler(solverServer.getResult)).Methods("GET")
@@ -444,50 +444,47 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 *
 */
 
-func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+type EmptyResponse struct{}
+
+func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
-	err := func() *http.HTTPError {
-		deal, err := solverServer.store.GetDeal(id)
-		if err != nil {
-			log.Error().Err(err).Msgf("error loading deal")
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-		if deal == nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		signerAddress, err := http.CheckSignature(req)
-		if err != nil {
-			log.Error().Err(err).Msgf("error checking signature")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-		// Only the job creator in a deal can download job outputs
-		if signerAddress != deal.JobCreator {
-			log.Error().Err(err).Msgf("job creator address does not match signer address")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-		return solverServer.handleFileDownload(GetDealsFilePath(deal.ID), res)
-	}()
-
+	// Get the deal
+	deal, err := solverServer.store.GetDeal(id)
 	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-		corehttp.Error(res, err.Error(), err.StatusCode)
-		return
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error loading deal",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
 	}
+	if deal == nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "deal not found",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Check authorization
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "not authorized",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+	if signerAddress != deal.JobCreator {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "not authorized: job creator address does not match signer address",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+
+	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res); err != nil {
+		return EmptyResponse{}, err
+	}
+
+	return EmptyResponse{}, nil
 }
 
 func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
