@@ -2,7 +2,7 @@ package options
 
 import (
 	"fmt"
-
+	"net"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/spf13/cobra"
 )
@@ -69,6 +69,10 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 		&serverOptions.RateLimiter.WindowLength, "server-rate-window-length", serverOptions.RateLimiter.WindowLength,
 		`The time window over which to limit in seconds (SERVER_RATE_WINDOW_LENGTH).`,
 	)
+	cmd.PersistentFlags().StringArrayVar(
+		&serverOptions.RateLimiter.ExemptedIPs, "server-rate-exempted-ips", serverOptions.RateLimiter.ExemptedIPs,
+		`The IPs to exempt from rate limiting (SERVER_RATE_EXEMPTED_IPS).`,
+	)
 }
 
 func CheckServerOptions(options http.ServerOptions) error {
@@ -80,6 +84,13 @@ func CheckServerOptions(options http.ServerOptions) error {
 	}
 	if options.AccessControl.ValidationTokenKid == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_KID is required")
+	}
+	if len(options.RateLimiter.ExemptedIPs) > 0 {
+		for _, ip := range options.RateLimiter.ExemptedIPs {
+			if net.ParseIP(ip) == nil {
+				return fmt.Errorf("invalid IP address: %s", ip)
+			}
+		}
 	}
 	return nil
 }
