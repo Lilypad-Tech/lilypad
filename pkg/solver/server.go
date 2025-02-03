@@ -480,67 +480,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
-
-		// Get the directory path
-		dirPath := GetDealsFilePath(id)
-
-		// Read directory contents
-		files, err := os.ReadDir(dirPath)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		// Find the first regular file
-		var targetFile os.DirEntry
-		for _, file := range files {
-			info, err := file.Info()
-			if err != nil {
-				continue
-			}
-			if info.Mode().IsRegular() {
-				targetFile = file
-				break
-			}
-		}
-
-		if targetFile == nil {
-			return &http.HTTPError{
-				Message:    "no regular files found in directory",
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		// Get the actual filename
-		filename := targetFile.Name()
-		filePath := filepath.Join(dirPath, filename)
-
-		// Open the file
-		file, err := os.Open(filePath)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-		defer file.Close()
-
-		// Set appropriate headers using the actual filename
-		res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-		res.Header().Set("Content-Type", "application/x-tar")
-
-		// Copy the file directly to the response
-		_, err = io.Copy(res, file)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-
-		return nil
+		return solverServer.handleFileDownload(GetDealsFilePath(deal.ID), res)
 	}()
 
 	if err != nil {
@@ -548,6 +488,64 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		corehttp.Error(res, err.Error(), err.StatusCode)
 		return
 	}
+}
+
+func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
+	// Read directory contents
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Find the first regular file
+	var targetFile os.DirEntry
+	for _, file := range files {
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+		if info.Mode().IsRegular() {
+			targetFile = file
+			break
+		}
+	}
+
+	if targetFile == nil {
+		return &http.HTTPError{
+			Message:    "no regular files found in directory",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Get the actual filename and path
+	filename := targetFile.Name()
+	filePath := filepath.Join(dirPath, filename)
+
+	// Open and serve the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	defer file.Close()
+
+	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	res.Header().Set("Content-Type", "application/x-tar")
+
+	_, err = io.Copy(res, file)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+
+	return nil
 }
 
 func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
