@@ -22,7 +22,7 @@ type CheckResult struct {
 	Error   error
 }
 
-type PreflightConfig struct {
+type preflightConfig struct {
 	GPU struct {
 		MinMemoryGB int64
 	}
@@ -35,9 +35,16 @@ type preflightChecker struct {
 	gpuInfo []GPUInfo
 }
 
-func RunPreflightChecks(ctx context.Context, config PreflightConfig) error {
+func RunPreflightChecks(ctx context.Context) error {
 	log.Info().Msg("Starting preflight checks...")
 	checker := &preflightChecker{}
+	config := preflightConfig{
+		GPU: struct {
+			MinMemoryGB int64
+		}{
+			MinMemoryGB: RequiredGPUMemoryGB,
+		},
+	}
 
 	// Logging GPU requirements
 	gpuInfo, err := checker.GetGPUInfo(ctx)
@@ -58,7 +65,7 @@ func RunPreflightChecks(ctx context.Context, config PreflightConfig) error {
 	return nil
 }
 
-func (p *preflightChecker) RunAllChecks(ctx context.Context, config PreflightConfig) error {
+func (p *preflightChecker) RunAllChecks(ctx context.Context, config preflightConfig) error {
 
 	gpuResult := p.CheckGPU(ctx, &GPUCheckConfig{
 		MinMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,

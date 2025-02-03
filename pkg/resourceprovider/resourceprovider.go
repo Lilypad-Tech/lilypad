@@ -74,7 +74,6 @@ type ResourceProviderOptions struct {
 	Pow       ResourceProviderPowOptions
 	IPFS      ipfs.IPFSOptions
 	Telemetry system.TelemetryOptions
-	Preflight preflight.PreflightConfig
 }
 
 type ResourceProvider struct {
@@ -90,7 +89,7 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-	if err := preflight.RunPreflightChecks(context.Background(), options.Preflight); err != nil {
+	if err := preflight.RunPreflightChecks(context.Background()); err != nil {
 		return nil, fmt.Errorf("preflight checks failed: %w", err)
 	}
 

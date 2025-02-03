@@ -6,7 +6,6 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/resourceprovider"
-	"github.com/lilypad-tech/lilypad/pkg/resourceprovider/preflight"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/spf13/cobra"
 )
@@ -19,13 +18,6 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 		Pow:       GetDefaultResourceProviderPowOptions(),
 		IPFS:      GetDefaultIPFSOptions(),
 		Telemetry: GetDefaultTelemetryOptions(),
-		Preflight: preflight.PreflightConfig{
-			GPU: struct {
-				MinMemoryGB int64
-			}{
-				MinMemoryGB: preflight.RequiredGPUMemoryGB,
-			},
-		},
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options
