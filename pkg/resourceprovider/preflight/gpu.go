@@ -33,8 +33,51 @@ type nvidiaSmiResponse struct {
 	DriverVersion string
 }
 
-func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
+func parseGPURecord(record string) (*GPUInfo, error) {
+	fields := strings.Split(record, ", ")
+	if len(fields) != 4 {
+		return nil, fmt.Errorf("invalid record format: expected 4 fields, got %d", len(fields))
+	}
 
+	// Parse memory, handling potential empty fields
+	memoryParts := strings.Split(strings.TrimSpace(fields[2]), " ")
+	if len(memoryParts) != 2 {
+		return nil, fmt.Errorf("invalid memory format: %s", fields[2])
+	}
+
+	memoryStr := memoryParts[0]
+	if memoryStr == "" {
+		return nil, fmt.Errorf("empty memory value")
+	}
+
+	memoryMiB, err := strconv.ParseInt(memoryStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse memory value '%s': %w", memoryStr, err)
+	}
+
+	// Create GPU info with trimmed fields and validated memory
+	gpu := &GPUInfo{
+		UUID:          strings.TrimSpace(fields[0]),
+		Name:          strings.TrimSpace(fields[1]),
+		MemoryTotal:   memoryMiB,
+		DriverVersion: strings.TrimSpace(fields[3]),
+	}
+
+	// Validate required fields
+	if gpu.UUID == "" {
+		return nil, fmt.Errorf("empty UUID")
+	}
+	if gpu.Name == "" {
+		return nil, fmt.Errorf("empty Name")
+	}
+	if gpu.DriverVersion == "" {
+		return nil, fmt.Errorf("empty DriverVersion")
+	}
+
+	return gpu, nil
+}
+
+func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 	if err := checkNvidiaSMI(); err != nil {
 		return nil, fmt.Errorf("nvidia-smi not available: %w", err)
 	}
@@ -49,30 +92,25 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 	}
 
 	records := strings.Split(strings.TrimSpace(string(output)), "\n")
-	gpus := make([]GPUInfo, 0)
+	gpus := make([]GPUInfo, 0, len(records))
 
-	for _, record := range records {
-		fields := strings.Split(record, ", ")
-		if len(fields) != 4 {
+	for i, record := range records {
+		gpu, err := parseGPURecord(record)
+		if err != nil {
+			log.Warn().Err(err).Int("index", i).Msg("Failed to parse GPU record")
 			continue
 		}
 
-		memoryStr := strings.Split(fields[2], " ")[0]
-		memoryMiB, _ := strconv.ParseInt(memoryStr, 10, 64)
-
-		gpu := GPUInfo{
-			UUID:          strings.TrimSpace(fields[0]),
-			Name:          strings.TrimSpace(fields[1]),
-			MemoryTotal:   memoryMiB,
-			DriverVersion: strings.TrimSpace(fields[3]),
-		}
-		gpus = append(gpus, gpu)
-
+		gpus = append(gpus, *gpu)
 		log.Info().
 			Str("name", gpu.Name).
 			Str("uuid", gpu.UUID).
 			Int64("memory_mb", gpu.MemoryTotal).
 			Msgf("🎮 GPU %d details", len(gpus))
+	}
+
+	if len(gpus) == 0 {
+		return nil, fmt.Errorf("no valid GPUs found in nvidia-smi output")
 	}
 
 	return gpus, nil
