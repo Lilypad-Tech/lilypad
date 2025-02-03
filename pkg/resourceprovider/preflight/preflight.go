@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-const RequiredGPUMemoryGB = 1
+const RequiredGPUMemoryGB = 1 // 1GB of VRAM is required to startup if GPU is enabled
 
 type GPUInfo struct {
 	UUID          string
