@@ -90,7 +90,7 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-	if err := runPreflightChecks(context.Background(), options.Preflight); err != nil {
+	if err := preflight.RunPreflightChecks(context.Background(), options.Preflight); err != nil {
 		return nil, fmt.Errorf("preflight checks failed: %w", err)
 	}
 
@@ -106,29 +106,6 @@ func NewResourceProvider(
 	}
 	powLogs.Init(options.Offers.Services.APIHost)
 	return solver, nil
-}
-
-func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) error {
-	log.Info().Msg("Starting preflight checks...")
-	checker := &preflight.PreflightChecker{}
-
-	// Logging GPU requirements
-	gpuInfo, err := checker.GetGPUInfo(ctx)
-	if err != nil {
-		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
-	} else {
-		log.Info().
-			Int("gpu_count", len(gpuInfo)).
-			Int64("min_memory_gb", config.GPU.MinMemoryGB).
-			Msg("🎮 GPU requirements")
-	}
-
-	err = checker.RunAllChecks(ctx, config)
-	if err != nil {
-		log.Error().Err(err).Msg("❌ Preflight checks failed")
-		return err
-	}
-	return nil
 }
 
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
