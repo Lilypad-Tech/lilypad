@@ -29,19 +29,11 @@ type PreflightConfig struct {
 	}
 }
 
-type PreflightChecker interface {
-	CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult
-	CheckDockerRuntime(ctx context.Context) CheckResult
-	GetGPUInfo(ctx context.Context) ([]GPUInfo, error)
-	RunAllChecks(ctx context.Context, config PreflightConfig) error
+type PreflightChecker struct {
+	gpuInfo []GPUInfo
 }
 
-// NewPreflightChecker creates a new instance of PreflightChecker
-func NewPreflightChecker() PreflightChecker {
-	return &preflightChecker{}
-}
-
-func (p *preflightChecker) RunAllChecks(ctx context.Context, config PreflightConfig) error {
+func (p *PreflightChecker) RunAllChecks(ctx context.Context, config PreflightConfig) error {
 
 	gpuResult := p.CheckGPU(ctx, &GPUCheckConfig{
 		MinMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,

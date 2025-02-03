@@ -11,7 +11,7 @@ type dockerInfo struct {
 	Runtimes map[string]interface{} `json:"Runtimes"`
 }
 
-func (p *preflightChecker) CheckDockerRuntime(ctx context.Context) CheckResult {
+func (p *PreflightChecker) CheckDockerRuntime(ctx context.Context) CheckResult {
 	cmd := exec.CommandContext(ctx, "docker", "info", "--format", "{{json .}}")
 	output, err := cmd.Output()
 	if err != nil {

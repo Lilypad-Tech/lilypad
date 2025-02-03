@@ -110,7 +110,7 @@ func NewResourceProvider(
 
 func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) error {
 	log.Info().Msg("Starting preflight checks...")
-	checker := preflight.NewPreflightChecker()
+	checker := &preflight.PreflightChecker{}
 
 	// Logging GPU requirements
 	gpuInfo, err := checker.GetGPUInfo(ctx)
@@ -134,7 +134,7 @@ func runPreflightChecks(ctx context.Context, config preflight.PreflightConfig) e
 func (resourceProvider *ResourceProvider) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	errorChan := make(chan error, 1)
 
-	checker := preflight.NewPreflightChecker()
+	checker := &preflight.PreflightChecker{}
 	gpuInfo, err := checker.GetGPUInfo(ctx)
 	if err != nil {
 		// Instead of returning error, just log warning and continue

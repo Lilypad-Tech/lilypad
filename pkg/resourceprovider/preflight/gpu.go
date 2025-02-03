@@ -10,10 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type preflightChecker struct {
-	gpuInfo []GPUInfo
-}
-
 type GPUCheckConfig struct {
 	Required     bool
 	MinGPUs      int
@@ -77,7 +73,7 @@ func parseGPURecord(record string) (*GPUInfo, error) {
 	return gpu, nil
 }
 
-func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
+func (p *PreflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 	if err := checkNvidiaSMI(); err != nil {
 		return nil, fmt.Errorf("nvidia-smi not available: %w", err)
 	}
@@ -116,7 +112,7 @@ func (p *preflightChecker) GetGPUInfo(ctx context.Context) ([]GPUInfo, error) {
 	return gpus, nil
 }
 
-func (p *preflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
+func (p *PreflightChecker) CheckGPU(ctx context.Context, config *GPUCheckConfig) CheckResult {
 	if !config.Required {
 		// Attempt to retrieve GPU info
 		gpus, err := p.GetGPUInfo(ctx)
