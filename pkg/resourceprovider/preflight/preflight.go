@@ -35,7 +35,8 @@ type preflightChecker struct {
 	gpuInfo []GPUInfo
 }
 
-func RunPreflightChecks(ctx context.Context) error {
+func RunPreflightChecks() error {
+	ctx := context.Background()
 	log.Info().Msg("Starting preflight checks...")
 	checker := &preflightChecker{}
 	config := preflightConfig{
