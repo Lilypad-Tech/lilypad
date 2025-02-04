@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1738356817353,
+  "lastUpdate": 1738703757047,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -336,6 +336,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "76999 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "logan.lentz1@gmail.com",
+            "name": "Logan Lentz",
+            "username": "noryev"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c2ae59dbfdd4fe6f8a63a5d4872ddf6272b2660",
+          "message": "feat: implement preflight (#502)\n\n* feat: barebones\r\n\r\n* feat: Implement preflight checks for GPU and Docker runtime\r\n\r\n* feat: Preflight logging and success messages\r\n\r\n* chore:  restore comments in [pkg/resourceprovider/resourceprovider.go]\r\n\r\n* feat: gpu check + cleanup\r\n\r\n* fix: gpu nvidia-smi check\r\n\r\n* fix: handle no-GPU case gracefully\r\n\r\n* fix: update start method in RP\r\n\r\n* chore: remove unused dockerfiles\r\n\r\n* chore: restore comments in [pkg/resourceprovider/resourceprovider.go]\r\n\r\n* chore: remove comments within [pkg/resourceprovider/resourceprovider.go]\r\n\r\n* refactor: removed minimum GPU parameter\r\n\r\n* feat: 1gb ram requirement\r\n\r\n* refactor: simplify GPU configuration by removing unnecessary parameters\r\n\r\n* refactor: enhance GPU info logging and remove types file\r\n\r\n* refactor: replace hardcoded GPU memory with default constant\r\n\r\n* refactor: improve GPU info parsing and validation in GetGPUInfo\r\n\r\n* chore: comments for required GPU VRAM\r\n\r\n* refactor: Move preflight checker from interface to struct\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* chore: Remove preflight check from start function\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* refactor: Move RunPreflightChecks function to preflight package\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* refactor: Move preflight config to preflight package\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* chore: refactor context within resource provider\r\n\r\n* chore: remove unused gpuInfo field\r\n\r\n* refactor: Make functions and structs private where possible\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* chore: Exit early when no GPU detected\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n* chore: Improve failed to parse GPU string error\r\n\r\nCo-authored-by: logan <logan.lentz1@gmail.com>\r\n\r\n---------\r\n\r\nCo-authored-by: Brian Ginsburg <gins@brianginsburg.com>",
+          "timestamp": "2025-02-04T15:15:27-06:00",
+          "tree_id": "ab9094143d28de86e2d171fefb51ca5e05d33fac",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/9c2ae59dbfdd4fe6f8a63a5d4872ddf6272b2660"
+        },
+        "date": 1738703756582,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46733,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79297 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46733,
+            "unit": "ns/op",
+            "extra": "79297 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79297 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79297 times\n4 procs"
           }
         ]
       }
