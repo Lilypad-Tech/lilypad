@@ -90,10 +90,10 @@ func (p *preflightChecker) getGPUInfo(ctx context.Context) ([]gpuInfo, error) {
 	records := strings.Split(strings.TrimSpace(string(output)), "\n")
 	gpus := make([]gpuInfo, 0, len(records))
 
-	for i, record := range records {
+	for _, record := range records {
 		gpu, err := parseGPURecord(record)
 		if err != nil {
-			log.Warn().Err(err).Int("index", i).Msg("Failed to parse GPU record")
+			log.Warn().Err(err).Msgf("Failed to parse GPU record: %s", record)
 			continue
 		}
 
