@@ -80,7 +80,6 @@ type ResourceProvider struct {
 	web3SDK    *web3.Web3SDK
 	options    ResourceProviderOptions
 	controller *ResourceProviderController
-	gpuInfo    []preflight.GPUInfo
 }
 
 func NewResourceProvider(
