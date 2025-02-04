@@ -51,6 +51,7 @@ func RunPreflightChecks() error {
 	gpuInfo, err := checker.getGPUInfo(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
+		return nil
 	} else {
 		log.Info().
 			Int("gpu_count", len(gpuInfo)).
