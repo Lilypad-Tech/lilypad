@@ -5,6 +5,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -19,6 +20,7 @@ type SolverOptions struct {
 	Store             store.StoreOptions
 	Web3              web3.Web3Options
 	Services          data.ServiceConfig
+	Stats             stats.StatsOptions
 	Telemetry         system.TelemetryOptions
 	Metrics           system.MetricsOptions
 	JobTimeoutSeconds int
