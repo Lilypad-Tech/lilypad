@@ -5,6 +5,7 @@ import (
 
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	db "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
@@ -67,7 +68,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer, meter)
+	stats, err := stats.NewStats(options.Stats)
+	if err != nil {
+		return err
+	}
+
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter)
 	if err != nil {
 		return err
 	}
