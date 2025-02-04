@@ -17,6 +17,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/executor/bacalhau"
 	"github.com/lilypad-tech/lilypad/pkg/ipfs"
 	"github.com/lilypad-tech/lilypad/pkg/powLogs"
+	"github.com/lilypad-tech/lilypad/pkg/resourceprovider/preflight"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
@@ -59,9 +60,8 @@ type ResourceProviderOfferOptions struct {
 
 // this configures the pow we will keep track of
 type ResourceProviderPowOptions struct {
-	DisablePow bool
-	NumWorkers int
-
+	DisablePow         bool
+	NumWorkers         int
 	CudaGridSize       int
 	CudaBlockSize      int
 	CudaHashsPerThread int
@@ -88,10 +88,15 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
+	if err := preflight.RunPreflightChecks(); err != nil {
+		return nil, fmt.Errorf("preflight checks failed: %w", err)
+	}
+
 	controller, err := NewResourceProviderController(options, web3SDK, executor, tracer)
 	if err != nil {
 		return nil, err
 	}
+
 	solver := &ResourceProvider{
 		controller: controller,
 		options:    options,
