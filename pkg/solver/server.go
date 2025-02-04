@@ -191,7 +191,7 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
 	return func(r *corehttp.Request) (string, error) {
 
-		ip, err := getRealIPWithCloudflare(r)
+		ip, err := httprate.KeyByRealIP(r)
 
 		if err != nil {
 			log.Error().Err(err).Msgf("error getting real ip")
@@ -206,14 +206,6 @@ func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, erro
 
 		return httprate.KeyByEndpoint(r)
 	}
-}
-
-func getRealIPWithCloudflare(r *corehttp.Request) (string, error) {
-	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
-		return canonicalizeIP(ip), nil
-	}
-	
-	return httprate.KeyByRealIP(r)
 }
 
 func canonicalizeIP(ip string) string {
