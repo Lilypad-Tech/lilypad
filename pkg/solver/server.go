@@ -21,6 +21,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
@@ -32,6 +33,7 @@ type solverServer struct {
 	options    http.ServerOptions
 	controller *SolverController
 	store      store.SolverStore
+	stats      stats.Stats
 	services   data.ServiceConfig
 }
 
@@ -39,12 +41,14 @@ func NewSolverServer(
 	options http.ServerOptions,
 	controller *SolverController,
 	store store.SolverStore,
+	stats stats.Stats,
 	services data.ServiceConfig,
 ) (*solverServer, error) {
 	server := &solverServer{
 		options:    options,
 		controller: controller,
 		store:      store,
+		stats:      stats,
 	}
 
 	metricsDashboard.Init(services.APIHost)
