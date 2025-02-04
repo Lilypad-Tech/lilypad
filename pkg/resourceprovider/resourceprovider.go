@@ -88,7 +88,6 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-
 	if err := preflight.RunPreflightChecks(); err != nil {
 		return nil, fmt.Errorf("preflight checks failed: %w", err)
 	}

@@ -9,17 +9,17 @@ import (
 
 const RequiredGPUMemoryGB = 1 // 1GB of VRAM is required to startup if GPU is enabled
 
-type GPUInfo struct {
-	UUID          string
-	Name          string
-	MemoryTotal   int64
-	DriverVersion string
+type gpuInfo struct {
+	uuid          string
+	name          string
+	memoryTotal   int64
+	driverVersion string
 }
 
-type CheckResult struct {
-	Passed  bool
-	Message string
-	Error   error
+type checkResult struct {
+	passed  bool
+	message string
+	error   error
 }
 
 type preflightConfig struct {
@@ -32,7 +32,7 @@ type preflightConfig struct {
 }
 
 type preflightChecker struct {
-	gpuInfo []GPUInfo
+	gpuInfo []gpuInfo
 }
 
 func RunPreflightChecks() error {
@@ -48,7 +48,7 @@ func RunPreflightChecks() error {
 	}
 
 	// Logging GPU requirements
-	gpuInfo, err := checker.GetGPUInfo(ctx)
+	gpuInfo, err := checker.getGPUInfo(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
 	} else {
@@ -58,7 +58,7 @@ func RunPreflightChecks() error {
 			Msg("🎮 GPU requirements")
 	}
 
-	err = checker.RunAllChecks(ctx, config)
+	err = checker.runAllChecks(ctx, config)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Preflight checks failed")
 		return err
@@ -66,19 +66,18 @@ func RunPreflightChecks() error {
 	return nil
 }
 
-func (p *preflightChecker) RunAllChecks(ctx context.Context, config preflightConfig) error {
-
-	gpuResult := p.CheckGPU(ctx, &GPUCheckConfig{
-		MinMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,
+func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightConfig) error {
+	gpuResult := p.checkGPU(ctx, &gpuCheckConfig{
+		minMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,
 	})
-	if !gpuResult.Passed {
-		return fmt.Errorf("GPU check failed: %s", gpuResult.Message)
+	if !gpuResult.passed {
+		return fmt.Errorf("GPU check failed: %s", gpuResult.message)
 	}
 
 	if config.Docker.CheckRuntime {
-		runtimeResult := p.CheckDockerRuntime(ctx)
-		if !runtimeResult.Passed {
-			return fmt.Errorf("Docker runtime check failed: %s", runtimeResult.Message)
+		runtimeResult := p.checkDockerRuntime(ctx)
+		if !runtimeResult.passed {
+			return fmt.Errorf("Docker runtime check failed: %s", runtimeResult.message)
 		}
 	}
 
