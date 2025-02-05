@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	corehttp "net/http"
 	"os"
 	"path/filepath"
@@ -81,6 +80,12 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 			exemptIPKeyFunc(exemptIPs),
 			httprate.KeyByEndpoint,
 		),
+		httprate.WithErrorHandler(func(w corehttp.ResponseWriter, r *corehttp.Request, err error) {
+			if err.Error() == "RATE_LIMIT_EXEMPT" {
+				return
+			}
+			corehttp.Error(w, err.Error(), corehttp.StatusTooManyRequests)
+		}),
 	))
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
@@ -190,39 +195,21 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 
 func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
 	return func(r *corehttp.Request) (string, error) {
-
 		ip, err := httprate.KeyByRealIP(r)
-
 		if err != nil {
-			log.Error().Err(err).Msgf("error getting real ip")
-			return httprate.KeyByEndpoint(r)
+			log.Error().Err(err).Msg("error getting real ip")
+			return ip, err
 		}
 
+		// Check if the IP is in the exempt list
 		for _, exemptIP := range exemptIPs {
-			if ip == canonicalizeIP(exemptIP) {
-				return "", nil
+			if http.CanonicalizeIP(exemptIP) == ip {
+				return "", fmt.Errorf("RATE_LIMIT_EXEMPT")
 			}
 		}
 
-		return httprate.KeyByEndpoint(r)
+		return ip, nil
 	}
-}
-
-func canonicalizeIP(ip string) string {
-	for _, c := range ip {
-		switch c {
-		case '.':
-			return ip
-		case ':':
-			parsed := net.ParseIP(ip)
-			if parsed == nil {
-				return ip
-			}
-			return parsed.Mask(net.CIDRMask(64, 128)).String()
-		}
-	}
-	
-	return ip
 }
 
 /*
