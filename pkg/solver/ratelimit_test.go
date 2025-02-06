@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sync"
 	"testing"
 	"time"
 )
@@ -27,31 +26,71 @@ func TestRateLimiter(t *testing.T) {
 		"/api/v1/deals",
 	}
 
-	var wg sync.WaitGroup
-	ch := make(chan rateResult, len(paths))
+	// Test non-exempt IP first (using a non-localhost address)
+	t.Run("Non-exempt IP is rate limited", func(t *testing.T) {
+		client := &http.Client{}
+		var okCount, limitedCount int
 
-	// Send off callers to run concurrently
-	for _, path := range paths {
-		wg.Add(1)
+		for i := 0; i < 10; i++ {
+			req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:8081%s", paths[0]), nil)
+			// Set X-Forwarded-For to simulate request from non-exempt IP
+			req.Header.Set("X-Forwarded-For", "1.2.3.4")
+			
+			res, err := client.Do(req)
+			if err != nil {
+				t.Fatalf("Request failed: %v", err)
+			}
 
-		go func() {
-			defer wg.Done()
-			makeCalls(t, path, ch)
-		}()
-	}
-
-	wg.Wait()
-	close(ch)
-
-	expectedOkCount := 5
-	for result := range ch {
-		if result.okCount > expectedOkCount {
-			t.Errorf(
-				"%s allowed %d requests and limited %d requests, but expected limiting after %d requests\n",
-				result.path, result.okCount, result.limitedCount, expectedOkCount,
-			)
+			if res.StatusCode == 200 {
+				okCount++
+			} else if res.StatusCode == 429 {
+				limitedCount++
+			} else {
+				t.Errorf("Unexpected status code: %d", res.StatusCode)
+			}
+			
+			time.Sleep(5 * time.Millisecond)
 		}
-	}
+
+		if okCount > 5 {
+			t.Errorf("Expected at most 5 successful requests, got %d", okCount)
+		}
+		if limitedCount == 0 {
+			t.Error("Expected some requests to be rate limited")
+		}
+	})
+
+	// Test exempt IP (localhost)
+	t.Run("Exempt IP is not rate limited", func(t *testing.T) {
+		client := &http.Client{}
+		var okCount, limitedCount int
+
+		for i := 0; i < 10; i++ {
+			req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:8081%s", paths[0]), nil)
+			
+			res, err := client.Do(req)
+			if err != nil {
+				t.Fatalf("Request failed: %v", err)
+			}
+
+			if res.StatusCode == 200 {
+				okCount++
+			} else if res.StatusCode == 429 {
+				limitedCount++
+			} else {
+				t.Errorf("Unexpected status code: %d", res.StatusCode)
+			}
+			
+			time.Sleep(5 * time.Millisecond)
+		}
+
+		if limitedCount > 0 {
+			t.Errorf("Expected no rate limiting for exempt IP, but got %d limited requests", limitedCount)
+		}
+		if okCount != 10 {
+			t.Errorf("Expected all 10 requests to succeed, got %d successful requests", okCount)
+		}
+	})
 }
 
 func makeCalls(t *testing.T, path string, ch chan rateResult) {
