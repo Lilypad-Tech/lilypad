@@ -51,17 +51,16 @@ func NewSolverServer(
 }
 
 /*
- *
- *
- *
+*
+*
+*
 
- Routes
+# Routes
 
- *
- *
- *
+*
+*
+*
 */
-
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
 	router := mux.NewRouter()
 
@@ -69,10 +68,24 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.Use(http.CorsMiddleware)
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
+
+	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
+
+	log.Debug().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
+
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
+		httprate.WithKeyFuncs(
+			exemptIPKeyFunc(exemptIPs),
+			httprate.KeyByEndpoint,
+		),
+		httprate.WithErrorHandler(func(w corehttp.ResponseWriter, r *corehttp.Request, err error) {
+			if err.Error() == "RATE_LIMIT_EXEMPT" {
+				return
+			}
+			corehttp.Error(w, err.Error(), corehttp.StatusTooManyRequests)
+		}),
 	))
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
@@ -177,6 +190,25 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 			IP:          connParams.IP,
 		})
 		solverServer.controller.removeUnmatchedResourceOffers(connParams.ID)
+	}
+}
+
+func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
+	return func(r *corehttp.Request) (string, error) {
+		ip, err := httprate.KeyByRealIP(r)
+		if err != nil {
+			log.Error().Err(err).Msg("error getting real ip")
+			return ip, err
+		}
+
+		// Check if the IP is in the exempt list
+		for _, exemptIP := range exemptIPs {
+			if http.CanonicalizeIP(exemptIP) == ip {
+				return "", fmt.Errorf("RATE_LIMIT_EXEMPT")
+			}
+		}
+
+		return ip, nil
 	}
 }
 
@@ -639,51 +671,51 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 }
 
 func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
-    // Read directory contents
-    files, err := os.ReadDir(dirPath)
-    if err != nil {
-        return &http.HTTPError{
-            Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
-            StatusCode: corehttp.StatusNotFound,
-        }
-    }
+	// Read directory contents
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
 
-    // Find the first regular file
-    var targetFile os.DirEntry
-    for _, file := range files {
-        info, err := file.Info()
-        if err != nil {
-            continue
-        }
-        if info.Mode().IsRegular() {
-            targetFile = file
-            break
-        }
-    }
+	// Find the first regular file
+	var targetFile os.DirEntry
+	for _, file := range files {
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+		if info.Mode().IsRegular() {
+			targetFile = file
+			break
+		}
+	}
 
-    if targetFile == nil {
-        return &http.HTTPError{
-            Message:    "no regular files found in directory",
-            StatusCode: corehttp.StatusNotFound,
-        }
-    }
+	if targetFile == nil {
+		return &http.HTTPError{
+			Message:    "no regular files found in directory",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
 
-    // Get the actual filename and path
-    filename := targetFile.Name()
-    filePath := filepath.Join(dirPath, filename)
+	// Get the actual filename and path
+	filename := targetFile.Name()
+	filePath := filepath.Join(dirPath, filename)
 
-    // Open and serve the file
-    file, err := os.Open(filePath)
-    if err != nil {
-        return &http.HTTPError{
-            Message:    err.Error(),
-            StatusCode: corehttp.StatusInternalServerError,
-        }
-    }
-    defer file.Close()
+	// Open and serve the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	defer file.Close()
 
-    res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-    res.Header().Set("Content-Type", "application/x-tar")
+	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	res.Header().Set("Content-Type", "application/x-tar")
 
 	_, err = io.Copy(res, file)
 	if err != nil {
