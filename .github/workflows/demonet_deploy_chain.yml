@@ -1,4 +1,4 @@
-name: Deploy Devnet chain
+name: Deploy Demonet chain
 
 on: workflow_dispatch
 
@@ -29,9 +29,9 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_CHAIN: ${{ secrets.ECR_REPOSITORY_CHAIN }}
-          CLOUDFLARE_TOKEN_HTTP: ${{ secrets.CLOUDFLARE_TOKEN_HTTP }}
-          CLOUDFLARE_TOKEN_WS: ${{ secrets.CLOUDFLARE_TOKEN_WS }}
-          ADMIN_ADDRESS: ${{ secrets.ADMIN_ADDRESS }}
+          CLOUDFLARE_TOKEN_HTTP: ${{ secrets.DEMONET_CLOUDFLARE_TOKEN_HTTP }}
+          CLOUDFLARE_TOKEN_WS: ${{ secrets.DEMONET_CLOUDFLARE_TOKEN_WS }}
+          ADMIN_ADDRESS: ${{ secrets.DEMONET_ADMIN_ADDRESS }}
         run: |
           docker build \
             -t $ECR_REPOSITORY_CHAIN \
@@ -40,6 +40,8 @@ jobs:
             --build-arg="expose_via=cloudflare" \
             --build-arg="cloudflare_token_http=${CLOUDFLARE_TOKEN_HTTP}"\
             --build-arg="cloudflare_token_ws=${CLOUDFLARE_TOKEN_WS}"\
+            --build-arg="network=demonet" \
+            --build-arg="chain_id=412347" \
             .
           docker tag $ECR_REPOSITORY_CHAIN:latest $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_CHAIN:latest
@@ -50,9 +52,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_CHAIN: ${{ secrets.ECR_REPOSITORY_CHAIN }}
         with:
-          host: ${{ secrets.DEVNET_EC2_HOST_CHAIN }}
-          username: ${{ secrets.DEVNET_EC2_USERNAME_CHAIN }}
-          key: ${{ secrets.DEVNET_EC2_PRIVATE_KEY_CHAIN }}
+          host: ${{ secrets.DEMONET_EC2_HOST_CHAIN }}
+          username: ${{ secrets.DEMONET_EC2_USERNAME_CHAIN }}
+          key: ${{ secrets.DEMONET_EC2_PRIVATE_KEY_CHAIN }}
           envs: ECR_REGISTRY, ECR_REPOSITORY_CHAIN
           script_stop: true
           script: |
