@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1738703757047,
+  "lastUpdate": 1738892115806,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -384,6 +384,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79297 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "walkah@walkah.net",
+            "name": "James Walker",
+            "username": "walkah"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7864ba15671b953345f94722c90ba2944d8ffeba",
+          "message": "chore: add demonet deploy workflows (#509)",
+          "timestamp": "2025-02-06T20:34:52-05:00",
+          "tree_id": "58e36181622288eead2a4ccf5ae6c5c52f023909",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/7864ba15671b953345f94722c90ba2944d8ffeba"
+        },
+        "date": 1738892115471,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46559,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "71485 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46559,
+            "unit": "ns/op",
+            "extra": "71485 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "71485 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "71485 times\n4 procs"
           }
         ]
       }
