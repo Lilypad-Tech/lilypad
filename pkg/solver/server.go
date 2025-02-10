@@ -71,8 +71,6 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
 
-	log.Debug().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
-
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
@@ -87,6 +85,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 			corehttp.Error(w, err.Error(), corehttp.StatusTooManyRequests)
 		}),
 	))
+
+	log.Info().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
@@ -658,7 +658,7 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
-        
+
 		solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
@@ -764,26 +764,22 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 	return &http.ValidationToken{JWT: tokenString}, nil
 }
 
-
-
-func (solverServer *solverServer) updateJobStates(dealID string, state string) (error) {
+func (solverServer *solverServer) updateJobStates(dealID string, state string) error {
 	deal, err := solverServer.store.GetDeal(dealID)
 	if err != nil {
 		return err
 	}
-
-   _, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
-   if err != nil {
-	return err
-   }
-
-   // update the job offer state
-   _, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
-   if err != nil {
-	return err
-   }
-
-   // update the resource offer state
+	
+	_, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+	// update the job offer state
+	_, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+	// update the resource offer state
 	_, err = solverServer.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
 	if err != nil {
 		return err
@@ -795,4 +791,4 @@ func (solverServer *solverServer) updateJobStates(dealID string, state string) (
 	})
 
 	return nil
-}	
+}
