@@ -15,6 +15,7 @@ type StatsOptions struct {
 
 type Stats interface {
 	PostJobRun(store store.SolverStore, deal *data.DealContainer) error
+	PostReputation(address string, reputation Reputation) error
 }
 
 func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK) (Stats, error) {
