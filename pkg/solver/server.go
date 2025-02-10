@@ -484,14 +484,16 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		}
 	}
 
-	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res); err != nil {
+	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
+		solverServer.stats.PostJobRun(solverServer.store, deal)
+	}); err != nil {
 		return EmptyResponse{}, err
 	}
 
 	return EmptyResponse{}, nil
 }
 
-func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
+func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter, onCompletion func()) *http.HTTPError {
 	// Read directory contents
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -525,7 +527,6 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	filename := targetFile.Name()
 	filePath := filepath.Join(dirPath, filename)
 
-	// Open and serve the file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return &http.HTTPError{
@@ -535,6 +536,7 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	}
 	defer file.Close()
 
+	// Set appropriate headers using the actual filename
 	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	res.Header().Set("Content-Type", "application/x-tar")
 
@@ -546,6 +548,7 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 		}
 	}
 
+	onCompletion()
 	return nil
 }
 
