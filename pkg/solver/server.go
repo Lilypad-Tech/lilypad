@@ -575,14 +575,16 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		}
 	}
 
-	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res); err != nil {
+	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
+		solverServer.stats.PostJobRun(solverServer.store, deal)
+	}); err != nil {
 		return EmptyResponse{}, err
 	}
 
 	return EmptyResponse{}, nil
 }
 
-func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
+func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter, onCompletion func()) *http.HTTPError {
 	// Read directory contents
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -616,7 +618,6 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	filename := targetFile.Name()
 	filePath := filepath.Join(dirPath, filename)
 
-	// Open and serve the file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return &http.HTTPError{
@@ -626,6 +627,7 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	}
 	defer file.Close()
 
+	// Set appropriate headers using the actual filename
 	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	res.Header().Set("Content-Type", "application/x-tar")
 
@@ -637,6 +639,7 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 		}
 	}
 
+	onCompletion()
 	return nil
 }
 
@@ -757,7 +760,24 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 
 	solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
-	if err := solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res); err != nil {
+	// Retrieve deal for stats reporting
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error loading deal",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	if deal == nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "deal not found",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	if err := solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
+		solverServer.stats.PostJobRun(solverServer.store, deal)
+	}); err != nil {
 		return EmptyResponse{}, err
 	}
 

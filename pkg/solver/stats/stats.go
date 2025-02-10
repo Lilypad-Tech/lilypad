@@ -1,9 +1,10 @@
 package stats
 
 import (
+	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
 
@@ -12,7 +13,9 @@ type StatsOptions struct {
 	URL     string
 }
 
-type Stats interface{}
+type Stats interface {
+	PostJobRun(store store.SolverStore, deal *data.DealContainer) error
+}
 
 func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK) (Stats, error) {
 	if !options.Enabled {
