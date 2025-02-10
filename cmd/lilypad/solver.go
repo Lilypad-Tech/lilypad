@@ -68,7 +68,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	stats, err := stats.NewStats(options.Stats)
+	stats, err := stats.NewStats(system.SolverService, options.Stats, options.Web3, web3SDK)
 	if err != nil {
 		return err
 	}
