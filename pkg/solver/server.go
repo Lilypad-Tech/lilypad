@@ -486,6 +486,11 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 
 	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
 		solverServer.stats.PostJobRun(solverServer.store, deal)
+		solverServer.stats.PostReputation(deal.ResourceProvider,
+			stats.NewReputationBuilder().
+				WithJobCompletedNoValidation(true).
+				Build(),
+		)
 	}); err != nil {
 		return EmptyResponse{}, err
 	}
