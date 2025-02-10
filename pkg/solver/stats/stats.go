@@ -21,6 +21,7 @@ type StatsOptions struct {
 
 type Stats interface {
 	PostJobRun(store store.SolverStore, deal *data.DealContainer) error
+	PostReputation(address string, reputation Reputation) error
 }
 
 func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK) (Stats, error) {
@@ -82,10 +83,24 @@ func (stat *HTTPStats) PostJobRun(store store.SolverStore, deal *data.DealContai
 	return nil
 }
 
+func (stat *HTTPStats) PostReputation(address string, reputation Reputation) error {
+	path := fmt.Sprintf("/resource-provider/%s/reputation", address)
+	_, err := http.PostRequest[Reputation, Reputation](stat.ClientOptions, path, reputation)
+	if err != nil {
+		return fmt.Errorf("failed to post reputation: %s", err)
+	}
+
+	return nil
+}
+
 // Noop implementation
 
 type NoopStats struct{}
 
 func (stat *NoopStats) PostJobRun(store store.SolverStore, deal *data.DealContainer) error {
+	return nil
+}
+
+func (stat *NoopStats) PostReputation(address string, reputation Reputation) error {
 	return nil
 }
