@@ -53,7 +53,8 @@ jobs:
       - name: Start solver
         run: |
           ./stack solver --disable-telemetry=true --api-host="" > solver.log &
-          sleep 10
+          sleep 30
+          cat solver.log
 
       - name: Run solver integration tests
         run: ./stack integration-tests-solver
