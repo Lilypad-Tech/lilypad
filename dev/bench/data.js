@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739293976701,
+  "lastUpdate": 1739296155357,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -480,6 +480,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78807 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ayushk2020@gmail.com",
+            "name": "Kelindi",
+            "username": "kelindi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eb9d218e70f35390b4a0428640a4d00b59a056bc",
+          "message": "feat: Api support + updates to job creation flow  (#510)\n\nMakes the following changes to support the API Flow + in preparation for mainnet smart contracts and job creation flow\r\n\r\nremoves deal agreement requirements from the job creator side (still needs to be removed from the cli and resource provider)\r\nset deal state to agreed on match (the states need to be revised and rearchitected to match the new smart contracts and job creation flow)\r\nSupporting changes:\r\n\r\nSolver\r\n\r\nAdds update JobStates helper function to update states across JobOffers, ResourceOffers, and Deal objects in the database in liu of smart contract updates\r\nAdds support to parse empty skeleton deal acceptance transactions from the JobCreator CLI\r\nLilypad CLI\r\n\r\nremoves smart contract call to accept results\r\nResource Provider\r\n\r\nremoves smart contract call to post results. Without this with the new solver changes the resource provider does not update its resource offer until it reaches the mandatory condition in the control loop (every 10 minutes).",
+          "timestamp": "2025-02-11T12:47:39-05:00",
+          "tree_id": "3996b10fcbd7857c1907287dedaf7c2e11bc2435",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/eb9d218e70f35390b4a0428640a4d00b59a056bc"
+        },
+        "date": 1739296154380,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45246,
+            "unit": "ns/op\t   44316 B/op\t     281 allocs/op",
+            "extra": "80096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45246,
+            "unit": "ns/op",
+            "extra": "80096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44316,
+            "unit": "B/op",
+            "extra": "80096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80096 times\n4 procs"
           }
         ]
       }
