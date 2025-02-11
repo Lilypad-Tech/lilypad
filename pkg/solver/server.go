@@ -78,11 +78,14 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 			exemptIPKeyFunc(exemptIPs),
 			httprate.KeyByEndpoint,
 		),
-		httprate.WithErrorHandler(func(w corehttp.ResponseWriter, r *corehttp.Request, err error) {
-			if err.Error() == "RATE_LIMIT_EXEMPT" {
+		httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+
+			key, _ := exemptIPKeyFunc(exemptIPs)(r)
+			if strings.HasPrefix(key, "exempt-") {
 				return
 			}
-			corehttp.Error(w, err.Error(), corehttp.StatusTooManyRequests)
+
+			corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
 		}),
 	))
 
@@ -198,13 +201,13 @@ func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, erro
 		ip, err := httprate.KeyByRealIP(r)
 		if err != nil {
 			log.Error().Err(err).Msg("error getting real ip")
-			return ip, err
+			return "", err
 		}
 
 		// Check if the IP is in the exempt list
 		for _, exemptIP := range exemptIPs {
 			if http.CanonicalizeIP(exemptIP) == ip {
-				return "", fmt.Errorf("RATE_LIMIT_EXEMPT")
+				return "exempt-" + ip, nil
 			}
 		}
 
@@ -769,7 +772,7 @@ func (solverServer *solverServer) updateJobStates(dealID string, state string) e
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
 	if err != nil {
 		return err
