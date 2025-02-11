@@ -2,6 +2,7 @@ package lilypad
 
 import (
 	"fmt"
+	"net/url"
 
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
@@ -91,7 +92,12 @@ func getSolverStore(options store.StoreOptions) (store.SolverStore, error) {
 
 	switch options.Type {
 	case "database":
-		solverStore, err = db.NewSolverStoreDatabase(options.ConnStr, options.GormLogLevel)
+		connStr, err := url.Parse(options.ConnStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse connection string: %w", err)
+		}
+
+		solverStore, err = db.NewSolverStoreDatabase(connStr.String(), options.GormLogLevel)
 		if err != nil {
 			return nil, err
 		}
