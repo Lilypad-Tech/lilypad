@@ -1257,6 +1257,67 @@ func TestMatchDecisionRemove(t *testing.T) {
 	}
 }
 
+func TestAllowedResourceProviderOps(t *testing.T) {
+	storeConfigs := solver.SetupTestStores(t)
+	for _, config := range storeConfigs {
+		t.Run(config.Name, func(t *testing.T) {
+			getStore, clearStore := config.Init()
+			store := getStore()
+			defer clearStore()
+
+			// Generate multiple addresses
+			addresses := generateAllowedResourceProviders(5, 50)
+
+			// Add addresses
+			for _, addr := range addresses {
+				added, err := store.AddAllowedResourceProvider(addr)
+				if err != nil {
+					t.Fatalf("Failed to add allowed resource provider: %v", err)
+				}
+				if added != addr {
+					t.Errorf("Expected address %s, got %s", addr, added)
+				}
+			}
+
+			// Get all addresses
+			retrieved, err := store.GetAllowedResourceProviders()
+			if err != nil {
+				t.Fatalf("Failed to get allowed resource providers: %v", err)
+			}
+
+			// Sort both slices for comparison
+			sort.Strings(addresses)
+			sort.Strings(retrieved)
+
+			if !slices.Equal(retrieved, addresses) {
+				t.Errorf("Retrieved addresses don't match added addresses.\nAdded: %v\nRetrieved: %v",
+					addresses, retrieved)
+			}
+
+			// Remove addresses and verify removal
+			for _, addr := range addresses {
+				err := store.RemoveAllowedResourceProvider(addr)
+				if err != nil {
+					t.Fatalf("Failed to remove allowed resource provider: %v", err)
+				}
+
+				// Get updated list
+				remaining, err := store.GetAllowedResourceProviders()
+				if err != nil {
+					t.Fatalf("Failed to get allowed resource providers after removal: %v", err)
+				}
+
+				// Verify address was removed
+				for _, remainingAddr := range remaining {
+					if remainingAddr == addr {
+						t.Errorf("Address %s still exists after removal", addr)
+					}
+				}
+			}
+		})
+	}
+}
+
 // Concurrency for all
 
 func TestConcurrentOps(t *testing.T) {
@@ -1265,6 +1326,7 @@ func TestConcurrentOps(t *testing.T) {
 	deals := generateDeals(4, 10)
 	results := generateResults(4, 10)
 	matchDecisions := generateMatchDecisions(4, 10)
+	allowedResourceProviders := generateAllowedResourceProviders(4, 10)
 
 	storeConfigs := solver.SetupTestStores(t)
 	for _, config := range storeConfigs {
@@ -1274,7 +1336,7 @@ func TestConcurrentOps(t *testing.T) {
 			store := getStore()
 			defer clearStore()
 
-			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results) + len(matchDecisions)
+			count := len(jobOffers) + len(resourceOffers) + len(deals) + len(results) + len(matchDecisions) + len(allowedResourceProviders)
 			errCh := make(chan error, count)
 			var wg sync.WaitGroup
 
@@ -1336,6 +1398,18 @@ func TestConcurrentOps(t *testing.T) {
 						errCh <- fmt.Errorf("match decision error: %v", err)
 					}
 				}(decision)
+			}
+
+			// Add allowed resource providers concurrently
+			for _, provider := range allowedResourceProviders {
+				wg.Add(1)
+				go func(p string) {
+					defer wg.Done()
+					_, err := store.AddAllowedResourceProvider(p)
+					if err != nil {
+						errCh <- fmt.Errorf("allowed resource provider error: %v", err)
+					}
+				}(provider)
 			}
 
 			wg.Wait()
@@ -1440,6 +1514,18 @@ func TestConcurrentOps(t *testing.T) {
 				}
 			}
 
+			// Verify all allowed resource providers were added
+			retrieved, err := store.GetAllowedResourceProviders()
+			if err != nil {
+				t.Errorf("Failed to get allowed resource providers: %v", err)
+			}
+			sort.Strings(allowedResourceProviders)
+			sort.Strings(retrieved)
+
+			if !slices.Equal(retrieved, allowedResourceProviders) {
+				t.Errorf("Retrieved allowed providers don't match added providers.\nAdded: %v\nRetrieved: %v",
+					allowedResourceProviders, retrieved)
+			}
 		})
 	}
 }
@@ -1586,4 +1672,15 @@ func generateMatchDecisions(min int, max int) []data.MatchDecision {
 	}
 
 	return decisions
+}
+
+func generateAllowedResourceProviders(min int, max int) []string {
+	count := min + rand.Intn(max-min+1)
+	providers := make([]string, count)
+
+	for i := 0; i < count; i++ {
+		providers[i] = generateEthAddress()
+	}
+
+	return providers
 }
