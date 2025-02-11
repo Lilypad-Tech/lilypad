@@ -52,17 +52,16 @@ func NewSolverServer(
 }
 
 /*
- *
- *
- *
+*
+*
+*
 
- Routes
+# Routes
 
- *
- *
- *
+*
+*
+*
 */
-
 func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
 	router := mux.NewRouter()
 
@@ -70,14 +69,40 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.Use(http.CorsMiddleware)
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
+
+	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
+	// TODO: re-enable exempt IP rate limiting
+	// subrouter.Use(httprate.Limit(
+	// 	solverServer.options.RateLimiter.RequestLimit,
+	// 	time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
+	// 	httprate.WithKeyFuncs(
+	// 		exemptIPKeyFunc(exemptIPs),
+	// 		httprate.KeyByEndpoint,
+	// 	),
+	// 	httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+
+	// 		key, _ := exemptIPKeyFunc(exemptIPs)(r)
+	// 		if strings.HasPrefix(key, "exempt-") {
+	// 			return
+	// 		}
+
+	// 		corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
+	// 	}),
+	// ))
+
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 
+	log.Info().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
+
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
+
+	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
 
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
@@ -178,6 +203,25 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 	}
 }
 
+func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
+	return func(r *corehttp.Request) (string, error) {
+		ip, err := httprate.KeyByRealIP(r)
+		if err != nil {
+			log.Error().Err(err).Msg("error getting real ip")
+			return "", err
+		}
+
+		// Check if the IP is in the exempt list
+		for _, exemptIP := range exemptIPs {
+			if http.CanonicalizeIP(exemptIP) == ip {
+				return "exempt-" + ip, nil
+			}
+		}
+
+		return ip, nil
+	}
+}
+
 /*
 *
 *
@@ -245,6 +289,17 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 *
 *
 */
+
+func (solverServer *solverServer) getJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (data.JobOfferContainer, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+	jobOffer, err := solverServer.store.GetJobOffer(id)
+	if err != nil {
+		return data.JobOfferContainer{}, err
+	}
+	return *jobOffer, nil
+}
+
 func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
@@ -362,7 +417,18 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 		return nil, err
 	}
 	results.DealID = id
-	return solverServer.store.AddResult(results)
+
+	storedResult, err := solverServer.store.AddResult(results)
+	if err != nil {
+		return nil, err
+	}
+
+	err = solverServer.updateJobStates(id, "ResultsSubmitted")
+	if err != nil {
+		return nil, err
+	}
+
+	return storedResult, nil
 }
 
 /*
@@ -496,67 +562,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 				StatusCode: corehttp.StatusUnauthorized,
 			}
 		}
-
-		// Get the directory path
-		dirPath := GetDealsFilePath(id)
-
-		// Read directory contents
-		files, err := os.ReadDir(dirPath)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		// Find the first regular file
-		var targetFile os.DirEntry
-		for _, file := range files {
-			info, err := file.Info()
-			if err != nil {
-				continue
-			}
-			if info.Mode().IsRegular() {
-				targetFile = file
-				break
-			}
-		}
-
-		if targetFile == nil {
-			return &http.HTTPError{
-				Message:    "no regular files found in directory",
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		// Get the actual filename
-		filename := targetFile.Name()
-		filePath := filepath.Join(dirPath, filename)
-
-		// Open the file
-		file, err := os.Open(filePath)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-		defer file.Close()
-
-		// Set appropriate headers using the actual filename
-		res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-		res.Header().Set("Content-Type", "application/x-tar")
-
-		// Copy the file directly to the response
-		_, err = io.Copy(res, file)
-		if err != nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-
-		return nil
+		return solverServer.handleFileDownload(GetDealsFilePath(deal.ID), res)
 	}()
 
 	if err != nil {
@@ -641,6 +647,112 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	}
 }
 
+func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	err := func() *http.HTTPError {
+		jobOffer, err := solverServer.store.GetJobOffer(id)
+		if err != nil {
+			log.Error().Err(err).Msgf("error loading job offer")
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusInternalServerError,
+			}
+		}
+		if jobOffer == nil {
+			return &http.HTTPError{
+				Message:    err.Error(),
+				StatusCode: corehttp.StatusNotFound,
+			}
+		}
+
+		signerAddress, err := http.CheckSignature(req)
+		if err != nil {
+			log.Error().Err(err).Msgf("error checking signature")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
+		if signerAddress != jobOffer.JobCreator {
+			log.Error().Err(err).Msgf("job creator address does not match signer address")
+			return &http.HTTPError{
+				Message:    errors.New("not authorized").Error(),
+				StatusCode: corehttp.StatusUnauthorized,
+			}
+		}
+
+		solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
+
+		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
+	}()
+
+	if err != nil {
+		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		corehttp.Error(res, err.Error(), err.StatusCode)
+	}
+}
+
+func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
+	// Read directory contents
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Find the first regular file
+	var targetFile os.DirEntry
+	for _, file := range files {
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+		if info.Mode().IsRegular() {
+			targetFile = file
+			break
+		}
+	}
+
+	if targetFile == nil {
+		return &http.HTTPError{
+			Message:    "no regular files found in directory",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Get the actual filename and path
+	filename := targetFile.Name()
+	filePath := filepath.Join(dirPath, filename)
+
+	// Open and serve the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	defer file.Close()
+
+	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	res.Header().Set("Content-Type", "application/x-tar")
+
+	_, err = io.Copy(res, file)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}
+
 // Validation Service
 
 func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter, req *corehttp.Request) (*http.ValidationToken, error) {
@@ -675,4 +787,33 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 
 	// Respond with the JWT
 	return &http.ValidationToken{JWT: tokenString}, nil
+}
+
+func (solverServer *solverServer) updateJobStates(dealID string, state string) error {
+	deal, err := solverServer.store.GetDeal(dealID)
+	if err != nil {
+		return err
+	}
+
+	_, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+	// update the job offer state
+	_, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+	// update the resource offer state
+	_, err = solverServer.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	if err != nil {
+		return err
+	}
+
+	solverServer.controller.writeEvent(SolverEvent{
+		EventType: DealStateUpdated,
+		Deal:      deal,
+	})
+
+	return nil
 }
