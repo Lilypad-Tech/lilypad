@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1738892115806,
+  "lastUpdate": 1739293976701,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -432,6 +432,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "71485 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "05f285d792de7ef9360f3039b6ccd6a141374a87",
+          "message": "feat: Add resource provider allowlist (#481)\n\n* feat: Add enable resource provider allowlist option\r\n\r\n* feat: Add AllowedResourceProvider model\r\n\r\n* feat: Add allowed resource provider store methods\r\n\r\n* test: Add allowed resource provider tests\r\n\r\n* feat: Add allowed resource provider memory implementations\r\n\r\n* feat: Add allowed resource provider database implementations\r\n\r\n* feat: Check resource provider when allowlist enabled",
+          "timestamp": "2025-02-11T09:11:14-08:00",
+          "tree_id": "0961358fde08b6d1b253359c3a80d52822ce500d",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/05f285d792de7ef9360f3039b6ccd6a141374a87"
+        },
+        "date": 1739293975786,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45509,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78807 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45509,
+            "unit": "ns/op",
+            "extra": "78807 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78807 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78807 times\n4 procs"
           }
         ]
       }
