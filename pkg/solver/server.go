@@ -70,23 +70,29 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 
 	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
+	// TODO: re-enable exempt IP rate limiting
+	// subrouter.Use(httprate.Limit(
+	// 	solverServer.options.RateLimiter.RequestLimit,
+	// 	time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
+	// 	httprate.WithKeyFuncs(
+	// 		exemptIPKeyFunc(exemptIPs),
+	// 		httprate.KeyByEndpoint,
+	// 	),
+	// 	httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+
+	// 		key, _ := exemptIPKeyFunc(exemptIPs)(r)
+	// 		if strings.HasPrefix(key, "exempt-") {
+	// 			return
+	// 		}
+
+	// 		corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
+	// 	}),
+	// ))
 
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-		httprate.WithKeyFuncs(
-			exemptIPKeyFunc(exemptIPs),
-			httprate.KeyByEndpoint,
-		),
-		httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-
-			key, _ := exemptIPKeyFunc(exemptIPs)(r)
-			if strings.HasPrefix(key, "exempt-") {
-				return
-			}
-
-			corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
-		}),
+		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 
 	log.Info().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
