@@ -9,6 +9,7 @@ import (
 	corehttp "net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -367,6 +368,21 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	if signerAddress != resourceOffer.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
+
+	// Resource provider must be in allowlist when enabled
+	if solverServer.options.AccessControl.EnableResourceProviderAllowlist {
+		allowedProviders, err := solverServer.store.GetAllowedResourceProviders()
+		if err != nil {
+			log.Error().Err(err).Msgf("Unable to load resource provider allowlist: %s", err)
+			return nil, err
+		}
+
+		if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
+			log.Debug().Msgf("resource provider not in allowlist %s", resourceOffer.ResourceProvider)
+			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
+		}
+	}
+
 	err = data.CheckResourceOffer(resourceOffer)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking resource offer")

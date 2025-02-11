@@ -19,9 +19,11 @@ func GetDefaultServerOptions() http.ServerOptions {
 
 func GetDefaultAccessControlOptions() http.AccessControlOptions {
 	return http.AccessControlOptions{
-		ValidationTokenSecret:     GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
-		ValidationTokenExpiration: GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
-		ValidationTokenKid:        GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
+		// When false, any resource provider may post a resource offer.
+		EnableResourceProviderAllowlist: GetDefaultServeOptionBool("SERVER_ENABLE_RESOURCE_PROVIDER_ALLOWLIST", false),
+		ValidationTokenSecret:           GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
+		ValidationTokenExpiration:       GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
+		ValidationTokenKid:              GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
 	}
 }
 
@@ -45,6 +47,11 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.Port, "server-port", serverOptions.Port,
 		`The port to bind the api server to (SERVER_PORT).`,
+	)
+	cmd.PersistentFlags().BoolVar(
+		&serverOptions.AccessControl.EnableResourceProviderAllowlist, "server-enable-resource-provider-allowlist",
+		serverOptions.AccessControl.EnableResourceProviderAllowlist,
+		`Enable resource provider allowlist (SERVER_ENABLE_RESOURCE_PROVIDER_ALLOWLIST).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.AccessControl.ValidationTokenSecret, "server-validation-token-secret",
@@ -75,9 +82,12 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	)
 }
 
-func CheckServerOptions(options http.ServerOptions) error {
+func CheckServerOptions(options http.ServerOptions, storeType string) error {
 	if options.URL == "" {
 		return fmt.Errorf("SERVER_URL is required")
+	}
+	if options.AccessControl.EnableResourceProviderAllowlist && storeType == "memory" {
+		return fmt.Errorf("Enabling the resource provider allowlist requires the database store. Set STORE_TYPE to \"database\".")
 	}
 	if options.AccessControl.ValidationTokenSecret == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_SECRET is required")

@@ -11,21 +11,23 @@ import (
 )
 
 type SolverStoreMemory struct {
-	jobOfferMap      map[string]*data.JobOfferContainer
-	resourceOfferMap map[string]*data.ResourceOfferContainer
-	dealMap          map[string]*data.DealContainer
-	resultMap        map[string]*data.Result
-	matchDecisionMap map[string]*data.MatchDecision
-	mutex            sync.RWMutex
+	jobOfferMap                map[string]*data.JobOfferContainer
+	resourceOfferMap           map[string]*data.ResourceOfferContainer
+	dealMap                    map[string]*data.DealContainer
+	resultMap                  map[string]*data.Result
+	matchDecisionMap           map[string]*data.MatchDecision
+	allowedResourceProviderMap map[string]string
+	mutex                      sync.RWMutex
 }
 
 func NewSolverStoreMemory() (*SolverStoreMemory, error) {
 	return &SolverStoreMemory{
-		jobOfferMap:      map[string]*data.JobOfferContainer{},
-		resourceOfferMap: map[string]*data.ResourceOfferContainer{},
-		dealMap:          map[string]*data.DealContainer{},
-		resultMap:        map[string]*data.Result{},
-		matchDecisionMap: map[string]*data.MatchDecision{},
+		jobOfferMap:                map[string]*data.JobOfferContainer{},
+		resourceOfferMap:           map[string]*data.ResourceOfferContainer{},
+		dealMap:                    map[string]*data.DealContainer{},
+		resultMap:                  map[string]*data.Result{},
+		matchDecisionMap:           map[string]*data.MatchDecision{},
+		allowedResourceProviderMap: map[string]string{},
 	}, nil
 }
 
@@ -78,6 +80,14 @@ func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer stri
 	s.matchDecisionMap[id] = decision
 
 	return decision, nil
+}
+
+func (store *SolverStoreMemory) AddAllowedResourceProvider(resourceProvider string) (string, error) {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	store.allowedResourceProviderMap[resourceProvider] = resourceProvider
+
+	return resourceProvider, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
@@ -207,6 +217,18 @@ func (s *SolverStoreMemory) GetMatchDecisions() ([]data.MatchDecision, error) {
 		results = append(results, *decision)
 	}
 	return results, nil
+}
+
+func (store *SolverStoreMemory) GetAllowedResourceProviders() ([]string, error) {
+	store.mutex.RLock()
+	defer store.mutex.RUnlock()
+
+	providers := []string{}
+	for provider := range store.allowedResourceProviderMap {
+		providers = append(providers, provider)
+	}
+
+	return providers, nil
 }
 
 func (s *SolverStoreMemory) GetJobOffer(id string) (*data.JobOfferContainer, error) {
@@ -430,6 +452,13 @@ func (s *SolverStoreMemory) RemoveMatchDecision(resourceOffer string, jobOffer s
 			delete(s.matchDecisionMap, k)
 		}
 	}
+	return nil
+}
+
+func (store *SolverStoreMemory) RemoveAllowedResourceProvider(resourceProvider string) error {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	delete(store.allowedResourceProviderMap, resourceProvider)
 	return nil
 }
 
