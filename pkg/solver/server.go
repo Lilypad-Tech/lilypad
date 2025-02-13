@@ -242,6 +242,9 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
 		query.NotMatched = true
 	}
+	if active := req.URL.Query().Get("active"); active == "true" {
+		query.Active = true
+	}
 	if includeCancelled := req.URL.Query().Get("include_cancelled"); includeCancelled == "true" {
 		query.IncludeCancelled = true
 	}

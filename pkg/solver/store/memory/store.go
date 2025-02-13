@@ -105,6 +105,12 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 				matching = false
 			}
 		}
+		if query.Active &&
+			jobOffer.State != data.GetAgreementStateIndex("DealNegotiating") &&
+			jobOffer.State != data.GetAgreementStateIndex("DealAgreed") &&
+			jobOffer.State != data.GetAgreementStateIndex("ResultsSubmitted") {
+			matching = false
+		}
 		if !query.IncludeCancelled && jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") {
 			matching = false
 		}

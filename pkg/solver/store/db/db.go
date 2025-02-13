@@ -159,6 +159,13 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 	if query.NotMatched {
 		q = q.Where("deal_id = ''")
 	}
+	if query.Active {
+		q = q.Where("state IN (?)", []uint8{
+			data.GetAgreementStateIndex("DealNegotiating"),
+			data.GetAgreementStateIndex("DealAgreed"),
+			data.GetAgreementStateIndex("ResultsSubmitted"),
+		})
+	}
 	if !query.IncludeCancelled {
 		q = q.Where("state != ?", data.GetAgreementStateIndex("JobOfferCancelled"))
 	}
