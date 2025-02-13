@@ -124,4 +124,17 @@ func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 			t.Fatalf("Failed to remove existing match decision: %v", err)
 		}
 	}
+
+	// Delete allowed resource providers
+	providers, err := s.GetAllowedResourceProviders()
+	if err != nil {
+		t.Fatalf("Failed to get existing allowed resource providers: %v", err)
+	}
+
+	for _, provider := range providers {
+		err := s.RemoveAllowedResourceProvider(provider)
+		if err != nil {
+			t.Fatalf("Failed to remove existing allowed resource provider: %v", err)
+		}
+	}
 }
