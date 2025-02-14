@@ -290,7 +290,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		return err
 	}
 
-	// find out which deals we can make from matching the offers
+	// Match job offers with resource offers to make deals
 	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.log, controller.tracer, controller.meter)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
@@ -302,7 +302,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
 	})
 
-	// loop over each of the deals add add them to the store and emit events
+	// Add deals to the store, update offer states, and notify network
 	span.AddEvent("add_deals.start")
 	for _, deal := range deals {
 		_, err := controller.addDeal(ctx, deal)
