@@ -21,6 +21,7 @@ type metrics struct {
 	timeoutJudgeResults   metric.Int64Gauge
 	timeoutMediateResults metric.Int64Gauge
 	jobOfferCancelled     metric.Int64Gauge
+	jobTimedOut           metric.Int64Gauge
 }
 
 type jobStats struct {
@@ -40,6 +41,7 @@ type stateCounts struct {
 	timeoutJudgeResults   int64
 	timeoutMediateResults int64
 	jobOfferCancelled     int64
+	jobTimedOut           int64
 }
 
 func newMetrics(meter metric.Meter) (*metrics, error) {
@@ -122,8 +124,15 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 		return nil, err
 	}
 	jobOfferCancelled, err := meter.Int64Gauge(
-		"solver.deal.state.job_offer_cancelled",
+		"solver.job_offer.state.job_offer_cancelled",
 		metric.WithDescription("Number of jobs in a JobOfferCancelled state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	jobTimedOut, err := meter.Int64Gauge(
+		"solver.job_offer.state.job_timed_out",
+		metric.WithDescription("Number of jobs in a JobTimedOut state."),
 	)
 	if err != nil {
 		return nil, err
@@ -142,10 +151,11 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 		timeoutJudgeResults,
 		timeoutMediateResults,
 		jobOfferCancelled,
+		jobTimedOut,
 	}, nil
 }
 
-func reportDealMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer) error {
+func reportDealMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
 	var jobStats jobStats
 
 	// Compute deal state counts
@@ -173,10 +183,20 @@ func reportDealMetrics(ctx context.Context, meter metric.Meter, deals []data.Dea
 			jobStats.stateCounts.timeoutJudgeResults += 1
 		case "TimeoutMediateResults":
 			jobStats.stateCounts.timeoutMediateResults += 1
+		default:
+			log.Trace().Msgf("untracked deal state ID: %d", deal.State)
+		}
+	}
+
+	// Cancelled states may only exist in the job offer
+	for _, offer := range jobOffers {
+		switch data.GetAgreementStateString(offer.State) {
 		case "JobOfferCancelled":
 			jobStats.stateCounts.jobOfferCancelled += 1
+		case "JobTimedOut":
+			jobStats.stateCounts.jobTimedOut += 1
 		default:
-			log.Warn().Msgf("unknown deal state ID: %d", deal.State)
+			log.Trace().Msgf("job metrics skipped offer state ID: %d", offer.State)
 		}
 	}
 
@@ -198,6 +218,7 @@ func reportDealMetrics(ctx context.Context, meter metric.Meter, deals []data.Dea
 	metrics.timeoutJudgeResults.Record(ctx, jobStats.stateCounts.timeoutJudgeResults)
 	metrics.timeoutMediateResults.Record(ctx, jobStats.stateCounts.timeoutMediateResults)
 	metrics.jobOfferCancelled.Record(ctx, jobStats.stateCounts.jobOfferCancelled)
+	metrics.jobTimedOut.Record(ctx, jobStats.stateCounts.jobTimedOut)
 
 	return nil
 }

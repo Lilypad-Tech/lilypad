@@ -304,6 +304,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	}
 	span.AddEvent("add_deals.done")
 
+	// Report deal state metrics
 	span.AddEvent("report_deal_metrics.start")
 	storedDeals, err := controller.store.GetDealsAll()
 	if err != nil {
@@ -311,7 +312,13 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		span.RecordError(err)
 		return err
 	}
-	err = reportDealMetrics(ctx, controller.meter, storedDeals)
+	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{Cancelled: true})
+	if err != nil {
+		span.SetStatus(codes.Error, "get cancelled job offers failed")
+		span.RecordError(err)
+		return err
+	}
+	err = reportDealMetrics(ctx, controller.meter, storedDeals, jobOffers)
 	if err != nil {
 		span.SetStatus(codes.Error, "report deal metrics failed")
 		span.RecordError(err)
