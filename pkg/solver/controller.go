@@ -368,7 +368,6 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 					controller.log.Error("update expired job offer state failed", err)
 					span.SetStatus(codes.Error, "update expired job offer state failed")
 					span.RecordError(err)
-					return err
 				}
 			} else {
 				// Cancel expired job offers, resource offers, and deals
@@ -377,7 +376,6 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 					controller.log.Error("update expired deal state failed", err)
 					span.SetStatus(codes.Error, "update expired deal state failed")
 					span.RecordError(err)
-					return err
 				}
 				expiredDeals = append(expiredDeals, jobOffer.DealID)
 			}
