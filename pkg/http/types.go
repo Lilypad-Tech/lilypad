@@ -13,6 +13,7 @@ type AccessControlOptions struct {
 	ValidationTokenSecret           string
 	ValidationTokenExpiration       int
 	ValidationTokenKid              string
+	AnuraAddresses                  []string
 }
 
 type ValidationToken struct {

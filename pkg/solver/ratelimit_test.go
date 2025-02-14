@@ -46,17 +46,6 @@ func TestRateLimiter(t *testing.T) {
 		{"X-Forwarded-For": "1.2.3.4"},
 	}
 
-	// The running solver is configured to exempt localhost.
-	// When no headers are set, test using the IP address from
-	// the underlying connection (also localhost)
-	// TODO: re-enable exempt IP rate limiting
-	// exemptHeaders := []map[string]string{
-	// 	{"True-Client-IP": "127.0.0.1"},
-	// 	{"X-Real-IP": "127.0.0.1"},
-	// 	{"X-Forwarded-For": "127.0.0.1"},
-	// 	{}, // No headers case - uses RemoteAddr
-	// }
-
 	t.Run("non-exempt IP is rate limited", func(t *testing.T) {
 		// Select a random header on each test run. Over time we test them all.
 		headers := nonExemptHeaders[rand.Intn(len(nonExemptHeaders))]
@@ -68,26 +57,13 @@ func TestRateLimiter(t *testing.T) {
 		}
 		runRateLimitTest(t, paths, tc)
 	})
-
-	// TODO: re-enable exempt IP rate limiting
-	// t.Run("exempt IP is not rate limited", func(t *testing.T) {
-	// 	// Select a random header on each test run. Over time we test them all.
-	// 	headers := exemptHeaders[rand.Intn(len(exemptHeaders))]
-	// 	tc := rateTestCase{
-	// 		name:          fmt.Sprintf("exempt with headers %v", headers),
-	// 		headers:       headers,
-	// 		expectedOK:    100,
-	// 		expectedLimit: 0,
-	// 	}
-	// 	runRateLimitTest(t, paths, tc)
-	// })
+	
 }
 
 func runRateLimitTest(t *testing.T, paths []string, tc rateTestCase) {
 	var wg sync.WaitGroup
 	ch := make(chan rateResult, len(paths))
 
-	// Run the calls against paths in parallel
 	for _, path := range paths {
 		wg.Add(1)
 		go func(path string) {

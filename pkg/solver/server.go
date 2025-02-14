@@ -122,6 +122,37 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 
 	subrouter.HandleFunc("/validation_token", http.GetHandler(solverServer.getValidationToken)).Methods("GET")
 
+	//anura subrouter
+
+	failedAuthLimiter := httprate.Limit(
+		5,              
+		60*time.Second, 
+		httprate.WithKeyFuncs(httprate.KeyByRealIP),
+	)
+
+	anuraMiddleware := func(next corehttp.Handler) corehttp.Handler {
+		return corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+			_, err := http.CheckAnuraSignature(r, solverServer.options.AccessControl.AnuraAddresses)
+			if err != nil {
+				failedAuthLimiter(corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+					corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
+				})).ServeHTTP(w, r)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	anurarouter := router.PathPrefix(http.API_SUB_PATH + "/anura").Subrouter()
+	anurarouter.Use(http.CorsMiddleware)
+	anurarouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
+	anurarouter.Use(anuraMiddleware)
+
+	anurarouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
+	anurarouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
+
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
 	// and write them to anyone who is connected to us
