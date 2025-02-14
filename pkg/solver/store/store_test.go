@@ -151,6 +151,12 @@ func TestJobOfferQuery(t *testing.T) {
 					DealID:     "",
 					State:      data.GetAgreementStateIndex("JobOfferCancelled"),
 				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobTimedOut"),
+				},
 			},
 			query: store.GetJobOffersQuery{
 				IncludeCancelled: false,
@@ -244,6 +250,12 @@ func TestJobOfferQuery(t *testing.T) {
 					DealID:     "",
 					State:      data.GetAgreementStateIndex("JobOfferCancelled"),
 				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobTimedOut"),
+				},
 			},
 			query: store.GetJobOffersQuery{
 				IncludeCancelled: true,
@@ -251,6 +263,7 @@ func TestJobOfferQuery(t *testing.T) {
 			expected: []string{
 				"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
 				"QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+				"QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
 			},
 		},
 		{

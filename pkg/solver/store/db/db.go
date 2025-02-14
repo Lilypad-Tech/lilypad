@@ -167,7 +167,10 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 		})
 	}
 	if !query.IncludeCancelled {
-		q = q.Where("state != ?", data.GetAgreementStateIndex("JobOfferCancelled"))
+		q = q.Where("state NOT IN (?)", []uint8{
+			data.GetAgreementStateIndex("JobOfferCancelled"),
+			data.GetAgreementStateIndex("JobTimedOut"),
+		})
 	}
 	if query.OrderOldestFirst {
 		q = q.Order("created_at ASC")
