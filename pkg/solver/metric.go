@@ -155,7 +155,7 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 	}, nil
 }
 
-func reportDealMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
+func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
 	var jobStats jobStats
 
 	// Compute deal state counts
