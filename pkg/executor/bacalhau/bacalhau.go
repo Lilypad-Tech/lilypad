@@ -128,6 +128,13 @@ func (executor *BacalhauExecutor) RunJob(
 			if jobInfo.Job.State.StateType == models.JobStateTypeCompleted {
 				break
 			}
+
+			// Jobs have 3 terminal states: completed, stopped and failed. We catch the latter two here.
+			// Most likely, the job failed, but could have been stopped by the operator.
+			// Any other state, the job is still running or yet to be run.
+			if jobInfo.Job.State.StateType.IsTerminal() {
+				return nil, fmt.Errorf("job failed to execute %s : %s", jobID, jobInfo.Job.State.Message)
+			}
 		}
 
 		time.Sleep(time.Duration(executor.Options.JobStatusPollInterval) * time.Second)
