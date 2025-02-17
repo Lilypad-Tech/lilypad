@@ -59,9 +59,7 @@ func SetupTestStores(t *testing.T) []TestStoreConfig {
 
 func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 	// Delete job offers
-	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{
-		IncludeCancelled: true,
-	})
+	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{})
 	if err != nil {
 		t.Fatalf("Failed to get existing job offers: %v", err)
 	}

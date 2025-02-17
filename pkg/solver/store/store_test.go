@@ -14,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	solverstore "github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"golang.org/x/exp/rand"
 )
 
@@ -159,7 +160,7 @@ func TestJobOfferQuery(t *testing.T) {
 				},
 			},
 			query: store.GetJobOffersQuery{
-				IncludeCancelled: false,
+				Cancelled: system.BoolPointer(false),
 			},
 			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
 		},
@@ -258,7 +259,7 @@ func TestJobOfferQuery(t *testing.T) {
 				},
 			},
 			query: store.GetJobOffersQuery{
-				IncludeCancelled: true,
+				Cancelled: nil,
 			},
 			expected: []string{
 				"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
@@ -289,7 +290,7 @@ func TestJobOfferQuery(t *testing.T) {
 				},
 			},
 			query: store.GetJobOffersQuery{
-				Cancelled: true,
+				Cancelled: system.BoolPointer(true),
 			},
 			expected: []string{
 				"QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
@@ -325,9 +326,9 @@ func TestJobOfferQuery(t *testing.T) {
 				},
 			},
 			query: store.GetJobOffersQuery{
-				JobCreator:       "0x1234567890123456789012345678901234567890",
-				NotMatched:       true,
-				IncludeCancelled: false,
+				JobCreator: "0x1234567890123456789012345678901234567890",
+				NotMatched: true,
+				Cancelled:  system.BoolPointer(false),
 			},
 			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
 		},

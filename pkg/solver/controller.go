@@ -320,7 +320,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		span.RecordError(err)
 		return err
 	}
-	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{Cancelled: true})
+	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{Cancelled: system.BoolPointer(true)})
 	if err != nil {
 		span.SetStatus(codes.Error, "get cancelled job offers failed")
 		span.RecordError(err)

@@ -166,16 +166,18 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 			data.GetAgreementStateIndex("ResultsSubmitted"),
 		})
 	}
-	if query.Cancelled {
-		q = q.Where("state IN (?)", []uint8{
-			data.GetAgreementStateIndex("JobOfferCancelled"),
-			data.GetAgreementStateIndex("JobTimedOut"),
-		})
-	} else if !query.IncludeCancelled {
-		q = q.Where("state NOT IN (?)", []uint8{
-			data.GetAgreementStateIndex("JobOfferCancelled"),
-			data.GetAgreementStateIndex("JobTimedOut"),
-		})
+	if query.Cancelled != nil {
+		if *query.Cancelled {
+			q = q.Where("state IN (?)", []uint8{
+				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("JobTimedOut"),
+			})
+		} else {
+			q = q.Where("state NOT IN (?)", []uint8{
+				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("JobTimedOut"),
+			})
+		}
 	}
 	if query.OrderOldestFirst {
 		q = q.Order("created_at ASC")

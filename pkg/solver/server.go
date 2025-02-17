@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -245,9 +246,14 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	if active := req.URL.Query().Get("active"); active == "true" {
 		query.Active = true
 	}
-	if includeCancelled := req.URL.Query().Get("include_cancelled"); includeCancelled == "true" {
-		query.IncludeCancelled = true
+	if cancelled := req.URL.Query().Get("cancelled"); cancelled != "" {
+		if val, err := strconv.ParseBool(cancelled); err == nil {
+			query.Cancelled = &val
+		} else {
+			return nil, fmt.Errorf("invalid cancelled filter value: %s", cancelled)
+		}
 	}
+
 	return solverServer.store.GetJobOffers(query)
 }
 
