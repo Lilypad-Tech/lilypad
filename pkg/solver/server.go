@@ -101,20 +101,11 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/validation_token", http.GetHandler(solverServer.getValidationToken)).Methods("GET")
 
 	//anura subrouter
-
-	failedAuthLimiter := httprate.Limit(
-		5,
-		60*time.Second,
-		httprate.WithKeyFuncs(httprate.KeyByRealIP),
-	)
-
 	anuraMiddleware := func(next corehttp.Handler) corehttp.Handler {
 		return corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
 			_, err := http.CheckAnuraSignature(r, solverServer.options.AccessControl.AnuraAddresses)
 			if err != nil {
-				failedAuthLimiter(corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-					corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
-				})).ServeHTTP(w, r)
+				corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
 				return
 			}
 			next.ServeHTTP(w, r)
