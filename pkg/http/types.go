@@ -23,7 +23,6 @@ type ValidationToken struct {
 type RateLimiterOptions struct {
 	RequestLimit int
 	WindowLength int
-	ExemptedIPs  []string
 }
 
 type ClientOptions struct {

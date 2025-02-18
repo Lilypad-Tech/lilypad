@@ -2,7 +2,6 @@ package options
 
 import (
 	"fmt"
-	"net"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +23,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 		ValidationTokenSecret:           GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
 		ValidationTokenExpiration:       GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
 		ValidationTokenKid:              GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
-		AnuraAddresses:                 GetDefaultServeOptionStringArray("ANURA_ADDRESSES", []string{}),
+		AnuraAddresses:                  GetDefaultServeOptionStringArray("ANURA_ADDRESSES", []string{}),
 	}
 }
 
@@ -94,13 +93,6 @@ func CheckServerOptions(options http.ServerOptions, storeType string) error {
 	}
 	if options.AccessControl.ValidationTokenKid == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_KID is required")
-	}
-	if len(options.RateLimiter.ExemptedIPs) > 0 {
-		for _, ip := range options.RateLimiter.ExemptedIPs {
-			if net.ParseIP(ip) == nil {
-				return fmt.Errorf("invalid IP address: %s", ip)
-			}
-		}
 	}
 	return nil
 }

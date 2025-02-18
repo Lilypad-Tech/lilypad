@@ -70,33 +70,11 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.Use(http.CorsMiddleware)
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 
-	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
-	// TODO: re-enable exempt IP rate limiting
-	// subrouter.Use(httprate.Limit(
-	// 	solverServer.options.RateLimiter.RequestLimit,
-	// 	time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-	// 	httprate.WithKeyFuncs(
-	// 		exemptIPKeyFunc(exemptIPs),
-	// 		httprate.KeyByEndpoint,
-	// 	),
-	// 	httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-
-	// 		key, _ := exemptIPKeyFunc(exemptIPs)(r)
-	// 		if strings.HasPrefix(key, "exempt-") {
-	// 			return
-	// 		}
-
-	// 		corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
-	// 	}),
-	// ))
-
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
-
-	log.Info().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
@@ -125,8 +103,8 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	//anura subrouter
 
 	failedAuthLimiter := httprate.Limit(
-		5,              
-		60*time.Second, 
+		5,
+		60*time.Second,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP),
 	)
 
@@ -231,25 +209,6 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 			IP:          connParams.IP,
 		})
 		solverServer.controller.removeUnmatchedResourceOffers(connParams.ID)
-	}
-}
-
-func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
-	return func(r *corehttp.Request) (string, error) {
-		ip, err := httprate.KeyByRealIP(r)
-		if err != nil {
-			log.Error().Err(err).Msg("error getting real ip")
-			return "", err
-		}
-
-		// Check if the IP is in the exempt list
-		for _, exemptIP := range exemptIPs {
-			if http.CanonicalizeIP(exemptIP) == ip {
-				return "exempt-" + ip, nil
-			}
-		}
-
-		return ip, nil
 	}
 }
 

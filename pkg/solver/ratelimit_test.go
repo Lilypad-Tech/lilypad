@@ -25,12 +25,11 @@ type rateTestCase struct {
 }
 
 // This test suite sends 200 requests to three different paths. We send the
-// requests in rate limited and exempt test groups. The rate limited group
-// should allow 5/100 requests through and the exempt group should allow 100/100.
+// requests in rate limited groups. The rate limited group should allow 5/100
+// requests through.
 //
 // We assume the solver uses the default rate limiting settings with
-// a request limit of 5 and window length of 10 seconds. In addition, the solver
-// should be configured to exempt localhost.
+// a request limit of 5 and window length of 10 seconds.
 func TestRateLimiter(t *testing.T) {
 	paths := []string{
 		"/api/v1/resource_offers",
@@ -40,15 +39,15 @@ func TestRateLimiter(t *testing.T) {
 
 	// The solver should rate limit when forwarded
 	// headers are set to 1.2.3.4.
-	nonExemptHeaders := []map[string]string{
+	forwardedHeaders := []map[string]string{
 		{"True-Client-IP": "1.2.3.4"},
 		{"X-Real-IP": "1.2.3.4"},
 		{"X-Forwarded-For": "1.2.3.4"},
 	}
 
-	t.Run("non-exempt IP is rate limited", func(t *testing.T) {
+	t.Run("requests are rate limited", func(t *testing.T) {
 		// Select a random header on each test run. Over time we test them all.
-		headers := nonExemptHeaders[rand.Intn(len(nonExemptHeaders))]
+		headers := forwardedHeaders[rand.Intn(len(forwardedHeaders))]
 		tc := rateTestCase{
 			name:          fmt.Sprintf("rate limited with headers %v", headers),
 			headers:       headers,
@@ -57,7 +56,6 @@ func TestRateLimiter(t *testing.T) {
 		}
 		runRateLimitTest(t, paths, tc)
 	})
-	
 }
 
 func runRateLimitTest(t *testing.T, paths []string, tc rateTestCase) {
