@@ -426,7 +426,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	}
 	err = data.CheckResult(results)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking resource offer")
+		log.Error().Err(err).Msgf("Error checking result for deal ID: %s", results.DealID)
 		return nil, err
 	}
 	results.DealID = id
