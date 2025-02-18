@@ -10,14 +10,13 @@ import (
 
 func NewSolverOptions() solver.SolverOptions {
 	options := solver.SolverOptions{
-		Server:    GetDefaultServerOptions(),
-		Store:     GetDefaultStoreOptions(),
-		Web3:      GetDefaultWeb3Options(),
-		Services:  GetDefaultServicesOptions(),
-		Telemetry: GetDefaultTelemetryOptions(),
-		Metrics:   GetDefaultMetricsOptions(),
-		// Timeout in seconds with a default of ten minutes
-		JobTimeoutSeconds: GetDefaultServeOptionInt("JOB_TIMEOUT_SECONDS", 600),
+		Server:            GetDefaultServerOptions(),
+		Store:             GetDefaultStoreOptions(),
+		Web3:              GetDefaultWeb3Options(),
+		Services:          GetDefaultServicesOptions(),
+		Telemetry:         GetDefaultTelemetryOptions(),
+		Metrics:           GetDefaultMetricsOptions(),
+		JobTimeoutSeconds: GetDefaultServeOptionInt("JOB_TIMEOUT_SECONDS", 600), // 10 minutes
 	}
 	options.Web3.Service = system.SolverService
 	return options
