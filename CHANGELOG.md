@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.13.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.12.0...v2.13.0) (2025-02-18)
+
+
+### Features
+
+* Add global job timeout ([#512](https://github.com/Lilypad-Tech/lilypad/issues/512)) ([1c9997b](https://github.com/Lilypad-Tech/lilypad/commit/1c9997b0f1b160154bd4d5bc475f0d067c1938ab))
+
+
+### Bug Fixes
+
+* RP error handling ([#514](https://github.com/Lilypad-Tech/lilypad/issues/514)) ([cd39bfc](https://github.com/Lilypad-Tech/lilypad/commit/cd39bfca080eaf3d86379efeb465b8d4fe8bf1d0))
+
 ## [2.12.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.11.0...v2.12.0) (2025-02-11)
 
 
