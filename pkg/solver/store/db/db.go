@@ -159,8 +159,25 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 	if query.NotMatched {
 		q = q.Where("deal_id = ''")
 	}
-	if !query.IncludeCancelled {
-		q = q.Where("state != ?", data.GetAgreementStateIndex("JobOfferCancelled"))
+	if query.Active {
+		q = q.Where("state IN (?)", []uint8{
+			data.GetAgreementStateIndex("DealNegotiating"),
+			data.GetAgreementStateIndex("DealAgreed"),
+			data.GetAgreementStateIndex("ResultsSubmitted"),
+		})
+	}
+	if query.Cancelled != nil {
+		if *query.Cancelled {
+			q = q.Where("state IN (?)", []uint8{
+				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("JobTimedOut"),
+			})
+		} else {
+			q = q.Where("state NOT IN (?)", []uint8{
+				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("JobTimedOut"),
+			})
+		}
 	}
 	if query.OrderOldestFirst {
 		q = q.Order("created_at ASC")
