@@ -360,7 +360,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 	expiredDeals := []string{}
 	for _, jobOffer := range jobOffers {
 		now := time.Now().UnixMilli()
-		if now-int64(jobOffer.JobOffer.CreatedAt) > int64(controller.options.JobOfferTimeout*1000) {
+		if now-int64(jobOffer.JobOffer.CreatedAt) > int64(controller.options.JobTimeoutSeconds*1000) {
 			if jobOffer.DealID == "" {
 				// Cancel expired job offers
 				_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))

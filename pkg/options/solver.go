@@ -17,7 +17,7 @@ func NewSolverOptions() solver.SolverOptions {
 		Telemetry: GetDefaultTelemetryOptions(),
 		Metrics:   GetDefaultMetricsOptions(),
 		// Timeout in seconds with a default of ten minutes
-		JobOfferTimeout: GetDefaultServeOptionInt("JOB_OFFER_TIMEOUT", 600),
+		JobTimeoutSeconds: GetDefaultServeOptionInt("JOB_TIMEOUT_SECONDS", 600),
 	}
 	options.Web3.Service = system.SolverService
 	return options
@@ -31,8 +31,8 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
 	AddMetricsCliFlags(cmd, &options.Metrics)
 	cmd.PersistentFlags().IntVar(
-		&options.JobOfferTimeout, "job-offer-timeout", options.JobOfferTimeout,
-		`The global timeout for job offers in seconds (JOB_OFFER_TIMEOUT).`,
+		&options.JobTimeoutSeconds, "job-timeout-seconds", options.JobTimeoutSeconds,
+		`The global timeout for jobs in seconds (JOB_TIMEOUT_SECONDS)`,
 	)
 }
 
@@ -57,8 +57,8 @@ func CheckSolverOptions(options solver.SolverOptions) error {
 	if err != nil {
 		return err
 	}
-	if options.JobOfferTimeout <= 0 {
-		return fmt.Errorf("JOB_OFFER_TIMEOUT must be greater than zero")
+	if options.JobTimeoutSeconds <= 0 {
+		return fmt.Errorf("JOB_TIMEOUT_SECONDS must be greater than zero")
 	}
 	return nil
 }
