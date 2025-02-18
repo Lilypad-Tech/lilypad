@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739474482396,
+  "lastUpdate": 1739907912364,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -576,6 +576,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80354 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "walkah@walkah.net",
+            "name": "James Walker",
+            "username": "walkah"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd39bfca080eaf3d86379efeb465b8d4fe8bf1d0",
+          "message": "fix: RP error handling (#514)",
+          "timestamp": "2025-02-18T14:44:45-05:00",
+          "tree_id": "2c4ac091ebb5fe89e230c00832d90c333cf09331",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/cd39bfca080eaf3d86379efeb465b8d4fe8bf1d0"
+        },
+        "date": 1739907912013,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45964,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45964,
+            "unit": "ns/op",
+            "extra": "80208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80208 times\n4 procs"
           }
         ]
       }
