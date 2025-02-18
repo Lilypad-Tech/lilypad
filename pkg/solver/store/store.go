@@ -20,8 +20,13 @@ type GetJobOffersQuery struct {
 	// we use the DealID property of the jobOfferContainer to tell if it's been matched
 	NotMatched bool `json:"not_matched"`
 
-	// this will include cancelled job offers in the results
-	IncludeCancelled bool `json:"include_cancelled"`
+	// Active job offers are umatched or in an in-progress deal.
+	// This includes the DealNegotiating, DealAgreed, or ResultsSubmitted states.
+	Active bool `json:"in_progress"`
+
+	// Cancelled job offers are in a JobOfferCancelled or JobTimedOut state.
+	// All job offers are included when Cancelled is nil.
+	Cancelled *bool `json:"cancelled"`
 
 	// Sort job offers oldest first
 	OrderOldestFirst bool `json:"order_oldest_first"`

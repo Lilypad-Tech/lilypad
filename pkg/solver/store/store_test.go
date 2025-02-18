@@ -14,6 +14,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	solverstore "github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"golang.org/x/exp/rand"
 )
 
@@ -151,9 +152,87 @@ func TestJobOfferQuery(t *testing.T) {
 					DealID:     "",
 					State:      data.GetAgreementStateIndex("JobOfferCancelled"),
 				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobTimedOut"),
+				},
 			},
 			query: store.GetJobOffersQuery{
-				IncludeCancelled: false,
+				Cancelled: system.BoolPointer(false),
+			},
+			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
+		},
+		{
+			name: "filter active offers",
+			offers: []data.JobOfferContainer{
+				{
+					ID:         "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("DealNegotiating"),
+				},
+				{
+					ID:         "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "QmV8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ku",
+					State:      data.GetAgreementStateIndex("DealAgreed"),
+				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("ResultsSubmitted"),
+				},
+				{
+					ID:         "QmW9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kw",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("ResultsAccepted"),
+				},
+			},
+			query: store.GetJobOffersQuery{
+				Active: true,
+			},
+			expected: []string{
+				"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+				"QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+				"QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+			},
+		},
+		{
+			name: "combined filters with active",
+			offers: []data.JobOfferContainer{
+				{
+					ID:         "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("DealNegotiating"),
+				},
+				{
+					ID:         "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					JobCreator: "0xabcdef0123456789abcdef0123456789abcdef01",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("DealNegotiating"),
+				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "QmW9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kw",
+					State:      data.GetAgreementStateIndex("DealAgreed"),
+				},
+				{
+					ID:         "QmV9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kv",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "QmU8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kt",
+					State:      data.GetAgreementStateIndex("ResultsAccepted"),
+				},
+			},
+			query: store.GetJobOffersQuery{
+				JobCreator: "0x1234567890123456789012345678901234567890",
+				NotMatched: true,
+				Active:     true,
 			},
 			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
 		},
@@ -172,13 +251,50 @@ func TestJobOfferQuery(t *testing.T) {
 					DealID:     "",
 					State:      data.GetAgreementStateIndex("JobOfferCancelled"),
 				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobTimedOut"),
+				},
 			},
 			query: store.GetJobOffersQuery{
-				IncludeCancelled: true,
+				Cancelled: nil,
 			},
 			expected: []string{
 				"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
 				"QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+				"QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+			},
+		},
+		{
+			name: "filter cancelled offers only",
+			offers: []data.JobOfferContainer{
+				{
+					ID:         "QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetDefaultAgreementState(),
+				},
+				{
+					ID:         "QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobOfferCancelled"),
+				},
+				{
+					ID:         "QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
+					JobCreator: "0x1234567890123456789012345678901234567890",
+					DealID:     "",
+					State:      data.GetAgreementStateIndex("JobTimedOut"),
+				},
+			},
+			query: store.GetJobOffersQuery{
+				Cancelled: system.BoolPointer(true),
+			},
+			expected: []string{
+				"QmX9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Ky",
+				"QmZ9JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kz",
 			},
 		},
 		{
@@ -210,9 +326,9 @@ func TestJobOfferQuery(t *testing.T) {
 				},
 			},
 			query: store.GetJobOffersQuery{
-				JobCreator:       "0x1234567890123456789012345678901234567890",
-				NotMatched:       true,
-				IncludeCancelled: false,
+				JobCreator: "0x1234567890123456789012345678901234567890",
+				NotMatched: true,
+				Cancelled:  system.BoolPointer(false),
 			},
 			expected: []string{"QmY8JwJh3bYDUuAnwfpxwStjUY1nQwyhJJ4SPpdV3bZ9Kx"},
 		},

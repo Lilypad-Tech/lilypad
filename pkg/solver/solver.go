@@ -15,12 +15,13 @@ import (
 )
 
 type SolverOptions struct {
-	Server    http.ServerOptions
-	Store     store.StoreOptions
-	Web3      web3.Web3Options
-	Services  data.ServiceConfig
-	Telemetry system.TelemetryOptions
-	Metrics   system.MetricsOptions
+	Server            http.ServerOptions
+	Store             store.StoreOptions
+	Web3              web3.Web3Options
+	Services          data.ServiceConfig
+	Telemetry         system.TelemetryOptions
+	Metrics           system.MetricsOptions
+	JobTimeoutSeconds int
 }
 
 type Solver struct {

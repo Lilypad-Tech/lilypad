@@ -59,9 +59,7 @@ func SetupTestStores(t *testing.T) []TestStoreConfig {
 
 func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 	// Delete job offers
-	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{
-		IncludeCancelled: true,
-	})
+	jobOffers, err := s.GetJobOffers(store.GetJobOffersQuery{})
 	if err != nil {
 		t.Fatalf("Failed to get existing job offers: %v", err)
 	}
@@ -122,6 +120,19 @@ func clearStoreDatabase(t *testing.T, s store.SolverStore) {
 		err := s.RemoveMatchDecision(decision.ResourceOffer, decision.JobOffer)
 		if err != nil {
 			t.Fatalf("Failed to remove existing match decision: %v", err)
+		}
+	}
+
+	// Delete allowed resource providers
+	providers, err := s.GetAllowedResourceProviders()
+	if err != nil {
+		t.Fatalf("Failed to get existing allowed resource providers: %v", err)
+	}
+
+	for _, provider := range providers {
+		err := s.RemoveAllowedResourceProvider(provider)
+		if err != nil {
+			t.Fatalf("Failed to remove existing allowed resource provider: %v", err)
 		}
 	}
 }

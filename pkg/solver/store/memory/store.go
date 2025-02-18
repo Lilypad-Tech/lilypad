@@ -105,8 +105,25 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 				matching = false
 			}
 		}
-		if !query.IncludeCancelled && jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") {
+		if query.Active &&
+			jobOffer.State != data.GetAgreementStateIndex("DealNegotiating") &&
+			jobOffer.State != data.GetAgreementStateIndex("DealAgreed") &&
+			jobOffer.State != data.GetAgreementStateIndex("ResultsSubmitted") {
 			matching = false
+		}
+		if query.Cancelled != nil {
+			isCancelled := jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") ||
+				jobOffer.State == data.GetAgreementStateIndex("JobTimedOut")
+
+			if *query.Cancelled {
+				if !isCancelled {
+					matching = false
+				}
+			} else {
+				if isCancelled {
+					matching = false
+				}
+			}
 		}
 		if matching {
 			jobOffers = append(jobOffers, *jobOffer)

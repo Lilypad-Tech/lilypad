@@ -118,6 +118,13 @@ waitloop:
 		return nil, fmt.Errorf("job was cancelled")
 	}
 
+	// Check if our job timed out
+	if finalJobOffer.State == data.GetAgreementStateIndex("JobTimedOut") {
+		span.SetStatus(codes.Error, "job timed out")
+		span.RecordError(err)
+		return nil, fmt.Errorf("job timed out")
+	}
+
 	span.AddEvent("get_result.start")
 	result, err := jobCreatorService.GetResult(finalJobOffer.DealID)
 	if err != nil {

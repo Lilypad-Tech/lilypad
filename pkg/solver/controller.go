@@ -282,7 +282,15 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	ctx, span := controller.tracer.Start(ctx, "solve")
 	defer span.End()
 
-	// find out which deals we can make from matching the offers
+	// Remove expired job offers
+	err := controller.cancelExpiredJobs(ctx)
+	if err != nil {
+		span.SetStatus(codes.Error, "remove expired offers failed")
+		span.RecordError(err)
+		return err
+	}
+
+	// Match job offers with resource offers to make deals
 	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.log, controller.tracer, controller.meter)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
@@ -294,7 +302,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		Value: attribute.StringSliceValue(data.GetDealIDs(deals)),
 	})
 
-	// loop over each of the deals add add them to the store and emit events
+	// Add deals to the store, update offer states, and notify network
 	span.AddEvent("add_deals.start")
 	for _, deal := range deals {
 		_, err := controller.addDeal(ctx, deal)
@@ -304,6 +312,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	}
 	span.AddEvent("add_deals.done")
 
+	// Report deal state metrics
 	span.AddEvent("report_deal_metrics.start")
 	storedDeals, err := controller.store.GetDealsAll()
 	if err != nil {
@@ -311,12 +320,77 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		span.RecordError(err)
 		return err
 	}
-	err = reportDealMetrics(ctx, controller.meter, storedDeals)
+	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{Cancelled: system.BoolPointer(true)})
+	if err != nil {
+		span.SetStatus(codes.Error, "get cancelled job offers failed")
+		span.RecordError(err)
+		return err
+	}
+	err = reportJobMetrics(ctx, controller.meter, storedDeals, jobOffers)
 	if err != nil {
 		span.SetStatus(codes.Error, "report deal metrics failed")
 		span.RecordError(err)
 	}
 	span.AddEvent("report_deal_metrics.done")
+
+	return nil
+}
+
+func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error {
+	ctx, span := controller.tracer.Start(ctx, "cancel_expired_jobs")
+	defer span.End()
+
+	// Get active job offers
+	span.AddEvent("db.get_job_offers.start")
+	jobOffers, err := controller.store.GetJobOffers(store.GetJobOffersQuery{
+		Active: true,
+	})
+	if err != nil {
+		controller.log.Error("get job offers failed", err)
+		span.SetStatus(codes.Error, "get job offers failed")
+		span.RecordError(err)
+		return err
+	}
+	span.AddEvent("db.get_job_offers.done")
+
+	// Check active job offers, and cancel expired offers
+	// and associated resource offers and deals
+	span.AddEvent("expire_jobs.start")
+	expiredOffers := []string{}
+	expiredDeals := []string{}
+	for _, jobOffer := range jobOffers {
+		now := time.Now().UnixMilli()
+		if now-int64(jobOffer.JobOffer.CreatedAt) > int64(controller.options.JobTimeoutSeconds*1000) {
+			if jobOffer.DealID == "" {
+				// Cancel expired job offers
+				_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
+				if err != nil {
+					controller.log.Error("update expired job offer state failed", err)
+					span.SetStatus(codes.Error, "update expired job offer state failed")
+					span.RecordError(err)
+				}
+			} else {
+				// Cancel expired job offers, resource offers, and deals
+				_, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
+				if err != nil {
+					controller.log.Error("update expired deal state failed", err)
+					span.SetStatus(codes.Error, "update expired deal state failed")
+					span.RecordError(err)
+				}
+				expiredDeals = append(expiredDeals, jobOffer.DealID)
+			}
+			expiredOffers = append(expiredOffers, jobOffer.ID)
+		}
+	}
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "expired_job_offers",
+		Value: attribute.StringSliceValue(expiredOffers),
+	})
+	span.SetAttributes(attribute.KeyValue{
+		Key:   "expired_deals",
+		Value: attribute.StringSliceValue(expiredDeals),
+	})
+	span.AddEvent("expire_jobs.end")
 
 	return nil
 }

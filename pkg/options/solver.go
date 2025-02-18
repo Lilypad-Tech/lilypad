@@ -1,6 +1,8 @@
 package options
 
 import (
+	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/solver"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/spf13/cobra"
@@ -8,12 +10,13 @@ import (
 
 func NewSolverOptions() solver.SolverOptions {
 	options := solver.SolverOptions{
-		Server:    GetDefaultServerOptions(),
-		Store:     GetDefaultStoreOptions(),
-		Web3:      GetDefaultWeb3Options(),
-		Services:  GetDefaultServicesOptions(),
-		Telemetry: GetDefaultTelemetryOptions(),
-		Metrics:   GetDefaultMetricsOptions(),
+		Server:            GetDefaultServerOptions(),
+		Store:             GetDefaultStoreOptions(),
+		Web3:              GetDefaultWeb3Options(),
+		Services:          GetDefaultServicesOptions(),
+		Telemetry:         GetDefaultTelemetryOptions(),
+		Metrics:           GetDefaultMetricsOptions(),
+		JobTimeoutSeconds: GetDefaultServeOptionInt("JOB_TIMEOUT_SECONDS", 600), // 10 minutes
 	}
 	options.Web3.Service = system.SolverService
 	return options
@@ -26,6 +29,10 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 	AddServicesCliFlags(cmd, &options.Services)
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
 	AddMetricsCliFlags(cmd, &options.Metrics)
+	cmd.PersistentFlags().IntVar(
+		&options.JobTimeoutSeconds, "job-timeout-seconds", options.JobTimeoutSeconds,
+		`The global timeout for jobs in seconds (JOB_TIMEOUT_SECONDS)`,
+	)
 }
 
 func CheckSolverOptions(options solver.SolverOptions) error {
@@ -48,6 +55,9 @@ func CheckSolverOptions(options solver.SolverOptions) error {
 	err = CheckMetricsOptions(options.Metrics)
 	if err != nil {
 		return err
+	}
+	if options.JobTimeoutSeconds <= 0 {
+		return fmt.Errorf("JOB_TIMEOUT_SECONDS must be greater than zero")
 	}
 	return nil
 }
