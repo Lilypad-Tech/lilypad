@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.12.0...v2.12.1) (2025-02-18)
+
+
+### Bug Fixes
+
+* RP error handling ([#514](https://github.com/Lilypad-Tech/lilypad/issues/514)) ([cd39bfc](https://github.com/Lilypad-Tech/lilypad/commit/cd39bfca080eaf3d86379efeb465b8d4fe8bf1d0))
+
 ## [2.12.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.11.0...v2.12.0) (2025-02-11)
 
 
