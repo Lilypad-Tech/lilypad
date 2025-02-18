@@ -2,7 +2,6 @@ package options
 
 import (
 	"fmt"
-	"net"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +23,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 		ValidationTokenSecret:           GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_SECRET", ""),
 		ValidationTokenExpiration:       GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
 		ValidationTokenKid:              GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
+		AnuraAddresses:                  GetDefaultServeOptionStringArray("ANURA_ADDRESSES", []string{}),
 	}
 }
 
@@ -31,7 +31,6 @@ func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
 	return http.RateLimiterOptions{
 		RequestLimit: GetDefaultServeOptionInt("SERVER_RATE_REQUEST_LIMIT", 5),
 		WindowLength: GetDefaultServeOptionInt("SERVER_RATE_WINDOW_LENGTH", 10),
-		ExemptedIPs:  GetDefaultServeOptionStringArray("SERVER_RATE_EXEMPTED_IPS", []string{}),
 	}
 }
 
@@ -77,8 +76,8 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 		`The time window over which to limit in seconds (SERVER_RATE_WINDOW_LENGTH).`,
 	)
 	cmd.PersistentFlags().StringArrayVar(
-		&serverOptions.RateLimiter.ExemptedIPs, "server-rate-exempted-ips", serverOptions.RateLimiter.ExemptedIPs,
-		`The IPs to exempt from rate limiting (SERVER_RATE_EXEMPTED_IPS).`,
+		&serverOptions.AccessControl.AnuraAddresses, "server-anura-addresses", serverOptions.AccessControl.AnuraAddresses,
+		`The Anura wallet addresses that are allowed to access anura endpoints (ANURA_ADDRESSES).`,
 	)
 }
 
@@ -94,13 +93,6 @@ func CheckServerOptions(options http.ServerOptions, storeType string) error {
 	}
 	if options.AccessControl.ValidationTokenKid == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_KID is required")
-	}
-	if len(options.RateLimiter.ExemptedIPs) > 0 {
-		for _, ip := range options.RateLimiter.ExemptedIPs {
-			if net.ParseIP(ip) == nil {
-				return fmt.Errorf("invalid IP address: %s", ip)
-			}
-		}
 	}
 	return nil
 }

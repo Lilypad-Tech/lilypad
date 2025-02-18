@@ -25,12 +25,11 @@ type rateTestCase struct {
 }
 
 // This test suite sends 200 requests to three different paths. We send the
-// requests in rate limited and exempt test groups. The rate limited group
-// should allow 5/100 requests through and the exempt group should allow 100/100.
+// requests in rate limited groups. The rate limited group should allow 5/100
+// requests through.
 //
 // We assume the solver uses the default rate limiting settings with
-// a request limit of 5 and window length of 10 seconds. In addition, the solver
-// should be configured to exempt localhost.
+// a request limit of 5 and window length of 10 seconds.
 func TestRateLimiter(t *testing.T) {
 	paths := []string{
 		"/api/v1/resource_offers",
@@ -40,26 +39,15 @@ func TestRateLimiter(t *testing.T) {
 
 	// The solver should rate limit when forwarded
 	// headers are set to 1.2.3.4.
-	nonExemptHeaders := []map[string]string{
+	forwardedHeaders := []map[string]string{
 		{"True-Client-IP": "1.2.3.4"},
 		{"X-Real-IP": "1.2.3.4"},
 		{"X-Forwarded-For": "1.2.3.4"},
 	}
 
-	// The running solver is configured to exempt localhost.
-	// When no headers are set, test using the IP address from
-	// the underlying connection (also localhost)
-	// TODO: re-enable exempt IP rate limiting
-	// exemptHeaders := []map[string]string{
-	// 	{"True-Client-IP": "127.0.0.1"},
-	// 	{"X-Real-IP": "127.0.0.1"},
-	// 	{"X-Forwarded-For": "127.0.0.1"},
-	// 	{}, // No headers case - uses RemoteAddr
-	// }
-
-	t.Run("non-exempt IP is rate limited", func(t *testing.T) {
+	t.Run("requests are rate limited", func(t *testing.T) {
 		// Select a random header on each test run. Over time we test them all.
-		headers := nonExemptHeaders[rand.Intn(len(nonExemptHeaders))]
+		headers := forwardedHeaders[rand.Intn(len(forwardedHeaders))]
 		tc := rateTestCase{
 			name:          fmt.Sprintf("rate limited with headers %v", headers),
 			headers:       headers,
@@ -68,26 +56,12 @@ func TestRateLimiter(t *testing.T) {
 		}
 		runRateLimitTest(t, paths, tc)
 	})
-
-	// TODO: re-enable exempt IP rate limiting
-	// t.Run("exempt IP is not rate limited", func(t *testing.T) {
-	// 	// Select a random header on each test run. Over time we test them all.
-	// 	headers := exemptHeaders[rand.Intn(len(exemptHeaders))]
-	// 	tc := rateTestCase{
-	// 		name:          fmt.Sprintf("exempt with headers %v", headers),
-	// 		headers:       headers,
-	// 		expectedOK:    100,
-	// 		expectedLimit: 0,
-	// 	}
-	// 	runRateLimitTest(t, paths, tc)
-	// })
 }
 
 func runRateLimitTest(t *testing.T, paths []string, tc rateTestCase) {
 	var wg sync.WaitGroup
 	ch := make(chan rateResult, len(paths))
 
-	// Run the calls against paths in parallel
 	for _, path := range paths {
 		wg.Add(1)
 		go func(path string) {
