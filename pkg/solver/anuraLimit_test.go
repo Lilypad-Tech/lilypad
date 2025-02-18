@@ -6,10 +6,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 	"testing"
 	"time"
-
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-retryablehttp"
 	httputil "github.com/lilypad-tech/lilypad/pkg/http"
@@ -67,21 +65,9 @@ func TestAnuraRateLimiter(t *testing.T) {
 }
 
 func runAnuraTest(t *testing.T, paths []string, tc anuraTestCase) {
-	var wg sync.WaitGroup
-	ch := make(chan anuraRateResult, len(paths))
-
 	for _, path := range paths {
-		wg.Add(1)
-		go func(path string) {
-			defer wg.Done()
-			makeAnuraCalls(t, path, ch, tc)
-		}(path)
-	}
-
-	wg.Wait()
-	close(ch)
-
-	for result := range ch {
+		result := makeAnuraCalls(t, path, tc)
+		
 		if result.okCount != tc.expectedOK {
 			t.Errorf("%s: Expected %d successful requests, got %d",
 				result.path, tc.expectedOK, result.okCount)
@@ -97,7 +83,7 @@ func runAnuraTest(t *testing.T, paths []string, tc anuraTestCase) {
 	}
 }
 
-func makeAnuraCalls(t *testing.T, path string, ch chan anuraRateResult, tc anuraTestCase) {
+func makeAnuraCalls(t *testing.T, path string, tc anuraTestCase) anuraRateResult {
 	var okCount, limitedCount, unauthorizedCount int
 
 	// Configure client with no retries and silent logger
@@ -112,25 +98,25 @@ func makeAnuraCalls(t *testing.T, path string, ch chan anuraRateResult, tc anura
 		req, err := retryablehttp.NewRequest("GET", fmt.Sprintf("http://localhost:%d%s", 8081, path), nil)
 		if err != nil {
 			t.Errorf("Failed to create request: %s\n", err)
-			return
+			return anuraRateResult{}
 		}
 
 		privateKey, err := crypto.HexToECDSA(tc.privateKey)
 		if err != nil {
 			t.Errorf("Failed to parse private key: %s\n", err)
-			return
+			return anuraRateResult{}
 		}
 
 		err = httputil.AddAnuraHeaders(req, privateKey, crypto.PubkeyToAddress(privateKey.PublicKey).String())
 		if err != nil {
 			t.Errorf("Failed to add Anura headers: %s\n", err)
-			return
+			return anuraRateResult{}
 		}
 
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Request failed on %s: %s\n", path, err)
-			return
+			return anuraRateResult{}
 		}
 
 		switch res.StatusCode {
@@ -147,7 +133,7 @@ func makeAnuraCalls(t *testing.T, path string, ch chan anuraRateResult, tc anura
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	ch <- anuraRateResult{
+	return anuraRateResult{
 		path:              path,
 		okCount:           okCount,
 		limitedCount:      limitedCount,
