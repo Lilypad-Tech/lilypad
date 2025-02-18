@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package gpu_tools;
+
+option go_package = "github.com/lilypad-tech/lilypad/pkg/resourceprovider/gpu-tools-protobuf";
+
+service GpuTools {
+  // Initialize the service
+  rpc Init(InitRequest) returns (InitResponse);
+
+  // Update JWT token used for authentication
+  rpc UpdateJwtToken(UpdateJwtTokenRequest) returns (UpdateJwtTokenResponse);
+  
+  // Start GPU profiling for a specific deal
+  rpc StartProfiling(StartProfilingRequest) returns (StartProfilingResponse);
+  
+  // Stop GPU profiling for a specific deal
+  rpc StopProfiling(StopProfilingRequest) returns (StopProfilingResponse);
+}
+
+message InitRequest {
+  string jwt_token = 1;
+  string rp_id = 2;
+}
+
+message InitResponse {
+  bool success = 1;
+} 
+
+message UpdateJwtTokenRequest {
+  string jwt_token = 1;
+}
+
+message UpdateJwtTokenResponse {
+  bool success = 1;
+}
+
+message StartProfilingRequest {
+  string deal_id = 1;
+}
+
+message StartProfilingResponse {
+  bool success = 1;
+}
+
+message StopProfilingRequest {
+  string deal_id = 1;
+}
+
+message StopProfilingResponse {
+  bool success = 1;
+}

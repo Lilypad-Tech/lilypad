@@ -21,3 +21,8 @@ vendor/
 /data/
 .DS_Store
 /chain-data/*
+# gpu-tools build
+**/target/
+cmd/generate_token/rp_gputooltest_token.txt
+# kafka logs
+docker/kraft-logs/*

@@ -66,6 +66,142 @@ services:
     command: ["bacalhau", "serve", "--orchestrator", "--compute"]
     volumes:
       - bacalhau-data:/root/.bacalhau
+  gpu-tools:
+    image: ghcr.io/lilypad-tech/gpu-tools
+    container_name: gpu-tools
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: ./docker/gpu-tools/Dockerfile
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - KAFKA_BROKER=broker
+      - KAFKA_BROKER_PORT=9094
+    ports:
+      - "50051:50051"
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu,compute,utility]
+  broker:
+    image: confluentinc/cp-kafka:latest
+    container_name: broker
+    user: root
+    environment:
+      - CLUSTER_ID=0QJDYHzrTYCJzAbHGOevug
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:9093
+      
+      # Listeners
+      - KAFKA_LISTENERS=PLAINTEXT://broker:9092,CONTROLLER://broker:9093,EXTERNAL://broker:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092,EXTERNAL://broker:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:SASL_PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      
+      # SASL/OAuth configuration
+      - KAFKA_SASL_ENABLED_MECHANISMS=OAUTHBEARER
+      - KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAINTEXT
+      - KAFKA_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8081/.well-known/jwks.json
+      - KAFKA_SASL_OAUTHBEARER_EXPECTED_AUDIENCE=kafka-broker
+      - KAFKA_SASL_OAUTHBEARER_EXPECTED_ISSUER=kafka-auth
+      - KAFKA_SASL_OAUTHBEARER_VALIDATION_ALLOW_SYMMETRIC_KEYS=true
+      - KAFKA_SASL_OAUTHBEARER_SUB_CLAIM_NAME=sub
+      - KAFKA_SASL_OAUTHBEARER_SCOPE_CLAIM_NAME=scope
+      
+      # Authorization configuration
+      - KAFKA_AUTHORIZER_CLASS_NAME=org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      - KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND=true
+      
+      # Callback handlers
+      - KAFKA_LISTENER_NAME_EXTERNAL_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerValidatorCallbackHandler
+      - KAFKA_LISTENER_NAME_EXTERNAL_OAUTHBEARER_SASL_JAAS_CONFIG=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
+      - KAFKA_LISTENER_NAME_SASL_LISTENER_PLAIN_SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required;
+
+      # Debug logging
+      - KAFKA_OPTS=-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf -Dlog4j.logger.org.apache.kafka.common.security.authenticator=DEBUG -Dlog4j.logger.org.apache.kafka.common.security.oauthbearer=DEBUG
+
+      # Add these new configurations
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+    volumes:
+      - ./kraft-logs:/tmp/kraft-combined-logs
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      - ./setup-acls.sh:/etc/kafka/setup-acls.sh
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    entrypoint: >
+      sh -c "
+      rm -rf /tmp/kraft-combined-logs/* &&
+      mkdir -p /tmp/kraft-combined-logs &&
+      chmod -R 777 /tmp/kraft-combined-logs &&
+      kafka-storage format --ignore-formatted --config /etc/kafka/kraft/server.properties --cluster-id 0QJDYHzrTYCJzAbHGOevug &&
+      su appuser -c '/etc/confluent/docker/run'"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server broker:9092 --list"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      jwt-auth:
+        condition: service_started
+  jwt-auth:
+    image: ghcr.io/lilypad-tech/jwt-auth
+    container_name: jwt-auth
+    build: 
+      context: ..
+      dockerfile: docker/jwt-auth/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - JWT_KEY_DEV_ID=key-dev
+      - JWT_KEY_DEV_SECRET=912dd001a6613632c066ca10a19254430db2986a84612882a18f838a6360880e
+      - JWT_ACTIVE_KEYS=key-dev
+      - JWT_DEFAULT_KEY=key-dev
+      - JWT_AUTH_ALLOWED_CLIENT_ID=kafka-ui
+      - JWT_AUTH_ALLOWED_CLIENT_SECRET=kafka-ui-secret
+      - PORT=8081
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      broker:
+        condition: service_healthy
+      jwt-auth:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      - DYNAMIC_CONFIG_ENABLED=true
+      - AUTH_TYPE=LOGIN_FORM
+      - SPRING_SECURITY_USER_NAME=admin
+      - SPRING_SECURITY_USER_PASSWORD=password
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:9094
+      - KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL=SASL_PLAINTEXT
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM=OAUTHBEARER
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="kafka-ui" clientSecret="kafka-ui-secret";
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_LOGIN_CALLBACK_HANDLER_CLASS=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL=http://jwt-auth:8081/token
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8081/.well-known/jwks.json
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_EXPECTED_AUDIENCE=kafka-broker
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_EXPECTED_ISSUER=kafka-auth
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_SUB_CLAIM_NAME=sub
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_SCOPE_CLAIM_NAME=scope
+
 volumes:
   bacalhau-data:
   chain-data:

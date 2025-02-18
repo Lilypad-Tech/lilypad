@@ -20,6 +20,8 @@ services:
     depends_on:
       bacalhau:
         condition: service_healthy
+      gpu-tools:
+        condition: service_started  
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
@@ -34,12 +36,39 @@ services:
       - BACALHAU_API_HOST=bacalhau
       - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
       - BACALHAU_NODE_CLIENTAPI_PORT=1234
+      - GPU_TOOLS_HOST=gpu-tools
+      - GPU_TOOLS_PORT=50051
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  gpu-tools:
+    image: ghcr.io/lilypad-tech/gpu-tools:latest
+    container_name: gpu-tools
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: ./docker/gpu-tools/Dockerfile
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - KAFKA_BROKER=broker
+      - KAFKA_BROKER_PORT=9094
+    ports:
+      - "50051:50051"
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu,compute,utility]
 volumes:
   bacalhau-data:
   lilypad-data:
