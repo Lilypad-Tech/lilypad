@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739907912364,
+  "lastUpdate": 1739921922757,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -624,6 +624,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80208 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c9997b0f1b160154bd4d5bc475f0d067c1938ab",
+          "message": "feat: Add global job timeout (#512)\n\n* test: Clean up allowed resource providers between test runs\n\n* feat: Add active job offers filter query\n\n* feat: Add job timeout field and options\n\n* feat: Add terminal JobTimedOut agreement state\n\n* feat: Add cancelled job offers filter query\n\n* chore: Rename solver dealStats to jobStats\n\n* feat: Add cancelled job metrics\n\n* feat: Add cancelExpiredJobs\n\n* chore: Update comments\n\n* chore: Rename reportDealMetrics to reportJobMetrics\n\n* feat: Add BoolPointer lang helper\n\n* feat: Combine cancelled filter queries\n\nThe cancelled filter query now includes the include cancelled, which was\nour mechanism for requesting all job offers. The cancelled filter query\nincludes all when nil, or cancelled or not when true or false.\n\n* feat: Reject results and file uploads for timed out jobs\n\n* chore: Improve results checking log message",
+          "timestamp": "2025-02-18T15:38:10-08:00",
+          "tree_id": "1b5401450948e5b79597f521f73669382893ed61",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/1c9997b0f1b160154bd4d5bc475f0d067c1938ab"
+        },
+        "date": 1739921921849,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 44827,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "68475 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 44827,
+            "unit": "ns/op",
+            "extra": "68475 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "68475 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "68475 times\n4 procs"
           }
         ]
       }
