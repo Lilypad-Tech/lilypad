@@ -6,7 +6,7 @@
 
 1. For testing, copy the sample environment file:
 ```bash
-cp tests/.env.sample tests/.env
+cp tests/sample.env.sample tests/.env
 ```
 
 2. The tests require a valid JWT key for Kafka authentication. Run: 
