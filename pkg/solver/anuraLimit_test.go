@@ -48,12 +48,11 @@ func TestAnuraAuth(t *testing.T) {
 
 func runAnuraTest(t *testing.T, paths []string, tc anuraTestCase) {
 	for _, path := range paths {
-		// Configure client with no retries and silent logger
 		client := retryablehttp.NewClient()
 		client.RetryMax = 0
-		client.Logger = nil // Disable logging
+		client.Logger = nil
 		client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-			return false, nil // Never retry
+			return false, nil
 		}
 
 		req, err := retryablehttp.NewRequest("GET", fmt.Sprintf("http://localhost:%d%s", 8081, path), nil)
