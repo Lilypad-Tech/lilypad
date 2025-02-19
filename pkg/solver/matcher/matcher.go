@@ -52,6 +52,7 @@ func GetMatchingDeals(
 	span.AddEvent("db.get_job_offers.start")
 	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched:       true,
+		Cancelled:        system.BoolPointer(false),
 		OrderOldestFirst: true,
 	})
 	if err != nil {

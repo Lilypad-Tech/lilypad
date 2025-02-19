@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -223,9 +224,17 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
 		query.NotMatched = true
 	}
-	if includeCancelled := req.URL.Query().Get("include_cancelled"); includeCancelled == "true" {
-		query.IncludeCancelled = true
+	if active := req.URL.Query().Get("active"); active == "true" {
+		query.Active = true
 	}
+	if cancelled := req.URL.Query().Get("cancelled"); cancelled != "" {
+		if val, err := strconv.ParseBool(cancelled); err == nil {
+			query.Cancelled = &val
+		} else {
+			return nil, fmt.Errorf("invalid cancelled filter value: %s", cancelled)
+		}
+	}
+
 	return solverServer.store.GetJobOffers(query)
 }
 
@@ -383,6 +392,10 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
+	if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+		log.Trace().Msgf("attempted results post for timed out job with deal ID: %s", deal.ID)
+		return nil, fmt.Errorf("job with deal ID %s timed out", deal.ID)
+	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("error checking signature")
@@ -394,7 +407,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	}
 	err = data.CheckResult(results)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking resource offer")
+		log.Error().Err(err).Msgf("Error checking result for deal ID: %s", results.DealID)
 		return nil, err
 	}
 	results.DealID = id
@@ -566,6 +579,10 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 		if deal == nil {
 			log.Error().Msgf("deal not found")
 			return err
+		}
+		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+			log.Trace().Msgf("attempted file upload for timed out job with deal ID: %s", deal.ID)
+			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
 		}
 		signerAddress, err := http.CheckSignature(req)
 		if err != nil {

@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.12.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.11.0...v2.12.0) (2025-02-11)
+
+
+### Features
+
+* Add matching sorts ([#497](https://github.com/Lilypad-Tech/lilypad/issues/497)) ([c310839](https://github.com/Lilypad-Tech/lilypad/commit/c31083901fb7f25794faad5d7da43af94f3aa2d0))
+* Add resource provider allowlist ([#481](https://github.com/Lilypad-Tech/lilypad/issues/481)) ([05f285d](https://github.com/Lilypad-Tech/lilypad/commit/05f285d792de7ef9360f3039b6ccd6a141374a87))
+* Add solver database ([#462](https://github.com/Lilypad-Tech/lilypad/issues/462)) ([6db8bf0](https://github.com/Lilypad-Tech/lilypad/commit/6db8bf0335421f29d16651289d5298d17a55c3af))
+* Add validation token endpoint ([#487](https://github.com/Lilypad-Tech/lilypad/issues/487)) ([fe37ec6](https://github.com/Lilypad-Tech/lilypad/commit/fe37ec67817d21e2f453f91c08b197a31326503c))
+* Add validation token key ID config ([#495](https://github.com/Lilypad-Tech/lilypad/issues/495)) ([6e16b72](https://github.com/Lilypad-Tech/lilypad/commit/6e16b720517728939c92a4a7f3490a48860a2a5f))
+* Api support + updates to job creation flow  ([#510](https://github.com/Lilypad-Tech/lilypad/issues/510)) ([eb9d218](https://github.com/Lilypad-Tech/lilypad/commit/eb9d218e70f35390b4a0428640a4d00b59a056bc))
+* Implement preflight ([#502](https://github.com/Lilypad-Tech/lilypad/issues/502)) ([9c2ae59](https://github.com/Lilypad-Tech/lilypad/commit/9c2ae59dbfdd4fe6f8a63a5d4872ddf6272b2660))
+* Update solver database models to milli timestamps ([bc23295](https://github.com/Lilypad-Tech/lilypad/commit/bc23295cbc45df575edc891c036e199e92802021))
+* Update solver database models to use milli timestamps ([#505](https://github.com/Lilypad-Tech/lilypad/issues/505)) ([bc23295](https://github.com/Lilypad-Tech/lilypad/commit/bc23295cbc45df575edc891c036e199e92802021))
+
+
+### Bug Fixes
+
+* Silence usage text after options processing ([#500](https://github.com/Lilypad-Tech/lilypad/issues/500)) ([a6ddf89](https://github.com/Lilypad-Tech/lilypad/commit/a6ddf89d6e5bc2814c393e1c5667a3208ec10eee))
+
 ## [2.11.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.10.0...v2.11.0) (2025-01-16)
 
 
