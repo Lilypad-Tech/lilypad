@@ -117,6 +117,9 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 		case "JobOfferCancelled":
 			desc = "Job cancelled..."
 			emoji = "😭"
+		case "JobTimedOut":
+			desc = "Job timed out..."
+			emoji = "⏱️"
 		default:
 			desc = st
 			emoji = "🌟"

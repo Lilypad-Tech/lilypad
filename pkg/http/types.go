@@ -13,6 +13,7 @@ type AccessControlOptions struct {
 	ValidationTokenSecret           string
 	ValidationTokenExpiration       int
 	ValidationTokenKid              string
+	AnuraAddresses                  []string
 }
 
 type ValidationToken struct {
@@ -22,7 +23,6 @@ type ValidationToken struct {
 type RateLimiterOptions struct {
 	RequestLimit int
 	WindowLength int
-	ExemptedIPs  []string
 }
 
 type ClientOptions struct {

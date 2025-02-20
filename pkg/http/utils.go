@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	stdlog "log"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,6 +28,12 @@ const X_LILYPAD_SIGNATURE_HEADER = "X-Lilypad-Signature"
 
 // the version run by the client or service
 const X_LILYPAD_VERSION_HEADER = "X-Lilypad-Version"
+
+// the signature of the anura server
+const X_ANURA_SIGNATURE_HEADER = "X-Anura-Key"
+
+// the address of the anura server
+const X_ANURA_SERVER_HEADER = "X-Anura-Server"
 
 // the context name we keep the address
 const CONTEXT_ADDRESS = "address"
@@ -110,6 +115,20 @@ func AddHeaders(
 	return nil
 }
 
+func AddAnuraHeaders(
+	req *retryablehttp.Request,
+	privateKey *ecdsa.PrivateKey,
+	address string,
+) error {
+	serverPayload, serverSignature, err := encodeUserAddress(privateKey, address)
+	if err != nil {
+		return err
+	}
+	req.Header.Add(X_ANURA_SERVER_HEADER, serverPayload)
+	req.Header.Add(X_ANURA_SIGNATURE_HEADER, serverSignature)
+	return nil
+}
+
 // Use the client headers to ensure that a message was signed
 // by the holder of a private key for a specific address.
 // The "X-Lilypad-User" header contains the address.
@@ -166,6 +185,44 @@ func CheckSignature(req *http.Request) (string, error) {
 	}
 
 	return signatureAddress, nil
+}
+
+func CheckAnuraSignature(req *http.Request, approvedAddresses []string) (string, error) {
+
+	serverHeader := req.Header.Get(X_ANURA_SERVER_HEADER)
+	if serverHeader == "" {
+		return "", HTTPError{
+			Message:    "missing anura server header",
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	anuraSignature := req.Header.Get(X_ANURA_SIGNATURE_HEADER)
+	if anuraSignature == "" {
+		return "", HTTPError{
+			Message:    "missing anura signature header",
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	signatureAddress, err := decodeUserAddress(serverHeader, anuraSignature)
+	if err != nil {
+		return "", HTTPError{
+			Message:    fmt.Sprintf("invalid server header or signature %s", err.Error()),
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+
+	for _, addr := range approvedAddresses {
+		if strings.EqualFold(signatureAddress, addr) {
+			return signatureAddress, nil
+		}
+	}
+
+	return "", HTTPError{
+		Message:    "unauthorized anura signature",
+		StatusCode: http.StatusUnauthorized,
+	}
 }
 
 func GetVersionFromHeaders(req *http.Request) (string, error) {
@@ -443,31 +500,4 @@ func newRetryClient() *retryablehttp.Client {
 		return nil, fmt.Errorf("%s %s gave up after %d attempt(s): %s", resp.Request.Method, resp.Request.URL, numTries, string(body))
 	}
 	return retryClient
-}
-
-func CanonicalizeIP(ip string) string {
-	isIPv6 := false
-	// This is how net.ParseIP decides if an address is IPv6
-	// https://cs.opensource.google/go/go/+/refs/tags/go1.17.7:src/net/ip.go;l=704
-	for i := 0; !isIPv6 && i < len(ip); i++ {
-		switch ip[i] {
-		case '.':
-			// IPv4
-			return ip
-		case ':':
-			// IPv6
-			isIPv6 = true
-			break
-		}
-	}
-	if !isIPv6 {
-		// Not an IP address at all
-		return ip
-	}
-
-	ipv6 := net.ParseIP(ip)
-	if ipv6 == nil {
-		return ip
-	}
-	return ipv6.Mask(net.CIDRMask(64, 128)).String()
 }

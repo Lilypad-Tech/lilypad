@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,33 +71,11 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.Use(http.CorsMiddleware)
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 
-	exemptIPs := solverServer.options.RateLimiter.ExemptedIPs
-	// TODO: re-enable exempt IP rate limiting
-	// subrouter.Use(httprate.Limit(
-	// 	solverServer.options.RateLimiter.RequestLimit,
-	// 	time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
-	// 	httprate.WithKeyFuncs(
-	// 		exemptIPKeyFunc(exemptIPs),
-	// 		httprate.KeyByEndpoint,
-	// 	),
-	// 	httprate.WithLimitHandler(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-
-	// 		key, _ := exemptIPKeyFunc(exemptIPs)(r)
-	// 		if strings.HasPrefix(key, "exempt-") {
-	// 			return
-	// 		}
-
-	// 		corehttp.Error(w, "Too Many Requests", corehttp.StatusTooManyRequests)
-	// 	}),
-	// ))
-
 	subrouter.Use(httprate.Limit(
 		solverServer.options.RateLimiter.RequestLimit,
 		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
-
-	log.Info().Strs("exemptIPs", exemptIPs).Msg("Loaded rate limit exemptions")
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
@@ -121,6 +100,28 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
 
 	subrouter.HandleFunc("/validation_token", http.GetHandler(solverServer.getValidationToken)).Methods("GET")
+
+	//anura subrouter
+	anuraMiddleware := func(next corehttp.Handler) corehttp.Handler {
+		return corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
+			_, err := http.CheckAnuraSignature(r, solverServer.options.AccessControl.AnuraAddresses)
+			if err != nil {
+				corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	anurarouter := router.PathPrefix(http.API_SUB_PATH + "/anura").Subrouter()
+	anurarouter.Use(http.CorsMiddleware)
+	anurarouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
+	anurarouter.Use(anuraMiddleware)
+
+	anurarouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
+	anurarouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -203,25 +204,6 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 	}
 }
 
-func exemptIPKeyFunc(exemptIPs []string) func(r *corehttp.Request) (string, error) {
-	return func(r *corehttp.Request) (string, error) {
-		ip, err := httprate.KeyByRealIP(r)
-		if err != nil {
-			log.Error().Err(err).Msg("error getting real ip")
-			return "", err
-		}
-
-		// Check if the IP is in the exempt list
-		for _, exemptIP := range exemptIPs {
-			if http.CanonicalizeIP(exemptIP) == ip {
-				return "exempt-" + ip, nil
-			}
-		}
-
-		return ip, nil
-	}
-}
-
 /*
 *
 *
@@ -242,9 +224,17 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
 		query.NotMatched = true
 	}
-	if includeCancelled := req.URL.Query().Get("include_cancelled"); includeCancelled == "true" {
-		query.IncludeCancelled = true
+	if active := req.URL.Query().Get("active"); active == "true" {
+		query.Active = true
 	}
+	if cancelled := req.URL.Query().Get("cancelled"); cancelled != "" {
+		if val, err := strconv.ParseBool(cancelled); err == nil {
+			query.Cancelled = &val
+		} else {
+			return nil, fmt.Errorf("invalid cancelled filter value: %s", cancelled)
+		}
+	}
+
 	return solverServer.store.GetJobOffers(query)
 }
 
@@ -402,6 +392,10 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
+	if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+		log.Trace().Msgf("attempted results post for timed out job with deal ID: %s", deal.ID)
+		return nil, fmt.Errorf("job with deal ID %s timed out", deal.ID)
+	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("error checking signature")
@@ -413,7 +407,7 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	}
 	err = data.CheckResult(results)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking resource offer")
+		log.Error().Err(err).Msgf("Error checking result for deal ID: %s", results.DealID)
 		return nil, err
 	}
 	results.DealID = id
@@ -585,6 +579,10 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 		if deal == nil {
 			log.Error().Msgf("deal not found")
 			return err
+		}
+		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+			log.Trace().Msgf("attempted file upload for timed out job with deal ID: %s", deal.ID)
+			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
 		}
 		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
