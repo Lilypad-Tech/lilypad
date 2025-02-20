@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740074712806,
+  "lastUpdate": 1740076768273,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -720,6 +720,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79629 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ayushk2020@gmail.com",
+            "name": "Kelindi",
+            "username": "kelindi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e996a78b657fb5495d9e40235595bcf18d12caf",
+          "message": "feat: Anura Rate Limiter (#513)",
+          "timestamp": "2025-02-20T10:39:02-08:00",
+          "tree_id": "b580bd5234d669654e66a8811d41f81e010944f8",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/8e996a78b657fb5495d9e40235595bcf18d12caf"
+        },
+        "date": 1740076767954,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 44724,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80540 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 44724,
+            "unit": "ns/op",
+            "extra": "80540 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80540 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80540 times\n4 procs"
           }
         ]
       }
