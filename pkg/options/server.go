@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 		ValidationTokenExpiration:       GetDefaultServeOptionInt("SERVER_VALIDATION_TOKEN_EXPIRATION", 604800), // one week
 		ValidationTokenKid:              GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
 		AnuraAddresses:                  GetDefaultServeOptionStringArray("ANURA_ADDRESSES", []string{}),
+		OfferTimestampDiffSeconds:       GetDefaultServeOptionInt("SERVER_OFFER_TIMESTAMP_DIFF_SECONDS", 30),
 	}
 }
 
@@ -79,6 +81,10 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 		&serverOptions.AccessControl.AnuraAddresses, "server-anura-addresses", serverOptions.AccessControl.AnuraAddresses,
 		`The Anura wallet addresses that are allowed to access anura endpoints (ANURA_ADDRESSES).`,
 	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.AccessControl.OfferTimestampDiffSeconds, "server-offer-timestamp-diff-seconds", serverOptions.AccessControl.OfferTimestampDiffSeconds,
+		`The diff before or after now when a job or resource offer must be received (SERVER_OFFER_TIMESTAMP_DIFF_SECONDS).`,
+	)
 }
 
 func CheckServerOptions(options http.ServerOptions, storeType string) error {
@@ -93,6 +99,9 @@ func CheckServerOptions(options http.ServerOptions, storeType string) error {
 	}
 	if options.AccessControl.ValidationTokenKid == "" {
 		return fmt.Errorf("SERVER_VALIDATION_TOKEN_KID is required")
+	}
+	if options.AccessControl.OfferTimestampDiffSeconds < 1 {
+		return fmt.Errorf("SERVER_OFFER_TIMESTAMP_DIFF_SECONDS must be greater than zero")
 	}
 	return nil
 }
