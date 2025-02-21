@@ -382,6 +382,12 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 		}
 	}
 
+	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, solverServer.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		log.Debug().Msgf("Resource offer from %s rejected because timestamp was not recent", resourceOffer.ResourceProvider)
+		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
+	}
+
 	err = data.CheckResourceOffer(resourceOffer)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking resource offer")
