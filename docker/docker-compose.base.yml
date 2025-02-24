@@ -111,7 +111,7 @@ services:
       # SASL/OAuth configuration
       - KAFKA_SASL_ENABLED_MECHANISMS=OAUTHBEARER
       - KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAINTEXT
-      - KAFKA_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8081/.well-known/jwks.json
+      - KAFKA_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8082/.well-known/jwks.json
       - KAFKA_SASL_OAUTHBEARER_EXPECTED_AUDIENCE=kafka-broker
       - KAFKA_SASL_OAUTHBEARER_EXPECTED_ISSUER=kafka-auth
       - KAFKA_SASL_OAUTHBEARER_VALIDATION_ALLOW_SYMMETRIC_KEYS=true
@@ -165,7 +165,7 @@ services:
       context: ..
       dockerfile: docker/jwt-auth/Dockerfile
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       - JWT_KEY_DEV_ID=key-dev
       - JWT_KEY_DEV_SECRET=912dd001a6613632c066ca10a19254430db2986a84612882a18f838a6360880e
@@ -173,7 +173,7 @@ services:
       - JWT_DEFAULT_KEY=key-dev
       - JWT_AUTH_ALLOWED_CLIENT_ID=kafka-ui
       - JWT_AUTH_ALLOWED_CLIENT_SECRET=kafka-ui-secret
-      - PORT=8081
+      - PORT=8082
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -195,8 +195,8 @@ services:
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM=OAUTHBEARER
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="kafka-ui" clientSecret="kafka-ui-secret";
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_LOGIN_CALLBACK_HANDLER_CLASS=org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
-      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL=http://jwt-auth:8081/token
-      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8081/.well-known/jwks.json
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL=http://jwt-auth:8082/token
+      - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=http://jwt-auth:8082/.well-known/jwks.json
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_EXPECTED_AUDIENCE=kafka-broker
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_EXPECTED_ISSUER=kafka-auth
       - KAFKA_CLUSTERS_0_PROPERTIES_SASL_OAUTHBEARER_SUB_CLAIM_NAME=sub
