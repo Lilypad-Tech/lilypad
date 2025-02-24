@@ -43,46 +43,56 @@ type JobCreatorOptions struct {
 	Telemetry system.TelemetryOptions
 }
 
-type JobCreator struct {
-	web3SDK    *web3.Web3SDK
-	options    JobCreatorOptions
+type JobCreator interface {
+	Start(ctx context.Context, cm *system.CleanupManager) chan error
+	GetJobOfferFromOptions(options JobCreatorOfferOptions) (data.JobOffer, error)
+	AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error)
+	SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func()
+	SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func()
+	GetResult(dealId string) (data.Result, error)
+}
+
+type BasicJobCreator struct {
 	controller *JobCreatorController
+	web3SDK    *web3.Web3SDK
 }
 
 func NewJobCreator(
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
 	tracer trace.Tracer,
-) (*JobCreator, error) {
+) (*BasicJobCreator, error) {
 	controller, err := NewJobCreatorController(options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}
-	jc := &JobCreator{
+	return &BasicJobCreator{
 		controller: controller,
-		options:    options,
 		web3SDK:    web3SDK,
-	}
-	return jc, nil
+	}, nil
 }
 
-func (jobCreator *JobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
+func (jobCreator *BasicJobCreator) Start(ctx context.Context, cm *system.CleanupManager) chan error {
 	return jobCreator.controller.Start(ctx, cm)
 }
 
-func (jobCreator *JobCreator) GetJobOfferFromOptions(options JobCreatorOfferOptions) (data.JobOffer, error) {
+func (jobCreator *BasicJobCreator) GetJobOfferFromOptions(options JobCreatorOfferOptions) (data.JobOffer, error) {
 	return getJobOfferFromOptions(options, jobCreator.web3SDK.GetAddress().String())
 }
 
 // adds the job offer to the solver
-func (jobCreator *JobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
+func (jobCreator *BasicJobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return jobCreator.controller.AddJobOffer(offer)
 }
 
-func (jobCreator *JobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) {
-	jobCreator.controller.SubscribeToJobOfferUpdates(sub)
+func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {
+	return jobCreator.controller.SubscribeToJobOfferUpdates(sub)
 }
 
-func (jobCreator *JobCreator) GetResult(dealId string) (data.Result, error) {
+func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func() {
+	return jobCreator.controller.SubscribeToJobOfferUpdatesWithFilter(sub, jobID)
+}
+
+func (jobCreator *BasicJobCreator) GetResult(dealId string) (data.Result, error) {
 	return jobCreator.controller.solverClient.GetResult(dealId)
 }
