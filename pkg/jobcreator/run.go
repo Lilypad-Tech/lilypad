@@ -35,8 +35,6 @@ func RunJob(
 		return nil, err
 	}
 
-	jobCreatorService.SubscribeToJobOfferUpdates(eventSub)
-
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
 
 	// let's process our options into an actual job offer
@@ -68,7 +66,7 @@ func RunJob(
 		span.RecordError(err)
 		return nil, err
 	}
-	jobCreatorService.controller.log.Debug("job offer ID", jobOfferContainer.ID)
+	jobCreatorService.controller.log.Debug("job offer container ID", jobOfferContainer.ID)
 	span.AddEvent("add_job_offer.done",
 		trace.WithAttributes(
 			attribute.String("job_offer_container.deal_id", jobOfferContainer.DealID),
@@ -79,14 +77,20 @@ func RunJob(
 
 	updateChan := make(chan data.JobOfferContainer)
 
-	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
-		if evOffer.JobOffer.ID != jobOfferContainer.ID {
-			return
-		}
+	// Now we use the filtered subscriber to only get events for this specific job
+	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdatesWithFilter(func(evOffer data.JobOfferContainer) {
 		span.AddEvent("job_offer_update",
 			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
 		updateChan <- evOffer
-	})
+
+		// Additionally call the provided eventSub if one was passed in
+		if eventSub != nil {
+			eventSub(evOffer)
+		}
+	}, jobOfferContainer.JobOffer.ID)
+
+	// Ensure we clean up the subscription when we're done
+	defer cleanup()
 
 	var finalJobOffer data.JobOfferContainer
 
@@ -131,6 +135,9 @@ waitloop:
 		return nil, err
 	}
 	span.AddEvent("get_result.done", trace.WithAttributes(attribute.String("result.deal_id", result.DealID)))
+
+	// Print the result immediately when we get it
+	fmt.Printf("🆔  Data ID for job %s: %s\n", finalJobOffer.JobOffer.ID, result.DataID)
 
 	return &RunJobResults{
 		JobOffer: finalJobOffer,
