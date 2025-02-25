@@ -3,6 +3,7 @@ package solver
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
@@ -66,4 +67,14 @@ func GetDownloadsFilePath(id string) string {
 
 func EnsureDownloadsFilePath(id string) (string, error) {
 	return system.EnsureDataDir(filepath.Join(DOWNLOADS_DIR, id))
+}
+
+// Check if timestamp is recent within a diff before or after now
+func isTimestampRecent(timestamp int, diff int) bool {
+	before := time.Now().UnixMilli() - int64(diff)
+	after := time.Now().UnixMilli() + int64(diff)
+	if int64(timestamp) < before || int64(timestamp) > after {
+		return false
+	}
+	return true
 }

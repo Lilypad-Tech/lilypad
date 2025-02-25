@@ -14,6 +14,7 @@ type AccessControlOptions struct {
 	ValidationTokenExpiration       int
 	ValidationTokenKid              string
 	AnuraAddresses                  []string
+	OfferTimestampDiffSeconds       int
 }
 
 type ValidationToken struct {

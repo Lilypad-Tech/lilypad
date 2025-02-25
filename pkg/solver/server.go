@@ -333,15 +333,24 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 		log.Error().Err(err).Msgf("error checking signature")
 		return nil, err
 	}
+
 	// Only the job creator can post their job offer
 	if signerAddress != jobOffer.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
+
+	offerRecent := isTimestampRecent(jobOffer.CreatedAt, solverServer.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		log.Debug().Msgf("Job offer from %s rejected because timestamp was not recent", jobOffer.JobCreator)
+		return nil, errors.New("job offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
+	}
+
 	err = data.CheckJobOffer(jobOffer)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error checking job offer")
 		return nil, err
 	}
+
 	return solverServer.controller.addJobOffer(jobOffer)
 }
 
@@ -371,6 +380,12 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 			log.Debug().Msgf("resource provider not in allowlist %s", resourceOffer.ResourceProvider)
 			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
 		}
+	}
+
+	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, solverServer.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		log.Debug().Msgf("Resource offer from %s rejected because timestamp was not recent", resourceOffer.ResourceProvider)
+		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
 	}
 
 	err = data.CheckResourceOffer(resourceOffer)
