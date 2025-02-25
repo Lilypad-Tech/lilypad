@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740510194443,
+  "lastUpdate": 1740519546468,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -816,6 +816,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80322 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eaa55093790fda1b065c0a9a30081d65e6989f9d",
+          "message": "feat: Check offer creation times for recency (#523)\n\n* feat: Add SERVER_OFFER_TIMESTAMP_DIFF_SECONDS config\n\n* chore: Rename ANURA_ADDRESSES to SERVER_ANURA_ADDRESSES\n\n* feat: Add isTimestampRecent helper\n\n* test: Add TestIsTimestampRecent test\n\n* feat: Add job offer creation time check\n\n* feat: Add resource offer creation time check",
+          "timestamp": "2025-02-25T13:38:37-08:00",
+          "tree_id": "cae7af07d2bc12e81a3ca0b91597e1c007334b06",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/eaa55093790fda1b065c0a9a30081d65e6989f9d"
+        },
+        "date": 1740519546063,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46595,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78829 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46595,
+            "unit": "ns/op",
+            "extra": "78829 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78829 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78829 times\n4 procs"
           }
         ]
       }
