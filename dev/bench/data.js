@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740519546468,
+  "lastUpdate": 1740597592461,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -864,6 +864,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78829 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0abdd42082afde970db81f65562b589e34ab16fe",
+          "message": "feat: Add job run stats reporting (#517)\n\n* fix: Update download files to return JSON errors\n\nOur implementation did not integrate with the GetHandler helper\npresumably because the success case is streaming a file. The update\nreturns an empty object on success, which does not matter to the job\ncreator but helps us integrate with GetHandler.\n\n* feat: Add stats options\n\n* feat: Add stats to solver server\n\n* feat: Add HTTPStats client options\n\n* feat: Add GetShortcut helper to get module identifier\n\n* feat: Add job run stats\n\nWe post job run details to the stats API, including job run time. The\njob run time starts when the job offer is created and ends when the job\ncreator finishes downloading the job outputs.\n\n* feat: Add reputation stats\n\n* feat: Post job completed no validation\n\n* chore: Update job offer CreatedAt comment\n\n* chore: Debug log download file signature-address mismatches\n\n* chore: Warn log when an expected file is missing in download files handlers",
+          "timestamp": "2025-02-26T11:19:09-08:00",
+          "tree_id": "d0148da066ac10147446d77f62883c0d5e2c3832",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/0abdd42082afde970db81f65562b589e34ab16fe"
+        },
+        "date": 1740597591578,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45033,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79484 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45033,
+            "unit": "ns/op",
+            "extra": "79484 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79484 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79484 times\n4 procs"
           }
         ]
       }
