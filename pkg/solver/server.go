@@ -605,6 +605,7 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	for _, file := range files {
 		info, err := file.Info()
 		if err != nil {
+			log.Warn().Msgf("expected file renamed or moved: %v", err)
 			continue
 		}
 		if info.Mode().IsRegular() {
