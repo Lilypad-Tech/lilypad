@@ -539,6 +539,8 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 *
 */
 
+// We use EmptyResponse to provide a type for the http.GetHandler wrapper,
+// but the client expects a file stream and will ignore it.
 type EmptyResponse struct{}
 
 func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
