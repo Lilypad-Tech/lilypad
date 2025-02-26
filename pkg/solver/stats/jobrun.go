@@ -8,7 +8,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/module/shortcuts"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,14 +24,8 @@ type JobRun struct {
 
 // Stats API implementation
 
-func (stat *HTTPStats) PostJobRun(store store.SolverStore, deal *data.DealContainer) error {
-	jobOffer, err := store.GetJobOffer(deal.Deal.JobOffer.ID)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to get job offer")
-		return err
-	}
-	jobRunTime := time.Now().UnixMilli() - int64(jobOffer.JobOffer.CreatedAt)
-
+func (stat *HTTPStats) PostJobRun(deal *data.DealContainer) error {
+	jobRunTime := time.Now().UnixMilli() - int64(deal.Deal.JobOffer.CreatedAt)
 	extraData, err := json.Marshal(map[string]string{
 		"state": data.GetAgreementStateString(deal.State),
 	})
@@ -62,6 +55,6 @@ func (stat *HTTPStats) PostJobRun(store store.SolverStore, deal *data.DealContai
 
 // Noop implementation
 
-func (stat *NoopStats) PostJobRun(store store.SolverStore, deal *data.DealContainer) error {
+func (stat *NoopStats) PostJobRun(deal *data.DealContainer) error {
 	return nil
 }

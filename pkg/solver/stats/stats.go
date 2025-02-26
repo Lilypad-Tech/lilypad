@@ -3,7 +3,6 @@ package stats
 import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 )
@@ -14,7 +13,7 @@ type StatsOptions struct {
 }
 
 type Stats interface {
-	PostJobRun(store store.SolverStore, deal *data.DealContainer) error
+	PostJobRun(deal *data.DealContainer) error
 	PostReputation(address string, reputation Reputation) error
 }
 

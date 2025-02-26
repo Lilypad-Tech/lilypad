@@ -579,7 +579,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 	}
 
 	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
-		solverServer.stats.PostJobRun(solverServer.store, deal)
+		solverServer.stats.PostJobRun(deal)
 		solverServer.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
@@ -785,7 +785,7 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 	}
 
 	if err := solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
-		solverServer.stats.PostJobRun(solverServer.store, deal)
+		solverServer.stats.PostJobRun(deal)
 		solverServer.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
