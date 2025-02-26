@@ -569,6 +569,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		}
 	}
 	if signerAddress != deal.JobCreator {
+		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, deal.JobCreator)
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "not authorized: job creator address does not match signer address",
 			StatusCode: corehttp.StatusUnauthorized,
@@ -756,7 +757,7 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 	}
 
 	if signerAddress != jobOffer.JobCreator {
-		log.Error().Err(err).Msgf("job creator address does not match signer address")
+		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, jobOffer.JobCreator)
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    errors.New("not authorized").Error(),
 			StatusCode: corehttp.StatusUnauthorized,
