@@ -21,6 +21,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/rs/zerolog/log"
@@ -32,6 +33,7 @@ type solverServer struct {
 	options    http.ServerOptions
 	controller *SolverController
 	store      store.SolverStore
+	stats      stats.Stats
 	services   data.ServiceConfig
 }
 
@@ -39,12 +41,14 @@ func NewSolverServer(
 	options http.ServerOptions,
 	controller *SolverController,
 	store store.SolverStore,
+	stats stats.Stats,
 	services data.ServiceConfig,
 ) (*solverServer, error) {
 	server := &solverServer{
 		options:    options,
 		controller: controller,
 		store:      store,
+		stats:      stats,
 	}
 
 	metricsDashboard.Init(services.APIHost)
@@ -81,7 +85,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 
 	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	subrouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(solverServer.jobOfferDownloadFiles)).Methods("GET")
 
 	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
 	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
@@ -89,7 +93,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
 
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.downloadFiles).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", http.GetHandler(solverServer.downloadFiles)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
 
 	subrouter.HandleFunc("/deals/{id}/result", http.GetHandler(solverServer.getResult)).Methods("GET")
@@ -121,7 +125,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	anurarouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
 	anurarouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
 	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	anurarouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(solverServer.jobOfferDownloadFiles)).Methods("GET")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
@@ -535,50 +539,117 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 *
 */
 
-func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+// We use EmptyResponse to provide a type for the http.GetHandler wrapper,
+// but the client expects a file stream and will ignore it.
+type EmptyResponse struct{}
+
+func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
-	err := func() *http.HTTPError {
-		deal, err := solverServer.store.GetDeal(id)
-		if err != nil {
-			log.Error().Err(err).Msgf("error loading deal")
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-		if deal == nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		signerAddress, err := http.CheckSignature(req)
-		if err != nil {
-			log.Error().Err(err).Msgf("error checking signature")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-		// Only the job creator in a deal can download job outputs
-		if signerAddress != deal.JobCreator {
-			log.Error().Err(err).Msgf("job creator address does not match signer address")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-		return solverServer.handleFileDownload(GetDealsFilePath(deal.ID), res)
-	}()
-
+	// Get the deal
+	deal, err := solverServer.store.GetDeal(id)
 	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-		corehttp.Error(res, err.Error(), err.StatusCode)
-		return
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error loading deal",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
 	}
+	if deal == nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "deal not found",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Check authorization
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "not authorized",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+	if signerAddress != deal.JobCreator {
+		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, deal.JobCreator)
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "not authorized: job creator address does not match signer address",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+
+	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
+		solverServer.stats.PostJobRun(deal)
+		solverServer.stats.PostReputation(deal.ResourceProvider,
+			stats.NewReputationBuilder().
+				WithJobCompletedNoValidation(true).
+				Build(),
+		)
+	}); err != nil {
+		return EmptyResponse{}, err
+	}
+
+	return EmptyResponse{}, nil
+}
+
+func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter, onCompletion func()) *http.HTTPError {
+	// Read directory contents
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Find the first regular file
+	var targetFile os.DirEntry
+	for _, file := range files {
+		info, err := file.Info()
+		if err != nil {
+			log.Warn().Msgf("expected file renamed or moved: %v", err)
+			continue
+		}
+		if info.Mode().IsRegular() {
+			targetFile = file
+			break
+		}
+	}
+
+	if targetFile == nil {
+		return &http.HTTPError{
+			Message:    "no regular files found in directory",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Get the actual filename and path
+	filename := targetFile.Name()
+	filePath := filepath.Join(dirPath, filename)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	defer file.Close()
+
+	// Set appropriate headers using the actual filename
+	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	res.Header().Set("Content-Type", "application/x-tar")
+
+	_, err = io.Copy(res, file)
+	if err != nil {
+		return &http.HTTPError{
+			Message:    err.Error(),
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+
+	onCompletion()
+	return nil
 }
 
 func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
@@ -660,110 +731,71 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	}
 }
 
-func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
-	err := func() *http.HTTPError {
-		jobOffer, err := solverServer.store.GetJobOffer(id)
-		if err != nil {
-			log.Error().Err(err).Msgf("error loading job offer")
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusInternalServerError,
-			}
-		}
-		if jobOffer == nil {
-			return &http.HTTPError{
-				Message:    err.Error(),
-				StatusCode: corehttp.StatusNotFound,
-			}
-		}
-
-		signerAddress, err := http.CheckSignature(req)
-		if err != nil {
-			log.Error().Err(err).Msgf("error checking signature")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-
-		if signerAddress != jobOffer.JobCreator {
-			log.Error().Err(err).Msgf("job creator address does not match signer address")
-			return &http.HTTPError{
-				Message:    errors.New("not authorized").Error(),
-				StatusCode: corehttp.StatusUnauthorized,
-			}
-		}
-
-		solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
-
-		return solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res)
-	}()
-
+	jobOffer, err := solverServer.store.GetJobOffer(id)
 	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
-		corehttp.Error(res, err.Error(), err.StatusCode)
-	}
-}
-
-func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter) *http.HTTPError {
-	// Read directory contents
-	files, err := os.ReadDir(dirPath)
-	if err != nil {
-		return &http.HTTPError{
-			Message:    fmt.Sprintf("error reading directory: %s", err.Error()),
-			StatusCode: corehttp.StatusNotFound,
-		}
-	}
-
-	// Find the first regular file
-	var targetFile os.DirEntry
-	for _, file := range files {
-		info, err := file.Info()
-		if err != nil {
-			continue
-		}
-		if info.Mode().IsRegular() {
-			targetFile = file
-			break
-		}
-	}
-
-	if targetFile == nil {
-		return &http.HTTPError{
-			Message:    "no regular files found in directory",
-			StatusCode: corehttp.StatusNotFound,
-		}
-	}
-
-	// Get the actual filename and path
-	filename := targetFile.Name()
-	filePath := filepath.Join(dirPath, filename)
-
-	// Open and serve the file
-	file, err := os.Open(filePath)
-	if err != nil {
-		return &http.HTTPError{
+		log.Error().Err(err).Msgf("error loading job offer")
+		return EmptyResponse{}, &http.HTTPError{
 			Message:    err.Error(),
 			StatusCode: corehttp.StatusInternalServerError,
 		}
 	}
-	defer file.Close()
-
-	res.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	res.Header().Set("Content-Type", "application/x-tar")
-
-	_, err = io.Copy(res, file)
-	if err != nil {
-		return &http.HTTPError{
+	if jobOffer == nil {
+		return EmptyResponse{}, &http.HTTPError{
 			Message:    err.Error(),
-			StatusCode: corehttp.StatusInternalServerError,
+			StatusCode: corehttp.StatusNotFound,
 		}
 	}
 
-	return nil
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		log.Error().Err(err).Msgf("error checking signature")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    errors.New("not authorized").Error(),
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+
+	if signerAddress != jobOffer.JobCreator {
+		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, jobOffer.JobCreator)
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    errors.New("not authorized").Error(),
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+
+	solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
+
+	// Retrieve deal for stats reporting
+	deal, err := solverServer.store.GetDeal(id)
+	if err != nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error loading deal",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	if deal == nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "deal not found",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	if err := solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
+		solverServer.stats.PostJobRun(deal)
+		solverServer.stats.PostReputation(deal.ResourceProvider,
+			stats.NewReputationBuilder().
+				WithJobCompletedNoValidation(true).
+				Build(),
+		)
+	}); err != nil {
+		return EmptyResponse{}, err
+	}
+
+	return EmptyResponse{}, nil
 }
 
 // Validation Service

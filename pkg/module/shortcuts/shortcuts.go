@@ -45,3 +45,7 @@ func GetModule(name string) (data.ModuleConfig, error) {
 
 	return module, nil
 }
+
+func GetShortcut(repo string, hash string) string {
+	return fmt.Sprintf("%s:%s", repo, hash)
+}
