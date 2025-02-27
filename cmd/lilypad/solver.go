@@ -55,7 +55,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 
 	unregisterMetrics, err := system.NewMetrics(meter)
 	if err != nil {
-		zerolog.Warn().Msgf("failed to start system metrics: %s", err)
+		log.Warn("failed to start system metrics", err)
 	}
 	commandCtx.Cm.RegisterCallback(unregisterMetrics)
 
