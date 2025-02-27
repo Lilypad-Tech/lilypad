@@ -17,7 +17,7 @@ type Stats interface {
 	PostReputation(address string, reputation Reputation) error
 }
 
-func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK) (Stats, error) {
+func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK, log *system.ServiceLogger) (Stats, error) {
 	if !options.Enabled {
 		return &NoopStats{}, nil
 	}
@@ -28,13 +28,16 @@ func NewStats(service system.Service, options StatsOptions, web3Options web3.Web
 			PrivateKey:    web3Options.PrivateKey,
 			Type:          string(service),
 			PublicAddress: web3SDK.GetAddress().String(),
-		}}, nil
+		},
+		log: log,
+	}, nil
 }
 
 // Stats API implementation
 
 type HTTPStats struct {
 	ClientOptions http.ClientOptions
+	log           *system.ServiceLogger
 }
 
 // Noop implementation

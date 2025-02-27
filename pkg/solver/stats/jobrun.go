@@ -8,7 +8,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/module/shortcuts"
-	"github.com/rs/zerolog/log"
 )
 
 type JobRun struct {
@@ -30,7 +29,7 @@ func (stat *HTTPStats) PostJobRun(deal *data.DealContainer) error {
 		"state": data.GetAgreementStateString(deal.State),
 	})
 	if err != nil {
-		log.Error().Msgf("unable to marshal extra data: %s", err)
+		stat.log.Error("unable to marshal extra data", err)
 		return err
 	}
 
