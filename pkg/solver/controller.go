@@ -13,7 +13,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -93,7 +92,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	}
 
 	// activate the web3 event listeners
-	log.Debug().Msgf("controller.web3Events.Start")
+	controller.log.Debug("starting controller", "controller.web3Events.Start")
 	err = controller.web3Events.Start(ctx, cm, controller.web3SDK)
 	if err != nil {
 		errorChan <- err
@@ -102,7 +101,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 
 	// make sure we are registered as a solver
 	// so that users can lookup our URL
-	log.Debug().Msgf("controller.registerAsSolver")
+	controller.log.Debug("registering URL", "controller.registerAsSolver")
 	err = controller.registerAsSolver()
 	if err != nil {
 		errorChan <- err
@@ -121,7 +120,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 			return err
 		},
 	)
-	log.Debug().Msgf("controller.loop.Start")
+	controller.log.Debug("start control loop", "controller.loop.Start")
 	err = controller.loop.Start(true)
 	if err != nil {
 		errorChan <- err
@@ -218,15 +217,15 @@ func (controller *SolverController) registerAsSolver() error {
 		return err
 	}
 
-	log.Debug().Msgf("GetUser with selfAddress: %s", selfAddress.String())
+	controller.log.Debug("GetUser with selfAddress", selfAddress.String())
 	selfUser, err := controller.web3SDK.GetUser(selfAddress)
 	if err != nil {
 		return err
 	}
 
 	// TODO: check the other props and call update if they have changed
-	log.Debug().Msgf("selfUser.Url: %s", selfUser.Url)
-	log.Debug().Msgf("controller.options.Server.URL: %s", controller.options.Server.URL)
+	controller.log.Debug("selfUser.Url", selfUser.Url)
+	controller.log.Debug("controller.options.Server.URL", controller.options.Server.URL)
 	if selfUser.Url != controller.options.Server.URL {
 		controller.log.Info("url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
 		err = controller.web3SDK.UpdateUser(
