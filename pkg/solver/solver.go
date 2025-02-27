@@ -48,7 +48,7 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server, controller, store, stats, options.Services)
+	server, err := NewSolverServer(options.Server, controller, store, stats, options.Services, log)
 	if err != nil {
 		return nil, err
 	}
