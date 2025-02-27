@@ -326,7 +326,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 		span.RecordError(err)
 		return err
 	}
-	err = reportJobMetrics(ctx, controller.meter, storedDeals, jobOffers)
+	err = reportJobMetrics(ctx, controller.meter, controller.log, storedDeals, jobOffers)
 	if err != nil {
 		span.SetStatus(codes.Error, "report deal metrics failed")
 		span.RecordError(err)

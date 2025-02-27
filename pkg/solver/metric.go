@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/rs/zerolog/log"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -155,7 +155,7 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 	}, nil
 }
 
-func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
+func reportJobMetrics(ctx context.Context, meter metric.Meter, log *system.ServiceLogger, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
 	var jobStats jobStats
 
 	// Compute deal state counts
@@ -184,7 +184,7 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 		case "TimeoutMediateResults":
 			jobStats.stateCounts.timeoutMediateResults += 1
 		default:
-			log.Trace().Msgf("untracked deal state ID: %d", deal.State)
+			log.Trace("untracked deal state ID", deal.State)
 		}
 	}
 
@@ -196,14 +196,14 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 		case "JobTimedOut":
 			jobStats.stateCounts.jobTimedOut += 1
 		default:
-			log.Trace().Msgf("job metrics skipped offer state ID: %d", offer.State)
+			log.Trace("job metrics skipped offer state ID", offer.State)
 		}
 	}
 
 	// Record metrics
 	metrics, err := newMetrics(meter)
 	if err != nil {
-		log.Warn().Msgf("failed to create solver metrics: %s", err)
+		log.Warn("failed to create solver metrics", err)
 		return err
 	}
 	metrics.dealNegotiating.Record(ctx, jobStats.stateCounts.dealNegotiating)
