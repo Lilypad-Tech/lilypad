@@ -24,7 +24,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -135,11 +134,11 @@ func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.Clean
 	// and write them to anyone who is connected to us
 	websocketEventChannel := make(chan []byte)
 
-	log.Debug().Msgf("begin server.controller.subscribeEvents")
+	server.log.Debug("begin server.controller.subscribeEvents", "")
 	server.controller.subscribeEvents(func(ev SolverEvent) {
 		evBytes, err := json.Marshal(ev)
 		if err != nil {
-			log.Error().Msgf("Error marshalling event: %s", err.Error())
+			server.log.Error("Error marshalling event: %s", err)
 		}
 		websocketEventChannel <- evBytes
 	})
@@ -337,7 +336,7 @@ func (server *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp
 func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 
@@ -348,13 +347,13 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 
 	offerRecent := isTimestampRecent(jobOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
 	if !offerRecent {
-		log.Debug().Msgf("Job offer from %s rejected because timestamp was not recent", jobOffer.JobCreator)
+		server.log.Debug("job offer rejected", fmt.Sprintf("offer from %s rejected because timestamp was not recent", jobOffer.JobCreator))
 		return nil, errors.New("job offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
 	}
 
 	err = data.CheckJobOffer(jobOffer)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking job offer")
+		server.log.Error("Error checking job offer", err)
 		return nil, err
 	}
 
@@ -363,11 +362,11 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 
 func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
 	versionHeader, _ := http.GetVersionFromHeaders(req)
-	log.Debug().Msgf("resource provider adding offer with version header %s", versionHeader)
+	server.log.Debug("resource provider adding offer with version header", versionHeader)
 
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 	// Only the resource provider can post their resource offer
@@ -379,25 +378,25 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 	if server.options.AccessControl.EnableResourceProviderAllowlist {
 		allowedProviders, err := server.store.GetAllowedResourceProviders()
 		if err != nil {
-			log.Error().Err(err).Msgf("Unable to load resource provider allowlist: %s", err)
+			server.log.Error("Unable to load resource provider allowlist", err)
 			return nil, err
 		}
 
 		if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
-			log.Debug().Msgf("resource provider not in allowlist %s", resourceOffer.ResourceProvider)
+			server.log.Debug("resource provider not in allowlist", resourceOffer.ResourceProvider)
 			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
 		}
 	}
 
 	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
 	if !offerRecent {
-		log.Debug().Msgf("Resource offer from %s rejected because timestamp was not recent", resourceOffer.ResourceProvider)
+		server.log.Debug("resource offer rejected", fmt.Sprintf("offer from %s rejected because timestamp was not recent", resourceOffer.ResourceProvider))
 		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
 	}
 
 	err = data.CheckResourceOffer(resourceOffer)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking resource offer")
+		server.log.Error("Error checking resource offer", err)
 		return nil, err
 	}
 	return server.controller.addResourceOffer(resourceOffer)
@@ -408,19 +407,19 @@ func (server *solverServer) addResult(results data.Result, res corehttp.Response
 	id := vars["id"]
 	deal, err := server.store.GetDeal(id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error loading deal")
+		server.log.Error("error loading deal", err)
 		return nil, err
 	}
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
 	if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
-		log.Trace().Msgf("attempted results post for timed out job with deal ID: %s", deal.ID)
+		server.log.Trace("attempted results post for timed out job with deal ID", deal.ID)
 		return nil, fmt.Errorf("job with deal ID %s timed out", deal.ID)
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 	// Only the resource provider in a deal can add a result
@@ -429,7 +428,7 @@ func (server *solverServer) addResult(results data.Result, res corehttp.Response
 	}
 	err = data.CheckResult(results)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error checking result for deal ID: %s", results.DealID)
+		server.log.Error(fmt.Sprintf("error checking result for deal ID: %s", results.DealID), err)
 		return nil, err
 	}
 	results.DealID = id
@@ -463,16 +462,16 @@ func (server *solverServer) updateTransactionsResourceProvider(payload data.Deal
 	id := vars["id"]
 	deal, err := server.store.GetDeal(id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error loading deal")
+		server.log.Error("error loading deal", err)
 		return nil, err
 	}
 	if deal == nil {
-		log.Error().Err(err).Msgf("deal not found")
+		server.log.Error("deal not found", err)
 		return nil, fmt.Errorf("deal not found")
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 	// Only the resource provider in a deal can update its transactions
@@ -487,16 +486,16 @@ func (server *solverServer) updateTransactionsJobCreator(payload data.DealTransa
 	id := vars["id"]
 	deal, err := server.store.GetDeal(id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error loading deal")
+		server.log.Error("error loading deal", err)
 		return nil, err
 	}
 	if deal == nil {
-		log.Error().Err(err).Msgf("deal not found")
+		server.log.Error("deal not found", err)
 		return nil, fmt.Errorf("deal not found")
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 	// Only the job creator in a deal can update its transactions
@@ -511,16 +510,16 @@ func (server *solverServer) updateTransactionsMediator(payload data.DealTransact
 	id := vars["id"]
 	deal, err := server.store.GetDeal(id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error loading deal")
+		server.log.Error("error loading deal", err)
 		return nil, err
 	}
 	if deal == nil {
-		log.Error().Err(err).Msgf("deal not found")
+		server.log.Error("deal not found", err)
 		return nil, fmt.Errorf("deal not found")
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return nil, err
 	}
 	// Only the mediator in a deal can update its transactions
@@ -574,7 +573,7 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 		}
 	}
 	if signerAddress != deal.JobCreator {
-		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, deal.JobCreator)
+		server.log.Debug("signature mismatch", fmt.Sprintf("signer address %s does not match job creator address %s", signerAddress, deal.JobCreator))
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "not authorized: job creator address does not match signer address",
 			StatusCode: corehttp.StatusUnauthorized,
@@ -610,7 +609,7 @@ func (server *solverServer) handleFileDownload(dirPath string, res corehttp.Resp
 	for _, file := range files {
 		info, err := file.Info()
 		if err != nil {
-			log.Warn().Msgf("expected file renamed or moved: %v", err)
+			server.log.Warn("expected file renamed or moved", err)
 			continue
 		}
 		if info.Mode().IsRegular() {
@@ -662,20 +661,20 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 	err := func() error {
 		deal, err := server.store.GetDeal(id)
 		if err != nil {
-			log.Error().Err(err).Msgf("error loading deal")
+			server.log.Error("error loading deal", err)
 			return err
 		}
 		if deal == nil {
-			log.Error().Msgf("deal not found")
+			server.log.Error(fmt.Sprintf("deal %s not found", id), errors.New(""))
 			return err
 		}
 		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
-			log.Trace().Msgf("attempted file upload for timed out job with deal ID: %s", deal.ID)
+			server.log.Trace("attempted file upload for timed out job with deal ID", deal.ID)
 			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
 		}
 		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
-			log.Error().Err(err).Msgf("error checking signature")
+			server.log.Error("error checking signature", err)
 			return err
 		}
 		// Only the resource provider in a deal can upload job outputs
@@ -719,7 +718,7 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 	}()
 
 	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for route: %s", err.Error())
+		server.log.Error("error receiving uploaded files: %s", err)
 		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
 		return
 	}
@@ -728,7 +727,7 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 		DataID: id,
 	})
 	if err != nil {
-		log.Ctx(req.Context()).Error().Msgf("error for json encoding: %s", err.Error())
+		server.log.Error("error encoding result: %s", err)
 		corehttp.Error(res, err.Error(), corehttp.StatusInternalServerError)
 		return
 	}
@@ -740,7 +739,7 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 
 	jobOffer, err := server.store.GetJobOffer(id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error loading job offer")
+		server.log.Error("error loading job offer", err)
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    err.Error(),
 			StatusCode: corehttp.StatusInternalServerError,
@@ -755,7 +754,7 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Error().Err(err).Msgf("error checking signature")
+		server.log.Error("error checking signature", err)
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    errors.New("not authorized").Error(),
 			StatusCode: corehttp.StatusUnauthorized,
@@ -763,7 +762,7 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 	}
 
 	if signerAddress != jobOffer.JobCreator {
-		log.Debug().Msgf("signer address %s does not match job creator address %s", signerAddress, jobOffer.JobCreator)
+		server.log.Debug("signature mismatch", fmt.Sprintf("signer address %s does not match job creator address %s", signerAddress, jobOffer.JobCreator))
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    errors.New("not authorized").Error(),
 			StatusCode: corehttp.StatusUnauthorized,
@@ -807,7 +806,7 @@ func (server *solverServer) getValidationToken(res corehttp.ResponseWriter, req 
 	// Check signature
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
-		log.Warn().Err(err).Msgf("error checking signature")
+		server.log.Warn("error checking signature", err)
 		return nil, err
 	}
 
@@ -829,7 +828,7 @@ func (server *solverServer) getValidationToken(res corehttp.ResponseWriter, req 
 	secret := []byte(server.options.AccessControl.ValidationTokenSecret)
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
-		log.Error().Err(err).Msgf("failed to sign token")
+		server.log.Error("failed to sign token", err)
 		return nil, errors.New("failed to sign token")
 	}
 
