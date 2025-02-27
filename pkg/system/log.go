@@ -24,6 +24,10 @@ func (s *ServiceLogger) Error(title string, err error) {
 	Error(s.service, title, err)
 }
 
+func (s *ServiceLogger) Warn(title string, data interface{}) {
+	Warn(s.service, title, data)
+}
+
 func (s *ServiceLogger) Info(title string, data interface{}) {
 	Info(s.service, title, data)
 }
@@ -66,6 +70,10 @@ func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, tit
 
 func Error(service Service, title string, err error) {
 	logWithCaller(5, zerolog.ErrorLevel, service, title, err)
+}
+
+func Warn(service Service, title string, data interface{}) {
+	logWithCaller(5, zerolog.WarnLevel, service, title, data)
 }
 
 func Info(service Service, title string, data interface{}) {
