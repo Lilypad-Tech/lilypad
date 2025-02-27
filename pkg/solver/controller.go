@@ -69,13 +69,14 @@ func NewSolverController(
 	options SolverOptions,
 	tracer trace.Tracer,
 	meter metric.Meter,
+	log *system.ServiceLogger,
 ) (*SolverController, error) {
 	controller := &SolverController{
 		web3SDK:    web3SDK,
 		web3Events: web3.NewEventChannels(),
 		store:      store,
 		options:    options,
-		log:        system.NewServiceLogger(system.SolverService),
+		log:        log,
 		tracer:     tracer,
 		meter:      meter,
 	}

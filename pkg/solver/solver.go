@@ -42,8 +42,9 @@ func NewSolver(
 	stats stats.Stats,
 	tracer trace.Tracer,
 	meter metric.Meter,
+	log *system.ServiceLogger,
 ) (*Solver, error) {
-	controller, err := NewSolverController(web3SDK, store, options, tracer, meter)
+	controller, err := NewSolverController(web3SDK, store, options, tracer, meter, log)
 	if err != nil {
 		return nil, err
 	}

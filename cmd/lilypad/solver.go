@@ -11,7 +11,7 @@ import (
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/rs/zerolog/log"
+	zerolog "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -46,15 +46,16 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
 	if err != nil {
-		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
+		zerolog.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+	log := system.NewServiceLogger(system.SolverService)
 
 	unregisterMetrics, err := system.NewMetrics(meter)
 	if err != nil {
-		log.Warn().Msgf("failed to start system metrics: %s", err)
+		zerolog.Warn().Msgf("failed to start system metrics: %s", err)
 	}
 	commandCtx.Cm.RegisterCallback(unregisterMetrics)
 
@@ -73,7 +74,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter)
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter, log)
 	if err != nil {
 		return err
 	}
