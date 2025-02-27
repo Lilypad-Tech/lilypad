@@ -67,7 +67,7 @@ func NewSolverServer(
 *
 *
 */
-func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
+func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.CleanupManager, tracerProvider *trace.TracerProvider) error {
 	router := mux.NewRouter()
 
 	subrouter := router.PathPrefix(http.API_SUB_PATH).Subrouter()
@@ -76,39 +76,39 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	subrouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 
 	subrouter.Use(httprate.Limit(
-		solverServer.options.RateLimiter.RequestLimit,
-		time.Duration(solverServer.options.RateLimiter.WindowLength)*time.Second,
+		server.options.RateLimiter.RequestLimit,
+		time.Duration(server.options.RateLimiter.WindowLength)*time.Second,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 
-	subrouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
-	subrouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
+	subrouter.HandleFunc("/job_offers", http.GetHandler(server.getJobOffers)).Methods("GET")
+	subrouter.HandleFunc("/job_offers", http.PostHandler(server.addJobOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	subrouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(solverServer.jobOfferDownloadFiles)).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(server.getJobOffer)).Methods("GET")
+	subrouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(server.jobOfferDownloadFiles)).Methods("GET")
 
-	subrouter.HandleFunc("/resource_offers", http.GetHandler(solverServer.getResourceOffers)).Methods("GET")
-	subrouter.HandleFunc("/resource_offers", http.PostHandler(solverServer.addResourceOffer)).Methods("POST")
+	subrouter.HandleFunc("/resource_offers", http.GetHandler(server.getResourceOffers)).Methods("GET")
+	subrouter.HandleFunc("/resource_offers", http.PostHandler(server.addResourceOffer)).Methods("POST")
 
-	subrouter.HandleFunc("/deals", http.GetHandler(solverServer.getDeals)).Methods("GET")
-	subrouter.HandleFunc("/deals/{id}", http.GetHandler(solverServer.getDeal)).Methods("GET")
+	subrouter.HandleFunc("/deals", http.GetHandler(server.getDeals)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}", http.GetHandler(server.getDeal)).Methods("GET")
 
-	subrouter.HandleFunc("/deals/{id}/files", http.GetHandler(solverServer.downloadFiles)).Methods("GET")
-	subrouter.HandleFunc("/deals/{id}/files", solverServer.uploadFiles).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/files", http.GetHandler(server.downloadFiles)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/files", server.uploadFiles).Methods("POST")
 
-	subrouter.HandleFunc("/deals/{id}/result", http.GetHandler(solverServer.getResult)).Methods("GET")
-	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(solverServer.addResult)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/result", http.GetHandler(server.getResult)).Methods("GET")
+	subrouter.HandleFunc("/deals/{id}/result", http.PostHandler(server.addResult)).Methods("POST")
 
-	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(solverServer.updateTransactionsResourceProvider)).Methods("POST")
-	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(solverServer.updateTransactionsJobCreator)).Methods("POST")
-	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(solverServer.updateTransactionsMediator)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/txs/resource_provider", http.PostHandler(server.updateTransactionsResourceProvider)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/txs/job_creator", http.PostHandler(server.updateTransactionsJobCreator)).Methods("POST")
+	subrouter.HandleFunc("/deals/{id}/txs/mediator", http.PostHandler(server.updateTransactionsMediator)).Methods("POST")
 
-	subrouter.HandleFunc("/validation_token", http.GetHandler(solverServer.getValidationToken)).Methods("GET")
+	subrouter.HandleFunc("/validation_token", http.GetHandler(server.getValidationToken)).Methods("GET")
 
 	//anura subrouter
 	anuraMiddleware := func(next corehttp.Handler) corehttp.Handler {
 		return corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-			_, err := http.CheckAnuraSignature(r, solverServer.options.AccessControl.AnuraAddresses)
+			_, err := http.CheckAnuraSignature(r, server.options.AccessControl.AnuraAddresses)
 			if err != nil {
 				corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
 				return
@@ -122,18 +122,18 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 	anurarouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
 	anurarouter.Use(anuraMiddleware)
 
-	anurarouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
-	anurarouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
-	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	anurarouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(solverServer.jobOfferDownloadFiles)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers", http.PostHandler(server.addJobOffer)).Methods("POST")
+	anurarouter.HandleFunc("/job_offers", http.GetHandler(server.getJobOffers)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(server.getJobOffer)).Methods("GET")
+	anurarouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(server.jobOfferDownloadFiles)).Methods("GET")
 
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
 	// and write them to anyone who is connected to us
 	websocketEventChannel := make(chan []byte)
 
-	log.Debug().Msgf("begin solverServer.controller.subscribeEvents")
-	solverServer.controller.subscribeEvents(func(ev SolverEvent) {
+	log.Debug().Msgf("begin server.controller.subscribeEvents")
+	server.controller.subscribeEvents(func(ev SolverEvent) {
 		evBytes, err := json.Marshal(ev)
 		if err != nil {
 			log.Error().Msgf("Error marshalling event: %s", err.Error())
@@ -146,12 +146,12 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 		http.WEBSOCKET_SUB_PATH,
 		websocketEventChannel,
 		ctx,
-		solverServer.connectCB,
-		solverServer.disconnectCB,
+		server.connectCB,
+		server.disconnectCB,
 	)
 
 	srv := &corehttp.Server{
-		Addr:              fmt.Sprintf("%s:%d", solverServer.options.Host, solverServer.options.Port),
+		Addr:              fmt.Sprintf("%s:%d", server.options.Host, server.options.Port),
 		WriteTimeout:      time.Minute * 15,
 		ReadTimeout:       time.Minute * 15,
 		ReadHeaderTimeout: time.Minute * 15,
@@ -185,7 +185,7 @@ func (solverServer *solverServer) ListenAndServe(ctx context.Context, cm *system
 }
 
 // WS connect events
-func (solverServer *solverServer) connectCB(connParams http.WSConnectionParams) {
+func (server *solverServer) connectCB(connParams http.WSConnectionParams) {
 	if connParams.Type == "ResourceProvider" {
 		metricsDashboard.TrackNodeConnectionEvent(metricsDashboard.NodeConnectionParams{
 			Event:       "Connect",
@@ -196,7 +196,7 @@ func (solverServer *solverServer) connectCB(connParams http.WSConnectionParams) 
 	}
 }
 
-func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParams) {
+func (server *solverServer) disconnectCB(connParams http.WSConnectionParams) {
 	if connParams.Type == "ResourceProvider" {
 		metricsDashboard.TrackNodeConnectionEvent(metricsDashboard.NodeConnectionParams{
 			Event:       "Disconnect",
@@ -204,7 +204,7 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 			CountryCode: connParams.CountryCode,
 			IP:          connParams.IP,
 		})
-		solverServer.controller.removeUnmatchedResourceOffers(connParams.ID)
+		server.controller.removeUnmatchedResourceOffers(connParams.ID)
 	}
 }
 
@@ -219,7 +219,7 @@ func (solverServer *solverServer) disconnectCB(connParams http.WSConnectionParam
 *
 *
 */
-func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOfferContainer, error) {
+func (server *solverServer) getJobOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.JobOfferContainer, error) {
 	query := store.GetJobOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
@@ -239,10 +239,10 @@ func (solverServer *solverServer) getJobOffers(res corehttp.ResponseWriter, req 
 		}
 	}
 
-	return solverServer.store.GetJobOffers(query)
+	return server.store.GetJobOffers(query)
 }
 
-func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOfferContainer, error) {
+func (server *solverServer) getResourceOffers(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.ResourceOfferContainer, error) {
 	query := store.GetResourceOffersQuery{}
 	// if there is a job_creator query param then assign it
 	if resourceProvider := req.URL.Query().Get("resource_provider"); resourceProvider != "" {
@@ -254,10 +254,10 @@ func (solverServer *solverServer) getResourceOffers(res corehttp.ResponseWriter,
 	if notMatched := req.URL.Query().Get("not_matched"); notMatched == "true" {
 		query.NotMatched = true
 	}
-	return solverServer.store.GetResourceOffers(query)
+	return server.store.GetResourceOffers(query)
 }
 
-func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.DealContainer, error) {
+func (server *solverServer) getDeals(res corehttp.ResponseWriter, req *corehttp.Request) ([]data.DealContainer, error) {
 	query := store.GetDealsQuery{}
 	// if there is a job_creator query param then assign it
 	if jobCreator := req.URL.Query().Get("job_creator"); jobCreator != "" {
@@ -269,7 +269,7 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 	if state := req.URL.Query().Get("state"); state != "" {
 		query.State = state
 	}
-	return solverServer.store.GetDeals(query)
+	return server.store.GetDeals(query)
 }
 
 /*
@@ -284,20 +284,20 @@ func (solverServer *solverServer) getDeals(res corehttp.ResponseWriter, req *cor
 *
 */
 
-func (solverServer *solverServer) getJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (data.JobOfferContainer, error) {
+func (server *solverServer) getJobOffer(res corehttp.ResponseWriter, req *corehttp.Request) (data.JobOfferContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	jobOffer, err := solverServer.store.GetJobOffer(id)
+	jobOffer, err := server.store.GetJobOffer(id)
 	if err != nil {
 		return data.JobOfferContainer{}, err
 	}
 	return *jobOffer, nil
 }
 
-func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
+func (server *solverServer) getDeal(res corehttp.ResponseWriter, req *corehttp.Request) (data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		return data.DealContainer{}, err
 	}
@@ -307,10 +307,10 @@ func (solverServer *solverServer) getDeal(res corehttp.ResponseWriter, req *core
 	return *deal, nil
 }
 
-func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp.Request) (data.Result, error) {
+func (server *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp.Request) (data.Result, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	result, err := solverServer.store.GetResult(id)
+	result, err := server.store.GetResult(id)
 	if err != nil {
 		return data.Result{}, err
 	}
@@ -331,7 +331,7 @@ func (solverServer *solverServer) getResult(res corehttp.ResponseWriter, req *co
 *
 *
 */
-func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
+func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		log.Error().Err(err).Msgf("error checking signature")
@@ -343,7 +343,7 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 
-	offerRecent := isTimestampRecent(jobOffer.CreatedAt, solverServer.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	offerRecent := isTimestampRecent(jobOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
 	if !offerRecent {
 		log.Debug().Msgf("Job offer from %s rejected because timestamp was not recent", jobOffer.JobCreator)
 		return nil, errors.New("job offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
@@ -355,10 +355,10 @@ func (solverServer *solverServer) addJobOffer(jobOffer data.JobOffer, res coreht
 		return nil, err
 	}
 
-	return solverServer.controller.addJobOffer(jobOffer)
+	return server.controller.addJobOffer(jobOffer)
 }
 
-func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
+func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
 	versionHeader, _ := http.GetVersionFromHeaders(req)
 	log.Debug().Msgf("resource provider adding offer with version header %s", versionHeader)
 
@@ -373,8 +373,8 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 	}
 
 	// Resource provider must be in allowlist when enabled
-	if solverServer.options.AccessControl.EnableResourceProviderAllowlist {
-		allowedProviders, err := solverServer.store.GetAllowedResourceProviders()
+	if server.options.AccessControl.EnableResourceProviderAllowlist {
+		allowedProviders, err := server.store.GetAllowedResourceProviders()
 		if err != nil {
 			log.Error().Err(err).Msgf("Unable to load resource provider allowlist: %s", err)
 			return nil, err
@@ -386,7 +386,7 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 		}
 	}
 
-	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, solverServer.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
 	if !offerRecent {
 		log.Debug().Msgf("Resource offer from %s rejected because timestamp was not recent", resourceOffer.ResourceProvider)
 		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
@@ -397,13 +397,13 @@ func (solverServer *solverServer) addResourceOffer(resourceOffer data.ResourceOf
 		log.Error().Err(err).Msgf("Error checking resource offer")
 		return nil, err
 	}
-	return solverServer.controller.addResourceOffer(resourceOffer)
+	return server.controller.addResourceOffer(resourceOffer)
 }
 
-func (solverServer *solverServer) addResult(results data.Result, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Result, error) {
+func (server *solverServer) addResult(results data.Result, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Result, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
@@ -431,12 +431,12 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 	}
 	results.DealID = id
 
-	storedResult, err := solverServer.store.AddResult(results)
+	storedResult, err := server.store.AddResult(results)
 	if err != nil {
 		return nil, err
 	}
 
-	err = solverServer.updateJobStates(id, "ResultsSubmitted")
+	err = server.updateJobStates(id, "ResultsSubmitted")
 	if err != nil {
 		return nil, err
 	}
@@ -455,10 +455,10 @@ func (solverServer *solverServer) addResult(results data.Result, res corehttp.Re
 *
 *
 */
-func (solverServer *solverServer) updateTransactionsResourceProvider(payload data.DealTransactionsResourceProvider, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+func (server *solverServer) updateTransactionsResourceProvider(payload data.DealTransactionsResourceProvider, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
@@ -476,13 +476,13 @@ func (solverServer *solverServer) updateTransactionsResourceProvider(payload dat
 	if signerAddress != deal.ResourceProvider {
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
-	return solverServer.controller.updateDealTransactionsResourceProvider(id, payload)
+	return server.controller.updateDealTransactionsResourceProvider(id, payload)
 }
 
-func (solverServer *solverServer) updateTransactionsJobCreator(payload data.DealTransactionsJobCreator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+func (server *solverServer) updateTransactionsJobCreator(payload data.DealTransactionsJobCreator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
@@ -500,13 +500,13 @@ func (solverServer *solverServer) updateTransactionsJobCreator(payload data.Deal
 	if signerAddress != deal.JobCreator {
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
-	return solverServer.controller.updateDealTransactionsJobCreator(id, payload)
+	return server.controller.updateDealTransactionsJobCreator(id, payload)
 }
 
-func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTransactionsMediator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
+func (server *solverServer) updateTransactionsMediator(payload data.DealTransactionsMediator, res corehttp.ResponseWriter, req *corehttp.Request) (*data.DealContainer, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading deal")
 		return nil, err
@@ -524,7 +524,7 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 	if signerAddress != deal.Mediator {
 		return nil, fmt.Errorf("job creator address does not match mediator address")
 	}
-	return solverServer.controller.updateDealTransactionsMediator(id, payload)
+	return server.controller.updateDealTransactionsMediator(id, payload)
 }
 
 /*
@@ -543,12 +543,12 @@ func (solverServer *solverServer) updateTransactionsMediator(payload data.DealTr
 // but the client expects a file stream and will ignore it.
 type EmptyResponse struct{}
 
-func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
+func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
 	// Get the deal
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "error loading deal",
@@ -578,9 +578,9 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 		}
 	}
 
-	if err := solverServer.handleFileDownload(GetDealsFilePath(id), res, func() {
-		solverServer.stats.PostJobRun(deal)
-		solverServer.stats.PostReputation(deal.ResourceProvider,
+	if err := server.handleFileDownload(GetDealsFilePath(id), res, func() {
+		server.stats.PostJobRun(deal)
+		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
 				Build(),
@@ -592,7 +592,7 @@ func (solverServer *solverServer) downloadFiles(res corehttp.ResponseWriter, req
 	return EmptyResponse{}, nil
 }
 
-func (solverServer *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter, onCompletion func()) *http.HTTPError {
+func (server *solverServer) handleFileDownload(dirPath string, res corehttp.ResponseWriter, onCompletion func()) *http.HTTPError {
 	// Read directory contents
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -652,12 +652,12 @@ func (solverServer *solverServer) handleFileDownload(dirPath string, res corehtt
 	return nil
 }
 
-func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
 	err := func() error {
-		deal, err := solverServer.store.GetDeal(id)
+		deal, err := server.store.GetDeal(id)
 		if err != nil {
 			log.Error().Err(err).Msgf("error loading deal")
 			return err
@@ -731,11 +731,11 @@ func (solverServer *solverServer) uploadFiles(res corehttp.ResponseWriter, req *
 	}
 }
 
-func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
+func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
 	id := vars["id"]
 
-	jobOffer, err := solverServer.store.GetJobOffer(id)
+	jobOffer, err := server.store.GetJobOffer(id)
 	if err != nil {
 		log.Error().Err(err).Msgf("error loading job offer")
 		return EmptyResponse{}, &http.HTTPError{
@@ -767,10 +767,10 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 		}
 	}
 
-	solverServer.updateJobStates(jobOffer.DealID, "ResultsAccepted")
+	server.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 	// Retrieve deal for stats reporting
-	deal, err := solverServer.store.GetDeal(id)
+	deal, err := server.store.GetDeal(id)
 	if err != nil {
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "error loading deal",
@@ -784,9 +784,9 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 		}
 	}
 
-	if err := solverServer.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
-		solverServer.stats.PostJobRun(deal)
-		solverServer.stats.PostReputation(deal.ResourceProvider,
+	if err := server.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
+		server.stats.PostJobRun(deal)
+		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
 				Build(),
@@ -800,7 +800,7 @@ func (solverServer *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWri
 
 // Validation Service
 
-func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter, req *corehttp.Request) (*http.ValidationToken, error) {
+func (server *solverServer) getValidationToken(res corehttp.ResponseWriter, req *corehttp.Request) (*http.ValidationToken, error) {
 	// Check signature
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
@@ -815,15 +815,15 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 		"aud":   "kafka-broker",
 		"scope": "kafka-cluster",
 		"iat":   time.Now().Unix(),
-		"exp":   time.Now().Add(time.Duration(solverServer.options.AccessControl.ValidationTokenExpiration) * time.Second).Unix(),
+		"exp":   time.Now().Add(time.Duration(server.options.AccessControl.ValidationTokenExpiration) * time.Second).Unix(),
 		"jti":   uuid.New().String(),
 	})
 
 	// Add the key ID to the token header
-	token.Header["kid"] = solverServer.options.AccessControl.ValidationTokenKid
+	token.Header["kid"] = server.options.AccessControl.ValidationTokenKid
 
 	// Sign the token
-	secret := []byte(solverServer.options.AccessControl.ValidationTokenSecret)
+	secret := []byte(server.options.AccessControl.ValidationTokenSecret)
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
 		log.Error().Err(err).Msgf("failed to sign token")
@@ -834,28 +834,28 @@ func (solverServer *solverServer) getValidationToken(res corehttp.ResponseWriter
 	return &http.ValidationToken{JWT: tokenString}, nil
 }
 
-func (solverServer *solverServer) updateJobStates(dealID string, state string) error {
-	deal, err := solverServer.store.GetDeal(dealID)
+func (server *solverServer) updateJobStates(dealID string, state string) error {
+	deal, err := server.store.GetDeal(dealID)
 	if err != nil {
 		return err
 	}
 
-	_, err = solverServer.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
+	_, err = server.controller.updateDealState(deal.Deal.ID, data.GetAgreementStateIndex(state))
 	if err != nil {
 		return err
 	}
 	// update the job offer state
-	_, err = solverServer.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	_, err = server.controller.updateJobOfferState(deal.Deal.JobOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
 	if err != nil {
 		return err
 	}
 	// update the resource offer state
-	_, err = solverServer.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
+	_, err = server.controller.updateResourceOfferState(deal.Deal.ResourceOffer.ID, deal.ID, data.GetAgreementStateIndex(state))
 	if err != nil {
 		return err
 	}
 
-	solverServer.controller.writeEvent(SolverEvent{
+	server.controller.writeEvent(SolverEvent{
 		EventType: DealStateUpdated,
 		Deal:      deal,
 	})
