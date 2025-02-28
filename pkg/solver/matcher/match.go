@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/rs/zerolog/log"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -379,68 +379,41 @@ func getLargestVRAM(gpus []data.GPUSpec) int {
 	return largestVRAM
 }
 
-func logMatch(result matchResult) {
+func logMatch(result matchResult, log *system.ServiceLogger) {
 	switch r := result.(type) {
 	case offersMatched:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Msg(r.message())
+		log.Trace(r.message(),
+			fmt.Sprintf("resource offer=%s job offer=%s", r.resourceOffer.ID, r.jobOffer.ID))
 	case cpuMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Int("resource CPU", r.resourceOffer.Spec.CPU).
-			Int("job CPU", r.jobOffer.Spec.CPU).
-			Msg(r.message())
+		log.Trace(r.message(),
+			fmt.Sprintf("resource offer=%s job offer=%s resource CPU=%d job CPU=%d",
+				r.resourceOffer.ID, r.jobOffer.ID, r.resourceOffer.Spec.CPU, r.jobOffer.Spec.CPU))
 	case gpuMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Int("resource GPU", r.resourceOffer.Spec.GPU).
-			Int("job GPU", r.jobOffer.Spec.GPU).
-			Msg(r.message())
+		log.Trace(r.message(),
+			fmt.Sprintf("resource offer=%s job offer=%s resource GPU=%d job GPU=%d",
+				r.resourceOffer.ID, r.jobOffer.ID, r.resourceOffer.Spec.GPU, r.jobOffer.Spec.GPU))
 	case ramMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Int("resource RAM", r.resourceOffer.Spec.RAM).
-			Int("job RAM", r.jobOffer.Spec.RAM).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s job offer=%s resource RAM=%d job RAM=%d",
+			r.resourceOffer.ID, r.jobOffer.ID, r.resourceOffer.Spec.RAM, r.jobOffer.Spec.RAM))
 	case moduleIDError:
-		log.Error().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Err(r.err).
-			Msg(r.message())
+		log.Error(r.message(), fmt.Errorf("resource offer=%s job offer=%s error=%s",
+			r.resourceOffer.ID, r.jobOffer.ID, r.err.Error()))
 	case moduleMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Str("modules", strings.Join(r.resourceOffer.Modules, ", ")).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s job offer=%s modules=%s",
+			r.resourceOffer.ID, r.jobOffer.ID, strings.Join(r.resourceOffer.Modules, ", ")))
 	case marketPriceUnavailable:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("pricing mode", string(r.resourceOffer.Mode)).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s pricing mode=%s",
+			r.resourceOffer.ID, string(r.resourceOffer.Mode)))
 	case priceMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s job offer=%s",
+			r.resourceOffer.ID, r.jobOffer.ID))
 	case mediatorMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s job offer=%s",
+			r.resourceOffer.ID, r.jobOffer.ID))
 	case solverMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Msg(r.message())
+		log.Trace(r.message(), fmt.Sprintf("resource offer=%s job offer=%s",
+			r.resourceOffer.ID, r.jobOffer.ID))
 	default:
-		log.Trace().
-			Msgf("unknown decision type: %v", r)
+		log.Trace(fmt.Sprintf("unknown decision type: %v", r), "")
 	}
 }

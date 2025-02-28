@@ -8,8 +8,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/rs/zerolog/log"
-	zerolog "github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -71,7 +69,7 @@ func GetMatchingDeals(
 	for _, jobOffer := range jobOffers {
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
-			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer)
+			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer, log)
 			if err != nil {
 				return nil, err
 			}
@@ -110,7 +108,7 @@ func GetMatchingDeals(
 			// Check for a match
 			matchSpan.AddEvent("match_offers.start")
 			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
-			logMatch(result)
+			logMatch(result, log)
 			matchSpan.AddEvent("match_offers.done", trace.WithAttributes(result.attributes()...))
 
 			if result.matched() {
@@ -180,7 +178,7 @@ func GetMatchingDeals(
 
 				// Add match decisions for all matching offers
 				span.AddEvent("add_match_decisions.start")
-				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers)
+				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers, log)
 				if err != nil {
 					log.Error("addMatchDecisions failed", err)
 					span.SetStatus(codes.Error, "unable to add match decision")
@@ -205,11 +203,10 @@ func GetMatchingDeals(
 	metrics.resourceOffers.Record(ctx, int64(len(resourceOffers)))
 	metrics.deals.Record(ctx, int64(len(deals)))
 
-	zerolog.Debug().
-		Int("jobOffers", len(jobOffers)).
-		Int("resourceOffers", len(resourceOffers)).
-		Int("deals", len(deals)).
-		Msg(system.GetServiceString(system.SolverService, "Solver solving"))
+	log.Debug("Solver solving",
+		fmt.Sprintf("jobOffer=%d resourceOffers=%d deals=%d",
+			len(jobOffers), len(resourceOffers), len(deals),
+		))
 
 	return deals, nil
 }
@@ -220,6 +217,7 @@ func addMatchDecisions(
 	dealID string,
 	selectedResourceOffer data.ResourceOffer,
 	matchingResourceOffers []data.ResourceOffer,
+	log *system.ServiceLogger,
 ) error {
 	for _, matchingOffer := range matchingResourceOffers {
 		addDealID := ""
@@ -239,9 +237,7 @@ func addMatchDecisions(
 			)
 		}
 	}
-	zerolog.Debug().
-		Int("decisions", len(matchingResourceOffers)).
-		Msg(system.GetServiceString(system.SolverService, "Solver adding matched resource offer decisions"))
+	log.Debug("Solver adding matched resource offer decisions", fmt.Sprintf("decisions=%d", len(matchingResourceOffers)))
 
 	return nil
 }
@@ -265,6 +261,7 @@ func getTargetedDeal(
 	jobOffer data.JobOfferContainer,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 	tracer trace.Tracer,
+	log *system.ServiceLogger,
 ) (*data.Deal, error) {
 	ctx, span := tracer.Start(ctx, "get_targeted_deal",
 		trace.WithAttributes(attribute.String("job_offer.target.address", jobOffer.JobOffer.Target.Address)))
@@ -278,10 +275,8 @@ func getTargetedDeal(
 
 	// We don't have a resource provider for this address
 	if resourceOffer == nil {
-		log.Trace().
-			Str("job offer", jobOffer.ID).
-			Str("target address", jobOffer.JobOffer.Target.Address).
-			Msgf("No resource provider found for address")
+		log.Trace("No resource provider found for address",
+			fmt.Sprintf("jobOffer=%s target address=%s", jobOffer.ID, jobOffer.JobOffer.Target.Address))
 		span.SetStatus(codes.Error, "no resource provider found for address")
 		span.RecordError(errors.New("no resource provider found for address"))
 
