@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740597592461,
+  "lastUpdate": 1740872045817,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -912,6 +912,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79484 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "37feea0b83a789c0d4f39c5812bf79bdc6c709ec",
+          "message": "chore: Update demonet addresses (#525)",
+          "timestamp": "2025-03-01T15:33:37-08:00",
+          "tree_id": "45df58ff5f8bff364452c6031a31cb26b49394d1",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/37feea0b83a789c0d4f39c5812bf79bdc6c709ec"
+        },
+        "date": 1740872045324,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45788,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "81044 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45788,
+            "unit": "ns/op",
+            "extra": "81044 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "81044 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "81044 times\n4 procs"
           }
         ]
       }
