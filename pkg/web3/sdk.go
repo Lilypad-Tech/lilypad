@@ -5,17 +5,18 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"math/big"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/controller"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/jobcreator"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
@@ -24,7 +25,8 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
+	zerologger "github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -52,12 +54,14 @@ type Web3SDK struct {
 	CallOpts     *bind.CallOpts
 	TransactOpts *bind.TransactOpts
 	Contracts    *Contracts
+	log          *zerolog.Logger
 }
 
 func NewContracts(
 	options Web3Options,
 	client *ethclient.Client,
 	callOpts *bind.CallOpts,
+	log *zerolog.Logger,
 ) (*Contracts, error) {
 	controller, err := controller.NewController(common.HexToAddress(options.ControllerAddress), client)
 	if err != nil {
@@ -201,7 +205,13 @@ func NewContracts(
 	}, nil
 }
 
-func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
+func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer, logger *system.ServiceLogger) (*Web3SDK, error) {
+	log := &zerologger.Logger
+	if logger != nil {
+		// Configure zerlog wrapper when using service logger
+		log = logger.GetZerologLogger("web3 event")
+	}
+
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
@@ -239,6 +249,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 		CallOpts:     callOpts,
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
+		log:          log,
 	}
 	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 

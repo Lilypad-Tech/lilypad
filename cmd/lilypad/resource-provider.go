@@ -46,7 +46,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
 
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer, nil)
 	if err != nil {
 		return err
 	}

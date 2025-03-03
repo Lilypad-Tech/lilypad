@@ -43,7 +43,7 @@ func getMediator(
 	mediatorOptions.Services.APIHost = ""
 
 	noopTracer := traceNoop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.MediatorService))
-	web3SDK, err := web3.NewContractSDK(systemContext.Ctx, mediatorOptions.Web3, noopTracer)
+	web3SDK, err := web3.NewContractSDK(systemContext.Ctx, mediatorOptions.Web3, noopTracer, nil)
 	if err != nil {
 		return nil, err
 	}

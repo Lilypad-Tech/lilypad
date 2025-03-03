@@ -41,7 +41,7 @@ func runMediator(cmd *cobra.Command, options mediator.MediatorOptions) error {
 	defer commandCtx.Cleanup()
 
 	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.MediatorService))
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer, nil)
 	if err != nil {
 		return err
 	}

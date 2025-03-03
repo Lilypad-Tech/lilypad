@@ -24,7 +24,7 @@ func RunJob(
 	tracer trace.Tracer,
 	eventSub JobOfferSubscriber,
 ) (*RunJobResults, error) {
-	web3SDK, err := web3.NewContractSDK(ctx.Ctx, options.Web3, tracer)
+	web3SDK, err := web3.NewContractSDK(ctx.Ctx, options.Web3, tracer, nil)
 	if err != nil {
 		return nil, err
 	}

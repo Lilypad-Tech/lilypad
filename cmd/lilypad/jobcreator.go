@@ -44,7 +44,7 @@ func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions, net
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.JobCreatorService))
 
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer, nil)
 	if err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 	}
 	commandCtx.Cm.RegisterCallback(unregisterMetrics)
 
-	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
+	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer, log)
 	if err != nil {
 		return err
 	}

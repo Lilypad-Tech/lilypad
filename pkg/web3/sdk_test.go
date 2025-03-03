@@ -59,7 +59,7 @@ func CreateTestWeb3SDK() (*web3.Web3SDK, error) {
 	fmt.Println("options: ", options)
 
 	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
-	sdk, err := web3.NewContractSDK(context.Background(), options, noopTracer)
+	sdk, err := web3.NewContractSDK(context.Background(), options, noopTracer, nil)
 	if err != nil {
 		return nil, err
 	}
