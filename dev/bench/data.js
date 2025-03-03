@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740872045817,
+  "lastUpdate": 1741031714054,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -960,6 +960,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "81044 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "308b2f3dfce36ddc327dfa7b51382e139c0df6a1",
+          "message": "feat: Add lilynext flag (#526)",
+          "timestamp": "2025-03-03T11:54:19-08:00",
+          "tree_id": "781beeef361fbf35b957ea78f2856bd3e2d4fae3",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/308b2f3dfce36ddc327dfa7b51382e139c0df6a1"
+        },
+        "date": 1741031713629,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 48958,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "73542 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 48958,
+            "unit": "ns/op",
+            "extra": "73542 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "73542 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "73542 times\n4 procs"
           }
         ]
       }
