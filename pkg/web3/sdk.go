@@ -216,7 +216,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	displayOpts.PrivateKey = "*********"
 	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
-	client, err := getEthClient(ctx, options, tracer)
+	client, err := getEthClient(ctx, options, tracer, log)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	if err != nil {
 		return nil, err
 	}
-	contracts, err := NewContracts(options, client, callOpts)
+	contracts, err := NewContracts(options, client, callOpts, log)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 	return web3SDK, nil
 }
 
-func getEthClient(ctx context.Context, options Web3Options, tracer trace.Tracer) (*ethclient.Client, error) {
+func getEthClient(ctx context.Context, options Web3Options, tracer trace.Tracer, log *zerolog.Logger) (*ethclient.Client, error) {
 	ctx, span := tracer.Start(ctx, "get_ethclient", trace.WithAttributes(attribute.Int("web3.chain_id", options.ChainID)))
 	defer span.End()
 
@@ -296,7 +296,7 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	var blockNumberHex string
 	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
-		log.Error().Msgf("error for getBlockNumber: %s", err.Error())
+		sdk.log.Error().Msgf("error for getBlockNumber: %s", err.Error())
 		return 0, err
 	}
 	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")
@@ -318,7 +318,7 @@ func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	balance, err := sdk.Client.BalanceAt(context.Background(), ethAddress, nil)
 	if err != nil {
-		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		sdk.log.Error().Msgf("error for GetBalance: %s", err.Error())
 		return nil, err
 	}
 	return balance, nil
@@ -333,7 +333,7 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
 	if err != nil {
-		log.Error().Msgf("error parsing ABI: %s", err)
+		sdk.log.Error().Msgf("error parsing ABI: %s", err)
 		return nil, err
 	}
 	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
@@ -341,14 +341,14 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	var out []interface{}
 	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
 	if err != nil {
-		log.Error().Msgf("error calling balanceOf: %s", err)
+		sdk.log.Error().Msgf("error calling balanceOf: %s", err)
 		return nil, err
 	}
 
 	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
 
 	if err != nil {
-		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		sdk.log.Error().Msgf("error for GetBalance: %s", err.Error())
 		return nil, err
 	}
 	return &lpBalance, nil
