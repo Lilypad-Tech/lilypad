@@ -25,13 +25,14 @@ func newSolverCmd() *cobra.Command {
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
+			lilynext, _ := cmd.Flags().GetBool("lilynext")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
 			if err != nil {
 				return err
 			}
 			cmd.SilenceUsage = true
 
-			return runSolver(cmd, options, network)
+			return runSolver(cmd, options, network, lilynext)
 		},
 	}
 
@@ -40,9 +41,13 @@ func newSolverCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string) error {
+func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string, lilynext bool) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
+
+	if lilynext {
+		log.Info().Msg("🍃 Running the new lilypad protocol")
+	}
 
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
 	if err != nil {

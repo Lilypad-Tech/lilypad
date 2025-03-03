@@ -24,7 +24,9 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	var network string
+	var lilynext bool
 	RootCmd.PersistentFlags().StringVarP(&network, "network", "n", "testnet", "Sets a target network configuration")
+	RootCmd.PersistentFlags().BoolVar(&lilynext, "lilynext", false, "Use the new Lilypad protocol")
 
 	RootCmd.AddCommand(newSolverCmd())
 	RootCmd.AddCommand(newResourceProviderCmd())
