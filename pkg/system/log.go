@@ -40,6 +40,37 @@ func (s *ServiceLogger) Trace(title string, data interface{}) {
 	Trace(s.service, title, data)
 }
 
+// Configure zerolog with the service logger format. We use this to adapt plain
+// zerolog calls, but we will eventually transition to a single general purpose
+// logger.
+// TODO(bgins): Remove when we transition to a new logger.
+func (s *ServiceLogger) GetZerologLogger(title string) *zerolog.Logger {
+	// Create a custom writer to format with the service badge
+	output := zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: time.RFC3339,
+		FormatMessage: func(m any) string {
+			if m == nil {
+				return ""
+			}
+			message := fmt.Sprintf("%+v", m)
+			if message != "" {
+				return fmt.Sprintf("%s=%s", GetServiceString(s.service, title), message)
+			}
+			return message
+		},
+	}
+
+	logger := zerolog.New(output).
+		Level(log.Logger.GetLevel()).
+		With().
+		Timestamp().
+		Caller().
+		Logger()
+
+	return &logger
+}
+
 func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	logLevelString := os.Getenv("LOG_LEVEL")
