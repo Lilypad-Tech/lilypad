@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.15.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.14.0...v2.15.0) (2025-03-03)
+
+
+### Features
+
+* Add job run stats reporting ([#517](https://github.com/Lilypad-Tech/lilypad/issues/517)) ([0abdd42](https://github.com/Lilypad-Tech/lilypad/commit/0abdd42082afde970db81f65562b589e34ab16fe))
+* Add lilynext flag ([#526](https://github.com/Lilypad-Tech/lilypad/issues/526)) ([308b2f3](https://github.com/Lilypad-Tech/lilypad/commit/308b2f3dfce36ddc327dfa7b51382e139c0df6a1))
+* Check offer creation times for recency ([#523](https://github.com/Lilypad-Tech/lilypad/issues/523)) ([eaa5509](https://github.com/Lilypad-Tech/lilypad/commit/eaa55093790fda1b065c0a9a30081d65e6989f9d))
+
 ## [2.14.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.13.0...v2.14.0) (2025-02-20)
 
 
