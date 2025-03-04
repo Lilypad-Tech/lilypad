@@ -9,7 +9,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -33,6 +33,7 @@ type Solver struct {
 	store      store.SolverStore
 	stats      stats.Stats
 	options    SolverOptions
+	log        *zerolog.Logger
 }
 
 func NewSolver(
@@ -57,13 +58,14 @@ func NewSolver(
 		server:     server,
 		web3SDK:    web3SDK,
 		options:    options,
+		log:        system.GetLogger(system.SolverService),
 	}
 	return solver, nil
 }
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager, tracerProvider *sdkTrace.TracerProvider) chan error {
 	errorChan := solver.controller.Start(ctx, cm)
-	log.Debug().Msgf("solver.server.ListenAndServe")
+	solver.log.Debug().Msgf("solver.server.ListenAndServe")
 	go func() {
 		err := solver.server.ListenAndServe(ctx, cm, tracerProvider)
 		if err != nil {
