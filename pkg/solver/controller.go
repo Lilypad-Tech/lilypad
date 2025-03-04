@@ -299,7 +299,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	}
 
 	// Match job offers with resource offers to make deals
-	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.log, controller.tracer, controller.meter)
+	deals, err := matcher.GetMatchingDeals(ctx, controller.store, controller.updateJobOfferState, controller.tracer, controller.meter)
 	if err != nil {
 		span.SetStatus(codes.Error, "get matching deals failed")
 		span.RecordError(err)
