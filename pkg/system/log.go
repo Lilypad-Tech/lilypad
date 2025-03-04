@@ -61,10 +61,13 @@ func GetLogger(service Service) *zerolog.Logger {
 	return &logger
 }
 
+// Service Logger
+
 type ServiceLogger struct {
 	service Service
 }
 
+// Get a service logger (deprecated, prefer the GetLogger in new implementations)
 func NewServiceLogger(service Service) *ServiceLogger {
 	return &ServiceLogger{
 		service: service,
@@ -111,6 +114,8 @@ func Debug(service Service, title string, data interface{}) {
 func Trace(service Service, title string, data interface{}) {
 	logWithCaller(5, zerolog.TraceLevel, service, title, data)
 }
+
+// Dump
 
 func DumpObject(d interface{}) {
 	spew.Dump(d)
