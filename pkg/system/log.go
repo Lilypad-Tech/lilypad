@@ -32,6 +32,35 @@ func SetupGlobalLogger() {
 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
 }
 
+// Logger
+
+// Get a logger configured with contextual fields
+func GetLogger(service Service) *zerolog.Logger {
+	output := zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: time.RFC3339,
+		FormatMessage: func(m any) string {
+			if m == nil {
+				return ""
+			}
+			message := fmt.Sprintf("%+v", m)
+			if message != "" {
+				return fmt.Sprintf("%s %s", GetServiceBadge(service), message)
+			}
+			return message
+		},
+	}
+
+	logger := zerolog.New(output).
+		Level(log.Logger.GetLevel()).
+		With().
+		Timestamp().
+		CallerWithSkipFrameCount(2).
+		Logger()
+
+	return &logger
+}
+
 type ServiceLogger struct {
 	service Service
 }
