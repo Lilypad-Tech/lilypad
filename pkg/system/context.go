@@ -18,7 +18,7 @@ type CommandContext struct {
 }
 
 func NewSystemContext(ctx context.Context) *CommandContext {
-	SetupLogging()
+	SetupGlobalLogger()
 
 	cm := NewCleanupManager()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
