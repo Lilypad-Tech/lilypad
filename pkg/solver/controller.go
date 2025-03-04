@@ -13,7 +13,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/mediation"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -51,7 +51,7 @@ type SolverController struct {
 	loop            *system.ControlLoop
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
-	log             *system.ServiceLogger
+	log             *zerolog.Logger
 	tracer          trace.Tracer
 	meter           metric.Meter
 }
@@ -75,7 +75,7 @@ func NewSolverController(
 		web3Events: web3.NewEventChannels(),
 		store:      store,
 		options:    options,
-		log:        system.NewServiceLogger(system.SolverService),
+		log:        system.GetLogger(system.SolverService),
 		tracer:     tracer,
 		meter:      meter,
 	}
@@ -92,7 +92,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 	}
 
 	// activate the web3 event listeners
-	log.Debug().Msgf("controller.web3Events.Start")
+	controller.log.Debug().Msgf("controller.web3Events.Start")
 	err = controller.web3Events.Start(ctx, cm, controller.web3SDK)
 	if err != nil {
 		errorChan <- err
@@ -101,7 +101,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 
 	// make sure we are registered as a solver
 	// so that users can lookup our URL
-	log.Debug().Msgf("controller.registerAsSolver")
+	controller.log.Debug().Msgf("controller.registerAsSolver")
 	err = controller.registerAsSolver()
 	if err != nil {
 		errorChan <- err
@@ -120,7 +120,7 @@ func (controller *SolverController) Start(ctx context.Context, cm *system.Cleanu
 			return err
 		},
 	)
-	log.Debug().Msgf("controller.loop.Start")
+	controller.log.Debug().Msgf("controller.loop.Start")
 	err = controller.loop.Start(true)
 	if err != nil {
 		errorChan <- err
@@ -151,10 +151,10 @@ func (controller *SolverController) subscribeToWeb3() error {
 	controller.web3Events.Storage.SubscribeDealStateChange(func(ev storage.StorageDealStateChange) {
 		_, err := controller.updateDealState(ev.DealId, ev.State)
 		if err != nil {
-			controller.log.Error("error updating deal state", err)
+			controller.log.Error().Err(err).Msg("error updating deal state")
 			return
 		}
-		controller.log.Info("StorageDealStateChange", data.GetAgreementStateString(ev.State))
+		controller.log.Info().Str("StorageDealStateChange", data.GetAgreementStateString(ev.State)).Msg("")
 		system.DumpObjectDebug(ev)
 		// update the store with the state change
 		controller.loop.Trigger()
@@ -162,11 +162,11 @@ func (controller *SolverController) subscribeToWeb3() error {
 
 	// update the mediator
 	controller.web3Events.Mediation.SubscribeMediationRequested(func(ev mediation.MediationMediationRequested) {
-		controller.log.Info("MediationMediationRequested", "")
+		controller.log.Info().Msg("MediationMediationRequested")
 		system.DumpObjectDebug(ev)
 		_, err := controller.updateDealMediator(ev.DealId, ev.Mediator.String())
 		if err != nil {
-			controller.log.Error("error updating deal state", err)
+			controller.log.Error().Err(err).Msg("error updating deal state")
 			return
 		}
 
@@ -217,17 +217,22 @@ func (controller *SolverController) registerAsSolver() error {
 		return err
 	}
 
-	log.Debug().Msgf("GetUser with selfAddress: %s", selfAddress.String())
+	controller.log.Debug().Msgf("GetUser with selfAddress: %s", selfAddress.String())
 	selfUser, err := controller.web3SDK.GetUser(selfAddress)
 	if err != nil {
 		return err
 	}
 
 	// TODO: check the other props and call update if they have changed
-	log.Debug().Msgf("selfUser.Url: %s", selfUser.Url)
-	log.Debug().Msgf("controller.options.Server.URL: %s", controller.options.Server.URL)
+	controller.log.Debug().Msgf("selfUser.Url: %s", selfUser.Url)
+	controller.log.Debug().Msgf("controller.options.Server.URL: %s", controller.options.Server.URL)
 	if selfUser.Url != controller.options.Server.URL {
-		controller.log.Info("url change", fmt.Sprintf("solver will be updated because URL has changed: %s %s != %s", selfAddress.String(), selfUser.Url, controller.options.Server.URL))
+		controller.log.Info().
+			Str("address", selfAddress.String()).
+			Str("oldURL", selfUser.Url).
+			Str("newURL", controller.options.Server.URL).
+			Msg("solver will be updated because URL has changed")
+
 		err = controller.web3SDK.UpdateUser(
 			"",
 			controller.options.Server.URL,
@@ -237,7 +242,10 @@ func (controller *SolverController) registerAsSolver() error {
 			return err
 		}
 	} else {
-		controller.log.Info("url same", fmt.Sprintf("solver url already correct: %s %s", selfAddress.String(), controller.options.Server.URL))
+		controller.log.Info().
+			Str("address", selfAddress.String()).
+			Str("url", controller.options.Server.URL).
+			Msg("solver url already correct")
 	}
 
 	existingSolvers, err := controller.web3SDK.GetSolverAddresses()
@@ -247,13 +255,13 @@ func (controller *SolverController) registerAsSolver() error {
 	foundSolver := false
 	for _, existingSolver := range existingSolvers {
 		if existingSolver.String() == selfAddress.String() {
-			controller.log.Info("solver exists", selfAddress.String())
+			controller.log.Info().Str("address", selfAddress.String()).Msg("solver exists")
 			foundSolver = true
 			break
 		}
 	}
 	if !foundSolver {
-		controller.log.Info("solver registering", "")
+		controller.log.Info().Msg("solver registering")
 		// add the solver to the storage contract
 		err = controller.web3SDK.AddUserToList(
 			solverType,
@@ -261,7 +269,7 @@ func (controller *SolverController) registerAsSolver() error {
 		if err != nil {
 			return err
 		}
-		controller.log.Info("solver registered", selfAddress.String())
+		controller.log.Info().Str("address", selfAddress.String()).Msg("solver registered")
 	}
 	return nil
 }
@@ -346,7 +354,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 		Active: true,
 	})
 	if err != nil {
-		controller.log.Error("get job offers failed", err)
+		controller.log.Error().Err(err).Msg("get job offers failed")
 		span.SetStatus(codes.Error, "get job offers failed")
 		span.RecordError(err)
 		return err
@@ -365,7 +373,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				// Cancel expired job offers
 				_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
-					controller.log.Error("update expired job offer state failed", err)
+					controller.log.Error().Err(err).Msg("update expired job offer state failed")
 					span.SetStatus(codes.Error, "update expired job offer state failed")
 					span.RecordError(err)
 				}
@@ -373,7 +381,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				// Cancel expired job offers, resource offers, and deals
 				_, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
-					controller.log.Error("update expired deal state failed", err)
+					controller.log.Error().Err(err).Msg("update expired deal state failed")
 					span.SetStatus(codes.Error, "update expired deal state failed")
 					span.RecordError(err)
 				}
@@ -413,7 +421,7 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	}
 	jobOffer.ID = id
 
-	controller.log.Info("add job offer", jobOffer)
+	controller.log.Info().Any("jobOffer", jobOffer).Msg("add job offer")
 
 	ret, err := controller.store.AddJobOffer(data.GetJobOfferContainer(jobOffer))
 	if err != nil {
@@ -443,8 +451,11 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	// If the balance is less than the required balance, don't add the resource offer
 	if balance.Cmp(requiredBalanceWei) < 0 {
-		err := fmt.Errorf("address %s doesn't have enough ETH balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceWei, balance)
-		controller.log.Error("ETH balance check failed", err)
+		controller.log.Error().Err(err).
+			Str("addresss", resourceOffer.ResourceProvider).
+			Str("balance", balance.String()).
+			Str("requiredBalance", requiredBalanceWei.String()).
+			Msg("resource provider does not have enough ETH to post offer")
 		return nil, nil
 	}
 
@@ -452,17 +463,19 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
 	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
 	if err != nil {
-		err := fmt.Errorf("failed to retrieve LP balance for resource provider: %v", err)
-		controller.log.Error("LP Balance error", err)
+		controller.log.Error().Err(err).Msg("failed to retrieve LP balance for resource provider")
 		return nil, nil
 	}
 	if balanceLp.Cmp(requiredBalanceLp) < 0 {
-		err := fmt.Errorf("address %s doesn't have enough LP balance. The required balance is %s but current balance is %s", resourceOffer.ResourceProvider, requiredBalanceLp, balanceLp)
-		controller.log.Error("LP balance check failed", err)
+		controller.log.Error().Err(err).
+			Str("addresss", resourceOffer.ResourceProvider).
+			Str("balance", balanceLp.String()).
+			Str("requiredBalance", requiredBalanceLp.String()).
+			Msg("resource provider does not have enough LP to post offer")
 		return nil, nil
 	}
 
-	controller.log.Info("add resource offer", resourceOffer)
+	controller.log.Info().Any("resourceOffer", resourceOffer).Msg("add resource offer")
 
 	metricsDashboard.TrackNodeInfo(resourceOffer)
 
@@ -480,7 +493,7 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 // Remove resource offers in an unmatched DealNegotiating[0] state
 func (controller *SolverController) removeUnmatchedResourceOffers(resourceProviderID string) error {
-	controller.log.Info("remove resource offer", resourceProviderID)
+	controller.log.Info().Str("address", resourceProviderID).Msg("remove unmatched resource offers")
 	resourceOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
 		ResourceProvider: resourceProviderID,
 	})
@@ -492,8 +505,10 @@ func (controller *SolverController) removeUnmatchedResourceOffers(resourceProvid
 		if offer.State == 0 {
 			err = controller.store.RemoveResourceOffer(offer.ID)
 			if err != nil {
-				controller.log.Error("remove resource offer failed",
-					fmt.Errorf("resource provider: %s, offer ID: %s, error: %s", resourceProviderID, offer.ID, err))
+				controller.log.Error().Err(err).
+					Str("address", resourceProviderID).
+					Str("cid", offer.ID).
+					Msg("remove resource offer failed")
 			}
 		}
 	}
@@ -520,7 +535,7 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 	span.SetAttributes(attribute.String("deal.id", deal.ID))
 	span.AddEvent("data.get_deal_id.done")
 
-	controller.log.Info("add deal", deal)
+	controller.log.Info().Any("deal", deal).Msg("add deal")
 
 	//creates deal container and sets state to agreed
 	dealContainer := data.GetDealContainer(deal)
@@ -575,7 +590,7 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 *
 */
 func (controller *SolverController) updateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error) {
-	controller.log.Info("update job offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info().Str("cid", id).Str("state", data.GetAgreementStateString(state)).Msg("update job offer")
 
 	ret, err := controller.store.UpdateJobOfferState(id, dealID, state)
 	if err != nil {
@@ -589,7 +604,7 @@ func (controller *SolverController) updateJobOfferState(id string, dealID string
 }
 
 func (controller *SolverController) updateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error) {
-	controller.log.Info("update resource offer", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info().Str("cid", id).Str("state", data.GetAgreementStateString(state)).Msg("update resource offer")
 
 	ret, err := controller.store.UpdateResourceOfferState(id, dealID, state)
 	if err != nil {
@@ -604,7 +619,7 @@ func (controller *SolverController) updateResourceOfferState(id string, dealID s
 
 // this will also update the job and resource offer states
 func (controller *SolverController) updateDealState(id string, state uint8) (*data.DealContainer, error) {
-	controller.log.Info("update deal", fmt.Sprintf("%s %s", id, data.GetAgreementStateString(state)))
+	controller.log.Info().Str("cid", id).Str("state", data.GetAgreementStateString(state)).Msg("update deal")
 
 	dealContainer, err := controller.store.UpdateDealState(id, state)
 	if err != nil {
@@ -628,7 +643,7 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 
 // this will also update the job and resource offer states
 func (controller *SolverController) updateDealMediator(id string, mediator string) (*data.DealContainer, error) {
-	controller.log.Info("update mediator", fmt.Sprintf("%s %s", id, mediator))
+	controller.log.Info().Str("cid", id).Str("address", mediator).Msg("update deal mediator")
 	dealContainer, err := controller.store.UpdateDealMediator(id, mediator)
 	if err != nil {
 		return nil, err
@@ -652,7 +667,7 @@ func (controller *SolverController) updateDealMediator(id string, mediator strin
 *
 */
 func (controller *SolverController) updateDealTransactionsResourceProvider(id string, payload data.DealTransactionsResourceProvider) (*data.DealContainer, error) {
-	controller.log.Info("update resource provider txs", payload)
+	controller.log.Info().Any("payload", payload).Msg("update resource provider txs")
 	dealContainer, err := controller.store.UpdateDealTransactionsResourceProvider(id, payload)
 	if err != nil {
 		return nil, err
@@ -665,7 +680,7 @@ func (controller *SolverController) updateDealTransactionsResourceProvider(id st
 }
 
 func (controller *SolverController) updateDealTransactionsJobCreator(id string, payload data.DealTransactionsJobCreator) (*data.DealContainer, error) {
-	controller.log.Info("update job creator txs", payload)
+	controller.log.Info().Any("payload", payload).Msg("update job creator txs")
 	dealContainer, err := controller.store.UpdateDealTransactionsJobCreator(id, payload)
 	if err != nil {
 		return nil, err
@@ -681,7 +696,7 @@ func (controller *SolverController) updateDealTransactionsJobCreator(id string, 
 }
 
 func (controller *SolverController) updateDealTransactionsMediator(id string, payload data.DealTransactionsMediator) (*data.DealContainer, error) {
-	controller.log.Info("update mediator txs", payload)
+	controller.log.Info().Any("payload", payload).Msg("update mediator txs")
 	dealContainer, err := controller.store.UpdateDealTransactionsMediator(id, payload)
 	if err != nil {
 		return nil, err
