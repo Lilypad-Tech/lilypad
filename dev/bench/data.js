@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741202211395,
+  "lastUpdate": 1741210033648,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1056,6 +1056,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80704 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "holly.grimm@gmail.com",
+            "name": "Holly Grimm",
+            "username": "hollygrimm"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "56b27890a33cdde0333b733ea304c1fca7196ef7",
+          "message": "feat: Isolate job output in cli (#528)\n\n* feat: Enhance job offer subscription with filtering and unsubscribe support\n\n- Add JobOfferSubscription struct to support optional job ID filtering\n- Modify SubscribeToJobOfferUpdates to return an unsubscribe function\n- Introduce new SubscribeToJobOfferUpdatesWithFilter method\n- Update job offer update mechanism to respect job ID filters\n- Refactor JobCreator to use an interface for better extensibility\n\n* feat: Improve job offer update handling and logging\n\n- Modify job offer update subscription to use filtered subscription\n- Add support for optional event subscriber\n- Enhance logging with job container ID\n- Print data ID immediately upon job result\n\n* refactor: Subscribe to job offer updates using the offer's ID before calling AddJobOffer, improving the reliability of job tracking.\n\n* refactor: Simplify job offer subscription management by using job ID as key",
+          "timestamp": "2025-03-05T14:26:38-07:00",
+          "tree_id": "f4e9ad5654f4abc729ab00a7f588e25e204ebe97",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/56b27890a33cdde0333b733ea304c1fca7196ef7"
+        },
+        "date": 1741210032654,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46752,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79654 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46752,
+            "unit": "ns/op",
+            "extra": "79654 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79654 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79654 times\n4 procs"
           }
         ]
       }
