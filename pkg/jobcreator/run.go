@@ -59,6 +59,26 @@ func RunJob(
 	defer span.End()
 
 	span.AddEvent("add_job_offer.start")
+
+	updateChan := make(chan data.JobOfferContainer)
+
+	// Set up the subscription BEFORE adding the job offer
+	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdatesWithFilter(func(evOffer data.JobOfferContainer) {
+		span.AddEvent("job_offer_update",
+			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
+		updateChan <- evOffer
+
+		// Additionally call the provided eventSub if one was passed in
+		if eventSub != nil {
+			eventSub(evOffer)
+		}
+	}, offer.ID)
+
+	// Ensure we clean up the subscription when we're done
+	defer cleanup()
+
+	// Add the job offer
+	span.AddEvent("add_job_offer.start")
 	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
 	if err != nil {
 		jobCreatorService.controller.log.Error("failed to add job offer", err)
@@ -74,23 +94,6 @@ func RunJob(
 		))
 	span.SetAttributes(attribute.String("job_offer.id", jobOfferContainer.JobOffer.ID),
 		attribute.String("deal.id", jobOfferContainer.DealID))
-
-	updateChan := make(chan data.JobOfferContainer)
-
-	// Now we use the filtered subscriber to only get events for this specific job
-	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdatesWithFilter(func(evOffer data.JobOfferContainer) {
-		span.AddEvent("job_offer_update",
-			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
-		updateChan <- evOffer
-
-		// Additionally call the provided eventSub if one was passed in
-		if eventSub != nil {
-			eventSub(evOffer)
-		}
-	}, jobOfferContainer.JobOffer.ID)
-
-	// Ensure we clean up the subscription when we're done
-	defer cleanup()
 
 	var finalJobOffer data.JobOfferContainer
 
@@ -135,9 +138,6 @@ waitloop:
 		return nil, err
 	}
 	span.AddEvent("get_result.done", trace.WithAttributes(attribute.String("result.deal_id", result.DealID)))
-
-	// Print the result immediately when we get it
-	fmt.Printf("🆔  Data ID for job %s: %s\n", finalJobOffer.JobOffer.ID, result.DataID)
 
 	return &RunJobResults{
 		JobOffer: finalJobOffer,
