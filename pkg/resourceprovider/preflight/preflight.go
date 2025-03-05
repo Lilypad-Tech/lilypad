@@ -29,6 +29,9 @@ type preflightConfig struct {
 	Docker struct {
 		CheckRuntime bool
 	}
+	Bacalhau struct {
+		CheckGPUAccess bool
+	}
 }
 
 type preflightChecker struct {
@@ -45,6 +48,11 @@ func RunPreflightChecks() error {
 		}{
 			MinMemoryGB: RequiredGPUMemoryGB,
 		},
+		Bacalhau: struct {
+			CheckGPUAccess bool
+		}{
+			CheckGPUAccess: true,
+		},
 	}
 
 	// Logging GPU requirements
@@ -53,10 +61,11 @@ func RunPreflightChecks() error {
 		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
 		return nil
 	} else {
+		checker.gpuInfo = gpuInfo // Store GPU info in the checker
 		log.Info().
 			Int("gpu_count", len(gpuInfo)).
 			Int64("min_memory_gb", config.GPU.MinMemoryGB).
-			Msg("🎮 GPU requirements")
+			Msg("🛠️ GPU requirements")
 	}
 
 	err = checker.runAllChecks(ctx, config)
@@ -80,6 +89,16 @@ func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightCon
 		if !runtimeResult.passed {
 			return fmt.Errorf("Docker runtime check failed: %s", runtimeResult.message)
 		}
+	}
+
+	// Check Bacalhau GPU access if GPUs are detected and Bacalhau check is enabled
+
+	if len(p.gpuInfo) > 0 && config.Bacalhau.CheckGPUAccess {
+		bacalhauResult := p.checkBacalhauGPUAccess(ctx)
+		if !bacalhauResult.passed {
+			return fmt.Errorf("Bacalhau GPU access check failed: %s", bacalhauResult.message)
+		}
+		log.Info().Msg(bacalhauResult.message)
 	}
 
 	return nil

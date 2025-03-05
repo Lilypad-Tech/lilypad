@@ -102,7 +102,7 @@ func (p *preflightChecker) getGPUInfo(ctx context.Context) ([]gpuInfo, error) {
 			Str("name", gpu.name).
 			Str("uuid", gpu.uuid).
 			Int64("memory_mb", gpu.memoryTotal).
-			Msgf("🎮 GPU %d details", len(gpus))
+			Msgf("🛠️ GPU %d details", len(gpus))
 	}
 
 	if len(gpus) == 0 {
@@ -125,7 +125,7 @@ func (p *preflightChecker) checkGPU(ctx context.Context, config *gpuCheckConfig)
 		}
 
 		// If we found GPUs, log them but still continue
-		log.Info().Msgf("🎮 Found %d optional GPUs available for use", len(gpus))
+		log.Info().Msgf("🖥️ Found %d optional GPUs available for use", len(gpus))
 		return checkResult{
 			passed:  true,
 			message: fmt.Sprintf("Found %d NVIDIA GPUs (optional)", len(gpus)),
