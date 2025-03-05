@@ -421,7 +421,10 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	}
 	jobOffer.ID = id
 
-	controller.log.Info().Any("jobOffer", jobOffer).Msg("add job offer")
+	controller.log.Info().Str("cid", jobOffer.ID).
+		Str("address", jobOffer.JobCreator).
+		Any("jobOffer", jobOffer).
+		Msg("add job offer")
 
 	ret, err := controller.store.AddJobOffer(data.GetJobOfferContainer(jobOffer))
 	if err != nil {
@@ -475,7 +478,10 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 		return nil, nil
 	}
 
-	controller.log.Info().Any("resourceOffer", resourceOffer).Msg("add resource offer")
+	controller.log.Info().Str("cid", resourceOffer.ID).
+		Str("address", resourceOffer.ResourceProvider).
+		Any("resourceOffer", resourceOffer).
+		Msg("add resource offer")
 
 	metricsDashboard.TrackNodeInfo(resourceOffer)
 
@@ -535,7 +541,11 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 	span.SetAttributes(attribute.String("deal.id", deal.ID))
 	span.AddEvent("data.get_deal_id.done")
 
-	controller.log.Info().Any("deal", deal).Msg("add deal")
+	controller.log.Info().Str("cid", deal.ID).
+		Str("resourceProvider", deal.Members.ResourceProvider).
+		Str("jobCreator", deal.Members.JobCreator).
+		Any("deal", deal).
+		Msg("add deal")
 
 	//creates deal container and sets state to agreed
 	dealContainer := data.GetDealContainer(deal)
