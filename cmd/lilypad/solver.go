@@ -45,10 +45,6 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	if lilynext {
-		log.Info().Msg("🍃 Running the new lilypad protocol")
-	}
-
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
@@ -56,6 +52,11 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+	log := system.GetLogger(system.SolverService)
+
+	if lilynext {
+		log.Info().Msg("🍃 Running the new lilypad protocol")
+	}
 
 	unregisterMetrics, err := system.NewMetrics(meter)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog"
 )
 
 type StatsOptions struct {
@@ -28,13 +29,16 @@ func NewStats(service system.Service, options StatsOptions, web3Options web3.Web
 			PrivateKey:    web3Options.PrivateKey,
 			Type:          string(service),
 			PublicAddress: web3SDK.GetAddress().String(),
-		}}, nil
+		},
+		log: system.GetLogger(system.SolverService),
+	}, nil
 }
 
 // Stats API implementation
 
 type HTTPStats struct {
 	ClientOptions http.ClientOptions
+	log           *zerolog.Logger
 }
 
 // Noop implementation
