@@ -19,7 +19,16 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// JobOfferSubscriber is a function that gets called when a job offer is updated
 type JobOfferSubscriber func(offer data.JobOfferContainer)
+
+// JobOfferSubscription represents a subscription to job offer updates
+type JobOfferSubscription struct {
+	// The callback function to call when a job offer is updated
+	Callback JobOfferSubscriber
+	// Optional job ID filter - if specified, only updates for this job will be sent
+	JobID string
+}
 
 type JobCreatorController struct {
 	solverClient          *solver.SolverClient
@@ -28,7 +37,7 @@ type JobCreatorController struct {
 	web3Events            *web3.EventChannels
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
-	jobOfferSubscriptions []JobOfferSubscriber
+	jobOfferSubscriptions map[string]JobOfferSubscription
 	tracer                trace.Tracer
 }
 
@@ -68,7 +77,7 @@ func NewJobCreatorController(
 		web3SDK:               web3SDK,
 		web3Events:            web3.NewEventChannels(),
 		log:                   system.NewServiceLogger(system.JobCreatorService),
-		jobOfferSubscriptions: []JobOfferSubscriber{},
+		jobOfferSubscriptions: make(map[string]JobOfferSubscription),
 		tracer:                tracer,
 	}
 	return controller, nil
@@ -91,8 +100,24 @@ func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.J
 	return controller.solverClient.AddJobOffer(offer)
 }
 
-func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) {
-	controller.jobOfferSubscriptions = append(controller.jobOfferSubscriptions, sub)
+// SubscribeToJobOfferUpdates subscribes to all job offer updates
+// Returns a function that can be called to unsubscribe
+func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {
+	return controller.SubscribeToJobOfferUpdatesWithFilter(sub, "")
+}
+
+// SubscribeToJobOfferUpdatesWithFilter subscribes to job offer updates with an optional job ID filter
+// If jobID is not empty, only updates for that job will be sent to the subscriber
+// Returns a function that can be called to unsubscribe
+func (controller *JobCreatorController) SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func() {
+	controller.jobOfferSubscriptions[jobID] = JobOfferSubscription{
+		Callback: sub,
+		JobID:    jobID,
+	}
+
+	return func() {
+		delete(controller.jobOfferSubscriptions, jobID)
+	}
 }
 
 /*
@@ -138,8 +163,13 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 				return
 			}
 			metricsDashboard.TrackJobOfferUpdate(*ev.JobOffer)
-			for _, sub := range controller.jobOfferSubscriptions {
-				go sub(*ev.JobOffer)
+
+			// Make a copy of the subscriptions to avoid modification during iteration
+			for jobID, sub := range controller.jobOfferSubscriptions {
+				// If JobID is empty (global subscription) or matches the job offer ID, send the update
+				if jobID == "" || jobID == ev.JobOffer.JobOffer.ID {
+					sub.Callback(*ev.JobOffer)
+				}
 			}
 		}
 	})
@@ -398,7 +428,6 @@ func (controller *JobCreatorController) acceptResult(deal data.DealContainer) er
 		return fmt.Errorf("error adding AcceptResult tx hash for deal: %s", err.Error())
 	}
 
-	
 	return nil
 }
 
