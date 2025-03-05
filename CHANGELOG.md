@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.13.0...v2.14.0) (2025-02-20)
+
+
+### Features
+
+* Anura Rate Limiter ([#513](https://github.com/Lilypad-Tech/lilypad/issues/513)) ([8e996a7](https://github.com/Lilypad-Tech/lilypad/commit/8e996a78b657fb5495d9e40235595bcf18d12caf))
+
 ## [2.13.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.12.0...v2.13.0) (2025-02-18)
 
 

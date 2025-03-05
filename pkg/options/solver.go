@@ -14,6 +14,7 @@ func NewSolverOptions() solver.SolverOptions {
 		Store:             GetDefaultStoreOptions(),
 		Web3:              GetDefaultWeb3Options(),
 		Services:          GetDefaultServicesOptions(),
+		Stats:             GetDefaultStatsOptions(),
 		Telemetry:         GetDefaultTelemetryOptions(),
 		Metrics:           GetDefaultMetricsOptions(),
 		JobTimeoutSeconds: GetDefaultServeOptionInt("JOB_TIMEOUT_SECONDS", 600), // 10 minutes
@@ -27,6 +28,7 @@ func AddSolverCliFlags(cmd *cobra.Command, options *solver.SolverOptions) {
 	AddStoreCliFlags(cmd, &options.Store)
 	AddWeb3CliFlags(cmd, &options.Web3)
 	AddServicesCliFlags(cmd, &options.Services)
+	AddStatsCliFlags(cmd, &options.Stats)
 	AddTelemetryCliFlags(cmd, &options.Telemetry)
 	AddMetricsCliFlags(cmd, &options.Metrics)
 	cmd.PersistentFlags().IntVar(
@@ -45,6 +47,10 @@ func CheckSolverOptions(options solver.SolverOptions) error {
 		return err
 	}
 	err = CheckWeb3Options(options.Web3)
+	if err != nil {
+		return err
+	}
+	err = CheckStatsOptions(options.Stats)
 	if err != nil {
 		return err
 	}
