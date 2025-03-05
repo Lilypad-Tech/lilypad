@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741031714054,
+  "lastUpdate": 1741202211395,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1008,6 +1008,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "73542 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a5461fba0e6a5f5fd2b6ffd41f15b5577e8fa794",
+          "message": "feat: Add contextual logger (#527)\n\n* chore: Rename SetupLogging to SetupGlobalLogger\n\n* feat: Add GetLogger helper\n\nReturns a zerolog instance configured with the service name. We can add\nmore contextual information going forward.\n\n* feat: Replace solver controller service logger\n\n* feat: Replace solver matcher service logger\n\n* feat: Add solver logger\n\n* feat: Add solver command logger\n\n* chore: Rename solverServer instances to server\n\n* feat: Add solver server logger\n\n* feat: Add solver metric logger\n\n* feat: Add solver stat logger",
+          "timestamp": "2025-03-05T11:16:16-08:00",
+          "tree_id": "2545b64af628ad93439bd8875463848080053ee9",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/a5461fba0e6a5f5fd2b6ffd41f15b5577e8fa794"
+        },
+        "date": 1741202211037,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 44862,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80704 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 44862,
+            "unit": "ns/op",
+            "extra": "80704 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80704 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80704 times\n4 procs"
           }
         ]
       }
