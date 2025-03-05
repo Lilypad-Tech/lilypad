@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -379,7 +379,7 @@ func getLargestVRAM(gpus []data.GPUSpec) int {
 	return largestVRAM
 }
 
-func logMatch(result matchResult) {
+func logMatch(result matchResult, log *zerolog.Logger) {
 	switch r := result.(type) {
 	case offersMatched:
 		log.Trace().
