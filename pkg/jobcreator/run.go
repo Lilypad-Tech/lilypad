@@ -58,8 +58,6 @@ func RunJob(
 	ctx.Ctx = c
 	defer span.End()
 
-	span.AddEvent("add_job_offer.start")
-
 	updateChan := make(chan data.JobOfferContainer)
 
 	// Set up the subscription BEFORE adding the job offer

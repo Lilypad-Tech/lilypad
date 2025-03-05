@@ -37,8 +37,7 @@ type JobCreatorController struct {
 	web3Events            *web3.EventChannels
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
-	jobOfferSubscriptions map[uint64]JobOfferSubscription
-	nextSubID             uint64
+	jobOfferSubscriptions map[string]JobOfferSubscription
 	tracer                trace.Tracer
 }
 
@@ -78,8 +77,7 @@ func NewJobCreatorController(
 		web3SDK:               web3SDK,
 		web3Events:            web3.NewEventChannels(),
 		log:                   system.NewServiceLogger(system.JobCreatorService),
-		jobOfferSubscriptions: make(map[uint64]JobOfferSubscription),
-		nextSubID:             0,
+		jobOfferSubscriptions: make(map[string]JobOfferSubscription),
 		tracer:                tracer,
 	}
 	return controller, nil
@@ -112,15 +110,13 @@ func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferS
 // If jobID is not empty, only updates for that job will be sent to the subscriber
 // Returns a function that can be called to unsubscribe
 func (controller *JobCreatorController) SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func() {
-	id := controller.nextSubID
-	controller.nextSubID++
-	controller.jobOfferSubscriptions[id] = JobOfferSubscription{
+	controller.jobOfferSubscriptions[jobID] = JobOfferSubscription{
 		Callback: sub,
 		JobID:    jobID,
 	}
 
 	return func() {
-		delete(controller.jobOfferSubscriptions, id)
+		delete(controller.jobOfferSubscriptions, jobID)
 	}
 }
 
@@ -169,9 +165,9 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 			metricsDashboard.TrackJobOfferUpdate(*ev.JobOffer)
 
 			// Make a copy of the subscriptions to avoid modification during iteration
-			for _, sub := range controller.jobOfferSubscriptions {
-				// If JobID filter is set, only send updates for that job
-				if sub.JobID == "" || sub.JobID == ev.JobOffer.JobOffer.ID {
+			for jobID, sub := range controller.jobOfferSubscriptions {
+				// If JobID is empty (global subscription) or matches the job offer ID, send the update
+				if jobID == "" || jobID == ev.JobOffer.JobOffer.ID {
 					sub.Callback(*ev.JobOffer)
 				}
 			}
