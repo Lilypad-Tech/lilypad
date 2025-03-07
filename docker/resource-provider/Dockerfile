@@ -14,19 +14,11 @@ COPY --from=base /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
 RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
-ENV DISABLE_POW=false
 
 FROM base AS build-cpu
 RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
-ENV DISABLE_POW=true
 
 FROM build-$COMPUTE_MODE AS final
-# Default environment variables
-ARG NETWORK=testnet
-ARG DISABLE_TELEMETRY=false
-ENV LOG_LEVEL=info
-ENV BACALHAU_API_HOST="localhost"
-ENV WEB3_PRIVATE_KEY=""
 
 RUN mv lilypad /usr/local/bin
 # Install necessary dependencies
@@ -34,15 +26,8 @@ RUN apt update && apt install -y wget bash curl && apt clean
 
 # Add both lilypad and bacalhau executables to PATH
 ENV PATH="/usr/local/bin:${PATH}"
+ENV NETWORK=testnet
 
-# Create a startup script to run both services simultaneously
-RUN touch run
-RUN echo "#!/bin/bash" >> run
+COPY ./docker/resource-provider/entrypoint.sh /entrypoint.sh
 
-# Launch Lilypad
-RUN echo "/usr/local/bin/lilypad resource-provider --network ${NETWORK} --disable-pow=${DISABLE_POW} --disable-telemetry=${DISABLE_TELEMETRY} &" >> run
-RUN echo "wait -n" >> run
-RUN chmod +x run
-
-# Run startup script when container starts
-CMD ["/bin/bash", "./run"]
+ENTRYPOINT [ "/entrypoint.sh" ]
