@@ -8,12 +8,19 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/vincentfree/opentelemetry/otelzerolog"
+	otelzlog "go.opentelemetry.io/contrib/bridges/otelzerolog"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 )
 
 // Global logger
 
+var provider *sdklog.LoggerProvider
+
 // Configure the default global logger
-func SetupGlobalLogger() {
+func SetupGlobalLogger(service Service, loggerProvider *sdklog.LoggerProvider) {
+	provider = loggerProvider
+
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	logLevelString := os.Getenv("LOG_LEVEL")
 	if logLevelString == "" {
@@ -27,9 +34,62 @@ func SetupGlobalLogger() {
 	if err == nil {
 		logLevel = parsedLogLevel
 	}
-	zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
+	// zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
 	zerolog.SetGlobalLevel(logLevel)
-	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
+
+	if provider != nil {
+		writer := NewOTelWriter(provider, string(service))
+		logOpts := []otelzerolog.LogOption{
+			otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+		}
+		log.Logger = otelzerolog.New(logOpts...).
+			Output(writer).
+			Level(logLevel).
+			With().
+			Timestamp().
+			CallerWithSkipFrameCount(3).
+			Logger()
+	} else {
+		log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
+	}
+
+	////// Works but missing OTel attributes
+
+	// if provider != nil {
+	// 	logOpts := []otelzerolog.LogOption{
+	// 		otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+	// 	}
+	// 	log.Logger = otelzerolog.New(logOpts...).
+	// 		Output(output).
+	// 		Level(logLevel).
+	// 		With().
+	// 		Timestamp().
+	// 		CallerWithSkipFrameCount(3).
+	// 		Logger()
+	// } else {
+	// 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
+	// }
+
+	/////// Multi writer
+
+	// if provider != nil {
+	// 	logOpts := []otelzerolog.LogOption{
+	// 		otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+	// 	}
+	// 	otelLogger := otelzerolog.New(logOpts...)
+
+	// 	multiWriter := zerolog.MultiLevelWriter(output, otelLogger.Logger)
+	// 	logger := zerolog.New(multiWriter).
+	// 		Level(logLevel).
+	// 		With().
+	// 		Timestamp().
+	// 		CallerWithSkipFrameCount(3).
+	// 		Logger()
+
+	// 	log.Logger = logger
+	// } else {
+	// 	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
+	// }
 }
 
 // Logger
@@ -50,6 +110,58 @@ func GetLogger(service Service) *zerolog.Logger {
 			return message
 		},
 	}
+
+	if provider != nil {
+		writer := NewOTelWriter(provider, string(service))
+		logOpts := []otelzerolog.LogOption{
+			otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+		}
+		logger := otelzerolog.New(logOpts...).
+			Output(writer).
+			Level(log.Logger.GetLevel()).
+			With().
+			Timestamp().
+			CallerWithSkipFrameCount(3).
+			Logger()
+
+		return &logger
+	}
+
+	////// Works but missing OTel attributes
+
+	// if provider != nil {
+	// 	logOpts := []otelzerolog.LogOption{
+	// 		otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+	// 	}
+	// 	logger := otelzerolog.New(logOpts...).
+	// 		Output(output).
+	// 		Level(log.Logger.GetLevel()).
+	// 		With().
+	// 		Timestamp().
+	// 		CallerWithSkipFrameCount(2).
+	// 		Logger()
+
+	// 	return &logger
+	// }
+
+	/////// Multi writer
+
+	// if provider != nil {
+	// 	logOpts := []otelzerolog.LogOption{
+	// 		otelzerolog.WithOtelBridge(string(service), otelzlog.WithLoggerProvider(provider)),
+	// 	}
+	// 	otelLogger := otelzerolog.New(logOpts...)
+
+	// 	multiWriter := zerolog.MultiLevelWriter(output, otelLogger.Logger)
+	// 	logger := zerolog.New(multiWriter).
+	// 		Level(log.Logger.GetLevel()).
+	// 		With().
+	// 		Timestamp().
+	// 		CallerWithSkipFrameCount(2).
+	// 		Logger()
+
+	// 	return &logger
+	// }
 
 	logger := zerolog.New(output).
 		Level(log.Logger.GetLevel()).

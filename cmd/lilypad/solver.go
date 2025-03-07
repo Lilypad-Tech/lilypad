@@ -45,13 +45,22 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
+	// TODO replace from CLI options or env vars
+	logsOptions := system.LogOptions{
+		URL:     "http://localhost:8500",
+		Token:   "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VyIjoicmVzb3VyY2UtcHJvdmlkZXIifQ.n36M_ngwC4XPQ_pEkkWAnPiOinnx6-0VO1v_WgCTUEERD7b_p9KHCU6SY5bUdFh5UXRZHAhc1gfyc7rjAnmeDQ",
+		Enabled: true,
+	}
+
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, &logsOptions, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+
+	system.SetupGlobalLogger(system.SolverService, telemetry.LoggerProvider)
 	log := system.GetLogger(system.SolverService)
 
 	if lilynext {

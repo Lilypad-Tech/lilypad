@@ -44,12 +44,13 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		log.Info().Msg("🍃 Running the new lilypad protocol")
 	}
 
-	telemetry, err := configureTelemetry(commandCtx.Ctx, system.ResourceProviderService, network, options.Telemetry, nil, options.Web3)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.ResourceProviderService, network, options.Telemetry, nil, nil, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
+	system.SetupGlobalLogger(system.ResourceProviderService, nil)
 
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {

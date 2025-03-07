@@ -11,10 +11,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -24,6 +26,7 @@ import (
 type Telemetry struct {
 	TracerProvider *trace.TracerProvider
 	MeterProvider  *metric.MeterProvider
+	LoggerProvider *sdklog.LoggerProvider
 	Shutdown       func(context.Context) error
 }
 
@@ -55,7 +58,19 @@ type MetricsConfig struct {
 	Enabled      bool
 }
 
-func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig MetricsConfig) (telemetry Telemetry, err error) {
+type LogOptions struct {
+	URL     string `json:"url" toml:"url"`
+	Token   string `json:"token" toml:"token"`
+	Enabled bool
+}
+
+type LogsConfig struct {
+	LogsURL   string
+	LogsToken string
+	Enabled   bool
+}
+
+func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig MetricsConfig, logsConfig LogsConfig) (telemetry Telemetry, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// Call registered cleanup handlers, calling each
@@ -94,6 +109,8 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig Met
 	TracerProvider := trace.NewTracerProvider()
 	// Meter provider with no reader performs no operations
 	MeterProvider := metric.NewMeterProvider()
+	// Logger provider with no processor performs no operations
+	LoggerProvider := sdklog.NewLoggerProvider()
 
 	// Set up tracer provider.
 	if config.Enabled {
@@ -103,6 +120,7 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig Met
 			return Telemetry{
 				TracerProvider,
 				MeterProvider,
+				LoggerProvider,
 				Shutdown,
 			}, err
 		}
@@ -117,15 +135,29 @@ func SetupOTelSDK(ctx context.Context, config TelemetryConfig, metricsConfig Met
 			return Telemetry{
 				TracerProvider,
 				MeterProvider,
+				LoggerProvider,
 				Shutdown,
 			}, err
 		}
 		shutdownFuncs = append(shutdownFuncs, MeterProvider.Shutdown)
 	}
 
-	// TODO(bgins) Add logger provider
+	// Set up logger provider
+	if logsConfig.Enabled {
+		LoggerProvider, err = newLoggerProvider(ctx, resource, logsConfig)
+		if err != nil {
+			handleErr(err)
+			return Telemetry{
+				TracerProvider,
+				MeterProvider,
+				LoggerProvider,
+				Shutdown,
+			}, err
+		}
+		shutdownFuncs = append(shutdownFuncs, LoggerProvider.Shutdown)
+	}
 
-	return Telemetry{TracerProvider, MeterProvider, Shutdown}, nil
+	return Telemetry{TracerProvider, MeterProvider, LoggerProvider, Shutdown}, nil
 }
 
 func newPropagator() propagation.TextMapPropagator {
@@ -134,6 +166,8 @@ func newPropagator() propagation.TextMapPropagator {
 		propagation.Baggage{},
 	)
 }
+
+// Traces
 
 func newTracerProvider(ctx context.Context, resource *resource.Resource, config TelemetryConfig) (*trace.TracerProvider, error) {
 	exporter, err := newTracerExporter(ctx, config)
@@ -181,6 +215,8 @@ func newTracerExporter(ctx context.Context, config TelemetryConfig) (*otlptrace.
 	return exporter, nil
 }
 
+// Metrics
+
 func newMeterProvider(
 	ctx context.Context,
 	resource *resource.Resource,
@@ -204,6 +240,7 @@ func newMeterProvider(
 func newMetricExporter(ctx context.Context, config MetricsConfig) (*otlpmetrichttp.Exporter, error) {
 	headers := map[string]string{"Authorization": fmt.Sprintf("Bearer %s", config.MetricsToken)}
 	url, err := url.ParseRequestURI(config.MetricsURL)
+	// TODO: Handle this error
 
 	var metricExporter *otlpmetrichttp.Exporter
 	if url.Scheme == "https" {
@@ -226,6 +263,58 @@ func newMetricExporter(ctx context.Context, config MetricsConfig) (*otlpmetricht
 	}
 
 	return metricExporter, nil
+}
+
+// Logs
+
+func newLoggerProvider(ctx context.Context, res *resource.Resource, config LogsConfig) (*sdklog.LoggerProvider, error) {
+	exporter, err := newLoggerExporter(ctx, config)
+	if err != nil {
+		log.Error().Msgf("failed to configure logger exporter: %v", err)
+		return nil, err
+	}
+
+	processor := sdklog.NewBatchProcessor(exporter)
+	loggerProvider := sdklog.NewLoggerProvider(
+		sdklog.WithResource(res),
+		sdklog.WithProcessor(processor),
+	)
+
+	// TODO Do we need this global?
+	// Set global logger provider for logger
+	// global.SetLoggerProvider(loggerProvider)
+
+	return loggerProvider, nil
+}
+
+func newLoggerExporter(ctx context.Context, config LogsConfig) (*otlploghttp.Exporter, error) {
+	headers := map[string]string{"Authorization": fmt.Sprintf("Bearer %s", config.LogsToken)}
+	url, err := url.ParseRequestURI(config.LogsURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse log collector URL: %s", err)
+	}
+
+	var loggerExporter *otlploghttp.Exporter
+	if url.Scheme == "https" {
+		loggerExporter, err = otlploghttp.New(ctx,
+			otlploghttp.WithHeaders(headers),
+			otlploghttp.WithEndpointURL(fmt.Sprintf("%s/v1/logs", config.LogsURL)),
+		)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		loggerExporter, err = otlploghttp.New(ctx,
+			otlploghttp.WithHeaders(headers),
+			otlploghttp.WithEndpointURL(fmt.Sprintf("%s/v1/logs", config.LogsURL)),
+			otlploghttp.WithInsecure(),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return loggerExporter, nil
 }
 
 // Convert service names to use standardized OTel underscores

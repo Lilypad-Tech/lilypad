@@ -206,6 +206,7 @@ func GetMatchingDeals(
 	metrics.deals.Record(ctx, int64(len(deals)))
 
 	log.Debug().
+		Func(system.AddTraceContext(span)).
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
