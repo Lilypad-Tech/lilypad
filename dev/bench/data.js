@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741210033648,
+  "lastUpdate": 1741309929799,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1104,6 +1104,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79654 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "holly.grimm@gmail.com",
+            "name": "Holly Grimm",
+            "username": "hollygrimm"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb6761aac3addaa898a97218c55cb2e33d44908c",
+          "message": "feat: Enhance JobCreatorController to manage single job lifecycle (#536)\n\nrefactor: Enhance JobCreatorController to manage single job lifecycle\n\n- Modify JobCreatorController to track a single job via jobID\n- Update job offer and deal event handling to filter by specific job\n- Improve result checking and processing with more robust error handling\n- Remove deprecated job offer subscription filter method\n- Simplify job tracking and event subscription logic",
+          "timestamp": "2025-03-06T18:11:42-07:00",
+          "tree_id": "a146ea303d647983e751479365207b63529e5153",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/cb6761aac3addaa898a97218c55cb2e33d44908c"
+        },
+        "date": 1741309929435,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45666,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45666,
+            "unit": "ns/op",
+            "extra": "80524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80524 times\n4 procs"
           }
         ]
       }
