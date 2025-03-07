@@ -48,7 +48,6 @@ type JobCreator interface {
 	GetJobOfferFromOptions(options JobCreatorOfferOptions) (data.JobOffer, error)
 	AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error)
 	SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func()
-	SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func()
 	GetResult(dealId string) (data.Result, error)
 }
 
@@ -62,7 +61,7 @@ func NewJobCreator(
 	web3SDK *web3.Web3SDK,
 	tracer trace.Tracer,
 ) (*BasicJobCreator, error) {
-	controller, err := NewJobCreatorController(options, web3SDK, tracer)
+	controller, err := NewJobCreatorController("", options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +86,6 @@ func (jobCreator *BasicJobCreator) AddJobOffer(offer data.JobOffer) (data.JobOff
 
 func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {
 	return jobCreator.controller.SubscribeToJobOfferUpdates(sub)
-}
-
-func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdatesWithFilter(sub JobOfferSubscriber, jobID string) func() {
-	return jobCreator.controller.SubscribeToJobOfferUpdatesWithFilter(sub, jobID)
 }
 
 func (jobCreator *BasicJobCreator) GetResult(dealId string) (data.Result, error) {
