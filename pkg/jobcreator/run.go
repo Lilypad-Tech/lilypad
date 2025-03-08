@@ -35,8 +35,6 @@ func RunJob(
 		return nil, err
 	}
 
-	jobCreatorService.SubscribeToJobOfferUpdates(eventSub)
-
 	jobCreatorErrors := jobCreatorService.Start(ctx.Ctx, ctx.Cm)
 
 	// let's process our options into an actual job offer
@@ -60,6 +58,24 @@ func RunJob(
 	ctx.Ctx = c
 	defer span.End()
 
+	updateChan := make(chan data.JobOfferContainer)
+
+	// Set up the subscription BEFORE adding the job offer
+	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
+		span.AddEvent("job_offer_update",
+			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
+		updateChan <- evOffer
+
+		// Additionally call the provided eventSub if one was passed in
+		if eventSub != nil {
+			eventSub(evOffer)
+		}
+	})
+
+	// Ensure we clean up the subscription when we're done
+	defer cleanup()
+
+	// Add the job offer
 	span.AddEvent("add_job_offer.start")
 	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
 	if err != nil {
@@ -68,7 +84,7 @@ func RunJob(
 		span.RecordError(err)
 		return nil, err
 	}
-	jobCreatorService.controller.log.Debug("job offer ID", jobOfferContainer.ID)
+	jobCreatorService.controller.log.Debug("job offer container ID", jobOfferContainer.ID)
 	span.AddEvent("add_job_offer.done",
 		trace.WithAttributes(
 			attribute.String("job_offer_container.deal_id", jobOfferContainer.DealID),
@@ -76,17 +92,6 @@ func RunJob(
 		))
 	span.SetAttributes(attribute.String("job_offer.id", jobOfferContainer.JobOffer.ID),
 		attribute.String("deal.id", jobOfferContainer.DealID))
-
-	updateChan := make(chan data.JobOfferContainer)
-
-	jobCreatorService.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
-		if evOffer.JobOffer.ID != jobOfferContainer.ID {
-			return
-		}
-		span.AddEvent("job_offer_update",
-			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
-		updateChan <- evOffer
-	})
 
 	var finalJobOffer data.JobOfferContainer
 
