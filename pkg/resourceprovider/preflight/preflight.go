@@ -8,7 +8,7 @@ import (
 )
 
 const RequiredGPUMemoryGB = 1      // 1GB of VRAM is required to startup if GPU is enabled
-const RequiredNetworkSpeedMBps = 2 // 25 MB/s is the minimum required network speed
+const RequiredNetworkSpeedMBps = 1 // 25 MB/s is the minimum required network speed
 
 type gpuInfo struct {
 	uuid          string
@@ -62,16 +62,16 @@ func RunPreflightChecks() error {
 			CheckSpeed   bool
 			MinSpeedMBps int
 		}{
-			CheckSpeed:   true,
+			CheckSpeed:   true, // Always check network speed
 			MinSpeedMBps: RequiredNetworkSpeedMBps,
 		},
 	}
 
-	// Logging GPU requirements
+	// Try to get GPU info, but continue with checks regardless
 	gpuInfo, err := checker.getGPUInfo(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
-		return nil
+		// Continue with empty gpuInfo - don't return early
 	} else {
 		checker.gpuInfo = gpuInfo // Store GPU info in the checker
 		log.Info().
@@ -80,6 +80,7 @@ func RunPreflightChecks() error {
 			Msg("🛠️ GPU requirements")
 	}
 
+	// Run all checks regardless of GPU availability
 	err = checker.runAllChecks(ctx, config)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Preflight checks failed")
@@ -89,6 +90,19 @@ func RunPreflightChecks() error {
 }
 
 func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightConfig) error {
+	// Network Speed Check - Run always and enforce the requirement
+	if config.Network.CheckSpeed {
+		networkResult := p.checkNetworkSpeed(ctx, &speedTestConfig{
+			required:       true,
+			minBandwidthMB: config.Network.MinSpeedMBps,
+			testURL:        SpeedTestURL,
+		})
+		if !networkResult.passed {
+			return fmt.Errorf("Network speed check failed: %s", networkResult.message)
+		}
+		log.Info().Msg(networkResult.message)
+	}
+
 	// GPU Check
 	gpuResult := p.checkGPU(ctx, &gpuCheckConfig{
 		minMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,
@@ -105,21 +119,8 @@ func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightCon
 		}
 	}
 
-	// Network Speed Check
-	if config.Network.CheckSpeed {
-		networkResult := p.checkNetworkSpeed(ctx, &speedTestConfig{
-			required:       true,
-			minBandwidthMB: config.Network.MinSpeedMBps,
-			testURL:        SpeedTestURL,
-		})
-		if !networkResult.passed {
-			return fmt.Errorf("Network speed check failed: %s", networkResult.message)
-		}
-		log.Info().Msg(networkResult.message)
-	}
-
-	// Bacalhau GPU Access Check
-	if len(p.gpuInfo) > 0 && config.Bacalhau.CheckGPUAccess {
+	// Bacalhau Check - Run regardless of GPU availability
+	if config.Bacalhau.CheckGPUAccess {
 		bacalhauResult := p.checkBacalhauGPUAccess(ctx)
 		if !bacalhauResult.passed {
 			return fmt.Errorf("Bacalhau GPU access check failed: %s", bacalhauResult.message)
