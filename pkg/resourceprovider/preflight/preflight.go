@@ -7,7 +7,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const RequiredGPUMemoryGB = 1 // 1GB of VRAM is required to startup if GPU is enabled
+const RequiredGPUMemoryGB = 1      // 1GB of VRAM is required to startup if GPU is enabled
+const RequiredNetworkSpeedMBps = 2 // 25 MB/s is the minimum required network speed
 
 type gpuInfo struct {
 	uuid          string
@@ -32,6 +33,10 @@ type preflightConfig struct {
 	Bacalhau struct {
 		CheckGPUAccess bool
 	}
+	Network struct {
+		CheckSpeed   bool
+		MinSpeedMBps int
+	}
 }
 
 type preflightChecker struct {
@@ -52,6 +57,13 @@ func RunPreflightChecks() error {
 			CheckGPUAccess bool
 		}{
 			CheckGPUAccess: true,
+		},
+		Network: struct {
+			CheckSpeed   bool
+			MinSpeedMBps int
+		}{
+			CheckSpeed:   true,
+			MinSpeedMBps: RequiredNetworkSpeedMBps,
 		},
 	}
 
@@ -77,6 +89,7 @@ func RunPreflightChecks() error {
 }
 
 func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightConfig) error {
+	// GPU Check
 	gpuResult := p.checkGPU(ctx, &gpuCheckConfig{
 		minMemory: config.GPU.MinMemoryGB * 1024 * 1024 * 1024,
 	})
@@ -84,6 +97,7 @@ func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightCon
 		return fmt.Errorf("GPU check failed: %s", gpuResult.message)
 	}
 
+	// Docker Runtime Check
 	if config.Docker.CheckRuntime {
 		runtimeResult := p.checkDockerRuntime(ctx)
 		if !runtimeResult.passed {
@@ -91,8 +105,20 @@ func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightCon
 		}
 	}
 
-	// Check Bacalhau GPU access if GPUs are detected and Bacalhau check is enabled
+	// Network Speed Check
+	if config.Network.CheckSpeed {
+		networkResult := p.checkNetworkSpeed(ctx, &speedTestConfig{
+			required:       true,
+			minBandwidthMB: config.Network.MinSpeedMBps,
+			testURL:        SpeedTestURL,
+		})
+		if !networkResult.passed {
+			return fmt.Errorf("Network speed check failed: %s", networkResult.message)
+		}
+		log.Info().Msg(networkResult.message)
+	}
 
+	// Bacalhau GPU Access Check
 	if len(p.gpuInfo) > 0 && config.Bacalhau.CheckGPUAccess {
 		bacalhauResult := p.checkBacalhauGPUAccess(ctx)
 		if !bacalhauResult.passed {
