@@ -61,7 +61,7 @@ func RunJob(
 	updateChan := make(chan data.JobOfferContainer)
 
 	// Set up the subscription BEFORE adding the job offer
-	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdatesWithFilter(func(evOffer data.JobOfferContainer) {
+	cleanup := jobCreatorService.controller.SubscribeToJobOfferUpdates(func(evOffer data.JobOfferContainer) {
 		span.AddEvent("job_offer_update",
 			trace.WithAttributes(attribute.String("job_offer_container.state", data.GetAgreementStateString(evOffer.State))))
 		updateChan <- evOffer
@@ -70,7 +70,7 @@ func RunJob(
 		if eventSub != nil {
 			eventSub(evOffer)
 		}
-	}, offer.ID)
+	})
 
 	// Ensure we clean up the subscription when we're done
 	defer cleanup()
