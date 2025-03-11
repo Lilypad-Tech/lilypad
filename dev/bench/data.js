@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741716335762,
+  "lastUpdate": 1741719631650,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1200,6 +1200,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79678 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29411347+narbs91@users.noreply.github.com",
+            "name": "Narb",
+            "username": "narbs91"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9662007f505985bb3e1f8bc83d686f86d8ccb5e2",
+          "message": "hotfix: Fixes bug where incorrect id passed to GetDeal in jobOfferdownloadfiles (#538)\n\nFixes bug where incorrect id passed to GetDeal in jobOfferdownloadfiles",
+          "timestamp": "2025-03-11T12:00:01-07:00",
+          "tree_id": "d9e7c531cbf0e8a30b26aca02d579369d31479b5",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/9662007f505985bb3e1f8bc83d686f86d8ccb5e2"
+        },
+        "date": 1741719631133,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46128,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80822 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46128,
+            "unit": "ns/op",
+            "extra": "80822 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80822 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80822 times\n4 procs"
           }
         ]
       }
