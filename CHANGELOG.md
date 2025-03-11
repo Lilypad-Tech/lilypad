@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.15.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.14.0...v2.15.0) (2025-03-07)
+
+
+### Features
+
+* Add contextual logger ([#527](https://github.com/Lilypad-Tech/lilypad/issues/527)) ([a5461fb](https://github.com/Lilypad-Tech/lilypad/commit/a5461fba0e6a5f5fd2b6ffd41f15b5577e8fa794))
+* Add job run stats reporting ([#517](https://github.com/Lilypad-Tech/lilypad/issues/517)) ([0abdd42](https://github.com/Lilypad-Tech/lilypad/commit/0abdd42082afde970db81f65562b589e34ab16fe))
+* Add lilynext flag ([#526](https://github.com/Lilypad-Tech/lilypad/issues/526)) ([308b2f3](https://github.com/Lilypad-Tech/lilypad/commit/308b2f3dfce36ddc327dfa7b51382e139c0df6a1))
+* Check offer creation times for recency ([#523](https://github.com/Lilypad-Tech/lilypad/issues/523)) ([eaa5509](https://github.com/Lilypad-Tech/lilypad/commit/eaa55093790fda1b065c0a9a30081d65e6989f9d))
+* Enhance JobCreatorController to manage single job lifecycle ([#536](https://github.com/Lilypad-Tech/lilypad/issues/536)) ([cb6761a](https://github.com/Lilypad-Tech/lilypad/commit/cb6761aac3addaa898a97218c55cb2e33d44908c))
+* Isolate job output in cli ([#528](https://github.com/Lilypad-Tech/lilypad/issues/528)) ([56b2789](https://github.com/Lilypad-Tech/lilypad/commit/56b27890a33cdde0333b733ea304c1fca7196ef7))
+
 ## [2.14.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.13.0...v2.14.0) (2025-02-20)
 
 
