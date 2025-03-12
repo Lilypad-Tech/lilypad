@@ -24,6 +24,14 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/storage"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/token"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadContractRegistry"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadModuleDirectory"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadPaymentEngine"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadProxy"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadStorage"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadToken"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadTokenomics"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadUser"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -45,6 +53,18 @@ type Contracts struct {
 	Pow        *pow.Pow
 }
 
+// These are the Go binding wrappers for the new version of the protocol
+type ContractsV2 struct {
+	LilypadPaymentEngine    *lilypadpaymentengine.LilypadPaymentEngine
+	LilypadProxy            *lilypadproxy.LilypadProxy
+	LilypadModuleDirectory  *lilypadmoduledirectory.LilypadModuleDirectory
+	LilypadContractRegistry *lilypadcontractregistry.LilypadContractRegistry
+	LilypadStorage          *lilypadstorage.LilypadStorage
+	LilypadUser             *lilypaduser.LilypadUser
+	LilypadTokenomics       *lilypadtokenomics.LilypadTokenomics
+	LilypadToken            *lilypadtoken.LilypadToken
+}
+
 type Web3SDK struct {
 	Options      Web3Options
 	PrivateKey   *ecdsa.PrivateKey
@@ -52,6 +72,15 @@ type Web3SDK struct {
 	CallOpts     *bind.CallOpts
 	TransactOpts *bind.TransactOpts
 	Contracts    *Contracts
+}
+
+type Web3SDKV2 struct {
+	Options      Web3Options
+	PrivateKey   *ecdsa.PrivateKey
+	Client       *ethclient.Client
+	CallOpts     *bind.CallOpts
+	TransactOpts *bind.TransactOpts
+	Contracts    *ContractsV2
 }
 
 func NewContracts(
@@ -201,6 +230,64 @@ func NewContracts(
 	}, nil
 }
 
+// Creates the new Go-binding wrapper modules for the new protocol
+func NewContractsV2(
+	options Web3Options,
+	client *ethclient.Client,
+	callOpts *bind.CallOpts,
+) (*ContractsV2, error) {
+	lilypadProxy, err := lilypadproxy.NewLilypadProxy(common.HexToAddress(options.LilypadProxyAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadModuleDirectory, err := lilypadmoduledirectory.NewLilypadModuleDirectory(common.HexToAddress(options.LilypadModuleDirectoryAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadPaymentEngine, err := lilypadpaymentengine.NewLilypadPaymentEngine(common.HexToAddress(options.LilypadPaymentEngineAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadContractRegistry, err := lilypadcontractregistry.NewLilypadContractRegistry(common.HexToAddress(options.LilypadContractRegistryAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadStorage, err := lilypadstorage.NewLilypadStorage(common.HexToAddress(options.LilypadStorageAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadUser, err := lilypaduser.NewLilypadUser(common.HexToAddress(options.LilypadUserAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadTokenomics, err := lilypadtokenomics.NewLilypadTokenomics(common.HexToAddress(options.LilypadTokenomicsAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	lilypadToken, err := lilypadtoken.NewLilypadToken(common.HexToAddress(options.LilypadL2TokenAddress), client)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ContractsV2{
+		LilypadPaymentEngine:    lilypadPaymentEngine,
+		LilypadProxy:            lilypadProxy,
+		LilypadContractRegistry: lilypadContractRegistry,
+		LilypadModuleDirectory:  lilypadModuleDirectory,
+		LilypadStorage:          lilypadStorage,
+		LilypadToken:            lilypadToken,
+		LilypadUser:             lilypadUser,
+		LilypadTokenomics:       lilypadTokenomics,
+	}, nil
+}
+
 func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
@@ -241,6 +328,49 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 		Contracts:    contracts,
 	}
 	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
+
+	return web3SDK, nil
+}
+
+func NewContractSDKV2(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDKV2, error) {
+	displayOpts := options
+	displayOpts.PrivateKey = "*********"
+	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+
+	client, err := getEthClient(ctx, options, tracer)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, err := ParsePrivateKey(options.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	callOpts := &bind.CallOpts{
+		Pending:     false,
+		From:        common.Address{},
+		BlockNumber: nil,
+		Context:     nil,
+	}
+
+	transactOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(int64(options.ChainID)))
+	if err != nil {
+		return nil, err
+	}
+	contracts, err := NewContractsV2(options, client, callOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	web3SDK := &Web3SDKV2{
+		PrivateKey:   privateKey,
+		Options:      options,
+		Client:       client,
+		CallOpts:     callOpts,
+		TransactOpts: transactOpts,
+		Contracts:    contracts,
+	}
 
 	return web3SDK, nil
 }
