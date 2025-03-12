@@ -22,6 +22,18 @@ type Web3Options struct {
 	MediationAddress  string `json:"mediation_address" toml:"mediation_address"`
 	JobCreatorAddress string `json:"jobcreator_address" toml:"jobcreator_address"`
 	PowAddress        string `json:"pow_address" toml:"pow_address"`
+
+	// V2 Protocol
+	LilypadProxyAddress            string `json:"lilypad_proxy_address" toml:"lilypad_proxy_address"`
+	LilypadPaymentEngineAddress    string `json:"lilypad_payment_engine_address" toml:"lilypad_payment_engine_address"`
+	LilypadStorageAddress          string `json:"lilypad_storage_address" toml:"lilypad_storage_address"`
+	LilypadUserAddress             string `json:"lilypad_user_address" toml:"lilypad_user_address"`
+	LilypadL2TokenAddress          string `json:"lilypad_l2_token_address" toml:"lilypad_l2_token_address"`
+	LilypadL1TokenAddress          string `json:"lilypad_l1_token_address" toml:"lilypad_l1_token_address"`
+	LilypadTokenomicsAddress       string `json:"lilypad_tokenomics_address" toml:"lilypad_tokenomics_address"`
+	LilypadModuleDirectoryAddress  string `json:"lilypad_module_directory_address" toml:"lilypad_module_directory_address"`
+	LilypadContractRegistryAddress string `json:"lilypad_contract_registry_address" toml:"lilypad_contract_registry_address"`
+
 	// this is injected by whatever service we are running
 	// it's used for logging tx's
 	Service system.Service `json:"-" toml:"-"`
