@@ -784,7 +784,7 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 	server.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 	// Retrieve deal for stats reporting
-	deal, err := server.store.GetDeal(id)
+	deal, err := server.store.GetDeal(jobOffer.DealID)
 	if err != nil {
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "error loading deal",
