@@ -52,6 +52,8 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+
+	system.SetupGlobalLogger(system.SolverService, nil)
 	log := system.GetLogger(system.SolverService)
 
 	if lilynext {

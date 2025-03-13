@@ -50,6 +50,7 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.ResourceProviderService))
+	system.SetupGlobalLogger(system.ResourceProviderService, nil)
 
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, tracer)
 	if err != nil {

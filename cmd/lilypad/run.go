@@ -97,6 +97,7 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.JobCreatorService))
+	system.SetupGlobalLogger(system.JobCreatorService, nil)
 
 	result, err := jobcreator.RunJob(commandCtx, options, tracer, func(evOffer data.JobOfferContainer) {
 		spinner.Stop()
