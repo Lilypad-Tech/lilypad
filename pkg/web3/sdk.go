@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/rs/zerolog"
 	"math/big"
 	"net/url"
 	"strconv"
@@ -41,6 +43,8 @@ import (
 // LP token ABI
 const erc20ABI = `[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256","internalType": "uint256"}],"type":"function"}]`
 
+var logger = system.GetLogger(system.Web3Service)
+
 // these are the go-binding wrappers for the various deployed contracts
 type Contracts struct {
 	Token      *token.Token
@@ -72,6 +76,7 @@ type Web3SDK struct {
 	CallOpts     *bind.CallOpts
 	TransactOpts *bind.TransactOpts
 	Contracts    *Contracts
+	Log          *zerolog.Logger
 }
 
 type Web3SDKV2 struct {
@@ -81,6 +86,7 @@ type Web3SDKV2 struct {
 	CallOpts     *bind.CallOpts
 	TransactOpts *bind.TransactOpts
 	Contracts    *ContractsV2
+	Log          *zerolog.Logger
 }
 
 func NewContracts(
@@ -94,14 +100,14 @@ func NewContracts(
 	}
 
 	paymentsAddress := options.PaymentsAddress
-	log.Debug().Msgf("paymentsAddress: %s", paymentsAddress)
+	logger.Debug().Msgf("paymentsAddress: %s", paymentsAddress)
 	if paymentsAddress == "" {
 		loadedPaymentsAddress, err := controller.GetPaymentsAddress(callOpts)
 		if err != nil {
 			return nil, err
 		}
 		paymentsAddress = loadedPaymentsAddress.String()
-		log.Debug().
+		logger.Debug().
 			Str("load payments address", paymentsAddress).
 			Msgf("")
 	}
@@ -111,14 +117,14 @@ func NewContracts(
 	}
 
 	powAddress := options.PowAddress
-	log.Debug().Msgf("PowAddress: %s", powAddress)
+	logger.Debug().Msgf("PowAddress: %s", powAddress)
 	if powAddress == "" {
 		loadedPowAddress, err := controller.GetPowAddress(callOpts)
 		if err != nil {
 			return nil, err
 		}
 		powAddress = loadedPowAddress.String()
-		log.Debug().
+		logger.Debug().
 			Str("load pow address", powAddress).
 			Msgf("")
 	}
@@ -129,14 +135,14 @@ func NewContracts(
 	}
 
 	tokenAddress := options.TokenAddress
-	log.Debug().Msgf("TokenAddress: %s", tokenAddress)
+	logger.Debug().Msgf("TokenAddress: %s", tokenAddress)
 	if tokenAddress == "" {
 		loadedTokenAddress, err := payments.GetTokenAddress(callOpts)
 		if err != nil {
 			return nil, err
 		}
 		tokenAddress = loadedTokenAddress.String()
-		log.Debug().
+		logger.Debug().
 			Str("load token address", tokenAddress).
 			Msgf("")
 	}
@@ -147,14 +153,14 @@ func NewContracts(
 	}
 
 	storageAddress := options.StorageAddress
-	log.Debug().Msgf("StorageAddress: %s", storageAddress)
+	logger.Debug().Msgf("StorageAddress: %s", storageAddress)
 	if storageAddress == "" {
 		loadedStorageAddress, err := controller.GetStorageAddress(callOpts)
 		if err != nil {
 			return nil, err
 		}
 		storageAddress = loadedStorageAddress.String()
-		log.Debug().
+		logger.Debug().
 			Str("load storage address", storageAddress).
 			Msgf("")
 	}
@@ -165,14 +171,14 @@ func NewContracts(
 	}
 
 	usersAddress := options.UsersAddress
-	log.Debug().Msgf("UsersAddress: %s", usersAddress)
+	logger.Debug().Msgf("UsersAddress: %s", usersAddress)
 	if usersAddress == "" {
 		loadedUsersAddress, err := controller.GetUsersAddress(callOpts)
 		if err != nil {
 			return nil, err
 		}
 		usersAddress = loadedUsersAddress.String()
-		log.Debug().
+		logger.Debug().
 			Str("load users address", usersAddress).
 			Msgf("")
 	}
@@ -183,7 +189,7 @@ func NewContracts(
 	}
 
 	jobcreatorAddress := options.JobCreatorAddress
-	log.Debug().Msgf("JobCreatorAddress: %s", jobcreatorAddress)
+	logger.Debug().Msgf("JobCreatorAddress: %s", jobcreatorAddress)
 	if jobcreatorAddress == "" {
 		loadedJobCreatorAddress, err := controller.GetJobCreatorAddress(callOpts)
 		if err != nil {
@@ -201,7 +207,7 @@ func NewContracts(
 	}
 
 	mediationAddress := options.MediationAddress
-	log.Debug().Msgf("MediationAddress: %s", mediationAddress)
+	logger.Debug().Msgf("MediationAddress: %s", mediationAddress)
 	if mediationAddress == "" {
 		loadedMediationAddress, err := controller.GetMediationAddress(callOpts)
 		if err != nil {
@@ -291,7 +297,7 @@ func NewContractsV2(
 func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDK, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
-	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+	logger.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
 	client, err := getEthClient(ctx, options, tracer)
 	if err != nil {
@@ -326,8 +332,9 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 		CallOpts:     callOpts,
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
+		Log:          logger,
 	}
-	log.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
+	logger.Info().Msgf("Public Address: %s", web3SDK.GetAddress())
 
 	return web3SDK, nil
 }
@@ -335,7 +342,7 @@ func NewContractSDK(ctx context.Context, options Web3Options, tracer trace.Trace
 func NewContractSDKV2(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDKV2, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
-	log.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+	logger.Debug().Msgf("NewContractSDK: %+v", displayOpts)
 
 	client, err := getEthClient(ctx, options, tracer)
 	if err != nil {
@@ -370,6 +377,7 @@ func NewContractSDKV2(ctx context.Context, options Web3Options, tracer trace.Tra
 		CallOpts:     callOpts,
 		TransactOpts: transactOpts,
 		Contracts:    contracts,
+		Log:          logger,
 	}
 
 	return web3SDK, nil
@@ -386,7 +394,7 @@ func getEthClient(ctx context.Context, options Web3Options, tracer trace.Tracer)
 	for _, u := range rpcs {
 		parsedURL, err = url.Parse(u)
 		if err != nil {
-			log.Warn().Msgf("Unable to parse web3 RPC URL: %v", err)
+			logger.Warn().Msgf("Unable to parse web3 RPC URL: %v", err)
 			span.RecordError(errors.New("Unable to parse web3 RPC URL"))
 			continue
 		}
@@ -394,11 +402,11 @@ func getEthClient(ctx context.Context, options Web3Options, tracer trace.Tracer)
 		span.AddEvent("ethclient.dial", trace.WithAttributes(attribute.String("web3.rpc_url", parsedURL.Host)))
 		client, err = ethclient.Dial(u)
 		if err != nil {
-			log.Warn().Msgf("Failed to connect to %s: %v", parsedURL.Host, err)
+			logger.Warn().Msgf("Failed to connect to %s: %v", parsedURL.Host, err)
 			span.RecordError(fmt.Errorf("Failed to connect to %s", parsedURL.Host))
 			continue
 		} else {
-			log.Info().Msgf("Connected to %s", parsedURL.Host)
+			logger.Info().Msgf("Connected to %s", parsedURL.Host)
 			span.AddEvent("ethclient.connected")
 			break
 		}
@@ -415,7 +423,7 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	var blockNumberHex string
 	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
-		log.Error().Msgf("error for getBlockNumber: %s", err.Error())
+		logger.Error().Msgf("error for getBlockNumber: %s", err.Error())
 		return 0, err
 	}
 	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")
@@ -437,7 +445,7 @@ func (sdk *Web3SDK) GetBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	balance, err := sdk.Client.BalanceAt(context.Background(), ethAddress, nil)
 	if err != nil {
-		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		logger.Error().Msgf("error for GetBalance: %s", err.Error())
 		return nil, err
 	}
 	return balance, nil
@@ -452,7 +460,7 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	erc20ABIObj, err := abi.JSON(strings.NewReader(erc20ABI))
 	if err != nil {
-		log.Error().Msgf("error parsing ABI: %s", err)
+		logger.Error().Msgf("error parsing ABI: %s", err)
 		return nil, err
 	}
 	tokenContract := bind.NewBoundContract(lpToken, erc20ABIObj, client, client, client)
@@ -460,14 +468,14 @@ func (sdk *Web3SDK) GetLPBalance(address string) (*big.Int, error) {
 	var out []interface{}
 	err = tokenContract.Call(nil, &out, "balanceOf", ethAddress)
 	if err != nil {
-		log.Error().Msgf("error calling balanceOf: %s", err)
+		logger.Error().Msgf("error calling balanceOf: %s", err)
 		return nil, err
 	}
 
 	lpBalance := *abi.ConvertType(out[0], new(big.Int)).(*big.Int)
 
 	if err != nil {
-		log.Error().Msgf("error for GetBalance: %s", err.Error())
+		logger.Error().Msgf("error for GetBalance: %s", err.Error())
 		return nil, err
 	}
 	return &lpBalance, nil
