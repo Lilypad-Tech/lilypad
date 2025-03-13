@@ -251,6 +251,9 @@ func newMeterProvider(
 func newMetricExporter(ctx context.Context, config MetricsConfig) (*otlpmetrichttp.Exporter, error) {
 	headers := map[string]string{"Authorization": fmt.Sprintf("Bearer %s", config.MetricsToken)}
 	url, err := url.ParseRequestURI(config.MetricsURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse metrics exporter URL: %s", err)
+	}
 
 	var metricExporter *otlpmetrichttp.Exporter
 	if url.Scheme == "https" {
