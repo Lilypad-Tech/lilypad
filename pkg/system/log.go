@@ -8,13 +8,19 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 )
+
+// Package global logger provider
+var loggerProvider *sdklog.LoggerProvider
 
 // Global logger
 
 // Configure the default global logger
-func SetupGlobalLogger() {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+func SetupGlobalLogger(service Service, provider *sdklog.LoggerProvider) {
+	loggerProvider = provider
+
+	// Set global log level
 	logLevelString := os.Getenv("LOG_LEVEL")
 	if logLevelString == "" {
 		logLevelString = "info"
@@ -27,16 +33,35 @@ func SetupGlobalLogger() {
 	if err == nil {
 		logLevel = parsedLogLevel
 	}
-	zerolog.CallerSkipFrameCount = 3 // Skip 3 frames (this function, log.Output, log.Logger)
 	zerolog.SetGlobalLevel(logLevel)
-	log.Logger = log.Output(output).With().Caller().Logger().Level(logLevel)
+
+	// Configure logger with OTel bridge + console or console only
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	if loggerProvider != nil {
+		bridge := NewOTelBridge(loggerProvider, string(service), consoleWriter)
+		log.Logger = zerolog.New(bridge).
+			Level(logLevel).
+			With().
+			Timestamp().
+			CallerWithSkipFrameCount(2).
+			Logger()
+	} else {
+		log.Logger = log.
+			Output(consoleWriter).
+			Level(logLevel).
+			With().
+			Caller().
+			CallerWithSkipFrameCount(2).
+			Logger()
+	}
 }
 
 // Logger
 
 // Get a logger configured with contextual fields
 func GetLogger(service Service) *zerolog.Logger {
-	output := zerolog.ConsoleWriter{
+	// Configure console writer with service badges
+	consoleWriter := zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 		FormatMessage: func(m any) string {
@@ -51,7 +76,20 @@ func GetLogger(service Service) *zerolog.Logger {
 		},
 	}
 
-	logger := zerolog.New(output).
+	// Configure logger with OTel bridge + console or console only
+	if loggerProvider != nil {
+		bridge := NewOTelBridge(loggerProvider, string(service), consoleWriter)
+		logger := zerolog.New(bridge).
+			Level(log.Logger.GetLevel()).
+			With().
+			Timestamp().
+			CallerWithSkipFrameCount(2).
+			Logger()
+
+		return &logger
+	}
+
+	logger := zerolog.New(consoleWriter).
 		Level(log.Logger.GetLevel()).
 		With().
 		Timestamp().
@@ -91,28 +129,25 @@ func (s *ServiceLogger) Trace(title string, data interface{}) {
 }
 
 func logWithCaller(skipFrameCount int, level zerolog.Level, service Service, title string, data interface{}) {
-	zerolog.CallerSkipFrameCount = skipFrameCount
-	defer func() { zerolog.CallerSkipFrameCount = 3 }() // Reset to the default value
-
-	e := log.WithLevel(level).
+	e := log.WithLevel(level).CallerSkipFrame(skipFrameCount).
 		Str(GetServiceString(service, title), fmt.Sprintf("%+v", data))
 	e.Caller().Msg("")
 }
 
 func Error(service Service, title string, err error) {
-	logWithCaller(5, zerolog.ErrorLevel, service, title, err)
+	logWithCaller(3, zerolog.ErrorLevel, service, title, err)
 }
 
 func Info(service Service, title string, data interface{}) {
-	logWithCaller(5, zerolog.InfoLevel, service, title, data)
+	logWithCaller(3, zerolog.InfoLevel, service, title, data)
 }
 
 func Debug(service Service, title string, data interface{}) {
-	logWithCaller(5, zerolog.DebugLevel, service, title, data)
+	logWithCaller(3, zerolog.DebugLevel, service, title, data)
 }
 
 func Trace(service Service, title string, data interface{}) {
-	logWithCaller(5, zerolog.TraceLevel, service, title, data)
+	logWithCaller(3, zerolog.TraceLevel, service, title, data)
 }
 
 // Dump
