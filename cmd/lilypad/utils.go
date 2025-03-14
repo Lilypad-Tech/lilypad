@@ -45,6 +45,7 @@ func configureTelemetry(ctx context.Context,
 	network string,
 	options system.TelemetryOptions,
 	metricsOptions *system.MetricsOptions,
+	logsOptions *system.LogsOptions,
 	web3Options web3.Web3Options,
 ) (*system.Telemetry, error) {
 	privateKey, err := web3.ParsePrivateKey(web3Options.PrivateKey)
@@ -78,7 +79,27 @@ func configureTelemetry(ctx context.Context,
 		}
 	}
 
-	telemetry, err := system.SetupOTelSDK(ctx, tc, mc)
+	var lc system.LogsConfig
+	if logsOptions != nil {
+		lc = system.LogsConfig{
+			Enabled:            logsOptions.Enable,
+			URL:                logsOptions.URL,
+			Token:              logsOptions.Token,
+			ExportBufferSize:   logsOptions.ExportBufferSize,
+			ExportInterval:     logsOptions.ExportInterval,
+			ExportMaxBatchSize: logsOptions.ExportMaxBatchSize,
+			ExportTimeout:      logsOptions.ExportTimeout,
+			MaxQueueSize:       logsOptions.MaxQueueSize,
+		}
+	} else {
+		lc = system.LogsConfig{
+			Enabled: false,
+			URL:     "",
+			Token:   "",
+		}
+	}
+
+	telemetry, err := system.SetupOTelSDK(ctx, tc, mc, lc)
 
 	return &telemetry, err
 }

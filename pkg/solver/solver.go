@@ -23,6 +23,7 @@ type SolverOptions struct {
 	Stats             stats.StatsOptions
 	Telemetry         system.TelemetryOptions
 	Metrics           system.MetricsOptions
+	Logs              system.LogsOptions
 	JobTimeoutSeconds int
 }
 

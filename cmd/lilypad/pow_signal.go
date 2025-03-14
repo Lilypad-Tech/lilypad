@@ -46,6 +46,8 @@ func runPowSignal(cmd *cobra.Command, options options.PowSignalOptions) error {
 	defer commandCtx.Cleanup()
 
 	noopTracer := noop.NewTracerProvider().Tracer(system.GetOTelServiceName(system.DefaultService))
+	system.SetupGlobalLogger(system.DefaultService, nil)
+
 	web3SDK, err := web3.NewContractSDK(commandCtx.Ctx, options.Web3, noopTracer)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to initialize Web3 SDK")

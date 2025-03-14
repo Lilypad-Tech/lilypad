@@ -36,7 +36,7 @@ func GetMatchingDeals(
 		OrderOldestFirst: true,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("get resource offers failed")
+		log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("get resource offers failed")
 		span.SetStatus(codes.Error, "get resource offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -55,7 +55,7 @@ func GetMatchingDeals(
 		OrderOldestFirst: true,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("get job offers failed")
+		log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("get job offers failed")
 		span.SetStatus(codes.Error, "get job offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -180,9 +180,9 @@ func GetMatchingDeals(
 
 				// Add match decisions for all matching offers
 				span.AddEvent("add_match_decisions.start")
-				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers, log)
+				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers, log, system.AddTraceContext(span))
 				if err != nil {
-					log.Error().Err(err).Msg("addMatchDecisions failed")
+					log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("addMatchDecisions failed")
 					span.SetStatus(codes.Error, "unable to add match decision")
 					span.RecordError(err)
 					return nil, err
@@ -206,6 +206,7 @@ func GetMatchingDeals(
 	metrics.deals.Record(ctx, int64(len(deals)))
 
 	log.Debug().
+		Func(system.AddTraceContext(span)).
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
@@ -221,6 +222,7 @@ func addMatchDecisions(
 	selectedResourceOffer data.ResourceOffer,
 	matchingResourceOffers []data.ResourceOffer,
 	log *zerolog.Logger,
+	addTraceContext func(e *zerolog.Event),
 ) error {
 	for _, matchingOffer := range matchingResourceOffers {
 		addDealID := ""
@@ -241,6 +243,7 @@ func addMatchDecisions(
 		}
 	}
 	log.Debug().
+		Func(addTraceContext).
 		Int("decisions", len(matchingResourceOffers)).
 		Msg("Solver adding matched resource offer decisions")
 
@@ -280,7 +283,8 @@ func getTargetedDeal(
 
 	// We don't have a resource provider for this address
 	if resourceOffer == nil {
-		log.Trace().
+		log.Debug().
+			Func(system.AddTraceContext(span)).
 			Str("job offer", jobOffer.ID).
 			Str("target address", jobOffer.JobOffer.Target.Address).
 			Msgf("no resource provider found for address")

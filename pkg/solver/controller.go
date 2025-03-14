@@ -354,7 +354,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 		Active: true,
 	})
 	if err != nil {
-		controller.log.Error().Err(err).Msg("get job offers failed")
+		controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("get job offers failed")
 		span.SetStatus(codes.Error, "get job offers failed")
 		span.RecordError(err)
 		return err
@@ -373,7 +373,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				// Cancel expired job offers
 				_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
-					controller.log.Error().Err(err).Msg("update expired job offer state failed")
+					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired job offer state failed")
 					span.SetStatus(codes.Error, "update expired job offer state failed")
 					span.RecordError(err)
 				}
@@ -381,7 +381,7 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				// Cancel expired job offers, resource offers, and deals
 				_, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
-					controller.log.Error().Err(err).Msg("update expired deal state failed")
+					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
 					span.SetStatus(codes.Error, "update expired deal state failed")
 					span.RecordError(err)
 				}
@@ -541,7 +541,8 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 	span.SetAttributes(attribute.String("deal.id", deal.ID))
 	span.AddEvent("data.get_deal_id.done")
 
-	controller.log.Info().Str("cid", deal.ID).
+	controller.log.Info().Func(system.AddTraceContext(span)).
+		Str("cid", deal.ID).
 		Str("resourceProvider", deal.Members.ResourceProvider).
 		Str("jobCreator", deal.Members.JobCreator).
 		Any("deal", deal).
