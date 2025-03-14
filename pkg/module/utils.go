@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/go-git/go-git/v5"
@@ -21,6 +22,39 @@ import (
 )
 
 const REPO_DIR = "repos"
+
+type RefCache struct {
+	cache map[string]map[string]string
+	mu    sync.RWMutex
+}
+
+func NewRefCache() *RefCache {
+	return &RefCache{
+		cache: make(map[string]map[string]string),
+	}
+}
+
+func (rc *RefCache) Get(repoURL, reference string) string {
+	rc.mu.RLock()
+	defer rc.mu.RUnlock()
+
+	if refs, ok := rc.cache[repoURL]; ok {
+		return refs[reference]
+	}
+	return ""
+}
+
+func (rc *RefCache) Set(repoURL, reference, commitHash string) {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+
+	if _, ok := rc.cache[repoURL]; !ok {
+		rc.cache[repoURL] = make(map[string]string)
+	}
+	rc.cache[repoURL][reference] = commitHash
+}
+
+var globalRefCache = NewRefCache()
 
 func getRepoLocalPath(repoURL string) (string, error) {
 	parsedURL, err := url.Parse(repoURL)
@@ -68,72 +102,166 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	return module, nil
 }
 
-// clone the given repo and return the full local path to the repo
-// TODO: check if we have the repo already cloned
-// handle fetching new changes perhaps the commit hash is not the latest
-// at the moment we will do the slow thing and clone the repo every time
-func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
-	repoPath, err := getRepoLocalPath(module.Repo)
-	if err != nil {
-		return nil, err
-	}
-	repoDir, err := system.EnsureDataDir(repoPath)
-	if err != nil {
-		return nil, err
-	}
-	fileInfo, err := os.Stat(filepath.Join(repoDir, ".git"))
+func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
+	maxRetries := 3
+	for retry := 0; retry < maxRetries; retry++ {
+		commitHash := globalRefCache.Get(module.Repo, module.Hash)
 
-	repoCloned := err == nil && fileInfo.IsDir()
+		if commitHash == "" {
+			var err error
+			commitHash, err = resolveToCommitHash(module.Repo, module.Hash)
+			if err != nil {
+				log.Debug().
+					Str("repo", module.Repo).
+					Str("reference", module.Hash).
+					Err(err).
+					Msg("Failed to resolve reference")
+				continue
+			}
 
-	if !repoCloned {
+			globalRefCache.Set(module.Repo, module.Hash, commitHash)
+
+			log.Debug().
+				Str("repo", module.Repo).
+				Str("reference", module.Hash).
+				Str("commitHash", commitHash).
+				Msg("Resolved reference to commit hash")
+		}
+
+		repoPath, err := getHashBasedRepoPath(module.Repo, commitHash)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get hash-based repo path: %w", err)
+		}
+
+		repoDir, err := system.EnsureDataDir(repoPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create repo directory: %w", err)
+		}
+
+		gitDirPath := filepath.Join(repoDir, ".git")
+		fileInfo, err := os.Stat(gitDirPath)
+		repoExists := (err == nil && fileInfo.IsDir())
+
+		if repoExists {
+			log.Debug().
+				Str("repo exists", repoDir).
+				Str("commitHash", commitHash).
+				Msgf("Using cached version")
+
+			repo, err := git.PlainOpen(repoDir)
+			if err != nil {
+				log.Error().
+					Str("repoDir", repoDir).
+					Err(err).
+					Msg("Cached repo corrupt - re-cloning")
+				_ = os.RemoveAll(repoDir)
+			} else {
+				h, err := repo.ResolveRevision(plumbing.Revision(commitHash))
+				if err == nil {
+					if _, err := repo.Storer.EncodedObject(plumbing.AnyObject, *h); err == nil {
+						w, err := repo.Worktree()
+						if err != nil {
+							return nil, fmt.Errorf("failed to get worktree: %w", err)
+						}
+
+						err = w.Checkout(&git.CheckoutOptions{
+							Hash: *h,
+						})
+						if err != nil {
+							return nil, fmt.Errorf("failed to checkout hash: %w", err)
+						}
+
+						head, err := repo.Head()
+						if err != nil {
+							return nil, fmt.Errorf("failed to get HEAD after checkout: %w", err)
+						}
+
+						if head.Hash().String() != h.String() {
+							return nil, fmt.Errorf("checkout verification failed: HEAD is %s, expected %s",
+								head.Hash().String(), h.String())
+						}
+
+						return repo, nil
+					}
+				}
+				log.Warn().
+					Str("repoDir", repoDir).
+					Str("commitHash", commitHash).
+					Msg("Cached repo missing requested commit - re-cloning")
+				_ = os.RemoveAll(repoDir)
+			}
+		}
+
 		log.Debug().
 			Str("repo clone", repoDir).
 			Str("repo remote", module.Repo).
-			Msgf("")
-		return git.PlainClone(repoDir, false, &git.CloneOptions{
+			Str("commitHash", commitHash).
+			Msg("Cloning fresh repo with specific hash")
+
+		if removeErr := os.RemoveAll(repoDir); removeErr != nil {
+			return nil, fmt.Errorf("failed to remove corrupt repo: %w", removeErr)
+		}
+		repo, err := git.PlainClone(repoDir, false, &git.CloneOptions{
 			URL:      module.Repo,
 			Progress: os.Stdout,
 		})
-	}
-
-	log.Debug().
-		Str("repo exists", repoDir).
-		Str("repo remote", module.Repo).
-		Msgf("")
-
-	repo, err = git.PlainOpen(repoDir)
-	// err := os.RemoveAll(repoDir)
-	if err != nil {
-		return nil, err
-	}
-
-	// git fetch origin: Resolves #https://github.com/lilypad-tech/lilypad/issues/13
-	gitFetchOptions := &git.FetchOptions{
-		Tags:     git.AllTags,
-		Progress: os.Stdout,
-	}
-	gitFetchOptions.Validate() // sets default values like remote=origin
-	log.Info().Str("updating cached git repo", repoDir).Msgf("")
-	err = repo.FetchContext(context.Background(), gitFetchOptions)
-
-	// Check if hash or tag specified exists
-	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
-	if err != nil {
-		return nil, err
-	}
-	// XXX SECURITY: on RP side, need to verify this hash is in the allowlist
-	// explicitly to ensure determinism (and that we're running the code we
-	// explicitly approved)
-	_, err = repo.Storer.EncodedObject(plumbing.AnyObject, *h)
-	if err != nil {
-		// this means there is no hash in the repo
-		// so let's clean it up and clone it again
-		err = os.RemoveAll(repoDir)
 		if err != nil {
-			return nil, err
+			log.Warn().
+				Str("repo", module.Repo).
+				Int("retry", retry+1).
+				Msg("Re-cloning repository")
+			continue
 		}
+
+		h, err := repo.ResolveRevision(plumbing.Revision(commitHash))
+		if err != nil {
+			log.Debug().
+				Str("commitHash", commitHash).
+				Msg("Hash not found in initial clone, fetching all refs")
+
+			fetchOpts := &git.FetchOptions{
+				Force:    true,
+				Tags:     git.AllTags,
+				Progress: os.Stdout,
+			}
+
+			if fetchErr := repo.FetchContext(context.Background(), fetchOpts); fetchErr != nil &&
+				fetchErr != git.NoErrAlreadyUpToDate {
+				return nil, fmt.Errorf("failed to fetch refs: %w", fetchErr)
+			}
+
+			h, err = repo.ResolveRevision(plumbing.Revision(commitHash))
+			if err != nil {
+				return nil, fmt.Errorf("hash %s not found even after fetch: %w", commitHash, err)
+			}
+		}
+
+		w, err := repo.Worktree()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get worktree: %w", err)
+		}
+
+		err = w.Checkout(&git.CheckoutOptions{
+			Hash: *h,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to checkout hash %s: %w", commitHash, err)
+		}
+
+		head, err := repo.Head()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get HEAD after checkout: %w", err)
+		}
+
+		if head.Hash().String() != h.String() {
+			return nil, fmt.Errorf("checkout verification failed: HEAD is %s, expected %s",
+				head.Hash().String(), h.String())
+		}
+
+		return repo, nil
 	}
-	return
+
+	return nil, fmt.Errorf("failed to clone repo after %d attempts", maxRetries)
 }
 
 // PrepareModule get a module cloned and checked out then return the text content of the template
@@ -142,10 +270,20 @@ func CloneModule(module data.ModuleConfig) (repo *git.Repository, err error) {
 //   - checkout the correct hash
 //   - check and read the file
 func PrepareModule(module data.ModuleConfig) (string, error) {
+	originalRef := module.Hash
+
 	module, err := ProcessModule(module)
 	if err != nil {
 		return "", err
 	}
+
+	if originalRef != module.Hash {
+		log.Debug().
+			Str("originalRef", originalRef).
+			Str("resolvedHash", module.Hash).
+			Msg("Resolved reference to hash")
+	}
+
 	repo, err := CloneModule(module)
 	if err != nil {
 		return "", err
@@ -256,4 +394,80 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	}
 
 	return &moduleData, nil
+}
+
+func resolveToCommitHash(repoURL, reference string) (string, error) {
+	tmpDir, err := os.MkdirTemp("", "git-resolver-*")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	log.Debug().
+		Str("repo", repoURL).
+		Str("reference", reference).
+		Msg("Resolving git reference to commit hash")
+
+	repo, err := git.PlainClone(tmpDir, true, &git.CloneOptions{ // true = bare repo
+		URL:          repoURL,
+		Progress:     os.Stdout,
+		NoCheckout:   true,
+		Depth:        1,
+		SingleBranch: false,
+		Tags:         git.AllTags,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to clone for reference resolution: %w", err)
+	}
+
+	hash, err := repo.ResolveRevision(plumbing.Revision(reference))
+	if err != nil {
+		log.Debug().
+			Str("reference", reference).
+			Msg("Reference not found in minimal clone, fetching all refs")
+
+		fetchOpts := &git.FetchOptions{
+			Force:    true,
+			Tags:     git.AllTags,
+			Progress: os.Stdout,
+			Depth:    1,
+		}
+
+		if fetchErr := repo.FetchContext(context.Background(), fetchOpts); fetchErr != nil &&
+			fetchErr != git.NoErrAlreadyUpToDate {
+			return "", fmt.Errorf("failed to fetch refs: %w", fetchErr)
+		}
+
+		hash, err = repo.ResolveRevision(plumbing.Revision(reference))
+		if err != nil {
+			return "", fmt.Errorf("reference %s not found: %w", reference, err)
+		}
+	}
+
+	return hash.String(), nil
+}
+
+func getHashBasedRepoPath(repoURL, hash string) (string, error) {
+	if repoURL == "" {
+		return "", fmt.Errorf("empty repository URL")
+	}
+	if hash == "" {
+		return "", fmt.Errorf("empty commit hash")
+	}
+
+	parsedURL, err := url.Parse(repoURL)
+	if err != nil {
+		return "", fmt.Errorf("url parsing failed with %v", err)
+	}
+
+	pathParts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
+	if len(pathParts) < 2 {
+		return "", fmt.Errorf("invalid git URL")
+	}
+
+	host := parsedURL.Host
+	owner := pathParts[0]
+	repo := pathParts[1]
+
+	return filepath.Join(REPO_DIR, host, owner, repo, hash), nil
 }
