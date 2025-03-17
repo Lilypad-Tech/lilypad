@@ -140,8 +140,13 @@ func CheckMetricsOptions(options system.MetricsOptions) error {
 }
 
 func CheckLogsOptions(options system.LogsOptions) error {
-	if options.Enable && len(options.URL) == 0 {
-		return fmt.Errorf("No logging endpoint specified - please use LOGS_URL or --logs-url")
+	if options.Enable {
+		if len(options.URL) == 0 {
+			return fmt.Errorf("No logging endpoint specified - please use LOGS_URL or --logs-url")
+		}
+		if options.Token == "" {
+			return fmt.Errorf("No logging token specified - please use LOGS_TOKEN or --logs-token")
+		}
 	}
 
 	return nil
