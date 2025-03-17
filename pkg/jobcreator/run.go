@@ -109,7 +109,17 @@ waitloop:
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
 			return nil, err
-		case finalJobOffer = <-updateChan:
+		case receivedOffer := <-updateChan:
+			// Ensure we only process updates for our specific job
+			if receivedOffer.JobOffer.ID != jobOfferContainer.JobOffer.ID {
+				jobCreatorService.controller.log.Debug("Ignoring update for different job", map[string]interface{}{
+					"received": receivedOffer.JobOffer.ID,
+					"expected": jobOfferContainer.JobOffer.ID,
+				})
+				continue
+			}
+
+			finalJobOffer = receivedOffer
 			if data.IsTerminalAgreementState(finalJobOffer.State) {
 				break waitloop
 			}
