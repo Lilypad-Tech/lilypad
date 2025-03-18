@@ -30,12 +30,13 @@ import (
 )
 
 type solverServer struct {
-	options    http.ServerOptions
-	controller *SolverController
-	store      store.SolverStore
-	stats      stats.Stats
-	services   data.ServiceConfig
-	log        *zerolog.Logger
+	options       http.ServerOptions
+	controller    *SolverController
+	store         store.SolverStore
+	stats         stats.Stats
+	services      data.ServiceConfig
+	versionConfig *system.VersionConfig
+	log           *zerolog.Logger
 }
 
 func NewSolverServer(
@@ -43,14 +44,16 @@ func NewSolverServer(
 	controller *SolverController,
 	store store.SolverStore,
 	stats stats.Stats,
+	versionConfig *system.VersionConfig,
 	services data.ServiceConfig,
 ) (*solverServer, error) {
 	server := &solverServer{
-		options:    options,
-		controller: controller,
-		store:      store,
-		stats:      stats,
-		log:        system.GetLogger(system.SolverService),
+		options:       options,
+		controller:    controller,
+		store:         store,
+		stats:         stats,
+		versionConfig: versionConfig,
+		log:           system.GetLogger(system.SolverService),
 	}
 
 	metricsDashboard.Init(services.APIHost)
