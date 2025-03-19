@@ -79,7 +79,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter)
+	versionConfig, err := system.NewVersionConfig(options.Server.AccessControl.MinimumVersion)
+	if err != nil {
+		return err
+	}
+
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter, versionConfig)
 	if err != nil {
 		return err
 	}
