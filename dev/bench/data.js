@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742160189855,
+  "lastUpdate": 1742421647016,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1296,6 +1296,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80248 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f56ed7c6b462ba080de27d1b08d65c1a63b93276",
+          "message": "feat: Add minimum version check (#544)\n\n* feat: Add supported version helper and version config\n\n* feat: Test version check and config\n\n* feat: Add SERVER_MINIMUM_VERSION config\n\n* feat: Add version config to solver server\n\n* feat: Add version check on resource offer and job offer posts",
+          "timestamp": "2025-03-19T15:00:05-07:00",
+          "tree_id": "5920d4e7b4736f7b19c63a7f25fa82d994f5a750",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/f56ed7c6b462ba080de27d1b08d65c1a63b93276"
+        },
+        "date": 1742421646674,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45014,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "80667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45014,
+            "unit": "ns/op",
+            "extra": "80667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "80667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "80667 times\n4 procs"
           }
         ]
       }
