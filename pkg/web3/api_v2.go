@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadProxy"
 	"math/big"
 )
 
@@ -21,10 +22,14 @@ func (sdk *Web3SDKV2) SaveDeal(deal interface{}) (bool, error) {
 	return true, nil
 }
 
-func (sdk *Web3SDKV2) GetDeal(dealId string) (interface{}, error) {
-	//TODO: implement method
+func (sdk *Web3SDKV2) GetDeal(dealId string) (lilypadproxy.SharedStructsDeal, error) {
+	deal, err := sdk.Contracts.LilypadProxy.GetDeal(sdk.CallOpts, dealId)
+	if err != nil {
+		sdk.Log.Error().Err(err).Str("dealId", dealId).Msg("failed to get deal")
+		return lilypadproxy.SharedStructsDeal{}, err
+	}
 
-	return nil, nil
+	return deal, nil
 }
 
 func (sdk *Web3SDKV2) AcceptJobPayment(amount *big.Int) (bool, error) {
