@@ -23,16 +23,39 @@ func (sdk *Web3SDKV2) SaveDeal(deal interface{}) (bool, error) {
 
 func (sdk *Web3SDKV2) GetDeal(dealId string) (interface{}, error) {
 	//TODO: implement method
+
 	return nil, nil
 }
 
 func (sdk *Web3SDKV2) AcceptJobPayment(amount *big.Int) (bool, error) {
-	//TODO: implement method
+	transaction, err := sdk.Contracts.LilypadProxy.AcceptJobPayment(sdk.TransactOpts, amount)
+	if err != nil {
+		sdk.Log.Error().Err(err).Msg("failed to accept job creator collateral")
+		return false, err
+	}
+
+	_, err = sdk.WaitTx(context.Background(), transaction)
+	if err != nil {
+		sdk.Log.Error().Err(err).Str("transactionHash", transaction.Hash().String()).Msg("failed to accept job creator collateral after submitting transaction")
+		return false, err
+	}
+
 	return true, nil
 }
 
-func (sdk *Web3SDKV2) acceptResourceProviderCollateral(amount *big.Int) (bool, error) {
-	//TODO: implement method
+func (sdk *Web3SDKV2) AcceptResourceProviderCollateral(amount *big.Int) (bool, error) {
+	transaction, err := sdk.Contracts.LilypadProxy.AcceptResourceProviderCollateral(sdk.TransactOpts, amount)
+	if err != nil {
+		sdk.Log.Error().Err(err).Msg("failed to accept resource provider collateral")
+		return false, err
+	}
+
+	_, err = sdk.WaitTx(context.Background(), transaction)
+	if err != nil {
+		sdk.Log.Error().Err(err).Str("transactionHash", transaction.Hash().String()).Msg("failed to accept resource provider collateral after submitting transaction")
+		return false, err
+	}
+
 	return true, nil
 }
 
@@ -61,7 +84,7 @@ func (sdk *Web3SDKV2) GetEscrowBalance(address common.Address) (*big.Int, error)
 	return balance, nil
 }
 
-func (sdk *Web3SDKV2) getMinimumResourceProviderCollateralAmount() (*big.Int, error) {
+func (sdk *Web3SDKV2) GetMinimumResourceProviderCollateralAmount() (*big.Int, error) {
 	minimumAmount, err := sdk.Contracts.LilypadProxy.GetMinimumResourceProviderCollateralAmount(sdk.CallOpts)
 	if err != nil {
 		sdk.Log.Error().Err(err).Msg("Failed to get minimum resource provider collateral amount")
