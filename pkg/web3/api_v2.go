@@ -12,9 +12,14 @@ func (sdk *Web3SDKV2) SaveResult(result interface{}) (bool, error) {
 	return true, nil
 }
 
-func (sdk *Web3SDKV2) GetResult(resultId string) (interface{}, error) {
-	//TODO: Implement method
-	return nil, nil
+func (sdk *Web3SDKV2) GetResult(resultId string) (lilypadproxy.SharedStructsResult, error) {
+	result, err := sdk.Contracts.LilypadProxy.GetResult(sdk.CallOpts, resultId)
+	if err != nil {
+		sdk.Log.Error().Err(err).Str("resultId", resultId).Msg("failed to get result")
+		return lilypadproxy.SharedStructsResult{}, nil
+	}
+
+	return result, nil
 }
 
 func (sdk *Web3SDKV2) SaveDeal(deal interface{}) (bool, error) {
