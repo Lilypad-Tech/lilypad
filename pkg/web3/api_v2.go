@@ -22,8 +22,31 @@ func (sdk *Web3SDKV2) GetResult(resultId string) (lilypadproxy.SharedStructsResu
 	return result, nil
 }
 
-func (sdk *Web3SDKV2) SaveDeal(deal interface{}) (bool, error) {
-	//TODO: implement method
+func (sdk *Web3SDKV2) SaveDeal(deal lilypadproxy.SharedStructsDeal) (bool, error) {
+	transaction, err := sdk.Contracts.LilypadProxy.SetDeal(sdk.TransactOpts, deal)
+	if err != nil {
+		sdk.Log.Error().Err(err).
+			Str("dealId", deal.DealId).
+			Str("jobCreator", deal.JobCreator.String()).
+			Str("resourceProvider", deal.ResourceProvider.String()).
+			Str("jobOfferCID", deal.JobOfferCID).
+			Str("resourceOfferCID", deal.ResourceOfferCID).
+			Msg("failed to save deal")
+		return false, err
+	}
+
+	_, err = sdk.WaitTx(context.Background(), transaction)
+	if err != nil {
+		sdk.Log.Error().Err(err).
+			Str("transactionHash", transaction.Hash().Hex()).
+			Str("jobCreator", deal.JobCreator.String()).
+			Str("resourceProvider", deal.ResourceProvider.String()).
+			Str("jobOfferCID", deal.JobOfferCID).
+			Str("resourceOfferCID", deal.ResourceOfferCID).
+			Msg("failed while executing transaction to save deal")
+		return false, err
+	}
+
 	return true, nil
 }
 
