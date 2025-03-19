@@ -16,17 +16,22 @@ type VersionConfig struct {
 }
 
 func NewVersionConfig(minimumVersion string) (*VersionConfig, error) {
+	log := GetLogger(SolverService)
+
 	if Version != "" && !semver.IsValid(Version) {
+		log.Error().Str("version", Version).Msg("invalid embedded version")
 		return nil, fmt.Errorf("invalid embedded version: %s", Version)
 	}
 
 	if minimumVersion != "" && !semver.IsValid(minimumVersion) {
+		log.Error().Str("minVersion", minimumVersion).Msg("invalid minimum version")
 		return nil, fmt.Errorf("invalid minimum version: %s", minimumVersion)
 	}
 
 	if Version != "" &&
 		minimumVersion != "" &&
 		semver.Compare(minimumVersion, Version) > 0 {
+		log.Error().Str("minVersion", minimumVersion).Str("version", Version).Msg("minimum version greater than embedded version")
 		return nil, fmt.Errorf("minimum version %s is greater than embedded version %s", minimumVersion, Version)
 	}
 
