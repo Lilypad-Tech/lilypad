@@ -16,7 +16,7 @@ func (sdk *Web3SDKV2) GetResult(resultId string) (lilypadproxy.SharedStructsResu
 	result, err := sdk.Contracts.LilypadProxy.GetResult(sdk.CallOpts, resultId)
 	if err != nil {
 		sdk.Log.Error().Err(err).Str("resultId", resultId).Msg("failed to get result")
-		return lilypadproxy.SharedStructsResult{}, nil
+		return lilypadproxy.SharedStructsResult{}, err
 	}
 
 	return result, nil
