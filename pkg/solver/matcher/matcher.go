@@ -8,8 +8,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/rs/zerolog/log"
-	zerolog "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -20,10 +19,10 @@ func GetMatchingDeals(
 	ctx context.Context,
 	db store.SolverStore,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
-	log *system.ServiceLogger,
 	tracer trace.Tracer,
 	meter metric.Meter,
 ) ([]data.Deal, error) {
+	log := system.GetLogger(system.SolverService)
 	metrics, err := newMetrics(meter)
 	ctx, span := tracer.Start(ctx, "get_matching_deals")
 	defer span.End()
@@ -37,7 +36,7 @@ func GetMatchingDeals(
 		OrderOldestFirst: true,
 	})
 	if err != nil {
-		log.Error("get resource offers failed", err)
+		log.Error().Err(err).Msg("get resource offers failed")
 		span.SetStatus(codes.Error, "get resource offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -52,10 +51,11 @@ func GetMatchingDeals(
 	span.AddEvent("db.get_job_offers.start")
 	jobOffers, err := db.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched:       true,
+		Cancelled:        system.BoolPointer(false),
 		OrderOldestFirst: true,
 	})
 	if err != nil {
-		log.Error("get job offers failed", err)
+		log.Error().Err(err).Msg("get job offers failed")
 		span.SetStatus(codes.Error, "get job offers failed")
 		span.RecordError(err)
 		return nil, err
@@ -70,7 +70,7 @@ func GetMatchingDeals(
 	for _, jobOffer := range jobOffers {
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
-			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer)
+			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer, log)
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +109,8 @@ func GetMatchingDeals(
 			// Check for a match
 			matchSpan.AddEvent("match_offers.start")
 			result := matchOffers(resourceOffer.ResourceOffer, jobOffer.JobOffer)
-			logMatch(result)
+			// TODO
+			logMatch(result, log)
 			matchSpan.AddEvent("match_offers.done", trace.WithAttributes(result.attributes()...))
 
 			if result.matched() {
@@ -179,9 +180,9 @@ func GetMatchingDeals(
 
 				// Add match decisions for all matching offers
 				span.AddEvent("add_match_decisions.start")
-				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers)
+				err = addMatchDecisions(db, jobOffer.ID, deal.ID, selectedResourceOffer, matchingResourceOffers, log)
 				if err != nil {
-					log.Error("addMatchDecisions failed", err)
+					log.Error().Err(err).Msg("addMatchDecisions failed")
 					span.SetStatus(codes.Error, "unable to add match decision")
 					span.RecordError(err)
 					return nil, err
@@ -204,11 +205,11 @@ func GetMatchingDeals(
 	metrics.resourceOffers.Record(ctx, int64(len(resourceOffers)))
 	metrics.deals.Record(ctx, int64(len(deals)))
 
-	zerolog.Debug().
+	log.Debug().
 		Int("jobOffers", len(jobOffers)).
 		Int("resourceOffers", len(resourceOffers)).
 		Int("deals", len(deals)).
-		Msg(system.GetServiceString(system.SolverService, "Solver solving"))
+		Msg("solving")
 
 	return deals, nil
 }
@@ -219,6 +220,7 @@ func addMatchDecisions(
 	dealID string,
 	selectedResourceOffer data.ResourceOffer,
 	matchingResourceOffers []data.ResourceOffer,
+	log *zerolog.Logger,
 ) error {
 	for _, matchingOffer := range matchingResourceOffers {
 		addDealID := ""
@@ -238,9 +240,9 @@ func addMatchDecisions(
 			)
 		}
 	}
-	zerolog.Debug().
+	log.Debug().
 		Int("decisions", len(matchingResourceOffers)).
-		Msg(system.GetServiceString(system.SolverService, "Solver adding matched resource offer decisions"))
+		Msg("Solver adding matched resource offer decisions")
 
 	return nil
 }
@@ -264,6 +266,7 @@ func getTargetedDeal(
 	jobOffer data.JobOfferContainer,
 	updateJobOfferState func(string, string, uint8) (*data.JobOfferContainer, error),
 	tracer trace.Tracer,
+	log *zerolog.Logger,
 ) (*data.Deal, error) {
 	ctx, span := tracer.Start(ctx, "get_targeted_deal",
 		trace.WithAttributes(attribute.String("job_offer.target.address", jobOffer.JobOffer.Target.Address)))
@@ -280,7 +283,7 @@ func getTargetedDeal(
 		log.Trace().
 			Str("job offer", jobOffer.ID).
 			Str("target address", jobOffer.JobOffer.Target.Address).
-			Msgf("No resource provider found for address")
+			Msgf("no resource provider found for address")
 		span.SetStatus(codes.Error, "no resource provider found for address")
 		span.RecordError(errors.New("no resource provider found for address"))
 

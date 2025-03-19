@@ -5,22 +5,25 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/http"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type SolverOptions struct {
-	Server    http.ServerOptions
-	Store     store.StoreOptions
-	Web3      web3.Web3Options
-	Services  data.ServiceConfig
-	Telemetry system.TelemetryOptions
-	Metrics   system.MetricsOptions
+	Server            http.ServerOptions
+	Store             store.StoreOptions
+	Web3              web3.Web3Options
+	Services          data.ServiceConfig
+	Stats             stats.StatsOptions
+	Telemetry         system.TelemetryOptions
+	Metrics           system.MetricsOptions
+	JobTimeoutSeconds int
 }
 
 type Solver struct {
@@ -28,13 +31,16 @@ type Solver struct {
 	server     *solverServer
 	controller *SolverController
 	store      store.SolverStore
+	stats      stats.Stats
 	options    SolverOptions
+	log        *zerolog.Logger
 }
 
 func NewSolver(
 	options SolverOptions,
 	store store.SolverStore,
 	web3SDK *web3.Web3SDK,
+	stats stats.Stats,
 	tracer trace.Tracer,
 	meter metric.Meter,
 ) (*Solver, error) {
@@ -42,7 +48,7 @@ func NewSolver(
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server, controller, store, options.Services)
+	server, err := NewSolverServer(options.Server, controller, store, stats, options.Services)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +58,14 @@ func NewSolver(
 		server:     server,
 		web3SDK:    web3SDK,
 		options:    options,
+		log:        system.GetLogger(system.SolverService),
 	}
 	return solver, nil
 }
 
 func (solver *Solver) Start(ctx context.Context, cm *system.CleanupManager, tracerProvider *sdkTrace.TracerProvider) chan error {
 	errorChan := solver.controller.Start(ctx, cm)
-	log.Debug().Msgf("solver.server.ListenAndServe")
+	solver.log.Debug().Msgf("solver.server.ListenAndServe")
 	go func() {
 		err := solver.server.ListenAndServe(ctx, cm, tracerProvider)
 		if err != nil {

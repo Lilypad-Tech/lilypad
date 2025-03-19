@@ -20,11 +20,12 @@ func newJobCreatorCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			network, _ := cmd.Flags().GetString("network")
+			lilynext, _ := cmd.Flags().GetBool("lilynext")
 			options, err := optionsfactory.ProcessOnChainJobCreatorOptions(options, args, network)
 			if err != nil {
 				return err
 			}
-			return runJobCreator(cmd, options, network)
+			return runJobCreator(cmd, options, network, lilynext)
 		},
 	}
 
@@ -33,9 +34,13 @@ func newJobCreatorCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string) error {
+func runJobCreator(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string, lilynext bool) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
+
+	if lilynext {
+		log.Info().Msg("🍃 Running the new lilypad protocol")
+	}
 
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, nil, options.Web3)
 	if err != nil {

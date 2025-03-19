@@ -5,6 +5,7 @@ import (
 
 	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
 	"github.com/lilypad-tech/lilypad/pkg/solver"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	db "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
 	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
@@ -24,13 +25,14 @@ func newSolverCmd() *cobra.Command {
 		Example: "",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			network, _ := cmd.Flags().GetString("network")
+			lilynext, _ := cmd.Flags().GetBool("lilynext")
 			options, err := optionsfactory.ProcessSolverOptions(options, network)
 			if err != nil {
 				return err
 			}
 			cmd.SilenceUsage = true
 
-			return runSolver(cmd, options, network)
+			return runSolver(cmd, options, network, lilynext)
 		},
 	}
 
@@ -39,7 +41,7 @@ func newSolverCmd() *cobra.Command {
 	return solverCmd
 }
 
-func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string) error {
+func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string, lilynext bool) error {
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
@@ -50,6 +52,11 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+	log := system.GetLogger(system.SolverService)
+
+	if lilynext {
+		log.Info().Msg("🍃 Running the new lilypad protocol")
+	}
 
 	unregisterMetrics, err := system.NewMetrics(meter)
 	if err != nil {
@@ -67,7 +74,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string)
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, tracer, meter)
+	stats, err := stats.NewStats(system.SolverService, options.Stats, options.Web3, web3SDK)
+	if err != nil {
+		return err
+	}
+
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter)
 	if err != nil {
 		return err
 	}

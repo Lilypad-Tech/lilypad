@@ -29,7 +29,7 @@ func NewOnChainJobCreator(
 	web3SDK *web3.Web3SDK,
 	tracer trace.Tracer,
 ) (*OnChainJobCreator, error) {
-	controller, err := NewJobCreatorController(options, web3SDK, tracer)
+	controller, err := NewJobCreatorController("", options, web3SDK, tracer)
 	if err != nil {
 		return nil, err
 	}

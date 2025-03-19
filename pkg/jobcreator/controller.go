@@ -2,10 +2,7 @@ package jobcreator
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io/fs"
-	"os"
 	"time"
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
@@ -19,8 +16,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// JobOfferSubscriber is a function that gets called when a job offer is updated
 type JobOfferSubscriber func(offer data.JobOfferContainer)
 
+// JobOfferSubscription represents a subscription to job offer updates
+type JobOfferSubscription struct {
+	// The callback function to call when a job offer is updated
+	Callback JobOfferSubscriber
+}
+
+// JobCreatorController manages a single job identified by jobID.
+// It handles all aspects of job processing including subscriptions,
+// deal management, and result handling for this specific job.
 type JobCreatorController struct {
 	solverClient          *solver.SolverClient
 	options               JobCreatorOptions
@@ -28,8 +35,9 @@ type JobCreatorController struct {
 	web3Events            *web3.EventChannels
 	loop                  *system.ControlLoop
 	log                   *system.ServiceLogger
-	jobOfferSubscriptions []JobOfferSubscriber
+	jobOfferSubscriptions map[string]JobOfferSubscription
 	tracer                trace.Tracer
+	jobID                 string // The single job this controller instance manages
 }
 
 // the background "even if we have not heard of an event" loop
@@ -39,6 +47,7 @@ type JobCreatorController struct {
 const CONTROL_LOOP_INTERVAL = 10 * time.Second
 
 func NewJobCreatorController(
+	jobID string,
 	options JobCreatorOptions,
 	web3SDK *web3.Web3SDK,
 	tracer trace.Tracer,
@@ -68,8 +77,9 @@ func NewJobCreatorController(
 		web3SDK:               web3SDK,
 		web3Events:            web3.NewEventChannels(),
 		log:                   system.NewServiceLogger(system.JobCreatorService),
-		jobOfferSubscriptions: []JobOfferSubscriber{},
+		jobOfferSubscriptions: make(map[string]JobOfferSubscription),
 		tracer:                tracer,
+		jobID:                 jobID,
 	}
 	return controller, nil
 }
@@ -88,11 +98,30 @@ func NewJobCreatorController(
 
 func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	controller.log.Debug("add job offer", offer)
-	return controller.solverClient.AddJobOffer(offer)
+	container, err := controller.solverClient.AddJobOffer(offer)
+	if err != nil {
+		return container, err
+	}
+
+	// Set the controller's jobID to track this specific job
+	controller.jobID = container.JobOffer.ID
+	controller.log.Debug("Set controller jobID", map[string]interface{}{
+		"jobID": controller.jobID,
+	})
+
+	return container, nil
 }
 
-func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) {
-	controller.jobOfferSubscriptions = append(controller.jobOfferSubscriptions, sub)
+// SubscribeToJobOfferUpdates subscribes to job offer updates for this controller's job
+// Returns a function that can be called to unsubscribe
+func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {
+	controller.jobOfferSubscriptions[controller.jobID] = JobOfferSubscription{
+		Callback: sub,
+	}
+
+	return func() {
+		delete(controller.jobOfferSubscriptions, controller.jobID)
+	}
 }
 
 /*
@@ -108,6 +137,18 @@ func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferS
 */
 func (controller *JobCreatorController) subscribeToSolver() error {
 	controller.solverClient.SubscribeEvents(func(ev solver.SolverEvent) {
+		// First check if this event is for our specific job
+		if controller.jobID != "" {
+			if ev.Deal != nil && ev.Deal.JobOffer != controller.jobID {
+				// Skip events for other jobs
+				return
+			}
+			if ev.JobOffer != nil && ev.JobOffer.JobOffer.ID != controller.jobID {
+				// Skip events for other jobs
+				return
+			}
+		}
+
 		if ev.EventType == "DealStateUpdated" {
 			metricsDashboard.TrackDeal(metricsDashboard.DealPayload{
 				ID:               ev.Deal.ID,
@@ -116,6 +157,7 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 				ResourceProvider: ev.Deal.ResourceProvider,
 			})
 		}
+
 		switch ev.EventType {
 		case solver.DealAdded:
 			if ev.Deal == nil {
@@ -128,18 +170,27 @@ func (controller *JobCreatorController) subscribeToSolver() error {
 				return
 			}
 
-			solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
+			controller.log.Debug("Received deal event", map[string]interface{}{
+				"dealID": ev.Deal.ID,
+				"jobID":  controller.jobID,
+			})
 
-			// trigger the solver
+			solver.ServiceLogSolverEvent(system.JobCreatorService, ev)
 			controller.loop.Trigger()
+
 		case solver.JobOfferStateUpdated:
 			if ev.JobOffer == nil {
 				controller.log.Error("solver event", fmt.Errorf("RP received nil job offer"))
 				return
 			}
 			metricsDashboard.TrackJobOfferUpdate(*ev.JobOffer)
-			for _, sub := range controller.jobOfferSubscriptions {
-				go sub(*ev.JobOffer)
+
+			// Make a copy of the subscriptions to avoid modification during iteration
+			for jobID, sub := range controller.jobOfferSubscriptions {
+				// If JobID is empty (global subscription) or matches the job offer ID, send the update
+				if jobID == "" || jobID == ev.JobOffer.JobOffer.ID {
+					sub.Callback(*ev.JobOffer)
+				}
 			}
 		}
 	})
@@ -249,15 +300,26 @@ func (controller *JobCreatorController) solve() error {
 
 // list the deals we have been assigned to that we have not yet posted and agree tx to the contract for
 func (controller *JobCreatorController) agreeToDeals() error {
-	// load the deals that are in DealNegotiating
-	// and do not have a TransactionsResourceProvider.Agree tx
+	// If no jobID is set, we shouldn't process any deals
+	if controller.jobID == "" {
+		return nil
+	}
+
 	matchedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			JobCreator: controller.web3SDK.GetAddress().String(),
 			State:      "DealNegotiating",
 		},
-		// this is where the solver has found us a match and we need to agree to it
 		func(dealContainer data.DealContainer) bool {
+			// Only agree to deals for our specific job
+			if dealContainer.Deal.JobOffer.ID != controller.jobID {
+				controller.log.Debug("Skipping deal - wrong jobID", map[string]interface{}{
+					"dealJobID": dealContainer.Deal.JobOffer.ID,
+					"ourJobID":  controller.jobID,
+				})
+				return false
+			}
+
 			return dealContainer.Transactions.JobCreator.Agree == ""
 		},
 	)
@@ -298,15 +360,40 @@ func (controller *JobCreatorController) agreeToDeals() error {
 // we do this synchronously to prevent us racing with large result sets
 // also we are the client so have a lower chance of there being a chunky backlog
 func (controller *JobCreatorController) checkResults() error {
-	// load all deals in ResultsSubmitted state and don't have either results checked or accepted txs
+	controller.log.Debug("Checking results for jobID", controller.jobID)
+
+	// If no jobID is set, we shouldn't process any results
+	if controller.jobID == "" {
+		return nil
+	}
+
 	completedDeals, err := controller.solverClient.GetDealsWithFilter(
 		store.GetDealsQuery{
 			JobCreator: controller.web3SDK.GetAddress().String(),
 			State:      "ResultsSubmitted",
 		},
-		// this is where the solver has found us a match and we need to agree to it
 		func(dealContainer data.DealContainer) bool {
-			return dealContainer.Transactions.JobCreator.AcceptResult == "" && dealContainer.Transactions.JobCreator.CheckResult == ""
+			// First check if this deal belongs to our job
+			if dealContainer.Deal.JobOffer.ID != controller.jobID {
+				controller.log.Debug("Skipping deal - wrong jobID", map[string]interface{}{
+					"dealJobID": dealContainer.Deal.JobOffer.ID,
+					"ourJobID":  controller.jobID,
+				})
+				return false
+			}
+
+			// Then check if we haven't processed it yet
+			match := dealContainer.Transactions.JobCreator.AcceptResult == "" &&
+				dealContainer.Transactions.JobCreator.CheckResult == ""
+
+			controller.log.Debug("Filtering deal", map[string]interface{}{
+				"dealID":          dealContainer.ID,
+				"dealJobOfferID":  dealContainer.Deal.JobOffer.ID,
+				"controllerJobID": controller.jobID,
+				"match":           match,
+			})
+
+			return match
 		},
 	)
 	if err != nil {
@@ -316,33 +403,50 @@ func (controller *JobCreatorController) checkResults() error {
 		return nil
 	}
 
+	// Process each deal
 	for _, dealContainer := range completedDeals {
+
 		result, err := controller.solverClient.GetResult(dealContainer.ID)
-		if err != nil || result.Error != "" {
-			// there is an error with the job
-			// accept anyway
-			// TODO: trigger mediation here
-			err := controller.acceptResult(dealContainer)
-			if err != nil {
-				controller.log.Error("failed to accept results", err)
-				return err
-			}
-		} else {
-			// We check for all completed deals, including deals whose results
-			// we have already downloaded. Check the download path and download
-			// if results do not exist.
-			downloadPath := solver.GetDownloadsFilePath(dealContainer.ID)
-			if _, err := os.Stat(downloadPath); errors.Is(err, fs.ErrNotExist) {
-				err := controller.downloadResult(dealContainer)
-				if err != nil {
-					controller.log.Error("failed to download results", err)
-					return err
-				}
-			}
+		if err != nil {
+			controller.log.Debug("failed to get result metadata", map[string]interface{}{
+				"dealID": dealContainer.ID,
+			})
+			controller.log.Error("failed to get result", err)
+			continue // Continue to next deal instead of returning
+		}
+
+		if result.Error != "" {
+			err := fmt.Errorf("result contains error: %s", result.Error)
+			controller.log.Debug("result error metadata", map[string]interface{}{
+				"dealID": dealContainer.ID,
+			})
+			controller.log.Error("result contains error", err)
+			continue // Continue to next deal
+		}
+
+		if result.DataID == "" {
+			err := fmt.Errorf("result missing DataID for deal %s", dealContainer.ID)
+			controller.log.Debug("missing DataID metadata", map[string]interface{}{
+				"dealID": dealContainer.ID,
+			})
+			controller.log.Error("result missing DataID", err)
+			continue // Continue to next deal
+		}
+
+		err = controller.downloadResult(dealContainer)
+		if err != nil {
+			controller.log.Error("failed to download results", err)
+			continue // Continue to next deal
+		}
+
+		err = controller.acceptResult(dealContainer)
+		if err != nil {
+			controller.log.Error("failed to accept results", err)
+			continue // Continue to next deal
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (controller *JobCreatorController) downloadResult(dealContainer data.DealContainer) error {
@@ -398,24 +502,5 @@ func (controller *JobCreatorController) acceptResult(deal data.DealContainer) er
 		return fmt.Errorf("error adding AcceptResult tx hash for deal: %s", err.Error())
 	}
 
-	
-	return nil
-}
-
-func (controller *JobCreatorController) checkResult(deal data.DealContainer) error {
-	controller.log.Debug("Checking results for job", deal.ID)
-	txHash, err := controller.web3SDK.CheckResult(deal.ID)
-	if err != nil {
-		return fmt.Errorf("error calling check result tx for deal: %s", err.Error())
-	}
-	controller.log.Debug("check result tx", txHash)
-
-	// we have agreed to the deal so we need to update the tx in the solver
-	_, err = controller.solverClient.UpdateTransactionsJobCreator(deal.ID, data.DealTransactionsJobCreator{
-		CheckResult: txHash,
-	})
-	if err != nil {
-		return fmt.Errorf("error adding CheckResult tx hash for deal: %s", err.Error())
-	}
 	return nil
 }

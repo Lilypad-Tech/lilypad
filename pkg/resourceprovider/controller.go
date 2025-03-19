@@ -436,6 +436,11 @@ func (controller *ResourceProviderController) runJobs(ctx context.Context) error
 // we've already updated controller.runningJobs so we know this will only
 // run once
 func (controller *ResourceProviderController) runJob(ctx context.Context, deal data.DealContainer) {
+	defer func() {
+		// Everytime we finish a job we need to ensure we have resource offers
+		controller.ensureResourceOffers()
+	}()
+
 	controller.log.Info("run job", deal)
 	controller.log.Info("deal ID", deal.Deal.ID)
 
@@ -550,8 +555,6 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		return
 	}
 	span.AddEvent("solver.transaction_hash.added")
-
-	controller.ensureResourceOffers()
 
 	span.AddEvent("done")
 }

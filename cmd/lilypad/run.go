@@ -29,13 +29,14 @@ func newRunCmd() *cobra.Command {
 		Example: "run cowsay:v0.0.1 -i Message=moo",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			network, _ := cmd.Flags().GetString("network")
+			lilynext, _ := cmd.Flags().GetBool("lilynext")
 			options, err := optionsfactory.ProcessJobCreatorOptions(options, args, network)
 			if err != nil {
 				return err
 			}
 			cmd.SilenceUsage = true
 
-			return runJob(cmd, options, network)
+			return runJob(cmd, options, network, lilynext)
 		},
 	}
 
@@ -44,7 +45,7 @@ func newRunCmd() *cobra.Command {
 	return runCmd
 }
 
-func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string) error {
+func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network string, lilynext bool) error {
 	c := color.New(color.FgCyan).Add(color.Bold)
 	header := `
 ⠀⠀⠀⠀⠀⠀⣀⣤⣤⢠⣤⣀⠀⠀⠀⠀⠀
@@ -86,6 +87,10 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
+	if lilynext {
+		log.Info().Msg("🍃 Running the new lilypad protocol")
+	}
+
 	telemetry, err := configureTelemetry(commandCtx.Ctx, system.JobCreatorService, network, options.Telemetry, nil, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
@@ -117,6 +122,9 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 		case "JobOfferCancelled":
 			desc = "Job cancelled..."
 			emoji = "😭"
+		case "JobTimedOut":
+			desc = "Job timed out..."
+			emoji = "⏱️"
 		default:
 			desc = st
 			emoji = "🌟"

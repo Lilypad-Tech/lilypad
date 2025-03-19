@@ -162,7 +162,8 @@ type TargetConfig struct {
 type JobOffer struct {
 	// this is the cid of the job offer where ID is set to empty string
 	ID string `json:"id"`
-	// this is basically a nonce so we don't have one ID pointing at multiple offers
+	// Acts as a nonce so we don't have one ID pointing at multiple offers.
+	// Also used as the starting time when recording job run times.
 	CreatedAt int `json:"created_at"`
 	// the address of the job creator
 	JobCreator string `json:"job_creator"`
