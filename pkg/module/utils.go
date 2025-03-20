@@ -58,20 +58,6 @@ func (rc *RefCache) Set(repoURL, reference, commitHash string) {
 
 var globalRefCache = NewRefCache()
 
-func getRepoLocalPath(repoURL string) (string, error) {
-	parsedURL, err := url.Parse(repoURL)
-	if err != nil {
-		return "", fmt.Errorf("url parsing failed with %v", err)
-	}
-
-	pathParts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		return "", fmt.Errorf("invalid git URL")
-	}
-
-	return filepath.Join(REPO_DIR, pathParts[0], pathParts[1]), nil
-}
-
 func CheckModuleOptions(options data.ModuleConfig) error {
 	if options.Repo == "" {
 		return fmt.Errorf("MODULE_REPO is required")
