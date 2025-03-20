@@ -129,28 +129,6 @@ func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.Clean
 	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(server.getJobOffer)).Methods("GET")
 	anurarouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(server.jobOfferDownloadFiles)).Methods("GET")
 
-	//anura subrouter
-	anuraMiddleware := func(next corehttp.Handler) corehttp.Handler {
-		return corehttp.HandlerFunc(func(w corehttp.ResponseWriter, r *corehttp.Request) {
-			_, err := http.CheckAnuraSignature(r, solverServer.options.AccessControl.AnuraAddresses)
-			if err != nil {
-				corehttp.Error(w, "Unauthorized", corehttp.StatusUnauthorized)
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
-
-	anurarouter := router.PathPrefix(http.API_SUB_PATH + "/anura").Subrouter()
-	anurarouter.Use(http.CorsMiddleware)
-	anurarouter.Use(otelmux.Middleware("solver", otelmux.WithTracerProvider(tracerProvider)))
-	anurarouter.Use(anuraMiddleware)
-
-	anurarouter.HandleFunc("/job_offers", http.PostHandler(solverServer.addJobOffer)).Methods("POST")
-	anurarouter.HandleFunc("/job_offers", http.GetHandler(solverServer.getJobOffers)).Methods("GET")
-	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(solverServer.getJobOffer)).Methods("GET")
-	anurarouter.HandleFunc("/job_offers/{id}/files", solverServer.jobOfferDownloadFiles).Methods("GET")
-
 	// this will fan out to all connected web socket connections
 	// we read all events coming from inside the solver controller
 	// and write them to anyone who is connected to us
