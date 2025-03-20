@@ -421,6 +421,16 @@ func (controller *SolverController) addJobOffer(jobOffer data.JobOffer) (*data.J
 	}
 	jobOffer.ID = id
 
+	// Reject duplicate job offers
+	existingOffer, err := controller.store.GetJobOffer(jobOffer.ID)
+	if err != nil {
+		return nil, err
+	}
+	if existingOffer != nil {
+		controller.log.Warn().Str("cid", jobOffer.ID).Str("address", jobOffer.JobCreator).Msg("received a duplicate job offer")
+		return nil, fmt.Errorf("received a duplicate job offer %s", jobOffer.ID)
+	}
+
 	controller.log.Info().Str("cid", jobOffer.ID).
 		Str("address", jobOffer.JobCreator).
 		Any("jobOffer", jobOffer).
