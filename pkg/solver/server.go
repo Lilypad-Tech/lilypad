@@ -30,12 +30,13 @@ import (
 )
 
 type solverServer struct {
-	options    http.ServerOptions
-	controller *SolverController
-	store      store.SolverStore
-	stats      stats.Stats
-	services   data.ServiceConfig
-	log        *zerolog.Logger
+	options       http.ServerOptions
+	controller    *SolverController
+	store         store.SolverStore
+	stats         stats.Stats
+	services      data.ServiceConfig
+	versionConfig *system.VersionConfig
+	log           *zerolog.Logger
 }
 
 func NewSolverServer(
@@ -43,14 +44,16 @@ func NewSolverServer(
 	controller *SolverController,
 	store store.SolverStore,
 	stats stats.Stats,
+	versionConfig *system.VersionConfig,
 	services data.ServiceConfig,
 ) (*solverServer, error) {
 	server := &solverServer{
-		options:    options,
-		controller: controller,
-		store:      store,
-		stats:      stats,
-		log:        system.GetLogger(system.SolverService),
+		options:       options,
+		controller:    controller,
+		store:         store,
+		stats:         stats,
+		versionConfig: versionConfig,
+		log:           system.GetLogger(system.SolverService),
 	}
 
 	metricsDashboard.Init(services.APIHost)
@@ -345,6 +348,17 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 
+	versionHeader, _ := http.GetVersionFromHeaders(req)
+	minVersion, ok := server.versionConfig.IsSupported(versionHeader)
+	if !ok {
+		server.log.Debug().Str("cid", jobOffer.ID).
+			Str("address", jobOffer.JobCreator).
+			Str("version", versionHeader).
+			Str("minVersion", minVersion).
+			Msg("job offer rejected because job creator is running an unsupported version")
+		return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
+	}
+
 	offerRecent := isTimestampRecent(jobOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
 	if !offerRecent {
 		server.log.Debug().Str("cid", jobOffer.ID).Str("address", jobOffer.JobCreator).Msg("job offer rejected because timestamp was not recent")
@@ -361,9 +375,6 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 }
 
 func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {
-	versionHeader, _ := http.GetVersionFromHeaders(req)
-	server.log.Debug().Str("version", versionHeader).Msg("resource provider adding offer with version header")
-
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		server.log.Error().Err(err).Msg("error checking signature")
@@ -386,6 +397,17 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 			server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider not in allowlist")
 			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
 		}
+	}
+
+	versionHeader, _ := http.GetVersionFromHeaders(req)
+	minVersion, ok := server.versionConfig.IsSupported(versionHeader)
+	if !ok {
+		server.log.Debug().Str("cid", resourceOffer.ID).
+			Str("address", resourceOffer.ResourceProvider).
+			Str("version", versionHeader).
+			Str("minVersion", minVersion).
+			Msg("resource offer rejected because resource provider is running an unsupported version")
+		return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
 	}
 
 	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)

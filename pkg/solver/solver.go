@@ -43,12 +43,13 @@ func NewSolver(
 	stats stats.Stats,
 	tracer trace.Tracer,
 	meter metric.Meter,
+	versionConfig *system.VersionConfig,
 ) (*Solver, error) {
 	controller, err := NewSolverController(web3SDK, store, options, tracer, meter)
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewSolverServer(options.Server, controller, store, stats, options.Services)
+	server, err := NewSolverServer(options.Server, controller, store, stats, versionConfig, options.Services)
 	if err != nil {
 		return nil, err
 	}
