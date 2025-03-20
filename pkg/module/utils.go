@@ -204,9 +204,9 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 
 		if repoExists {
 			log.Debug().
-				Str("repo exists", repoDir).
+				Str("path", repoDir).
 				Str("commitHash", commitHash).
-				Msgf("Using cached version")
+				Msg("Using cached repository")
 
 			// For existing repos, just open and verify the hash
 			repo, err := git.PlainOpen(repoDir)
@@ -250,10 +250,10 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		}
 
 		log.Debug().
-			Str("repo clone", repoDir).
-			Str("repo remote", module.Repo).
+			Str("path", repoDir).
+			Str("remote", module.Repo).
 			Str("commitHash", commitHash).
-			Msg("Cloning fresh repo with specific hash")
+			Msg("Cloning repository with specific hash")
 
 		// Double check if another process created the repo while we were waiting for the lock
 		if fileInfo, err := os.Stat(gitDirPath); err == nil && fileInfo.IsDir() {
@@ -372,8 +372,9 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 	// TODO: match tags against hash specified in server side allowlist
 	repoDir := worktree.Filesystem.Root()
 	log.Debug().
-		Str("checkout hash", module.Hash).
-		Msgf(module.Repo)
+		Str("hash", module.Hash).
+		Str("repo", module.Repo).
+		Msg("Checking out repository at specific hash")
 
 	h, err := repo.ResolveRevision(plumbing.Revision(module.Hash))
 	if err != nil {
@@ -398,8 +399,9 @@ func PrepareModule(module data.ModuleConfig) (string, error) {
 		return "", err
 	}
 	log.Debug().
-		Str("read file", module.Path).
-		Msgf(string(fileContents))
+		Str("path", module.Path).
+		Int("size", len(fileContents)).
+		Msg("Read module template file")
 	return string(fileContents), nil
 }
 
@@ -416,7 +418,7 @@ func subst(format string, jsonEncodedInputs ...string) string {
 
 		jsonDecodedInputs = append(jsonDecodedInputs, s)
 	}
-	log.Printf("jsonDecodedInputs: %v", jsonDecodedInputs)
+	log.Debug().Interface("jsonDecodedInputs", jsonDecodedInputs).Msg("Template substitution inputs")
 
 	return fmt.Sprintf(format, jsonDecodedInputs...)
 }
@@ -437,7 +439,7 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	})
 	tmpl, err = tmpl.Parse(moduleText)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %v", err)
+		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	newInputs := make(map[string]string)
@@ -445,7 +447,7 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	for k, v := range inputs {
 		bs, err := json.Marshal(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to marshal string %q", v)
+			return nil, fmt.Errorf("unable to marshal string %q: %w", v, err)
 		}
 		newInputs[k] = string(bs)
 	}
@@ -453,9 +455,8 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	var template bytes.Buffer
 	if err := tmpl.Execute(&template, newInputs); err != nil {
 		return nil, fmt.Errorf(
-			"error executing template: %s (tmpl=%s, inputs=%+v)",
+			"error executing template: %w (inputs=%+v)",
 			err,
-			moduleText,
 			newInputs,
 		)
 	}
@@ -464,7 +465,7 @@ func LoadModule(module data.ModuleConfig, inputs map[string]string) (*data.Modul
 	bs := template.Bytes()
 	if err := json.Unmarshal(bs, &moduleData); err != nil {
 		return nil, fmt.Errorf(
-			"error unmarshalling resulting json: %s, %s",
+			"error unmarshalling resulting JSON: %w, content: %s",
 			err,
 			bs,
 		)
