@@ -210,7 +210,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 		// If this is a retry, add a small delay to avoid hammering the system
 		if retry > 0 {
 			delay := time.Duration(retry*2) * time.Second
-			log.Info().
+			log.Debug().
 				Str("repo", module.Repo).
 				Int("retry", retry).
 				Dur("delay", delay).
@@ -243,7 +243,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 
 			globalRefCache.Set(module.Repo, module.Hash, commitHash)
 
-			log.Info().
+			log.Debug().
 				Str("repo", module.Repo).
 				Str("reference", module.Hash).
 				Str("commitHash", commitHash).
@@ -270,7 +270,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 				// Verify we have the correct hash
 				head, err := repo.Head()
 				if err == nil && head.Hash().String() == commitHash {
-					log.Info().
+					log.Debug().
 						Str("path", repoDir).
 						Str("commitHash", commitHash).
 						Msg("Using cached repository")
@@ -322,7 +322,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 				if err == nil {
 					head, err := repo.Head()
 					if err == nil && head.Hash().String() == commitHash {
-						log.Info().
+						log.Debug().
 							Str("path", repoDir).
 							Str("commitHash", commitHash).
 							Msg("Repository created while waiting for lock")
@@ -358,7 +358,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 				}
 			}()
 
-			log.Info().
+			log.Debug().
 				Str("tmpDir", tmpDir).
 				Str("remote", module.Repo).
 				Str("commitHash", commitHash).
@@ -650,7 +650,7 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 
 	for retry := 0; retry < 3; retry++ {
 		if retry > 0 {
-			log.Warn().
+			log.Debug().
 				Str("repo", repoURL).
 				Int("retry", retry).
 				Msg("Retrying reference resolution")
@@ -717,7 +717,7 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 	}
 
 	hashStr := hash.String()
-	log.Info().
+	log.Debug().
 		Str("repo", repoURL).
 		Str("reference", reference).
 		Str("hash", hashStr).
