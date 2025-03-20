@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -72,15 +73,27 @@ func TestTryLock(t *testing.T) {
 		assert.NotNil(t, unlock, "Should return unlock function")
 
 		// Verify lock file exists
-		_, err = os.Stat(filepath.Join(tempDir, ".lilypad.lock"))
+		lockFile := filepath.Join(tempDir, ".lilypad.lock")
+		_, err = os.Stat(lockFile)
 		assert.NoError(t, err, "Lock file should exist")
+
+		// Verify lock file contains expected content
+		content, err := os.ReadFile(lockFile)
+		assert.NoError(t, err, "Should be able to read lock file")
+
+		var pid int
+		var hostname, timestamp string
+		_, err = fmt.Sscanf(string(content), "%d %s %s", &pid, &hostname, &timestamp)
+		assert.NoError(t, err, "Should be able to parse lock file content")
+		assert.Equal(t, os.Getpid(), pid, "PID should match current process")
 
 		// Clean up
 		unlock()
 
 		// Verify lock file is removed
-		_, err = os.Stat(filepath.Join(tempDir, ".lilypad.lock"))
+		_, err = os.Stat(lockFile)
 		assert.Error(t, err, "Lock file should be removed")
+		assert.True(t, os.IsNotExist(err), "Lock file should not exist")
 	})
 
 	// Test 2: Cannot acquire lock when already locked
@@ -90,9 +103,10 @@ func TestTryLock(t *testing.T) {
 		defer unlock1()
 
 		// Try to acquire second lock - should fail quickly
-		unlock2, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		unlock2, err := tryLockWithTimeout(tempDir, 500*time.Millisecond) // Use shorter timeout
 		assert.Error(t, err, "Should fail to acquire second lock")
 		assert.Nil(t, unlock2, "Should not return unlock function")
+		assert.Contains(t, err.Error(), "timeout", "Error should mention timeout")
 	})
 
 	// Test 3: Can acquire lock after stale lock is removed
@@ -100,7 +114,8 @@ func TestTryLock(t *testing.T) {
 		lockFile := filepath.Join(tempDir, ".lilypad.lock")
 
 		// Create a stale lock file with non-existent PID
-		err := os.WriteFile(lockFile, []byte("999999999"), 0600)
+		content := fmt.Sprintf("%d %s %s", 999999999, "test-host", time.Now().Format(time.RFC3339))
+		err := os.WriteFile(lockFile, []byte(content), 0600)
 		assert.NoError(t, err, "Should create stale lock file")
 
 		// Should be able to acquire lock despite stale file
@@ -110,5 +125,67 @@ func TestTryLock(t *testing.T) {
 
 		// Clean up
 		unlock()
+	})
+
+	// Test 4: Can acquire lock after old lock is removed (timeout based)
+	t.Run("Old Lock", func(t *testing.T) {
+		lockFile := filepath.Join(tempDir, ".lilypad.lock")
+
+		// Create an old lock file with valid PID but old timestamp
+		oldTime := time.Now().Add(-11 * time.Minute).Format(time.RFC3339)
+		content := fmt.Sprintf("%d %s %s", os.Getpid(), "test-host", oldTime)
+		err := os.WriteFile(lockFile, []byte(content), 0600)
+		assert.NoError(t, err, "Should create old lock file")
+
+		// Should be able to acquire lock despite old file
+		unlock, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.NoError(t, err, "Should acquire lock after old lock")
+		assert.NotNil(t, unlock, "Should return unlock function")
+
+		// Clean up
+		unlock()
+	})
+
+	// Test 5: Concurrent locking attempts should work correctly
+	t.Run("Concurrent Locking", func(t *testing.T) {
+		// Create multiple directories to avoid test interference
+		concurrentDir := filepath.Join(t.TempDir(), "concurrent")
+		err := os.MkdirAll(concurrentDir, 0755)
+		assert.NoError(t, err, "Should create concurrent test directory")
+
+		// This will track which goroutine got the lock
+		gotLock := make(chan int, 5)
+		var wg sync.WaitGroup
+
+		// Launch 5 goroutines to try to get the lock
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+				unlock, err := tryLockWithTimeout(concurrentDir, 2*time.Second)
+				if err == nil && unlock != nil {
+					// Got the lock!
+					gotLock <- id
+					// Hold the lock briefly
+					time.Sleep(100 * time.Millisecond)
+					unlock()
+				}
+			}(i)
+		}
+
+		// Collect the results
+		lockHolders := make([]int, 0, 5)
+		go func() {
+			wg.Wait()
+			close(gotLock)
+		}()
+
+		for id := range gotLock {
+			lockHolders = append(lockHolders, id)
+		}
+
+		assert.True(t, len(lockHolders) > 0, "At least one goroutine should get the lock")
+		// In an ideal world, all 5 would get it sequentially, but we can't guarantee the timing
+		// so we just check that someone did
 	})
 }
