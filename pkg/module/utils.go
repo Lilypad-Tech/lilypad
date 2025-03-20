@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"text/template"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -102,6 +104,64 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	return module, nil
 }
 
+// tryLock attempts to create a lock file for the given repository path
+// returns a cleanup function that should be called to release the lock
+func tryLock(repoPath string) (func(), error) {
+	return tryLockWithTimeout(repoPath, 30*time.Second)
+}
+
+// tryLockWithTimeout is like tryLock but with a configurable timeout
+func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) {
+	lockFile := filepath.Join(repoPath, ".lilypad.lock")
+
+	// Try to acquire lock for the specified duration
+	timeoutChan := time.After(timeout)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeoutChan:
+			return nil, fmt.Errorf("timeout waiting for repository lock")
+		case <-ticker.C:
+			// Try to create lock file
+			f, err := os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+			if err == nil {
+				// Write PID to lock file
+				fmt.Fprintf(f, "%d", os.Getpid())
+				f.Close()
+
+				// Return cleanup function
+				return func() {
+					os.Remove(lockFile)
+				}, nil
+			}
+
+			// If file exists, check if the process holding the lock is still alive
+			if os.IsExist(err) {
+				// Read PID from lock file
+				pidBytes, err := os.ReadFile(lockFile)
+				if err == nil {
+					var pid int
+					_, err = fmt.Sscanf(string(pidBytes), "%d", &pid)
+					if err == nil {
+						// Check if process exists
+						process, err := os.FindProcess(pid)
+						if err == nil {
+							// On Unix, this always succeeds, so we need to send signal 0 to test
+							err = process.Signal(syscall.Signal(0))
+							if err != nil {
+								// Process is not running, remove stale lock
+								os.Remove(lockFile)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	maxRetries := 3
 	for retry := 0; retry < maxRetries; retry++ {
@@ -148,48 +208,45 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 				Str("commitHash", commitHash).
 				Msgf("Using cached version")
 
+			// For existing repos, just open and verify the hash
 			repo, err := git.PlainOpen(repoDir)
 			if err != nil {
 				log.Error().
 					Str("repoDir", repoDir).
 					Err(err).
-					Msg("Cached repo corrupt - re-cloning")
+					Msg("Cached repo corrupt - will re-clone")
 				_ = os.RemoveAll(repoDir)
-			} else {
-				h, err := repo.ResolveRevision(plumbing.Revision(commitHash))
-				if err == nil {
-					if _, err := repo.Storer.EncodedObject(plumbing.AnyObject, *h); err == nil {
-						w, err := repo.Worktree()
-						if err != nil {
-							return nil, fmt.Errorf("failed to get worktree: %w", err)
-						}
-
-						err = w.Checkout(&git.CheckoutOptions{
-							Hash: *h,
-						})
-						if err != nil {
-							return nil, fmt.Errorf("failed to checkout hash: %w", err)
-						}
-
-						head, err := repo.Head()
-						if err != nil {
-							return nil, fmt.Errorf("failed to get HEAD after checkout: %w", err)
-						}
-
-						if head.Hash().String() != h.String() {
-							return nil, fmt.Errorf("checkout verification failed: HEAD is %s, expected %s",
-								head.Hash().String(), h.String())
-						}
-
-						return repo, nil
-					}
-				}
-				log.Warn().
-					Str("repoDir", repoDir).
-					Str("commitHash", commitHash).
-					Msg("Cached repo missing requested commit - re-cloning")
-				_ = os.RemoveAll(repoDir)
+				continue
 			}
+
+			// Verify we have the correct hash
+			head, err := repo.Head()
+			if err != nil {
+				log.Error().
+					Str("repoDir", repoDir).
+					Err(err).
+					Msg("Cached repo corrupt - will re-clone")
+				_ = os.RemoveAll(repoDir)
+				continue
+			}
+
+			if head.Hash().String() != commitHash {
+				log.Error().
+					Str("repoDir", repoDir).
+					Str("expectedHash", commitHash).
+					Str("actualHash", head.Hash().String()).
+					Msg("Cached repo has wrong hash - will re-clone")
+				_ = os.RemoveAll(repoDir)
+				continue
+			}
+
+			return repo, nil
+		}
+
+		// Only acquire lock when we need to clone
+		unlock, err := tryLock(repoDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to acquire repository lock: %w", err)
 		}
 
 		log.Debug().
@@ -198,14 +255,24 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 			Str("commitHash", commitHash).
 			Msg("Cloning fresh repo with specific hash")
 
+		// Double check if another process created the repo while we were waiting for the lock
+		if fileInfo, err := os.Stat(gitDirPath); err == nil && fileInfo.IsDir() {
+			unlock()
+			continue // Retry from the start to use the existing repo
+		}
+
 		if removeErr := os.RemoveAll(repoDir); removeErr != nil {
+			unlock()
 			return nil, fmt.Errorf("failed to remove corrupt repo: %w", removeErr)
 		}
+
+		// Clone the repository
 		repo, err := git.PlainClone(repoDir, false, &git.CloneOptions{
 			URL:      module.Repo,
 			Progress: os.Stdout,
 		})
 		if err != nil {
+			unlock()
 			log.Warn().
 				Str("repo", module.Repo).
 				Int("retry", retry+1).
@@ -213,6 +280,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 			continue
 		}
 
+		// Resolve and checkout the specific commit
 		h, err := repo.ResolveRevision(plumbing.Revision(commitHash))
 		if err != nil {
 			log.Debug().
@@ -227,17 +295,20 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 
 			if fetchErr := repo.FetchContext(context.Background(), fetchOpts); fetchErr != nil &&
 				fetchErr != git.NoErrAlreadyUpToDate {
+				unlock()
 				return nil, fmt.Errorf("failed to fetch refs: %w", fetchErr)
 			}
 
 			h, err = repo.ResolveRevision(plumbing.Revision(commitHash))
 			if err != nil {
+				unlock()
 				return nil, fmt.Errorf("hash %s not found even after fetch: %w", commitHash, err)
 			}
 		}
 
 		w, err := repo.Worktree()
 		if err != nil {
+			unlock()
 			return nil, fmt.Errorf("failed to get worktree: %w", err)
 		}
 
@@ -245,19 +316,25 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 			Hash: *h,
 		})
 		if err != nil {
+			unlock()
 			return nil, fmt.Errorf("failed to checkout hash %s: %w", commitHash, err)
 		}
 
+		// Verify the checkout worked
 		head, err := repo.Head()
 		if err != nil {
+			unlock()
 			return nil, fmt.Errorf("failed to get HEAD after checkout: %w", err)
 		}
 
 		if head.Hash().String() != h.String() {
+			unlock()
 			return nil, fmt.Errorf("checkout verification failed: HEAD is %s, expected %s",
 				head.Hash().String(), h.String())
 		}
 
+		// Successfully cloned and checked out
+		unlock()
 		return repo, nil
 	}
 

@@ -5,7 +5,10 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -56,4 +59,56 @@ func TestSubst(t *testing.T) {
 	if actualOutput != expectedOutput {
 		t.Errorf("Expected output: %s, but got: %s", expectedOutput, actualOutput)
 	}
+}
+
+func TestTryLock(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := t.TempDir()
+
+	// Test 1: Successfully acquire a lock
+	t.Run("Acquire Lock", func(t *testing.T) {
+		unlock, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.NoError(t, err, "Should successfully acquire lock")
+		assert.NotNil(t, unlock, "Should return unlock function")
+
+		// Verify lock file exists
+		_, err = os.Stat(filepath.Join(tempDir, ".lilypad.lock"))
+		assert.NoError(t, err, "Lock file should exist")
+
+		// Clean up
+		unlock()
+
+		// Verify lock file is removed
+		_, err = os.Stat(filepath.Join(tempDir, ".lilypad.lock"))
+		assert.Error(t, err, "Lock file should be removed")
+	})
+
+	// Test 2: Cannot acquire lock when already locked
+	t.Run("Lock Contention", func(t *testing.T) {
+		unlock1, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.NoError(t, err, "Should successfully acquire first lock")
+		defer unlock1()
+
+		// Try to acquire second lock - should fail quickly
+		unlock2, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.Error(t, err, "Should fail to acquire second lock")
+		assert.Nil(t, unlock2, "Should not return unlock function")
+	})
+
+	// Test 3: Can acquire lock after stale lock is removed
+	t.Run("Stale Lock", func(t *testing.T) {
+		lockFile := filepath.Join(tempDir, ".lilypad.lock")
+
+		// Create a stale lock file with non-existent PID
+		err := os.WriteFile(lockFile, []byte("999999999"), 0600)
+		assert.NoError(t, err, "Should create stale lock file")
+
+		// Should be able to acquire lock despite stale file
+		unlock, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.NoError(t, err, "Should acquire lock after stale lock")
+		assert.NotNil(t, unlock, "Should return unlock function")
+
+		// Clean up
+		unlock()
+	})
 }
