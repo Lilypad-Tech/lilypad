@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742571406195,
+  "lastUpdate": 1742590546117,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1440,6 +1440,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79100 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ayushk2020@gmail.com",
+            "name": "Kelindi",
+            "username": "kelindi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "385af81dbf51e016f8514606b98af6697d8630e2",
+          "message": "feat: Module Loading Improvements (#539)\n\n* anura rate limiter\n\n* removed exempt ip references\n\n* removed unauthorized ratelimiting\n\n* removed concurrency\n\n* updated tests\n\n* updated tests\n\n* saving by branch + retries\n\n* duplicate fix\n\n* feat: Implement repository locking mechanism with tests\n\n- Introduced tryLock and tryLockWithTimeout functions to manage repository locking.\n- Added unit tests for lock acquisition, contention, and stale lock scenarios in utils_test.go.\n- Enhanced CloneModule function to utilize the locking mechanism during repository cloning.\n\nSigned-off-by: Holly Grimm <holly.grimm@gmail.com>\n\n* refactor: Improve logging and error handling in module utilities\n\n* feat: Add minimum version check (#544)\n\n* feat: Add supported version helper and version config\n\n* feat: Test version check and config\n\n* feat: Add SERVER_MINIMUM_VERSION config\n\n* feat: Add version config to solver server\n\n* feat: Add version check on resource offer and job offer posts\n\n* feat: Enhance repository locking and error handling\n\n- Improved the locking mechanism in tryLockWithTimeout to include hostname and timestamp in the lock file for better debugging.\n- Added tests for various locking scenarios, including concurrent locking attempts and handling stale locks.\n- Enhanced error handling and logging in CloneModule to provide clearer feedback during repository operations.\n- Implemented retries for cloning and fetching references to improve robustness.\n\n* refactor: Remove unused getRepoLocalPath function from utils\n\n* refactor: Change log level from Info to Debug in CloneModule and resolveToCommitHash functions\n\n* refactor: Simplify retry loop syntax\n\n* test: Remove lockFile on malformed timestamp; Add unit test for handling invalid timestamp in lock file\n\n* feat: Introduce configurable timeout options for module operations\n\n- Added ModuleTimeoutConfig struct to manage timeout settings for locking and git operations.\n- Implemented getDefaultOptionInt helper function to retrieve integer values from environment variables.\n- Updated tryLockWithTimeout and CloneModule functions to utilize configurable timeouts.\n- Added ConfigureTimeouts and ResetTimeouts functions for dynamic timeout management.\n- Renamed TestTryLock to TestTryLockWithTimeout for clarity in unit tests.\n\n* test: Update TestTryLockWithTimeout to use configurable goroutine count\n\n---------\n\nSigned-off-by: Holly Grimm <holly.grimm@gmail.com>\nCo-authored-by: Holly Grimm <holly.grimm@gmail.com>",
+          "timestamp": "2025-03-21T14:51:04-06:00",
+          "tree_id": "71a4d3e8331d1f4d989ba22569da7f9f2795c120",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/385af81dbf51e016f8514606b98af6697d8630e2"
+        },
+        "date": 1742590545178,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 47546,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78412 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 47546,
+            "unit": "ns/op",
+            "extra": "78412 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78412 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78412 times\n4 procs"
           }
         ]
       }
