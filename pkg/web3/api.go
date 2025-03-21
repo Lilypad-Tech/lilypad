@@ -10,7 +10,6 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/pow"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/users"
-	"github.com/rs/zerolog/log"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {
@@ -49,10 +48,10 @@ func (sdk *Web3SDK) UpdateUser(
 		roles,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting Users.UpdateUser", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting Users.UpdateUser")
 		return err
 	} else {
-		system.Info(sdk.Options.Service, "submitted users.UpdateUser", tx.Hash().String())
+		sdk.Log.Info().Str("transactionHash", tx.Hash().String()).Msg("Submitted users.UpdateUser")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -70,10 +69,10 @@ func (sdk *Web3SDK) AddUserToList(
 		serviceType,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting Users.AddUserToList", err)
+		sdk.Log.Error().Err(err).Msg("error submitting Users.AddUserToList")
 		return err
 	} else {
-		system.Info(sdk.Options.Service, "submitted users.AddUserToList", tx.Hash().String())
+		sdk.Log.Info().Str("transactionHash", tx.Hash().String()).Msg("Submitted users.AddUserToList")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -84,13 +83,13 @@ func (sdk *Web3SDK) AddUserToList(
 }
 
 func (sdk *Web3SDK) GetSolverUrl(address string) (string, error) {
-	log.Debug().Msgf("begin GetSolverUrl from contract at address: %s", address)
+	sdk.Log.Debug().Str("address", address).Msg("Begin GetSolverUrl from contract address")
 	solver, err := sdk.Contracts.Users.GetUser(
 		sdk.CallOpts,
 		common.HexToAddress(address),
 	)
 	if err != nil {
-		log.Error().Msgf("Failed to discover solver URL: %s", err)
+		sdk.Log.Error().Err(err).Msg("Failed to discover solver URL")
 		return "", err
 	}
 
@@ -115,10 +114,10 @@ func (sdk *Web3SDK) Agree(
 		data.ConvertDealPricing(deal.Pricing),
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.Agree() tx", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.Agree() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.Agree() tx", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.Agree() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -142,10 +141,10 @@ func (sdk *Web3SDK) AddResult(
 		big.NewInt(int64(instructionCount)),
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.AddResult", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.AddResult() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.AddResult", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.AddResult() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -163,10 +162,10 @@ func (sdk *Web3SDK) AcceptResult(
 		dealId,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.AcceptResult", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.AcceptResult() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.AcceptResult", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.AcceptResult() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -184,10 +183,10 @@ func (sdk *Web3SDK) CheckResult(
 		dealId,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.CheckResult", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.CheckResult() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.CheckResult", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.CheckResult() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -205,10 +204,10 @@ func (sdk *Web3SDK) MediationAcceptResult(
 		dealId,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.MediationAcceptResult", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.MediationAcceptResult() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.MediationAcceptResult", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.MediationAcceptResult() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -226,10 +225,10 @@ func (sdk *Web3SDK) MediationRejectResult(
 		dealId,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting controller.MediationRejectResult", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting controller.MediationRejectResult() tx")
 		return "", err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted controller.MediationRejectResult", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted controller.MediationRejectResult() tx")
 		system.DumpObjectDebug(tx)
 	}
 	_, err = sdk.WaitTx(context.Background(), tx)
@@ -248,10 +247,10 @@ func (sdk *Web3SDK) GetGenerateChallenge(
 		nodeId,
 	)
 	if err != nil {
-		system.Error(sdk.Options.Service, "error submitting pow.GenerateChallenge", err)
+		sdk.Log.Error().Err(err).Msg("Error submitting pow.GenerateChallenge() tx")
 		return "", nil, err
 	} else {
-		system.Debug(sdk.Options.Service, "submitted pow.GenerateChallenge", tx.Hash().String())
+		sdk.Log.Debug().Str("transactionHash", tx.Hash().String()).Msg("Submitted pow.GenerateChallenge() tx")
 		system.DumpObjectDebug(tx)
 	}
 	receipt, err := sdk.WaitTx(context.Background(), tx)
