@@ -45,13 +45,15 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 	commandCtx := system.NewCommandContext(cmd)
 	defer commandCtx.Cleanup()
 
-	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, options.Web3)
+	telemetry, err := configureTelemetry(commandCtx.Ctx, system.SolverService, network, options.Telemetry, &options.Metrics, &options.Logs, options.Web3)
 	if err != nil {
 		log.Warn().Msgf("failed to setup opentelemetry: %s", err)
 	}
 	commandCtx.Cm.RegisterCallbackWithContext(telemetry.Shutdown)
 	tracer := telemetry.TracerProvider.Tracer(system.GetOTelServiceName(system.SolverService))
 	meter := telemetry.MeterProvider.Meter(system.GetOTelServiceName(system.SolverService))
+
+	system.SetupGlobalLogger(system.SolverService, telemetry.LoggerProvider)
 	log := system.GetLogger(system.SolverService)
 
 	if lilynext {
@@ -79,7 +81,12 @@ func runSolver(cmd *cobra.Command, options solver.SolverOptions, network string,
 		return err
 	}
 
-	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter)
+	versionConfig, err := system.NewVersionConfig(options.Server.AccessControl.MinimumVersion)
+	if err != nil {
+		return err
+	}
+
+	solverService, err := solver.NewSolver(options, solverStore, web3SDK, stats, tracer, meter, versionConfig)
 	if err != nil {
 		return err
 	}
