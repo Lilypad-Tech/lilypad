@@ -188,4 +188,27 @@ func TestTryLock(t *testing.T) {
 		// In an ideal world, all 5 would get it sequentially, but we can't guarantee the timing
 		// so we just check that someone did
 	})
+
+	// Test 6: Can acquire lock when timestamp format is invalid
+	t.Run("Invalid Timestamp", func(t *testing.T) {
+		lockFile := filepath.Join(tempDir, ".lilypad.lock")
+
+		// Create a lock file with invalid timestamp format
+		invalidTimestamp := "not-a-timestamp"
+		content := fmt.Sprintf("%d %s %s", os.Getpid(), "test-host", invalidTimestamp)
+		err := os.WriteFile(lockFile, []byte(content), 0600)
+		assert.NoError(t, err, "Should create lock file with invalid timestamp")
+
+		// Verify the malformed lock file exists
+		_, err = os.Stat(lockFile)
+		assert.NoError(t, err, "Lock file should exist")
+
+		// Should be able to acquire lock despite invalid timestamp format
+		unlock, err := tryLockWithTimeout(tempDir, 1*time.Second)
+		assert.NoError(t, err, "Should acquire lock after detecting invalid timestamp")
+		assert.NotNil(t, unlock, "Should return unlock function")
+
+		// Clean up
+		unlock()
+	})
 }

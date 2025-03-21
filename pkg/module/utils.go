@@ -160,7 +160,17 @@ func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) 
 
 				// Check if the lock is too old (> 10 minutes)
 				lockTime, parseErr := time.Parse(time.RFC3339, timestamp)
-				if parseErr == nil && time.Since(lockTime) > 10*time.Minute {
+				if parseErr != nil {
+					log.Warn().
+						Str("path", lockFile).
+						Str("timestamp", timestamp).
+						Err(parseErr).
+						Msg("Could not parse timestamp in lock file, removing stale lock")
+					os.Remove(lockFile)
+					continue
+				}
+
+				if time.Since(lockTime) > 10*time.Minute {
 					log.Warn().
 						Str("path", lockFile).
 						Str("created", timestamp).
