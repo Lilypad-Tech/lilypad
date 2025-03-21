@@ -7,8 +7,28 @@ import (
 	"math/big"
 )
 
-func (sdk *Web3SDKV2) SaveResult(result interface{}) (bool, error) {
-	//TODO: Implement method
+func (sdk *Web3SDKV2) SaveResult(result lilypadproxy.SharedStructsResult) (bool, error) {
+	transaction, err := sdk.Contracts.LilypadProxy.SetResult(sdk.TransactOpts, result)
+	if err != nil {
+		sdk.Log.Error().Err(err).
+			Str("resultId", result.ResultId).
+			Str("dealId", result.DealId).
+			Str("resultCID", result.ResultCID).
+			Msg("failed to save result")
+		return false, err
+	}
+
+	_, err = sdk.WaitTx(context.Background(), transaction)
+	if err != nil {
+		sdk.Log.Error().Err(err).
+			Str("transactionHash", transaction.Hash().Hex()).
+			Str("resultId", result.ResultId).
+			Str("dealId", result.DealId).
+			Str("resultCID", result.ResultCID).
+			Msg("failed while executing transaction to save result")
+		return false, err
+	}
+
 	return true, nil
 }
 
