@@ -62,7 +62,7 @@ func TestSubst(t *testing.T) {
 	}
 }
 
-func TestTryLock(t *testing.T) {
+func TestTryLockWithTimeout(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir := t.TempDir()
 

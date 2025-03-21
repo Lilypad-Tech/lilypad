@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -24,6 +25,94 @@ import (
 )
 
 const REPO_DIR = "repos"
+
+// Helper function to get integer value from environment variable or return default
+func getDefaultOptionInt(envName string, defaultValue int) int {
+	envValue := os.Getenv(envName)
+	if envValue != "" {
+		i, err := strconv.Atoi(envValue)
+		if err == nil {
+			return i
+		}
+	}
+	return defaultValue
+}
+
+// ModuleTimeoutConfig holds all timeout configuration values
+type ModuleTimeoutConfig struct {
+	// Lock related timeouts
+	DefaultLockTimeout  time.Duration // Default timeout for acquiring lock
+	ExtendedLockTimeout time.Duration // Extended timeout for lock acquisition during clone
+	LockTickInterval    time.Duration // Interval between lock acquisition attempts
+	StaleLockThreshold  time.Duration // Time after which a lock is considered stale
+
+	// Git operation related timeouts and retries
+	MaxRetries             int           // Maximum number of retries for git operations
+	RetryDelayMultiplier   time.Duration // Base delay multiplier for retries
+	NetworkRetryMultiplier time.Duration // Additional delay for network-related errors
+}
+
+// GetDefaultModuleTimeoutOptions returns default options from environment variables or hardcoded defaults
+func GetDefaultModuleTimeoutOptions() ModuleTimeoutConfig {
+	return ModuleTimeoutConfig{
+		DefaultLockTimeout:     time.Duration(getDefaultOptionInt("MODULE_DEFAULT_LOCK_TIMEOUT", 30)) * time.Second,
+		ExtendedLockTimeout:    time.Duration(getDefaultOptionInt("MODULE_EXTENDED_LOCK_TIMEOUT", 60)) * time.Second,
+		LockTickInterval:       time.Duration(getDefaultOptionInt("MODULE_LOCK_TICK_INTERVAL", 100)) * time.Millisecond,
+		StaleLockThreshold:     time.Duration(getDefaultOptionInt("MODULE_STALE_LOCK_THRESHOLD", 600)) * time.Second, // 10 minutes
+		MaxRetries:             getDefaultOptionInt("MODULE_MAX_RETRIES", 5),
+		RetryDelayMultiplier:   time.Duration(getDefaultOptionInt("MODULE_RETRY_DELAY_MULTIPLIER", 2)) * time.Second,
+		NetworkRetryMultiplier: time.Duration(getDefaultOptionInt("MODULE_NETWORK_RETRY_MULTIPLIER", 10)) * time.Second,
+	}
+}
+
+// DefaultTimeoutConfig provides default values for all timeouts
+var DefaultTimeoutConfig = GetDefaultModuleTimeoutOptions()
+
+// Current timeout configuration, can be modified at runtime
+var TimeoutConfig = DefaultTimeoutConfig
+
+// ConfigureTimeouts allows users to modify the timeout configuration
+// Partial configurations are supported - only the provided fields will be updated
+func ConfigureTimeouts(config ModuleTimeoutConfig) {
+	// Only update non-zero values
+	if config.DefaultLockTimeout > 0 {
+		TimeoutConfig.DefaultLockTimeout = config.DefaultLockTimeout
+	}
+
+	if config.ExtendedLockTimeout > 0 {
+		TimeoutConfig.ExtendedLockTimeout = config.ExtendedLockTimeout
+	}
+
+	if config.LockTickInterval > 0 {
+		TimeoutConfig.LockTickInterval = config.LockTickInterval
+	}
+
+	if config.StaleLockThreshold > 0 {
+		TimeoutConfig.StaleLockThreshold = config.StaleLockThreshold
+	}
+
+	if config.MaxRetries > 0 {
+		TimeoutConfig.MaxRetries = config.MaxRetries
+	}
+
+	if config.RetryDelayMultiplier > 0 {
+		TimeoutConfig.RetryDelayMultiplier = config.RetryDelayMultiplier
+	}
+
+	if config.NetworkRetryMultiplier > 0 {
+		TimeoutConfig.NetworkRetryMultiplier = config.NetworkRetryMultiplier
+	}
+
+	log.Debug().
+		Interface("timeoutConfig", TimeoutConfig).
+		Msg("Updated module timeout configuration")
+}
+
+// ResetTimeouts resets all timeouts to default values
+func ResetTimeouts() {
+	TimeoutConfig = DefaultTimeoutConfig
+	log.Debug().Msg("Reset module timeout configuration to defaults")
+}
 
 type RefCache struct {
 	cache map[string]map[string]string
@@ -90,13 +179,6 @@ func ProcessModule(module data.ModuleConfig) (data.ModuleConfig, error) {
 	return module, nil
 }
 
-// tryLock attempts to create a lock file for the given repository path
-// returns a cleanup function that should be called to release the lock
-func tryLock(repoPath string) (func(), error) {
-	return tryLockWithTimeout(repoPath, 30*time.Second)
-}
-
-// tryLockWithTimeout is like tryLock but with a configurable timeout
 func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) {
 	// Ensure the directory exists before trying to create a lock file
 	if err := os.MkdirAll(repoPath, 0755); err != nil {
@@ -109,7 +191,7 @@ func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) 
 
 	// Try to acquire lock for the specified duration
 	timeoutChan := time.After(timeout)
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(TimeoutConfig.LockTickInterval)
 	defer ticker.Stop()
 
 	for {
@@ -170,7 +252,7 @@ func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) 
 					continue
 				}
 
-				if time.Since(lockTime) > 10*time.Minute {
+				if time.Since(lockTime) > TimeoutConfig.StaleLockThreshold {
 					log.Warn().
 						Str("path", lockFile).
 						Str("created", timestamp).
@@ -213,13 +295,13 @@ func tryLockWithTimeout(repoPath string, timeout time.Duration) (func(), error) 
 }
 
 func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
-	maxRetries := 3
+	maxRetries := TimeoutConfig.MaxRetries
 	var lastErr error
 
 	for retry := range maxRetries {
 		// If this is a retry, add a small delay to avoid hammering the system
 		if retry > 0 {
-			delay := time.Duration(retry*2) * time.Second
+			delay := TimeoutConfig.RetryDelayMultiplier * time.Duration(retry)
 			log.Debug().
 				Str("repo", module.Repo).
 				Int("retry", retry).
@@ -243,10 +325,11 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 					Msg("Failed to resolve reference, will retry")
 
 				// For network errors, wait longer before retrying
-				if strings.Contains(err.Error(), "dial") ||
+				if strings.Contains(err.Error(), "EOF") ||
+					strings.Contains(err.Error(), "dial") ||
 					strings.Contains(err.Error(), "connection") ||
 					strings.Contains(err.Error(), "timeout") {
-					time.Sleep(time.Duration(5*(retry+1)) * time.Second)
+					time.Sleep(TimeoutConfig.NetworkRetryMultiplier * time.Duration(retry+1))
 				}
 				continue
 			}
@@ -307,7 +390,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 
 		// Get an exclusive lock for rebuilding this repo
 		// Use a longer timeout for the lock acquisition
-		unlock, err := tryLockWithTimeout(repoDir, 60*time.Second)
+		unlock, err := tryLockWithTimeout(repoDir, TimeoutConfig.ExtendedLockTimeout)
 		if err != nil {
 			lastErr = err
 			log.Warn().
@@ -658,13 +741,13 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 	var repo *git.Repository
 	var cloneErr error
 
-	for retry := range 3 {
+	for retry := range TimeoutConfig.MaxRetries {
 		if retry > 0 {
 			log.Debug().
 				Str("repo", repoURL).
 				Int("retry", retry).
 				Msg("Retrying reference resolution")
-			time.Sleep(time.Duration(retry) * time.Second)
+			time.Sleep(TimeoutConfig.RetryDelayMultiplier * time.Duration(retry))
 		}
 
 		repo, cloneErr = git.PlainClone(tmpDir, true, &git.CloneOptions{ // true = bare repo
@@ -699,9 +782,9 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 
 		// Try to fetch with retries
 		var fetchErr error
-		for retry := range 3 {
+		for retry := range TimeoutConfig.MaxRetries {
 			if retry > 0 {
-				time.Sleep(time.Duration(retry) * time.Second)
+				time.Sleep(TimeoutConfig.RetryDelayMultiplier * time.Duration(retry))
 			}
 
 			fetchOpts := &git.FetchOptions{
