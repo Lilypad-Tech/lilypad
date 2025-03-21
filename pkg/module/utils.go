@@ -206,7 +206,7 @@ func CloneModule(module data.ModuleConfig) (*git.Repository, error) {
 	maxRetries := 3
 	var lastErr error
 
-	for retry := 0; retry < maxRetries; retry++ {
+	for retry := range maxRetries {
 		// If this is a retry, add a small delay to avoid hammering the system
 		if retry > 0 {
 			delay := time.Duration(retry*2) * time.Second
@@ -648,7 +648,7 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 	var repo *git.Repository
 	var cloneErr error
 
-	for retry := 0; retry < 3; retry++ {
+	for retry := range 3 {
 		if retry > 0 {
 			log.Debug().
 				Str("repo", repoURL).
@@ -689,7 +689,7 @@ func resolveToCommitHash(repoURL, reference string) (string, error) {
 
 		// Try to fetch with retries
 		var fetchErr error
-		for retry := 0; retry < 3; retry++ {
+		for retry := range 3 {
 			if retry > 0 {
 				time.Sleep(time.Duration(retry) * time.Second)
 			}
