@@ -18,8 +18,6 @@ type CommandContext struct {
 }
 
 func NewSystemContext(ctx context.Context) *CommandContext {
-	SetupGlobalLogger()
-
 	cm := NewCleanupManager()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	return &CommandContext{
