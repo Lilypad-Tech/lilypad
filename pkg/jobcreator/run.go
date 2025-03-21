@@ -8,6 +8,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -43,6 +44,12 @@ func RunJob(
 	if err != nil {
 		return nil, err
 	}
+
+	jobOfferID, err := data.GetJobOfferID(offer)
+	if err != nil {
+		return nil, err
+	}
+	log.Info().Str("cid", jobOfferID).Msg("sending job offer")
 
 	// wait a short period because we've just started the job creator service
 	time.Sleep(100 * time.Millisecond)
