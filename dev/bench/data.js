@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742519142739,
+  "lastUpdate": 1742571406195,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1392,6 +1392,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "80214 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "842d862886c2d51069249bcd86a88e167435fd0b",
+          "message": "feat: Add OpenTelemetry logger (#540)\n\n* feat: Add OTel log bridge\n\nThe bridge parses and forwards to an OTel logger provider and writes to\nthe console.\n\n* feat: Add OTel logger provider\n\n* fix: Handle metrics exporter URL parsing error\n\n* feat: Add OTel logger\n\nWe conditionally use the OTel bridge when a logger provider is set on\npackage global state.\n\n* feat: Move SetupGlobalLogger to commands\n\nConfigures global logger with service name.\n\n* feat: Add logs options\n\n* feat: Add trace context to solver logs in spans",
+          "timestamp": "2025-03-21T08:35:02-07:00",
+          "tree_id": "560345f88a7eeeea7ce72d9060b7c06f5b761208",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/842d862886c2d51069249bcd86a88e167435fd0b"
+        },
+        "date": 1742571405343,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46901,
+            "unit": "ns/op\t   44316 B/op\t     281 allocs/op",
+            "extra": "79100 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46901,
+            "unit": "ns/op",
+            "extra": "79100 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44316,
+            "unit": "B/op",
+            "extra": "79100 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79100 times\n4 procs"
           }
         ]
       }
