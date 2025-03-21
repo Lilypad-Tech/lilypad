@@ -153,12 +153,15 @@ func TestTryLockWithTimeout(t *testing.T) {
 		err := os.MkdirAll(concurrentDir, 0755)
 		assert.NoError(t, err, "Should create concurrent test directory")
 
+		// Number of concurrent goroutines trying to acquire the lock
+		numGoroutines := 5
+
 		// This will track which goroutine got the lock
-		gotLock := make(chan int, 5)
+		gotLock := make(chan int, numGoroutines)
 		var wg sync.WaitGroup
 
-		// Launch 5 goroutines to try to get the lock
-		for i := 0; i < 5; i++ {
+		// Launch goroutines to try to get the lock
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -174,7 +177,7 @@ func TestTryLockWithTimeout(t *testing.T) {
 		}
 
 		// Collect the results
-		lockHolders := make([]int, 0, 5)
+		lockHolders := make([]int, 0, numGoroutines)
 		go func() {
 			wg.Wait()
 			close(gotLock)
