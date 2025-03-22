@@ -112,11 +112,19 @@ func (jobCreator *OnChainJobCreator) Start(ctx context.Context, cm *system.Clean
 
 		options := jobCreator.options.Offer
 		options.Module.Name = ev.Module
+		if strings.Contains(options.Module.Name, "github.com") {
+			parts := strings.Split(options.Module.Name, ":")
+			options.Module.Name = ""
+			options.Module.Repo = "https://" + parts[0]
+			options.Module.Hash = parts[1]
+			options.Module.Path = "/lilypad_module.json.tmpl"
+		}
+
 		inputs := map[string]string{}
 		for _, input := range ev.Inputs {
 			parts := strings.Split(input, "=")
-			if len(parts) == 2 {
-				inputs[parts[0]] = parts[1]
+			if len(parts) > 1 {
+				inputs[parts[0]] = strings.Join(parts[1:], "=")
 			}
 		}
 		options.Inputs = inputs
