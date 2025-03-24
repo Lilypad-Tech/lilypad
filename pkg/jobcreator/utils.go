@@ -6,6 +6,8 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/module"
+
+	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
 // this will load the module in the offer options
@@ -18,9 +20,16 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		return data.JobOffer{}, fmt.Errorf("error loading module: %s opts=%+v", err.Error(), options)
 	}
 
+	// Generate a nonce to make sure the job offer is unique
+	nonce, err := nanoid.New()
+	if err != nil {
+		return data.JobOffer{}, fmt.Errorf("error generating job offer nonce: %v", err)
+	}
+
 	return data.JobOffer{
 		// assign CreatedAt to the current millisecond timestamp
 		CreatedAt:  int(time.Now().UnixNano() / int64(time.Millisecond)),
+		Nonce:      nonce,
 		JobCreator: jobCreatorAddress,
 		Module:     options.Module,
 		Spec:       loadedModule.Machine,
