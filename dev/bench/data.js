@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742926607793,
+  "lastUpdate": 1742931701612,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1632,6 +1632,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78705 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cf8e7f586df50679552be2ac1981cdb77622188c",
+          "message": "feat: Add minimum version check enabled option (#552)",
+          "timestamp": "2025-03-25T12:41:12-07:00",
+          "tree_id": "d9b7018135f1f71d1e8811c24aa7f659dcf0d14d",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/cf8e7f586df50679552be2ac1981cdb77622188c"
+        },
+        "date": 1742931701249,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 47311,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79849 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 47311,
+            "unit": "ns/op",
+            "extra": "79849 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79849 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79849 times\n4 procs"
           }
         ]
       }
