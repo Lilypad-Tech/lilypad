@@ -109,7 +109,7 @@ Repository system identifier: jdelamare
 
 ---------------------------------------------------------------------------------
 
-Licensee’s name: James Wwestbrook
+Licensee’s name: James Westbrook
 
 Repository system identifier: 0xThresh
 
