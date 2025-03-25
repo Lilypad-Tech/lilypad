@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742935447872,
+  "lastUpdate": 1742942500621,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1728,6 +1728,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78928 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "104535511+0xThresh@users.noreply.github.com",
+            "name": "James W.",
+            "username": "0xThresh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "37e86a39122a54260d72d853e7282f1925c0a70c",
+          "message": "fix: Add explicit NVIDIA device reservation to Resource Provider docker compose (#549)\n\nAdd explicit NVIDIA device reservation to resource provider",
+          "timestamp": "2025-03-25T15:41:05-07:00",
+          "tree_id": "ba16a722c6d269d88ca438c811c458b59258b33c",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/37e86a39122a54260d72d853e7282f1925c0a70c"
+        },
+        "date": 1742942499707,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46517,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46517,
+            "unit": "ns/op",
+            "extra": "78343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78343 times\n4 procs"
           }
         ]
       }
