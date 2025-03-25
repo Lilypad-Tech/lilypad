@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742878269839,
+  "lastUpdate": 1742926607793,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1584,6 +1584,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79034 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "174042765+lilypad-releases[bot]@users.noreply.github.com",
+            "name": "lilypad-releases[bot]",
+            "username": "lilypad-releases[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36ca3f27248a014bd5339a192406eb00bde17373",
+          "message": "chore(main): release 2.16.0 (#542)\n\nCo-authored-by: lilypad-releases[bot] <174042765+lilypad-releases[bot]@users.noreply.github.com>\nCo-authored-by: Narb <29411347+narbs91@users.noreply.github.com>",
+          "timestamp": "2025-03-25T11:16:16-07:00",
+          "tree_id": "08dbea343535a85ddebbcface42f5f9f1b377413",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/36ca3f27248a014bd5339a192406eb00bde17373"
+        },
+        "date": 1742926607418,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45657,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78705 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45657,
+            "unit": "ns/op",
+            "extra": "78705 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78705 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78705 times\n4 procs"
           }
         ]
       }
