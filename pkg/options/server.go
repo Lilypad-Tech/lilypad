@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/lilypad-tech/lilypad/pkg/http"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 		ValidationTokenKid:              GetDefaultServeOptionString("SERVER_VALIDATION_TOKEN_KID", ""),
 		AnuraAddresses:                  GetDefaultServeOptionStringArray("SERVER_ANURA_ADDRESSES", []string{}),
 		OfferTimestampDiffSeconds:       GetDefaultServeOptionInt("SERVER_OFFER_TIMESTAMP_DIFF_SECONDS", 30),
+		EnableVersionCheck:              GetDefaultServeOptionBool("SERVER_ENABLE_VERSION_CHECK", true),
 		MinimumVersion:                  GetDefaultServeOptionString("SERVER_MINIMUM_VERSION", ""),
 	}
 }
@@ -84,6 +86,10 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.AccessControl.OfferTimestampDiffSeconds, "server-offer-timestamp-diff-seconds", serverOptions.AccessControl.OfferTimestampDiffSeconds,
 		`The diff before or after now when a job or resource offer must be received (SERVER_OFFER_TIMESTAMP_DIFF_SECONDS).`,
+	)
+	cmd.PersistentFlags().BoolVar(
+		&serverOptions.AccessControl.EnableVersionCheck, "server-enable-version-check", serverOptions.AccessControl.EnableVersionCheck,
+		`Enable version check (SERVER_ENABLE_VERSION_CHECK).`,
 	)
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.AccessControl.MinimumVersion, "server-minimum-version", serverOptions.AccessControl.MinimumVersion,
