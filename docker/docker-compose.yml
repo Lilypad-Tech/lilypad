@@ -20,6 +20,13 @@ services:
     depends_on:
       bacalhau:
         condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
