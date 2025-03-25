@@ -108,3 +108,9 @@ Licensee’s name: Jeff De La Mare
 Repository system identifier: jdelamare
 
 ---------------------------------------------------------------------------------
+
+Licensee’s name: James W.
+
+Repository system identifier: 0xThresh
+
+---------------------------------------------------------------------------------
