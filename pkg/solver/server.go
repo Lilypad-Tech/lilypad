@@ -348,15 +348,17 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 
-	versionHeader, _ := http.GetVersionFromHeaders(req)
-	minVersion, ok := server.versionConfig.IsSupported(versionHeader)
-	if !ok {
-		server.log.Debug().Str("cid", jobOffer.ID).
-			Str("address", jobOffer.JobCreator).
-			Str("version", versionHeader).
-			Str("minVersion", minVersion).
-			Msg("job offer rejected because job creator is running an unsupported version")
-		return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
+	if server.options.AccessControl.EnableVersionCheck {
+		versionHeader, _ := http.GetVersionFromHeaders(req)
+		minVersion, ok := server.versionConfig.IsSupported(versionHeader)
+		if !ok {
+			server.log.Debug().Str("cid", jobOffer.ID).
+				Str("address", jobOffer.JobCreator).
+				Str("version", versionHeader).
+				Str("minVersion", minVersion).
+				Msg("job offer rejected because job creator is running an unsupported version")
+			return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
+		}
 	}
 
 	offerRecent := isTimestampRecent(jobOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
@@ -399,15 +401,17 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 		}
 	}
 
-	versionHeader, _ := http.GetVersionFromHeaders(req)
-	minVersion, ok := server.versionConfig.IsSupported(versionHeader)
-	if !ok {
-		server.log.Debug().Str("cid", resourceOffer.ID).
-			Str("address", resourceOffer.ResourceProvider).
-			Str("version", versionHeader).
-			Str("minVersion", minVersion).
-			Msg("resource offer rejected because resource provider is running an unsupported version")
-		return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
+	if server.options.AccessControl.EnableVersionCheck {
+		versionHeader, _ := http.GetVersionFromHeaders(req)
+		minVersion, ok := server.versionConfig.IsSupported(versionHeader)
+		if !ok {
+			server.log.Debug().Str("cid", resourceOffer.ID).
+				Str("address", resourceOffer.ResourceProvider).
+				Str("version", versionHeader).
+				Str("minVersion", minVersion).
+				Msg("resource offer rejected because resource provider is running an unsupported version")
+			return nil, fmt.Errorf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion)
+		}
 	}
 
 	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
