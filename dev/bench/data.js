@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742590546117,
+  "lastUpdate": 1742878079740,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1488,6 +1488,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78412 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "104535511+0xThresh@users.noreply.github.com",
+            "name": "James W.",
+            "username": "0xThresh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36c2574db644a872854f251a5b3bdc4809656ba7",
+          "message": "chore: Sign CLA 0xThresh (#550)\n\n* Accept the contributor agreement",
+          "timestamp": "2025-03-24T21:47:28-07:00",
+          "tree_id": "20541e15750e93f2338cbc19cbf139eccd3c3c33",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/36c2574db644a872854f251a5b3bdc4809656ba7"
+        },
+        "date": 1742878078804,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46616,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46616,
+            "unit": "ns/op",
+            "extra": "79107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79107 times\n4 procs"
           }
         ]
       }
