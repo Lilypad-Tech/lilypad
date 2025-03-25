@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742931701612,
+  "lastUpdate": 1742935447872,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1680,6 +1680,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "79849 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "42fb28d51ca40b640dceaa36f50ea0157317a0ac",
+          "message": "fix: Prevent duplicate job offers (#545)\n\nfeat: Add job offer nonce",
+          "timestamp": "2025-03-25T13:42:30-07:00",
+          "tree_id": "d91cf9599ed38dfaff4d37575a0d8f35d1ad6d63",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/42fb28d51ca40b640dceaa36f50ea0157317a0ac"
+        },
+        "date": 1742935446874,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45654,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78928 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45654,
+            "unit": "ns/op",
+            "extra": "78928 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78928 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78928 times\n4 procs"
           }
         ]
       }
