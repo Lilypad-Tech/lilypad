@@ -9,6 +9,7 @@ const (
 	ResourceProviderService Service = "resource-provider"
 	JobCreatorService       Service = "job-creator"
 	MediatorService         Service = "mediator"
+	Web3Service             Service = "web3"
 	DefaultService          Service = "default"
 )
 
@@ -22,6 +23,8 @@ func GetServiceBadge(service Service) string {
 		return "🟢 JC"
 	case MediatorService:
 		return "🟠 MED"
+	case Web3Service:
+		return "🟣 WEB3"
 	default:
 		return "⚪"
 	}

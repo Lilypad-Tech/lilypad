@@ -27,6 +27,17 @@ func GetDefaultWeb3Options() web3.Web3Options {
 		JobCreatorAddress: GetDefaultServeOptionString("WEB3_JOBCREATOR_ADDRESS", ""),
 		PowAddress:        GetDefaultServeOptionString("WEB3_POW_ADDRESS", ""),
 
+		// V2 Protocol
+		LilypadProxyAddress:            GetDefaultServeOptionString("WEB3_LILYPAD_PROXY_ADDRESS", ""),
+		LilypadTokenomicsAddress:       GetDefaultServeOptionString("WEB3_LILYPAD_TOKENOMICS_ADDRESS", ""),
+		LilypadL1TokenAddress:          GetDefaultServeOptionString("WEB3_LILYPAD_L1_TOKEN_ADDRESS", ""),
+		LilypadL2TokenAddress:          GetDefaultServeOptionString("WEB3_LILYPAD_L2_TOKEN_ADDRESS", ""),
+		LilypadPaymentEngineAddress:    GetDefaultServeOptionString("WEB3_LILYPAD_PAYMENT_ENGINE_ADDRESS", ""),
+		LilypadStorageAddress:          GetDefaultServeOptionString("WEB3_LILYPAD_STORAGE_ADDRESS", ""),
+		LilypadModuleDirectoryAddress:  GetDefaultServeOptionString("WEB3_LILYPAD_MODULE_DIRECTORY", ""),
+		LilypadContractRegistryAddress: GetDefaultServeOptionString("WEB3_LILYPAD_CONTRACT_REGISTRY_ADDRESS", ""),
+		LilypadUserAddress:             GetDefaultServeOptionString("WEB3_LILYPAD_USER_ADDRESS", ""),
+
 		// misc
 		Service: system.DefaultService,
 	}
@@ -132,6 +143,43 @@ func ProcessWeb3Options(options web3.Web3Options, network string) (web3.Web3Opti
 
 	if options.PrivateKey == "" {
 		options.PrivateKey = os.Getenv("WEB3_PRIVATE_KEY")
+	}
+
+	// V2 Protocol
+	if options.LilypadProxyAddress == "" {
+		options.LilypadProxyAddress = config.Web3.LilypadProxyAddress
+	}
+
+	if options.LilypadPaymentEngineAddress == "" {
+		options.LilypadPaymentEngineAddress = config.Web3.LilypadPaymentEngineAddress
+	}
+
+	if options.LilypadContractRegistryAddress == "" {
+		options.LilypadContractRegistryAddress = config.Web3.LilypadContractRegistryAddress
+	}
+
+	if options.LilypadL1TokenAddress == "" {
+		options.LilypadL1TokenAddress = config.Web3.LilypadL1TokenAddress
+	}
+
+	if options.LilypadL2TokenAddress == "" {
+		options.LilypadL2TokenAddress = config.Web3.LilypadL2TokenAddress
+	}
+
+	if options.LilypadModuleDirectoryAddress == "" {
+		options.LilypadModuleDirectoryAddress = config.Web3.LilypadModuleDirectoryAddress
+	}
+
+	if options.LilypadStorageAddress == "" {
+		options.LilypadStorageAddress = config.Web3.LilypadStorageAddress
+	}
+
+	if options.LilypadTokenomicsAddress == "" {
+		options.LilypadTokenomicsAddress = config.Web3.LilypadTokenomicsAddress
+	}
+
+	if options.LilypadUserAddress == "" {
+		options.LilypadUserAddress = config.Web3.LilypadUserAddress
 	}
 	return options, nil
 }
