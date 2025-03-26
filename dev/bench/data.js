@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742942500621,
+  "lastUpdate": 1743013719951,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1776,6 +1776,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78343 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29411347+narbs91@users.noreply.github.com",
+            "name": "Narb",
+            "username": "narbs91"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "41942d32f678b6531f82bee0c3eec3663aac363d",
+          "message": "feat: setup foundation for new protocol (#547)\n\n* Adds new contract addresses to web3options and env\n\n* adds new contract bindings Go modules\n\n* Adds foundational pieces for web3 sdkv2\n\n* first pass at introducing api_v2 to the web3 package\n\n* Adds Web3 service logger\n\n* Adds web3 logger to sdk and api\n\n* Adds Web3 Logger to api_v2\n\n* splits v2 related sdk code into it's own module\n\n* Refactors api_v2 module implementation\n\n* Adds collateral payment methods\n\n* adds GetDeal impl\n\n* adds GetResult impl\n\n* properly returns err in GetResult impl\n\n* Adds SaveDeal impl\n\n* Adds SaveResult impl\n\n* Addresses logging feedback from code review",
+          "timestamp": "2025-03-26T11:28:07-07:00",
+          "tree_id": "1d5c4374d2e0ec6b8bcf85aa99fad01ad9f9de59",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/41942d32f678b6531f82bee0c3eec3663aac363d"
+        },
+        "date": 1743013719579,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 47227,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78952 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 47227,
+            "unit": "ns/op",
+            "extra": "78952 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78952 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78952 times\n4 procs"
           }
         ]
       }
