@@ -703,9 +703,10 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return err
 		}
 		if deal == nil {
-			server.log.Error().Str("cide", id).Msg("deal not found")
+			server.log.Error().Str("cid", id).Msg("deal not found")
 			return err
 		}
+
 		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
 			server.log.Trace().
 				Str("cid", deal.ID).
@@ -713,6 +714,7 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 				Msg("attempted file upload for timed out job for deal")
 			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
 		}
+
 		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
 			server.log.Error().Err(err).Msg("error checking signature")
