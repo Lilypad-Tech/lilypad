@@ -28,27 +28,42 @@ type JobRun struct {
 // Stats API implementation
 
 func (stat *HTTPStats) PostJobRun(deal *data.DealContainer) error {
-	jobRunTime := time.Now().UnixMilli() - int64(deal.Deal.JobOffer.CreatedAt)
-	extraData, err := json.Marshal(map[string]string{
-		"state": data.GetAgreementStateString(deal.State),
-	})
-	if err != nil {
-		stat.log.Error().Err(err).Msg("unable to marshal extra data")
-		return err
+	// The time from job offer creation until a match is made
+	matchDuration := int64(deal.CreatedAt) - int64(deal.Deal.JobOffer.CreatedAt)
+
+	// The time from when a match is made until job outputs are uploaded
+	var executionDuration int64
+	if deal.UploadAt > 0 {
+		executionDuration = int64(deal.UploadAt) - int64(deal.CreatedAt)
+	}
+
+	// The time from when resource provider upload to job creator download
+	var retrievalDuration int64
+	// The total job run duration until download or failure
+	var jobRunDuration int64
+	if deal.DownloadAt > 0 {
+		retrievalDuration = int64(deal.DownloadAt) - int64(deal.UploadAt)
+		jobRunDuration = int64(deal.DownloadAt) - int64(deal.Deal.JobOffer.CreatedAt)
+	} else {
+		// The job failed, so we record the job run duration until now
+		jobRunDuration = time.Now().UnixMilli() - int64(deal.Deal.JobOffer.CreatedAt)
 	}
 
 	jobRun := JobRun{
-		DealID:                    deal.ID,
-		ModuleID:                  shortcuts.GetShortcut(deal.Deal.JobOffer.Module.Repo, deal.Deal.JobOffer.Module.Hash),
-		ResourceProvider:          deal.ResourceProvider,
-		JobCreator:                deal.JobCreator,
-		TotalDurationMilliseconds: float64(jobRunTime),
-		ExtraData:                 extraData,
-		JobOffer:                  deal.JobOffer,
-		ResourceOffer:             deal.ResourceOffer,
+		DealID:                        deal.ID,
+		ModuleID:                      shortcuts.GetShortcut(deal.Deal.JobOffer.Module.Repo, deal.Deal.JobOffer.Module.Hash),
+		ResourceProvider:              deal.ResourceProvider,
+		JobCreator:                    deal.JobCreator,
+		ResourceOffer:                 deal.ResourceOffer,
+		JobOffer:                      deal.JobOffer,
+		JobState:                      data.GetAgreementStateString(deal.State),
+		MatchDurationMilliseconds:     float64(matchDuration),
+		ExecutionDurationMilliseconds: float64(executionDuration),
+		RetrievalDurationMilliseconds: float64(retrievalDuration),
+		TotalDurationMilliseconds:     float64(jobRunDuration),
 	}
 
-	_, err = http.PostRequest[JobRun, JobRun](stat.ClientOptions, "/job-run", jobRun)
+	_, err := http.PostRequest[JobRun, JobRun](stat.ClientOptions, "/job-run", jobRun)
 	if err != nil {
 		return fmt.Errorf("failed to post job run: %s", err)
 	}
