@@ -357,6 +357,18 @@ func (s *SolverStoreMemory) UpdateDealUploadTime(id string, timestamp int) (*dat
 	return deal, nil
 }
 
+func (s *SolverStoreMemory) UpdateDealDownloadTime(id string, timestamp int) (*data.DealContainer, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	deal, ok := s.dealMap[id]
+	if !ok {
+		return nil, fmt.Errorf("deal not found: %s", id)
+	}
+	deal.DownloadAt = timestamp
+	s.dealMap[id] = deal
+	return deal, nil
+}
+
 func (s *SolverStoreMemory) UpdateDealMediator(id string, mediator string) (*data.DealContainer, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
