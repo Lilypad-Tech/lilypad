@@ -501,6 +501,32 @@ func (store *SolverStoreDatabase) UpdateDealState(id string, state uint8) (*data
 	return &inner, nil
 }
 
+func (store *SolverStoreDatabase) UpdateDealUploadTime(id string, timestamp int) (*data.DealContainer, error) {
+	var record Deal
+	result := store.db.Where("c_id = ?", id).First(&record)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("deal not found: %s", id)
+		}
+		return nil, result.Error
+	}
+
+	// Update the jsonb data
+	inner := record.Attributes.Data()
+	inner.UploadAt = timestamp
+
+	if err := store.db.Model(&record).
+		Select("Attributes").
+		Updates(Deal{
+			Attributes: datatypes.NewJSONType(inner),
+		}).Error; err != nil {
+		return nil, err
+	}
+
+	return &inner, nil
+}
+
 func (store *SolverStoreDatabase) UpdateDealMediator(id string, mediator string) (*data.DealContainer, error) {
 	var record Deal
 	result := store.db.Where("c_id = ?", id).First(&record)

@@ -89,6 +89,7 @@ type SolverStore interface {
 	UpdateJobOfferState(id string, dealID string, state uint8) (*data.JobOfferContainer, error)
 	UpdateResourceOfferState(id string, dealID string, state uint8) (*data.ResourceOfferContainer, error)
 	UpdateDealState(id string, state uint8) (*data.DealContainer, error)
+	UpdateDealUploadTime(id string, timestamp int) (*data.DealContainer, error)
 	UpdateDealMediator(id string, mediator string) (*data.DealContainer, error)
 	UpdateDealTransactionsJobCreator(id string, data data.DealTransactionsJobCreator) (*data.DealContainer, error)
 	UpdateDealTransactionsResourceProvider(id string, data data.DealTransactionsResourceProvider) (*data.DealContainer, error)
