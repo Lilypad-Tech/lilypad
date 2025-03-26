@@ -613,6 +613,12 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 	}
 
 	if err := server.handleFileDownload(GetDealsFilePath(id), res, func() {
+		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
+		if err != nil {
+			server.log.Error().Err(err).Msg("failed to record deal downloadAt time")
+		}
+
 		server.stats.PostJobRun(deal)
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
@@ -831,6 +837,12 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 	}
 
 	if err := server.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
+		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
+		if err != nil {
+			server.log.Error().Err(err).Msg("failed to record deal downloadAt time")
+		}
+
 		server.stats.PostJobRun(deal)
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
