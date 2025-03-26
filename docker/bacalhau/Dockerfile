@@ -1,5 +1,7 @@
 FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04 
 
+ARG VERSION=1.6.4
+
 WORKDIR /app
 
 RUN apt update && \
@@ -17,8 +19,8 @@ RUN mkdir -pm755 /etc/apt/keyrings && curl -o /etc/apt/keyrings/docker.asc -fsSL
 RUN nvidia-ctk runtime configure --runtime=docker --set-as-default
 
 # Install Bacalhau
-ADD https://github.com/bacalhau-project/bacalhau/releases/download/v1.6.0/bacalhau_v1.6.0_linux_amd64.tar.gz .
-RUN tar xfv bacalhau_v1.6.0_linux_amd64.tar.gz
+ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${VERSION}/bacalhau_v${VERSION}_linux_amd64.tar.gz .
+RUN tar xfv bacalhau_v${VERSION}_linux_amd64.tar.gz
 RUN mv bacalhau /usr/local/bin
 
 ADD https://raw.githubusercontent.com/moby/moby/refs/heads/master/hack/dind /usr/local/bin/dind
@@ -29,12 +31,6 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=10 \
 
 VOLUME /var/lib/docker
 
-RUN touch run
-RUN echo "#!/bin/bash" >> run
-RUN echo "find /run /var/run -iname 'docker*.pid' -delete" >> run
-RUN echo "dind dockerd &" >> run
-RUN echo 'until pgrep "dockerd" >/dev/null; do sleep 0.5; done' >> run
-RUN echo 'exec "$@"' >> run
-RUN chmod a+x ./run
+COPY ./docker/bacalhau/entrypoint.sh /entrypoint.sh
 
-ENTRYPOINT [ "./run" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
