@@ -348,7 +348,7 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 		return nil, fmt.Errorf("job creator address does not match signer address")
 	}
 
-	if server.options.AccessControl.EnableVersionCheck {
+	if server.options.AccessControl.EnableVersionCheck && !http.IsAnura(req, server.options.AccessControl.AnuraAddresses) {
 		versionHeader, _ := http.GetVersionFromHeaders(req)
 		minVersion, ok := server.versionConfig.IsSupported(versionHeader)
 		if !ok {
