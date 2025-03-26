@@ -290,7 +290,7 @@ func (sdk *Web3SDK) getBlockNumber() (uint64, error) {
 	var blockNumberHex string
 	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
-		logger.Error().Msgf("error for getBlockNumber: %s", err.Error())
+		sdkLogger.Error().Msgf("error for getBlockNumber: %s", err.Error())
 		return 0, err
 	}
 	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")

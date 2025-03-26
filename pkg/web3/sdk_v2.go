@@ -115,7 +115,7 @@ func NewContractsV2(
 func NewContractSDKV2(ctx context.Context, options Web3Options, tracer trace.Tracer) (*Web3SDKV2, error) {
 	displayOpts := options
 	displayOpts.PrivateKey = "*********"
-	logger.Debug().Msgf("NewContractSDK: %+v", displayOpts)
+	logger.Debug().Any("DisplayOptions", displayOpts).Msg("Creating new contract SDK")
 
 	client, err := getEthClient(ctx, options, tracer)
 	if err != nil {
@@ -167,7 +167,7 @@ func (sdk *Web3SDKV2) getEthClient(ctx context.Context, options Web3Options, tra
 	for _, u := range rpcs {
 		parsedURL, err = url.Parse(u)
 		if err != nil {
-			logger.Warn().Msgf("Unable to parse web3 RPC URL: %v", err)
+			logger.Warn().Err(err).Msg("Unable to parse web3 RPC URL")
 			span.RecordError(errors.New("Unable to parse web3 RPC URL"))
 			continue
 		}
@@ -175,11 +175,11 @@ func (sdk *Web3SDKV2) getEthClient(ctx context.Context, options Web3Options, tra
 		span.AddEvent("ethclient.dial", trace.WithAttributes(attribute.String("web3.rpc_url", parsedURL.Host)))
 		client, err = ethclient.Dial(u)
 		if err != nil {
-			logger.Warn().Msgf("Failed to connect to %s: %v", parsedURL.Host, err)
+			logger.Warn().Err(err).Str("url", parsedURL.Host).Msg("Unable to connect to web3 RPC URL")
 			span.RecordError(fmt.Errorf("Failed to connect to %s", parsedURL.Host))
 			continue
 		} else {
-			logger.Info().Msgf("Connected to %s", parsedURL.Host)
+			logger.Info().Str("url", parsedURL.Host).Msg("Connected to web3 RPC URL")
 			span.AddEvent("ethclient.connected")
 			break
 		}
@@ -196,7 +196,7 @@ func (sdk *Web3SDKV2) getBlockNumber() (uint64, error) {
 	var blockNumberHex string
 	err := sdk.Client.Client().Call(&blockNumberHex, "eth_blockNumber")
 	if err != nil {
-		logger.Error().Msgf("error for getBlockNumber: %s", err.Error())
+		logger.Error().Err(err).Msg("Unable to get block number")
 		return 0, err
 	}
 	blockNumberHex = strings.TrimPrefix(blockNumberHex, "0x")
@@ -218,7 +218,7 @@ func (sdk *Web3SDKV2) GetBalance(address string) (*big.Int, error) {
 	// Get the balance using the converted address
 	balance, err := sdk.Client.BalanceAt(context.Background(), ethAddress, nil)
 	if err != nil {
-		logger.Error().Msgf("error for GetBalance: %s", err.Error())
+		logger.Error().Err(err).Str("address", address).Msg("Unable to get balance for address")
 		return nil, err
 	}
 	return balance, nil
