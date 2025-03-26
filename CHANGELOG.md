@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.16.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.15.0...v2.16.0) (2025-03-25)
+
+
+### Features
+
+* Add minimum version check ([#544](https://github.com/Lilypad-Tech/lilypad/issues/544)) ([f56ed7c](https://github.com/Lilypad-Tech/lilypad/commit/f56ed7c6b462ba080de27d1b08d65c1a63b93276))
+* Add OpenTelemetry logger ([#540](https://github.com/Lilypad-Tech/lilypad/issues/540)) ([842d862](https://github.com/Lilypad-Tech/lilypad/commit/842d862886c2d51069249bcd86a88e167435fd0b))
+* Enhance job offer update handling to filter by job ID ([#541](https://github.com/Lilypad-Tech/lilypad/issues/541)) ([922c3e7](https://github.com/Lilypad-Tech/lilypad/commit/922c3e79ced16022042affbca221b5c52389dfef))
+* Module Loading Improvements ([#539](https://github.com/Lilypad-Tech/lilypad/issues/539)) ([385af81](https://github.com/Lilypad-Tech/lilypad/commit/385af81dbf51e016f8514606b98af6697d8630e2))
+
 ## [2.15.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.14.0...v2.15.0) (2025-03-07)
 
 

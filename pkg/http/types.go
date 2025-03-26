@@ -15,6 +15,7 @@ type AccessControlOptions struct {
 	ValidationTokenKid              string
 	AnuraAddresses                  []string
 	OfferTimestampDiffSeconds       int
+	EnableVersionCheck              bool
 	MinimumVersion                  string
 }
 
