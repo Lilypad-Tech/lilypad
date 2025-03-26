@@ -11,14 +11,18 @@ import (
 )
 
 type JobRun struct {
-	DealID                    string          `json:"dealId"`
-	ModuleID                  string          `json:"moduleId"`
-	ResourceProvider          string          `json:"resourceProvider"`
-	JobCreator                string          `json:"jobCreator"`
-	TotalDurationMilliseconds float64         `json:"totalDuration_ms"`
-	ExtraData                 json.RawMessage `json:"extraData"`
-	JobOffer                  string          `json:"jobOffer"`
-	ResourceOffer             string          `json:"resourceOffer"`
+	DealID                        string          `json:"dealId"`
+	ModuleID                      string          `json:"moduleId"`
+	JobCreator                    string          `json:"jobCreator"`
+	ResourceProvider              string          `json:"resourceProvider"`
+	JobOffer                      string          `json:"jobOffer"`
+	ResourceOffer                 string          `json:"resourceOffer"`
+	JobState                      string          `json:"jobState"`
+	MatchDurationMilliseconds     float64         `json:"matchDuration_ms"`
+	ExecutionDurationMilliseconds float64         `json:"executionDuration_ms"`
+	RetrievalDurationMilliseconds float64         `json:"retrievalDuration_ms"`
+	TotalDurationMilliseconds     float64         `json:"totalDuration_ms"`
+	ExtraData                     json.RawMessage `json:"extraData"`
 }
 
 // Stats API implementation
