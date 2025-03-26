@@ -749,6 +749,12 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return err
 		}
 
+		uploadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		_, err = server.store.UpdateDealUploadTime(deal.ID, uploadAt)
+		if err != nil {
+			server.log.Error().Err(err).Msg("failed to record deal uploadAt time")
+		}
+
 		return nil
 	}()
 
