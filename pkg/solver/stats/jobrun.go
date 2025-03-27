@@ -28,6 +28,7 @@ type JobRun struct {
 // Stats API implementation
 
 func (stat *HTTPStats) PostJobRun(deal *data.DealContainer) error {
+
 	// The time from job offer creation until a match is made
 	matchDuration := int64(deal.CreatedAt) - int64(deal.Deal.JobOffer.CreatedAt)
 
@@ -65,6 +66,7 @@ func (stat *HTTPStats) PostJobRun(deal *data.DealContainer) error {
 
 	_, err := http.PostRequest[JobRun, JobRun](stat.ClientOptions, "/job-run", jobRun)
 	if err != nil {
+		log.Error().Err(err).Msg("failed to post job run")
 		return fmt.Errorf("failed to post job run: %s", err)
 	}
 

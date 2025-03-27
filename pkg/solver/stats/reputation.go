@@ -56,6 +56,7 @@ func (stat *HTTPStats) PostReputation(address string, reputation Reputation) err
 	path := fmt.Sprintf("/resource-provider/%s/reputation", address)
 	_, err := http.PostRequest[Reputation, Reputation](stat.ClientOptions, path, reputation)
 	if err != nil {
+		log.Error().Err(err).Msg("failed to post reputation")
 		return fmt.Errorf("failed to post reputation: %s", err)
 	}
 
