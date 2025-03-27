@@ -383,13 +383,14 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				}
 			} else {
 				// Cancel expired job offers, resource offers, and deals
-				_, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
+				deal, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
 					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
 					span.SetStatus(codes.Error, "update expired deal state failed")
 					span.RecordError(err)
 				}
 				expiredDeals = append(expiredDeals, jobOffer.DealID)
+				controller.stats.PostJobRun(deal)
 			}
 			expiredOffers = append(expiredOffers, jobOffer.ID)
 		}
