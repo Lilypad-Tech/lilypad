@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743174568129,
+  "lastUpdate": 1743187724126,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1920,6 +1920,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78108 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "50788836d22f70b134acfa88225e8fb3ea1bbd35",
+          "message": "feat: Compute and report job run timings (#557)\n\n* feat: Add deal container timestamps\n\n* feat: Add UpdateDealUploadTime solver store method\n\n* feat: Add UpdateDealDownloadTime solver store method\n\n* feat: Record deal CreatedAt time\n\n* feat: Record deal UploadAt time\n\n* feat: Record deal DownloadAt time\n\n* feat: Add timing and JobState fields to stats JobRun\n\n* feat: Compute and report job timings to stats API\n\n* feat: Add stats to solver controller\n\n* feat: Report timed out job runs\n\n* feat: Add solver stats logging",
+          "timestamp": "2025-03-28T11:48:11-07:00",
+          "tree_id": "115a63ef5fe8f318ac44f59130deaed1b8e8bbef",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/50788836d22f70b134acfa88225e8fb3ea1bbd35"
+        },
+        "date": 1743187723114,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46336,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "79506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46336,
+            "unit": "ns/op",
+            "extra": "79506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "79506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "79506 times\n4 procs"
           }
         ]
       }
