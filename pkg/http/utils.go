@@ -225,6 +225,30 @@ func CheckAnuraSignature(req *http.Request, approvedAddresses []string) (string,
 	}
 }
 
+func IsAnura(req *http.Request, approvedAddresses []string) bool {
+	serverHeader := req.Header.Get(X_ANURA_SERVER_HEADER)
+	if serverHeader == "" {
+		return false
+	}
+	anuraSignature := req.Header.Get(X_ANURA_SIGNATURE_HEADER)
+	if anuraSignature == "" {
+		return false
+	}
+
+	signatureAddress, err := decodeUserAddress(serverHeader, anuraSignature)
+	if err != nil {
+		return false
+	}
+
+	for _, addr := range approvedAddresses {
+		if strings.EqualFold(signatureAddress, addr) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func GetVersionFromHeaders(req *http.Request) (string, error) {
 	versionHeader := req.Header.Get(X_LILYPAD_VERSION_HEADER)
 	if versionHeader == "" {
