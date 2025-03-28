@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743087241674,
+  "lastUpdate": 1743174568129,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -1872,6 +1872,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78693 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "wembenyama01@gmail.com",
+            "name": "B0bbyDowns",
+            "username": "B0bbyDowns"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ac31a550fbcc2d84e95d146240b33a3eea00ce2",
+          "message": "feat: sign CLA for B0bbyDowns (#558)",
+          "timestamp": "2025-03-28T08:08:40-07:00",
+          "tree_id": "a93793b13b10db40b84752cf4bbce7990a691192",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/1ac31a550fbcc2d84e95d146240b33a3eea00ce2"
+        },
+        "date": 1743174567119,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46071,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46071,
+            "unit": "ns/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78108 times\n4 procs"
           }
         ]
       }
