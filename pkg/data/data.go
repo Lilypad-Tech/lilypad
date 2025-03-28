@@ -329,7 +329,16 @@ type DealTransactions struct {
 }
 
 type DealContainer struct {
-	ID               string           `json:"id"`
+	ID string `json:"id"`
+	// Set at match time.
+	// Used to compute match and execution durations.
+	CreatedAt int `json:"created_at"`
+	// Set when job outputs are uploaded by the resource provider.
+	// Used to compute execution and output retrieval durations.
+	UploadAt int `json:"upload_at"`
+	// Set when job outputs are downloaded by the job creator.
+	// Used to compute output retrieval and job run durations.
+	DownloadAt       int              `json:"download_at"`
 	JobCreator       string           `json:"job_creator"`
 	ResourceProvider string           `json:"resource_provider"`
 	JobOffer         string           `json:"job_offer"`

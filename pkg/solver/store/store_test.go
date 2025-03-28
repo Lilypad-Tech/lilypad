@@ -873,6 +873,28 @@ func TestDealUpdates(t *testing.T) {
 						newState, updated.State)
 				}
 
+				// Update deal upload time
+				newUploadTime := int(time.Now().Unix())
+				updated, err = store.UpdateDealUploadTime(added.ID, newUploadTime)
+				if err != nil {
+					t.Fatalf("Failed to update deal upload time: %v", err)
+				}
+				if updated.UploadAt != newUploadTime {
+					t.Errorf("Update upload time failed: expected uploadAt=%d, got uploadAt=%d",
+						newUploadTime, updated.UploadAt)
+				}
+
+				// Update deal download time
+				newDownloadTime := int(time.Now().Unix())
+				updated, err = store.UpdateDealDownloadTime(added.ID, newDownloadTime)
+				if err != nil {
+					t.Fatalf("Failed to update deal download time: %v", err)
+				}
+				if updated.DownloadAt != newDownloadTime {
+					t.Errorf("Update download time failed: expected downloadAt=%d, got downloadAt=%d",
+						newDownloadTime, updated.DownloadAt)
+				}
+
 				// Update deal mediator
 				newMediator := generateEthAddress()
 				updated, err = store.UpdateDealMediator(added.ID, newMediator)

@@ -8,6 +8,7 @@ import (
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/metricsDashboard"
 	"github.com/lilypad-tech/lilypad/pkg/solver/matcher"
+	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
 	"github.com/lilypad-tech/lilypad/pkg/system"
 	"github.com/lilypad-tech/lilypad/pkg/web3"
@@ -48,6 +49,7 @@ type SolverController struct {
 	web3SDK         *web3.Web3SDK
 	web3Events      *web3.EventChannels
 	store           store.SolverStore
+	stats           stats.Stats
 	loop            *system.ControlLoop
 	solverEventSubs []func(SolverEvent)
 	options         SolverOptions
@@ -66,6 +68,7 @@ const REQUIRED_BALANCE_IN_WEI = 0.0006
 func NewSolverController(
 	web3SDK *web3.Web3SDK,
 	store store.SolverStore,
+	stats stats.Stats,
 	options SolverOptions,
 	tracer trace.Tracer,
 	meter metric.Meter,
@@ -74,6 +77,7 @@ func NewSolverController(
 		web3SDK:    web3SDK,
 		web3Events: web3.NewEventChannels(),
 		store:      store,
+		stats:      stats,
 		options:    options,
 		log:        system.GetLogger(system.SolverService),
 		tracer:     tracer,
@@ -379,13 +383,14 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 				}
 			} else {
 				// Cancel expired job offers, resource offers, and deals
-				_, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
+				deal, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
 				if err != nil {
 					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
 					span.SetStatus(codes.Error, "update expired deal state failed")
 					span.RecordError(err)
 				}
 				expiredDeals = append(expiredDeals, jobOffer.DealID)
+				controller.stats.PostJobRun(deal)
 			}
 			expiredOffers = append(expiredOffers, jobOffer.ID)
 		}

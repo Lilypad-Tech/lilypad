@@ -613,6 +613,13 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 	}
 
 	if err := server.handleFileDownload(GetDealsFilePath(id), res, func() {
+		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
+		if err != nil {
+			server.log.Error().Str("dealID", deal.ID).
+				Int("downloadAt", downloadAt).Err(err).Msg("failed to record deal downloadAt time")
+		}
+
 		server.stats.PostJobRun(deal)
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
@@ -697,9 +704,10 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return err
 		}
 		if deal == nil {
-			server.log.Error().Str("cide", id).Msg("deal not found")
+			server.log.Error().Str("cid", id).Msg("deal not found")
 			return err
 		}
+
 		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
 			server.log.Trace().
 				Str("cid", deal.ID).
@@ -707,6 +715,7 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 				Msg("attempted file upload for timed out job for deal")
 			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
 		}
+
 		signerAddress, err := http.CheckSignature(req)
 		if err != nil {
 			server.log.Error().Err(err).Msg("error checking signature")
@@ -747,6 +756,13 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 		_, err = io.Copy(f, req.Body)
 		if err != nil {
 			return err
+		}
+
+		uploadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		_, err = server.store.UpdateDealUploadTime(deal.ID, uploadAt)
+		if err != nil {
+			server.log.Error().Str("dealID", deal.ID).
+				Int("uploadAt", uploadAt).Err(err).Msg("failed to record deal uploadAt time")
 		}
 
 		return nil
@@ -825,6 +841,13 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 	}
 
 	if err := server.handleFileDownload(GetDealsFilePath(jobOffer.DealID), res, func() {
+		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
+		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
+		if err != nil {
+			server.log.Error().Str("dealID", deal.ID).
+				Int("downloadAt", downloadAt).Err(err).Msg("failed to record deal downloadAt time")
+		}
+
 		server.stats.PostJobRun(deal)
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().

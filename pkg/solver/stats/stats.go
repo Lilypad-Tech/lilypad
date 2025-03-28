@@ -18,6 +18,8 @@ type Stats interface {
 	PostReputation(address string, reputation Reputation) error
 }
 
+var log = system.GetLogger(system.SolverService)
+
 func NewStats(service system.Service, options StatsOptions, web3Options web3.Web3Options, web3SDK *web3.Web3SDK) (Stats, error) {
 	if !options.Enabled {
 		return &NoopStats{}, nil

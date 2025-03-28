@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/controller"
@@ -160,6 +161,7 @@ func GetDealContainer(
 ) DealContainer {
 	return DealContainer{
 		ID:               deal.ID,
+		CreatedAt:        int(time.Now().UnixNano() / int64(time.Millisecond)),
 		JobCreator:       deal.JobOffer.JobCreator,
 		ResourceProvider: deal.ResourceOffer.ResourceProvider,
 		JobOffer:         deal.JobOffer.ID,
