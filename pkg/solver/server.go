@@ -616,7 +616,8 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
 		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
 		if err != nil {
-			server.log.Error().Err(err).Msg("failed to record deal downloadAt time")
+			server.log.Error().Str("dealID", deal.ID).
+				Int("downloadAt", downloadAt).Err(err).Msg("failed to record deal downloadAt time")
 		}
 
 		server.stats.PostJobRun(deal)
@@ -760,7 +761,8 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 		uploadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
 		_, err = server.store.UpdateDealUploadTime(deal.ID, uploadAt)
 		if err != nil {
-			server.log.Error().Err(err).Msg("failed to record deal uploadAt time")
+			server.log.Error().Str("dealID", deal.ID).
+				Int("uploadAt", uploadAt).Err(err).Msg("failed to record deal uploadAt time")
 		}
 
 		return nil
@@ -842,7 +844,8 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
 		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
 		if err != nil {
-			server.log.Error().Err(err).Msg("failed to record deal downloadAt time")
+			server.log.Error().Str("dealID", deal.ID).
+				Int("downloadAt", downloadAt).Err(err).Msg("failed to record deal downloadAt time")
 		}
 
 		server.stats.PostJobRun(deal)
