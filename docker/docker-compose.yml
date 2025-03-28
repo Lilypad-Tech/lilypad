@@ -3,6 +3,10 @@ services:
   bacalhau:
     image: ghcr.io/lilypad-tech/bacalhau:latest
     container_name: bacalhau
+    ports:
+      - "8438:8438"
+    command: ["bacalhau", "serve", "--orchestrator", "--compute", "--config", "WebUI.Enabled"]
+    runtime: nvidia
     restart: unless-stopped
     privileged: true
     build:
@@ -10,23 +14,17 @@ services:
       dockerfile: ./docker/bacalhau/Dockerfile
     environment:
       - BACALHAU_ENVIRONMENT=local
-    command: ["bacalhau", "serve", "--orchestrator", "--compute"]
+      - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - bacalhau-data:/root/.bacalhau
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider
+    runtime: nvidia
     restart: unless-stopped
     depends_on:
       bacalhau:
         condition: service_healthy
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     build:
       context: ..
       dockerfile: ./docker/resource-provider/Dockerfile
@@ -37,6 +35,7 @@ services:
       - bacalhau-data:/root/.bacalhau
     environment:
       - WEB3_PRIVATE_KEY
+      - NVIDIA_VISIBLE_DEVICES=all
       - WEB3_RPC_URL
       - BACALHAU_API_HOST=bacalhau
       - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
