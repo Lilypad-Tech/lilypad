@@ -63,7 +63,7 @@ type SharedStructsResult struct {
 
 // LilypadProxyMetaData contains all meta data concerning the LilypadProxy contract.
 var LilypadProxyMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"acceptJobPayment\",\"inputs\":[{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"acceptResourceProviderCollateral\",\"inputs\":[{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getDeal\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getEscrowBalance\",\"inputs\":[{\"name\":\"_address\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMinimumResourceProviderCollateralAmount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getPaymentEngineAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getResult\",\"inputs\":[{\"name\":\"_resultId\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getStorageAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getUserAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getVersion\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getl2LilypadTokenAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_storageAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_paymentEngineAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_userAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_tokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"callerConfirmation\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setDeal\",\"inputs\":[{\"name\":\"deal\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setL2LilypadTokenContract\",\"inputs\":[{\"name\":\"_l2LilypadTokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setPaymentEngineContract\",\"inputs\":[{\"name\":\"_paymentEngineAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setResult\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setStorageContract\",\"inputs\":[{\"name\":\"_storageAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setUserContract\",\"inputs\":[{\"name\":\"_userAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__JobCreatorEscrowPayment\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__JobCreatorInserted\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__ResourceProviderCollateralPayment\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__ResourceProviderInserted\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccessControlBadConfirmation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AccessControlUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"neededRole\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InvalidInitialization\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__DealFailedToLockup\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__DealFailedToSave\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__NotAuthorizedToGetResult\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__NotEnoughAllowance\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ResultFailedToSave\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ZeroAddressNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ZeroAmountNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__acceptJobPayment__NotJobCreator\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__acceptResourceProviderCollateral__NotResourceProvider\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotInitializing\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"acceptJobPayment\",\"inputs\":[{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"acceptResourceProviderCollateral\",\"inputs\":[{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getDeal\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getEscrowBalance\",\"inputs\":[{\"name\":\"_address\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMinimumResourceProviderCollateralAmount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getPaymentEngineAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getResult\",\"inputs\":[{\"name\":\"_resultId\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getStorageAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getUserAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getVersion\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getl2LilypadTokenAddress\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_storageAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_paymentEngineAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_userAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_tokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"callerConfirmation\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setDeal\",\"inputs\":[{\"name\":\"deal\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setL2LilypadTokenContract\",\"inputs\":[{\"name\":\"_l2LilypadTokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setPaymentEngineContract\",\"inputs\":[{\"name\":\"_paymentEngineAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setResult\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setStorageContract\",\"inputs\":[{\"name\":\"_storageAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setUserContract\",\"inputs\":[{\"name\":\"_userAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__JobCreatorEscrowPayment\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__JobCreatorInserted\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__L2LilypadTokenContractUpdated\",\"inputs\":[{\"name\":\"newL2LilypadTokenContract\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__PaymentEngineContractUpdated\",\"inputs\":[{\"name\":\"newPaymentEngineContract\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__ResourceProviderCollateralPayment\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__ResourceProviderInserted\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__StorageContractUpdated\",\"inputs\":[{\"name\":\"newStorageContract\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadProxy__UserContractUpdated\",\"inputs\":[{\"name\":\"newUserContract\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccessControlBadConfirmation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AccessControlUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"neededRole\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InvalidInitialization\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__DealFailedToLockup\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__DealFailedToSave\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__NotAuthorizedToGetResult\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__NotEnoughAllowance\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ResultFailedToSave\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ZeroAddressNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__ZeroAmountNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__acceptJobPayment__NotJobCreator\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadProxy__acceptResourceProviderCollateral__NotResourceProvider\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotInitializing\",\"inputs\":[]}]",
 }
 
 // LilypadProxyABI is the input ABI used to generate the binding from.
@@ -1321,6 +1321,294 @@ func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyJobCreatorInserted(l
 	return event, nil
 }
 
+// LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator is returned from FilterLilypadProxyL2LilypadTokenContractUpdated and is used to iterate over the raw logs and unpacked data for LilypadProxyL2LilypadTokenContractUpdated events raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator struct {
+	Event *LilypadProxyLilypadProxyL2LilypadTokenContractUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadProxyLilypadProxyL2LilypadTokenContractUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadProxyLilypadProxyL2LilypadTokenContractUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadProxyLilypadProxyL2LilypadTokenContractUpdated represents a LilypadProxyL2LilypadTokenContractUpdated event raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyL2LilypadTokenContractUpdated struct {
+	NewL2LilypadTokenContract common.Address
+	Raw                       types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadProxyL2LilypadTokenContractUpdated is a free log retrieval operation binding the contract event 0x50079846b1fb6cc26beb57dfb2d3492b692a752071682edf42e18ad2a460905b.
+//
+// Solidity: event LilypadProxy__L2LilypadTokenContractUpdated(address indexed newL2LilypadTokenContract)
+func (_LilypadProxy *LilypadProxyFilterer) FilterLilypadProxyL2LilypadTokenContractUpdated(opts *bind.FilterOpts, newL2LilypadTokenContract []common.Address) (*LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator, error) {
+
+	var newL2LilypadTokenContractRule []interface{}
+	for _, newL2LilypadTokenContractItem := range newL2LilypadTokenContract {
+		newL2LilypadTokenContractRule = append(newL2LilypadTokenContractRule, newL2LilypadTokenContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.FilterLogs(opts, "LilypadProxy__L2LilypadTokenContractUpdated", newL2LilypadTokenContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadProxyLilypadProxyL2LilypadTokenContractUpdatedIterator{contract: _LilypadProxy.contract, event: "LilypadProxy__L2LilypadTokenContractUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadProxyL2LilypadTokenContractUpdated is a free log subscription operation binding the contract event 0x50079846b1fb6cc26beb57dfb2d3492b692a752071682edf42e18ad2a460905b.
+//
+// Solidity: event LilypadProxy__L2LilypadTokenContractUpdated(address indexed newL2LilypadTokenContract)
+func (_LilypadProxy *LilypadProxyFilterer) WatchLilypadProxyL2LilypadTokenContractUpdated(opts *bind.WatchOpts, sink chan<- *LilypadProxyLilypadProxyL2LilypadTokenContractUpdated, newL2LilypadTokenContract []common.Address) (event.Subscription, error) {
+
+	var newL2LilypadTokenContractRule []interface{}
+	for _, newL2LilypadTokenContractItem := range newL2LilypadTokenContract {
+		newL2LilypadTokenContractRule = append(newL2LilypadTokenContractRule, newL2LilypadTokenContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.WatchLogs(opts, "LilypadProxy__L2LilypadTokenContractUpdated", newL2LilypadTokenContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadProxyLilypadProxyL2LilypadTokenContractUpdated)
+				if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__L2LilypadTokenContractUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadProxyL2LilypadTokenContractUpdated is a log parse operation binding the contract event 0x50079846b1fb6cc26beb57dfb2d3492b692a752071682edf42e18ad2a460905b.
+//
+// Solidity: event LilypadProxy__L2LilypadTokenContractUpdated(address indexed newL2LilypadTokenContract)
+func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyL2LilypadTokenContractUpdated(log types.Log) (*LilypadProxyLilypadProxyL2LilypadTokenContractUpdated, error) {
+	event := new(LilypadProxyLilypadProxyL2LilypadTokenContractUpdated)
+	if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__L2LilypadTokenContractUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator is returned from FilterLilypadProxyPaymentEngineContractUpdated and is used to iterate over the raw logs and unpacked data for LilypadProxyPaymentEngineContractUpdated events raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator struct {
+	Event *LilypadProxyLilypadProxyPaymentEngineContractUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadProxyLilypadProxyPaymentEngineContractUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadProxyLilypadProxyPaymentEngineContractUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadProxyLilypadProxyPaymentEngineContractUpdated represents a LilypadProxyPaymentEngineContractUpdated event raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyPaymentEngineContractUpdated struct {
+	NewPaymentEngineContract common.Address
+	Raw                      types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadProxyPaymentEngineContractUpdated is a free log retrieval operation binding the contract event 0x2d73c3ee170ad11f36947daf136d0ce8fb731a7a03e86862115dcd0a097a3b4e.
+//
+// Solidity: event LilypadProxy__PaymentEngineContractUpdated(address indexed newPaymentEngineContract)
+func (_LilypadProxy *LilypadProxyFilterer) FilterLilypadProxyPaymentEngineContractUpdated(opts *bind.FilterOpts, newPaymentEngineContract []common.Address) (*LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator, error) {
+
+	var newPaymentEngineContractRule []interface{}
+	for _, newPaymentEngineContractItem := range newPaymentEngineContract {
+		newPaymentEngineContractRule = append(newPaymentEngineContractRule, newPaymentEngineContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.FilterLogs(opts, "LilypadProxy__PaymentEngineContractUpdated", newPaymentEngineContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadProxyLilypadProxyPaymentEngineContractUpdatedIterator{contract: _LilypadProxy.contract, event: "LilypadProxy__PaymentEngineContractUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadProxyPaymentEngineContractUpdated is a free log subscription operation binding the contract event 0x2d73c3ee170ad11f36947daf136d0ce8fb731a7a03e86862115dcd0a097a3b4e.
+//
+// Solidity: event LilypadProxy__PaymentEngineContractUpdated(address indexed newPaymentEngineContract)
+func (_LilypadProxy *LilypadProxyFilterer) WatchLilypadProxyPaymentEngineContractUpdated(opts *bind.WatchOpts, sink chan<- *LilypadProxyLilypadProxyPaymentEngineContractUpdated, newPaymentEngineContract []common.Address) (event.Subscription, error) {
+
+	var newPaymentEngineContractRule []interface{}
+	for _, newPaymentEngineContractItem := range newPaymentEngineContract {
+		newPaymentEngineContractRule = append(newPaymentEngineContractRule, newPaymentEngineContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.WatchLogs(opts, "LilypadProxy__PaymentEngineContractUpdated", newPaymentEngineContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadProxyLilypadProxyPaymentEngineContractUpdated)
+				if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__PaymentEngineContractUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadProxyPaymentEngineContractUpdated is a log parse operation binding the contract event 0x2d73c3ee170ad11f36947daf136d0ce8fb731a7a03e86862115dcd0a097a3b4e.
+//
+// Solidity: event LilypadProxy__PaymentEngineContractUpdated(address indexed newPaymentEngineContract)
+func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyPaymentEngineContractUpdated(log types.Log) (*LilypadProxyLilypadProxyPaymentEngineContractUpdated, error) {
+	event := new(LilypadProxyLilypadProxyPaymentEngineContractUpdated)
+	if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__PaymentEngineContractUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // LilypadProxyLilypadProxyResourceProviderCollateralPaymentIterator is returned from FilterLilypadProxyResourceProviderCollateralPayment and is used to iterate over the raw logs and unpacked data for LilypadProxyResourceProviderCollateralPayment events raised by the LilypadProxy contract.
 type LilypadProxyLilypadProxyResourceProviderCollateralPaymentIterator struct {
 	Event *LilypadProxyLilypadProxyResourceProviderCollateralPayment // Event containing the contract specifics and raw log
@@ -1604,6 +1892,294 @@ func (_LilypadProxy *LilypadProxyFilterer) WatchLilypadProxyResourceProviderInse
 func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyResourceProviderInserted(log types.Log) (*LilypadProxyLilypadProxyResourceProviderInserted, error) {
 	event := new(LilypadProxyLilypadProxyResourceProviderInserted)
 	if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__ResourceProviderInserted", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// LilypadProxyLilypadProxyStorageContractUpdatedIterator is returned from FilterLilypadProxyStorageContractUpdated and is used to iterate over the raw logs and unpacked data for LilypadProxyStorageContractUpdated events raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyStorageContractUpdatedIterator struct {
+	Event *LilypadProxyLilypadProxyStorageContractUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadProxyLilypadProxyStorageContractUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadProxyLilypadProxyStorageContractUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadProxyLilypadProxyStorageContractUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadProxyLilypadProxyStorageContractUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadProxyLilypadProxyStorageContractUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadProxyLilypadProxyStorageContractUpdated represents a LilypadProxyStorageContractUpdated event raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyStorageContractUpdated struct {
+	NewStorageContract common.Address
+	Raw                types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadProxyStorageContractUpdated is a free log retrieval operation binding the contract event 0x0313754bfeeb7de8b45b7448f3827f596f2dce8f32a2021dc9d6188477bfbaf7.
+//
+// Solidity: event LilypadProxy__StorageContractUpdated(address indexed newStorageContract)
+func (_LilypadProxy *LilypadProxyFilterer) FilterLilypadProxyStorageContractUpdated(opts *bind.FilterOpts, newStorageContract []common.Address) (*LilypadProxyLilypadProxyStorageContractUpdatedIterator, error) {
+
+	var newStorageContractRule []interface{}
+	for _, newStorageContractItem := range newStorageContract {
+		newStorageContractRule = append(newStorageContractRule, newStorageContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.FilterLogs(opts, "LilypadProxy__StorageContractUpdated", newStorageContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadProxyLilypadProxyStorageContractUpdatedIterator{contract: _LilypadProxy.contract, event: "LilypadProxy__StorageContractUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadProxyStorageContractUpdated is a free log subscription operation binding the contract event 0x0313754bfeeb7de8b45b7448f3827f596f2dce8f32a2021dc9d6188477bfbaf7.
+//
+// Solidity: event LilypadProxy__StorageContractUpdated(address indexed newStorageContract)
+func (_LilypadProxy *LilypadProxyFilterer) WatchLilypadProxyStorageContractUpdated(opts *bind.WatchOpts, sink chan<- *LilypadProxyLilypadProxyStorageContractUpdated, newStorageContract []common.Address) (event.Subscription, error) {
+
+	var newStorageContractRule []interface{}
+	for _, newStorageContractItem := range newStorageContract {
+		newStorageContractRule = append(newStorageContractRule, newStorageContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.WatchLogs(opts, "LilypadProxy__StorageContractUpdated", newStorageContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadProxyLilypadProxyStorageContractUpdated)
+				if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__StorageContractUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadProxyStorageContractUpdated is a log parse operation binding the contract event 0x0313754bfeeb7de8b45b7448f3827f596f2dce8f32a2021dc9d6188477bfbaf7.
+//
+// Solidity: event LilypadProxy__StorageContractUpdated(address indexed newStorageContract)
+func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyStorageContractUpdated(log types.Log) (*LilypadProxyLilypadProxyStorageContractUpdated, error) {
+	event := new(LilypadProxyLilypadProxyStorageContractUpdated)
+	if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__StorageContractUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// LilypadProxyLilypadProxyUserContractUpdatedIterator is returned from FilterLilypadProxyUserContractUpdated and is used to iterate over the raw logs and unpacked data for LilypadProxyUserContractUpdated events raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyUserContractUpdatedIterator struct {
+	Event *LilypadProxyLilypadProxyUserContractUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadProxyLilypadProxyUserContractUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadProxyLilypadProxyUserContractUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadProxyLilypadProxyUserContractUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadProxyLilypadProxyUserContractUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadProxyLilypadProxyUserContractUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadProxyLilypadProxyUserContractUpdated represents a LilypadProxyUserContractUpdated event raised by the LilypadProxy contract.
+type LilypadProxyLilypadProxyUserContractUpdated struct {
+	NewUserContract common.Address
+	Raw             types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadProxyUserContractUpdated is a free log retrieval operation binding the contract event 0xa7a003a0e920651bf4d23ca4aeaaab17096ccd02622e07532b0343b33bf00da8.
+//
+// Solidity: event LilypadProxy__UserContractUpdated(address indexed newUserContract)
+func (_LilypadProxy *LilypadProxyFilterer) FilterLilypadProxyUserContractUpdated(opts *bind.FilterOpts, newUserContract []common.Address) (*LilypadProxyLilypadProxyUserContractUpdatedIterator, error) {
+
+	var newUserContractRule []interface{}
+	for _, newUserContractItem := range newUserContract {
+		newUserContractRule = append(newUserContractRule, newUserContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.FilterLogs(opts, "LilypadProxy__UserContractUpdated", newUserContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadProxyLilypadProxyUserContractUpdatedIterator{contract: _LilypadProxy.contract, event: "LilypadProxy__UserContractUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadProxyUserContractUpdated is a free log subscription operation binding the contract event 0xa7a003a0e920651bf4d23ca4aeaaab17096ccd02622e07532b0343b33bf00da8.
+//
+// Solidity: event LilypadProxy__UserContractUpdated(address indexed newUserContract)
+func (_LilypadProxy *LilypadProxyFilterer) WatchLilypadProxyUserContractUpdated(opts *bind.WatchOpts, sink chan<- *LilypadProxyLilypadProxyUserContractUpdated, newUserContract []common.Address) (event.Subscription, error) {
+
+	var newUserContractRule []interface{}
+	for _, newUserContractItem := range newUserContract {
+		newUserContractRule = append(newUserContractRule, newUserContractItem)
+	}
+
+	logs, sub, err := _LilypadProxy.contract.WatchLogs(opts, "LilypadProxy__UserContractUpdated", newUserContractRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadProxyLilypadProxyUserContractUpdated)
+				if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__UserContractUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadProxyUserContractUpdated is a log parse operation binding the contract event 0xa7a003a0e920651bf4d23ca4aeaaab17096ccd02622e07532b0343b33bf00da8.
+//
+// Solidity: event LilypadProxy__UserContractUpdated(address indexed newUserContract)
+func (_LilypadProxy *LilypadProxyFilterer) ParseLilypadProxyUserContractUpdated(log types.Log) (*LilypadProxyLilypadProxyUserContractUpdated, error) {
+	event := new(LilypadProxyLilypadProxyUserContractUpdated)
+	if err := _LilypadProxy.contract.UnpackLog(event, "LilypadProxy__UserContractUpdated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
