@@ -73,7 +73,7 @@ type SharedStructsValidationResult struct {
 
 // LilypadPaymentEngineMetaData contains all meta data concerning the LilypadPaymentEngine contract.
 var LilypadPaymentEngineMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"function\",\"name\":\"COLLATERAL_LOCK_DURATION\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"MIN_RESOURCE_PROVIDER_DEPOSIT_AMOUNT\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"activeBurnTokens\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"activeEscrow\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"activeEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"canWithdrawEscrow\",\"inputs\":[{\"name\":\"_address\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"depositTimestamps\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"depositTimestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"escrowBalances\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleJobCompletion\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleJobFailure\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleValidationFailed\",\"inputs\":[{\"name\":\"_validationResult\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.ValidationResult\",\"components\":[{\"name\":\"validationResultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"validationCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ValidationResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"validator\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"name\":\"_originalJobDeal\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleValidationPassed\",\"inputs\":[{\"name\":\"_validationResult\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.ValidationResult\",\"components\":[{\"name\":\"validationResultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"validationCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ValidationResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"validator\",\"type\":\"address\",\"internalType\":\"address\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_l2token\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadStorageAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadUserAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadTokenomicsAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_treasuryWallet\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_valueBasedRewardsWallet\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_validationPoolWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initiateLockupOfEscrowForJob\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"cost\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderCollateralLockupAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"payEscrow\",\"inputs\":[{\"name\":\"_payee\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_paymentReason\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.PaymentReason\"},{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"callerConfirmation\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setL2Token\",\"inputs\":[{\"name\":\"_l2tokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadStorage\",\"inputs\":[{\"name\":\"_lilypadStorageAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadTokenomics\",\"inputs\":[{\"name\":\"_lilypadTokenomicsAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadUser\",\"inputs\":[{\"name\":\"_lilypadUserAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setTreasuryWallet\",\"inputs\":[{\"name\":\"_treasuryWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setValidationPoolWallet\",\"inputs\":[{\"name\":\"_validationPoolWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setValueBasedRewardsWallet\",\"inputs\":[{\"name\":\"_valueBasedRewardsWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"totalActiveEscrow\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"totalEscrow\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"treasuryWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"updateActiveBurnTokens\",\"inputs\":[{\"name\":\"_amountBurnt\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"validationPoolWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"valueBasedRewardsWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"withdrawEscrow\",\"inputs\":[{\"name\":\"_withdrawer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ActiveEscrowLockedForJob\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":true,\"internalType\":\"string\"},{\"name\":\"cost\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ControllerRoleGranted\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ControllerRoleRevoked\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__JobCompleted\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__JobFailed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resultId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__TokensBurned\",\"inputs\":[{\"name\":\"blockNumber\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"blockTimestamp\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"amountBurnt\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__TotalFeesGeneratedByJob\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValidationFailed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"validator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValidationPassed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"validator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ZeroAmountPayout\",\"inputs\":[{\"name\":\"intended_recipient\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowPaid\",\"inputs\":[{\"name\":\"payee\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"paymentReason\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumSharedStructs.PaymentReason\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowPayout\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowSlashed\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"actor\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumSharedStructs.UserType\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowWithdrawn\",\"inputs\":[{\"name\":\"withdrawer\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccessControlBadConfirmation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AccessControlUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"neededRole\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InvalidInitialization\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__CannotRevokeOwnRole\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobCompletion__InsufficientActiveEscrowToCompleteJob\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreatorActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"totalCostOfJob\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderRequiredActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobCompletion__InvalidTreasuryAmounts\",\"inputs\":[{\"name\":\"pValue\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p1Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p2Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p3Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobFailure__InsufficientActiveEscrowToCompleteJob\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreatorActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"totalCostOfJob\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderRequiredActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__InsufficientActiveBurnTokens\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__InvalidResultStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__InvalidValidationResultStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__RoleAlreadyAssigned\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__RoleNotFound\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroAddressNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroJobCreatorAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroPayeeAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroPayoutAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroResourceProviderAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroSlashAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroStorageAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTokenAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTokenomicsAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTreasuryWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroUserAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroValidationPoolWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroValueBasedRewardsWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroWithdrawalAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__amountMustBeGreaterThanZero\",\"inputs\":[{\"name\":\"functionSelector\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__escrowNotWithdrawable\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__escrowNotWithdrawableForActor\",\"inputs\":[{\"name\":\"actor\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__escrowSlashAmountTooLarge\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientActiveEscrowAmount\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientEscrowAmount\",\"inputs\":[{\"name\":\"escrowAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"requiredAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientEscrowBalanceForWithdrawal\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__minimumResourceProviderAndValidatorDepositAmountNotMet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__transferFailed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__unauthorizedWithdrawal\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotInitializing\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReentrancyGuardReentrantCall\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"COLLATERAL_LOCK_DURATION\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"MIN_RESOURCE_PROVIDER_DEPOSIT_AMOUNT\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"activeBurnTokens\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"activeEscrow\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"activeEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"canWithdrawEscrow\",\"inputs\":[{\"name\":\"_address\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"depositTimestamps\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"depositTimestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"escrowBalances\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleJobCompletion\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleJobFailure\",\"inputs\":[{\"name\":\"result\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Result\",\"components\":[{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleValidationFailed\",\"inputs\":[{\"name\":\"_validationResult\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.ValidationResult\",\"components\":[{\"name\":\"validationResultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"validationCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ValidationResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"validator\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"name\":\"_originalJobDeal\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.Deal\",\"components\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"moduleCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"jobOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resourceOfferCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.DealStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"paymentStructure\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.DealPaymentStructure\",\"components\":[{\"name\":\"jobCreatorSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderSolverFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"networkCongestionFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"moduleCreatorFee\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"priceOfJobWithoutFees\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"handleValidationPassed\",\"inputs\":[{\"name\":\"_validationResult\",\"type\":\"tuple\",\"internalType\":\"structSharedStructs.ValidationResult\",\"components\":[{\"name\":\"validationResultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"resultId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"validationCID\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.ValidationResultStatusEnum\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"validator\",\"type\":\"address\",\"internalType\":\"address\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_l2token\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadStorageAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadUserAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_lilypadTokenomicsAddress\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_treasuryWallet\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_valueBasedRewardsWallet\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_validationPoolWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initiateLockupOfEscrowForJob\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"cost\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderCollateralLockupAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"payEscrow\",\"inputs\":[{\"name\":\"_payee\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_paymentReason\",\"type\":\"uint8\",\"internalType\":\"enumSharedStructs.PaymentReason\"},{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"callerConfirmation\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setL2Token\",\"inputs\":[{\"name\":\"_l2tokenAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadStorage\",\"inputs\":[{\"name\":\"_lilypadStorageAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadTokenomics\",\"inputs\":[{\"name\":\"_lilypadTokenomicsAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setLilypadUser\",\"inputs\":[{\"name\":\"_lilypadUserAddress\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setTreasuryWallet\",\"inputs\":[{\"name\":\"_treasuryWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setValidationPoolWallet\",\"inputs\":[{\"name\":\"_validationPoolWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setValueBasedRewardsWallet\",\"inputs\":[{\"name\":\"_valueBasedRewardsWallet\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"totalActiveEscrow\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"totalEscrow\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"treasuryWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"updateActiveBurnTokens\",\"inputs\":[{\"name\":\"_amountBurnt\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"validationPoolWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"valueBasedRewardsWallet\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"withdrawEscrow\",\"inputs\":[{\"name\":\"_withdrawer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ActiveEscrowLockedForJob\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":true,\"internalType\":\"string\"},{\"name\":\"cost\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ControllerRoleGranted\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ControllerRoleRevoked\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__JobCompleted\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__JobFailed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resultId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__TokensBurned\",\"inputs\":[{\"name\":\"blockNumber\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"blockTimestamp\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"amountBurnt\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__TotalFeesGeneratedByJob\",\"inputs\":[{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dealId\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__TreasuryWalletUpdated\",\"inputs\":[{\"name\":\"newTreasuryWallet\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValidationFailed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"validator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValidationPassed\",\"inputs\":[{\"name\":\"jobCreator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"resourceProvider\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"validator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValidationPoolWalletUpdated\",\"inputs\":[{\"name\":\"newValidationPoolWallet\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ValueBasedRewardsWalletUpdated\",\"inputs\":[{\"name\":\"newValueBasedRewardsWallet\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__ZeroAmountPayout\",\"inputs\":[{\"name\":\"intended_recipient\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowPaid\",\"inputs\":[{\"name\":\"payee\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"paymentReason\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumSharedStructs.PaymentReason\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowPayout\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowSlashed\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"actor\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumSharedStructs.UserType\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"LilypadPayment__escrowWithdrawn\",\"inputs\":[{\"name\":\"withdrawer\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccessControlBadConfirmation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AccessControlUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"neededRole\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InvalidInitialization\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__CannotRevokeOwnRole\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobCompletion__InsufficientActiveEscrowToCompleteJob\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreatorActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"totalCostOfJob\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderRequiredActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobCompletion__InvalidTreasuryAmounts\",\"inputs\":[{\"name\":\"pValue\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p1Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p2Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"p3Value\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__HandleJobFailure__InsufficientActiveEscrowToCompleteJob\",\"inputs\":[{\"name\":\"dealId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"jobCreatorActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"totalCostOfJob\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"resourceProviderRequiredActiveEscrow\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__InsufficientActiveBurnTokens\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__InvalidResultStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__InvalidValidationResultStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__RoleAlreadyAssigned\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__RoleNotFound\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroAddressNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroJobCreatorAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroPayeeAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroPayoutAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroResourceProviderAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroSlashAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroStorageAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTokenAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTokenomicsAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroTreasuryWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroUserAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroValidationPoolWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroValueBasedRewardsWallet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__ZeroWithdrawalAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__amountMustBeGreaterThanZero\",\"inputs\":[{\"name\":\"functionSelector\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__escrowNotWithdrawable\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__escrowSlashAmountTooLarge\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientActiveEscrowAmount\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientEscrowAmount\",\"inputs\":[{\"name\":\"escrowAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"requiredAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"LilypadPayment__insufficientEscrowBalanceForWithdrawal\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__minimumResourceProviderAndValidatorDepositAmountNotMet\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__transferFailed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LilypadPayment__unauthorizedWithdrawal\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotInitializing\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReentrancyGuardReentrantCall\",\"inputs\":[]}]",
 }
 
 // LilypadPaymentEngineABI is the input ABI used to generate the binding from.
@@ -2350,6 +2350,140 @@ func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) ParseLilypadPaymentTo
 	return event, nil
 }
 
+// LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator is returned from FilterLilypadPaymentTreasuryWalletUpdated and is used to iterate over the raw logs and unpacked data for LilypadPaymentTreasuryWalletUpdated events raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator struct {
+	Event *LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated represents a LilypadPaymentTreasuryWalletUpdated event raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated struct {
+	NewTreasuryWallet common.Address
+	Raw               types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadPaymentTreasuryWalletUpdated is a free log retrieval operation binding the contract event 0xac99775b354bce99af2298c1e7d58da60e1dfb9962c14149e21a03e781965212.
+//
+// Solidity: event LilypadPayment__TreasuryWalletUpdated(address newTreasuryWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) FilterLilypadPaymentTreasuryWalletUpdated(opts *bind.FilterOpts) (*LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.FilterLogs(opts, "LilypadPayment__TreasuryWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdatedIterator{contract: _LilypadPaymentEngine.contract, event: "LilypadPayment__TreasuryWalletUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadPaymentTreasuryWalletUpdated is a free log subscription operation binding the contract event 0xac99775b354bce99af2298c1e7d58da60e1dfb9962c14149e21a03e781965212.
+//
+// Solidity: event LilypadPayment__TreasuryWalletUpdated(address newTreasuryWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) WatchLilypadPaymentTreasuryWalletUpdated(opts *bind.WatchOpts, sink chan<- *LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.WatchLogs(opts, "LilypadPayment__TreasuryWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated)
+				if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__TreasuryWalletUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadPaymentTreasuryWalletUpdated is a log parse operation binding the contract event 0xac99775b354bce99af2298c1e7d58da60e1dfb9962c14149e21a03e781965212.
+//
+// Solidity: event LilypadPayment__TreasuryWalletUpdated(address newTreasuryWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) ParseLilypadPaymentTreasuryWalletUpdated(log types.Log) (*LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated, error) {
+	event := new(LilypadPaymentEngineLilypadPaymentTreasuryWalletUpdated)
+	if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__TreasuryWalletUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // LilypadPaymentEngineLilypadPaymentValidationFailedIterator is returned from FilterLilypadPaymentValidationFailed and is used to iterate over the raw logs and unpacked data for LilypadPaymentValidationFailed events raised by the LilypadPaymentEngine contract.
 type LilypadPaymentEngineLilypadPaymentValidationFailedIterator struct {
 	Event *LilypadPaymentEngineLilypadPaymentValidationFailed // Event containing the contract specifics and raw log
@@ -2670,6 +2804,274 @@ func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) WatchLilypadPaymentVa
 func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) ParseLilypadPaymentValidationPassed(log types.Log) (*LilypadPaymentEngineLilypadPaymentValidationPassed, error) {
 	event := new(LilypadPaymentEngineLilypadPaymentValidationPassed)
 	if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__ValidationPassed", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator is returned from FilterLilypadPaymentValidationPoolWalletUpdated and is used to iterate over the raw logs and unpacked data for LilypadPaymentValidationPoolWalletUpdated events raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator struct {
+	Event *LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated represents a LilypadPaymentValidationPoolWalletUpdated event raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated struct {
+	NewValidationPoolWallet common.Address
+	Raw                     types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadPaymentValidationPoolWalletUpdated is a free log retrieval operation binding the contract event 0xcc86aa3e89fa6b1716afd46c4fda5ac91cfafb53c0fc828016b605e58243fc99.
+//
+// Solidity: event LilypadPayment__ValidationPoolWalletUpdated(address newValidationPoolWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) FilterLilypadPaymentValidationPoolWalletUpdated(opts *bind.FilterOpts) (*LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.FilterLogs(opts, "LilypadPayment__ValidationPoolWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdatedIterator{contract: _LilypadPaymentEngine.contract, event: "LilypadPayment__ValidationPoolWalletUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadPaymentValidationPoolWalletUpdated is a free log subscription operation binding the contract event 0xcc86aa3e89fa6b1716afd46c4fda5ac91cfafb53c0fc828016b605e58243fc99.
+//
+// Solidity: event LilypadPayment__ValidationPoolWalletUpdated(address newValidationPoolWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) WatchLilypadPaymentValidationPoolWalletUpdated(opts *bind.WatchOpts, sink chan<- *LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.WatchLogs(opts, "LilypadPayment__ValidationPoolWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated)
+				if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__ValidationPoolWalletUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadPaymentValidationPoolWalletUpdated is a log parse operation binding the contract event 0xcc86aa3e89fa6b1716afd46c4fda5ac91cfafb53c0fc828016b605e58243fc99.
+//
+// Solidity: event LilypadPayment__ValidationPoolWalletUpdated(address newValidationPoolWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) ParseLilypadPaymentValidationPoolWalletUpdated(log types.Log) (*LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated, error) {
+	event := new(LilypadPaymentEngineLilypadPaymentValidationPoolWalletUpdated)
+	if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__ValidationPoolWalletUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator is returned from FilterLilypadPaymentValueBasedRewardsWalletUpdated and is used to iterate over the raw logs and unpacked data for LilypadPaymentValueBasedRewardsWalletUpdated events raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator struct {
+	Event *LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated represents a LilypadPaymentValueBasedRewardsWalletUpdated event raised by the LilypadPaymentEngine contract.
+type LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated struct {
+	NewValueBasedRewardsWallet common.Address
+	Raw                        types.Log // Blockchain specific contextual infos
+}
+
+// FilterLilypadPaymentValueBasedRewardsWalletUpdated is a free log retrieval operation binding the contract event 0x15d760d36b9389dde13705a91ff4518b98034adfc40167541e152a572ba9ae49.
+//
+// Solidity: event LilypadPayment__ValueBasedRewardsWalletUpdated(address newValueBasedRewardsWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) FilterLilypadPaymentValueBasedRewardsWalletUpdated(opts *bind.FilterOpts) (*LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.FilterLogs(opts, "LilypadPayment__ValueBasedRewardsWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdatedIterator{contract: _LilypadPaymentEngine.contract, event: "LilypadPayment__ValueBasedRewardsWalletUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchLilypadPaymentValueBasedRewardsWalletUpdated is a free log subscription operation binding the contract event 0x15d760d36b9389dde13705a91ff4518b98034adfc40167541e152a572ba9ae49.
+//
+// Solidity: event LilypadPayment__ValueBasedRewardsWalletUpdated(address newValueBasedRewardsWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) WatchLilypadPaymentValueBasedRewardsWalletUpdated(opts *bind.WatchOpts, sink chan<- *LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _LilypadPaymentEngine.contract.WatchLogs(opts, "LilypadPayment__ValueBasedRewardsWalletUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated)
+				if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__ValueBasedRewardsWalletUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseLilypadPaymentValueBasedRewardsWalletUpdated is a log parse operation binding the contract event 0x15d760d36b9389dde13705a91ff4518b98034adfc40167541e152a572ba9ae49.
+//
+// Solidity: event LilypadPayment__ValueBasedRewardsWalletUpdated(address newValueBasedRewardsWallet)
+func (_LilypadPaymentEngine *LilypadPaymentEngineFilterer) ParseLilypadPaymentValueBasedRewardsWalletUpdated(log types.Log) (*LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated, error) {
+	event := new(LilypadPaymentEngineLilypadPaymentValueBasedRewardsWalletUpdated)
+	if err := _LilypadPaymentEngine.contract.UnpackLog(event, "LilypadPayment__ValueBasedRewardsWalletUpdated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
