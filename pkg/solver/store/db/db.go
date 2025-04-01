@@ -6,6 +6,7 @@ import (
 
 	"github.com/lilypad-tech/lilypad/pkg/data"
 	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/pkg/system"
 	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -150,6 +151,7 @@ func (store *SolverStoreDatabase) AddAllowedResourceProvider(resourceProvider st
 }
 
 func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([]data.JobOfferContainer, error) {
+	log := system.GetLogger(system.SolverService)
 	q := store.db.Where([]JobOffer{})
 
 	// Apply filters
@@ -185,6 +187,7 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 
 	var records []JobOffer
 	if err := q.Find(&records).Error; err != nil {
+		log.Error().Err(err).Msg("retrieve job offers from database failed")
 		return nil, err
 	}
 
@@ -197,6 +200,8 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 }
 
 func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffersQuery) ([]data.ResourceOfferContainer, error) {
+	log := system.GetLogger(system.SolverService)
+
 	q := store.db.Where([]ResourceOffer{})
 
 	// Apply filters
@@ -218,6 +223,7 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 
 	var records []ResourceOffer
 	if err := q.Find(&records).Error; err != nil {
+		log.Error().Err(err).Msg("retrieve resource offers from database failed")
 		return nil, err
 	}
 

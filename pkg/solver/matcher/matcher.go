@@ -46,6 +46,7 @@ func GetMatchingDeals(
 		Value: attribute.StringSliceValue(data.GetResourceOfferContainerIDs(resourceOffers)),
 	})
 	span.AddEvent("db.get_resource_offers.done")
+	log.Info().Int("count", len(resourceOffers)).Msg("matcher found resource offers")
 
 	// Get job offers oldest first
 	span.AddEvent("db.get_job_offers.start")
@@ -64,14 +65,18 @@ func GetMatchingDeals(
 		Key:   "job_offers",
 		Value: attribute.StringSliceValue(data.GetJobOfferContainerIDs(jobOffers)),
 	})
-	span.AddEvent("db.get_resource_offers.done")
+	span.AddEvent("db.get_job_offers.done")
+	log.Info().Int("count", len(jobOffers)).Msg("matcher found job offers")
 
 	// Loop over job offers attempting to match with resource offers
 	for _, jobOffer := range jobOffers {
 		// Check for targeted jobs
 		if jobOffer.JobOffer.Target.Address != "" {
+			log.Info().Str("target", jobOffer.JobOffer.Target.Address).Str("cid", jobOffer.ID).Msg("targeting job")
+
 			deal, err := getTargetedDeal(ctx, db, jobOffer, updateJobOfferState, tracer, log)
 			if err != nil {
+				log.Error().Err(err).Str("target", jobOffer.JobOffer.Target.Address).Str("cid", jobOffer.ID).Msg("get targeted deal failed")
 				return nil, err
 			}
 
@@ -126,6 +131,7 @@ func GetMatchingDeals(
 				matchSpan.AddEvent("add_match_decision.start")
 				_, err := db.AddMatchDecision(resourceOffer.ID, jobOffer.ID, "", false)
 				if err != nil {
+					log.Error().Str("resourceOfferID", resourceOffer.ID).Str("jobOfferID", jobOffer.ID).Err(err).Msg("failed to add match decision")
 					matchSpan.SetStatus(codes.Error, "unable to record mismatch decision")
 					matchSpan.RecordError(err)
 					return nil, err
@@ -172,6 +178,7 @@ func GetMatchingDeals(
 				// Make a deal with the job offer and selected resource offer
 				deal, err := data.GetDeal(jobOffer.JobOffer, selectedResourceOffer)
 				if err != nil {
+					log.Error().Any("jobOffer", jobOffer.JobOffer).Any("selected resourceOffer", selectedResourceOffer).Msg("failed to create deal")
 					span.SetStatus(codes.Error, "unable to get deal")
 					span.RecordError(err)
 					return nil, err
