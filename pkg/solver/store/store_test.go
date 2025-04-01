@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/solver"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
-	solverstore "github.com/lilypad-tech/lilypad/pkg/solver/store"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	solverstore "github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 	"golang.org/x/exp/rand"
 )
 

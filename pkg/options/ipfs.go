@@ -3,7 +3,7 @@ package options
 import (
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/ipfs"
+	"github.com/lilypad-tech/lilypad/v2/pkg/ipfs"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )

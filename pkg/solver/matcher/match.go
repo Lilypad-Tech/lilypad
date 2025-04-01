@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 )

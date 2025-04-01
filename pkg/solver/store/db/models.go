@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )

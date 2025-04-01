@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-retryablehttp"
-	httputil "github.com/lilypad-tech/lilypad/pkg/http"
+	httputil "github.com/lilypad-tech/lilypad/v2/pkg/http"
 )
 
 type anuraTestCase struct {
-	name           string
-	privateKey     string
-	expectedOK     bool
+	name       string
+	privateKey string
+	expectedOK bool
 }
 
 // This test suite tests Anura authentication with valid and invalid signatures

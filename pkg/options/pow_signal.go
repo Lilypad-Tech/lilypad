@@ -1,7 +1,7 @@
 package options
 
 import (
-	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
 )
 
 type PowSignalOptions struct {

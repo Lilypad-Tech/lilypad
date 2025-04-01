@@ -3,7 +3,7 @@ package options
 import (
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
 	"github.com/spf13/cobra"
 )
 

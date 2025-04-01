@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 	"github.com/spf13/cobra"
 )
 

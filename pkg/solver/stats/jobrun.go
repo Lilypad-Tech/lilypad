@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/http"
-	"github.com/lilypad-tech/lilypad/pkg/module/shortcuts"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/http"
+	"github.com/lilypad-tech/lilypad/v2/pkg/module/shortcuts"
 )
 
 type JobRun struct {

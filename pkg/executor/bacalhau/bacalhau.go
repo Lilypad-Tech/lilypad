@@ -16,9 +16,9 @@ import (
 	"github.com/ipfs/kubo/core"
 	"github.com/ipfs/kubo/core/coreapi"
 	"github.com/ipfs/kubo/core/coreiface/options"
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	executorlib "github.com/lilypad-tech/lilypad/v2/pkg/executor"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 )
 
 const RESULTS_DIR = "bacalhau-results"

@@ -2,9 +2,10 @@ package web3
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindingsV2/LilypadProxy"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/common"
+	lilypadproxy "github.com/lilypad-tech/lilypad/v2/pkg/web3/bindingsV2/LilypadProxy"
 )
 
 func (sdk *Web3SDKV2) SaveResult(result lilypadproxy.SharedStructsResult) (bool, error) {
