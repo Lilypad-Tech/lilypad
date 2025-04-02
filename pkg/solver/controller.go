@@ -160,8 +160,6 @@ func (controller *SolverController) subscribeToWeb3() error {
 		}
 		controller.log.Info().Str("StorageDealStateChange", data.GetAgreementStateString(ev.State)).Msg("")
 		system.DumpObjectDebug(ev)
-		// update the store with the state change
-		controller.loop.Trigger()
 	})
 
 	// update the mediator
@@ -173,9 +171,6 @@ func (controller *SolverController) subscribeToWeb3() error {
 			controller.log.Error().Err(err).Msg("error updating deal state")
 			return
 		}
-
-		// update the store with the state change
-		controller.loop.Trigger()
 	})
 
 	return nil
