@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743454641705,
+  "lastUpdate": 1743706426511,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2016,6 +2016,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78324 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ded7366e759789cb1eb899cf8b3cafe5114121c",
+          "message": "chore: Update module path to v2 (#562)\n\n* chore: Update module path to v2\n\n* chore: Update build module paths to v2\n\n* chore: Update import module paths to v2",
+          "timestamp": "2025-04-03T11:53:09-07:00",
+          "tree_id": "22cfa3055866fb0d83c464017a9bef7bbc6bd610",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/1ded7366e759789cb1eb899cf8b3cafe5114121c"
+        },
+        "date": 1743706425582,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 45993,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78627 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 45993,
+            "unit": "ns/op",
+            "extra": "78627 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78627 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78627 times\n4 procs"
           }
         ]
       }
