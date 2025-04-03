@@ -3,8 +3,8 @@ package solver
 import (
 	"context"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 	"go.opentelemetry.io/otel/metric"
 )
 

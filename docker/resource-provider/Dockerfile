@@ -13,11 +13,11 @@ COPY --from=base /usr/src/app .
 COPY --from=base /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 RUN nvcc --version && nvcc --ptx -o ./pkg/resourceprovider/cudaminer/keccak.ptx ./pkg/resourceprovider/cudaminer/keccak.cu
-RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
+RUN go build -v -tags cuda -ldflags="-X 'github.com/lilypad-tech/lilypad/v2/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/v2/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=false
 
 FROM base AS build-cpu
-RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/pkg/system.CommitSHA=${COMMIT_SHA}'"
+RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/v2/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/v2/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=true
 
 FROM build-$COMPUTE_MODE AS final

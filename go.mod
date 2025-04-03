@@ -1,4 +1,4 @@
-module github.com/lilypad-tech/lilypad
+module github.com/lilypad-tech/lilypad/v2
 
 go 1.23
 

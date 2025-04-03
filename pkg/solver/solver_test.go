@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/solver"
-	"github.com/lilypad-tech/lilypad/pkg/solver/matcher"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/matcher"
 	"go.opentelemetry.io/otel"
 )
 

@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	executorlib "github.com/lilypad-tech/lilypad/pkg/executor"
-	"github.com/lilypad-tech/lilypad/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	executorlib "github.com/lilypad-tech/lilypad/v2/pkg/executor"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
 )
 
 const RESULTS_DIR = "noop-results"

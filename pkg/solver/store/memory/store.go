@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lilypad-tech/lilypad/pkg/data"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
 )
 
 type SolverStoreMemory struct {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lilypad-tech/lilypad/pkg/web3/bindings/controller"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/controller"
 
 	mdag "github.com/ipfs/go-merkledag"
 )

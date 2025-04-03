@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/stats"
 	"github.com/spf13/cobra"
 )
 

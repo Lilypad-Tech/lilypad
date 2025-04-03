@@ -16,9 +16,9 @@ import (
 	"golang.org/x/crypto/sha3"
 
 	"github.com/BurntSushi/toml"
-	"github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3"
+	"github.com/lilypad-tech/lilypad/v2/pkg/options"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 

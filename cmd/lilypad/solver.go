@@ -3,14 +3,14 @@ package lilypad
 import (
 	"fmt"
 
-	optionsfactory "github.com/lilypad-tech/lilypad/pkg/options"
-	"github.com/lilypad-tech/lilypad/pkg/solver"
-	"github.com/lilypad-tech/lilypad/pkg/solver/stats"
-	"github.com/lilypad-tech/lilypad/pkg/solver/store"
-	db "github.com/lilypad-tech/lilypad/pkg/solver/store/db"
-	memorystore "github.com/lilypad-tech/lilypad/pkg/solver/store/memory"
-	"github.com/lilypad-tech/lilypad/pkg/system"
-	"github.com/lilypad-tech/lilypad/pkg/web3"
+	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/stats"
+	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	db "github.com/lilypad-tech/lilypad/v2/pkg/solver/store/db"
+	memorystore "github.com/lilypad-tech/lilypad/v2/pkg/solver/store/memory"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
