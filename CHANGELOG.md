@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.17.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.16.0...v2.17.0) (2025-04-04)
+
+
+### Features
+
+* Add job offer nonce ([42fb28d](https://github.com/Lilypad-Tech/lilypad/commit/42fb28d51ca40b640dceaa36f50ea0157317a0ac))
+* Add minimum version check enabled option ([#552](https://github.com/Lilypad-Tech/lilypad/issues/552)) ([cf8e7f5](https://github.com/Lilypad-Tech/lilypad/commit/cf8e7f586df50679552be2ac1981cdb77622188c))
+* Compute and report job run timings ([#557](https://github.com/Lilypad-Tech/lilypad/issues/557)) ([5078883](https://github.com/Lilypad-Tech/lilypad/commit/50788836d22f70b134acfa88225e8fb3ea1bbd35))
+* Setup foundation for new protocol ([#547](https://github.com/Lilypad-Tech/lilypad/issues/547)) ([41942d3](https://github.com/Lilypad-Tech/lilypad/commit/41942d32f678b6531f82bee0c3eec3663aac363d))
+* Sign CLA for B0bbyDowns ([#558](https://github.com/Lilypad-Tech/lilypad/issues/558)) ([1ac31a5](https://github.com/Lilypad-Tech/lilypad/commit/1ac31a550fbcc2d84e95d146240b33a3eea00ce2))
+
+
+### Bug Fixes
+
+* Add explicit NVIDIA device reservation to Resource Provider docker compose ([#549](https://github.com/Lilypad-Tech/lilypad/issues/549)) ([37e86a3](https://github.com/Lilypad-Tech/lilypad/commit/37e86a39122a54260d72d853e7282f1925c0a70c))
+* Exempt Anura from version check ([#554](https://github.com/Lilypad-Tech/lilypad/issues/554)) ([9be369e](https://github.com/Lilypad-Tech/lilypad/commit/9be369e15b99047b3462b31777882feebbf2c77e))
+* Prevent duplicate job offers ([#545](https://github.com/Lilypad-Tech/lilypad/issues/545)) ([42fb28d](https://github.com/Lilypad-Tech/lilypad/commit/42fb28d51ca40b640dceaa36f50ea0157317a0ac))
+
 ## [2.16.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.15.0...v2.16.0) (2025-03-25)
 
 
