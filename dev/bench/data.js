@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743706426511,
+  "lastUpdate": 1743787485828,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2064,6 +2064,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78627 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5738caa8cf36c236a7e9b846de191e60dc9381d7",
+          "message": "build: Add Grafana alert repository dispatch (#564)",
+          "timestamp": "2025-04-04T10:24:11-07:00",
+          "tree_id": "31332997a2efa898c1b56876fec2bd3164ed7123",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/5738caa8cf36c236a7e9b846de191e60dc9381d7"
+        },
+        "date": 1743787485438,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 47038,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78614 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 47038,
+            "unit": "ns/op",
+            "extra": "78614 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78614 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78614 times\n4 procs"
           }
         ]
       }
