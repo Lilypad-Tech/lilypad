@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744135840852,
+  "lastUpdate": 1744228209852,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2160,6 +2160,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "77067 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "54076b20be701e0fa8a7ae1a474b73ec79dba9f0",
+          "message": "chore: Add target span attribute to CLI job run traces (#565)\n\nchore: Add target attribute to CLI run_job trace",
+          "timestamp": "2025-04-09T12:48:22-07:00",
+          "tree_id": "0c2b6efe380ba21000d49398ff20a279172d7601",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/54076b20be701e0fa8a7ae1a474b73ec79dba9f0"
+        },
+        "date": 1744228208889,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46445,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "77913 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46445,
+            "unit": "ns/op",
+            "extra": "77913 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "77913 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77913 times\n4 procs"
           }
         ]
       }
