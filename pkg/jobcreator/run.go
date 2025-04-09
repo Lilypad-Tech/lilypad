@@ -61,6 +61,7 @@ func RunJob(
 			attribute.String("job_offer.module.repo", offer.Module.Repo),
 			attribute.String("job_offer.module.hash", offer.Module.Hash),
 			attribute.String("job_offer.mode", string(offer.Mode)),
+			attribute.String("job_offer.target.address", string(offer.Target.Address)),
 		))
 	ctx.Ctx = c
 	defer span.End()
