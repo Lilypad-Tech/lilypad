@@ -449,6 +449,21 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 	}
 	resourceOffer.ID = id
 
+	// Check if we have an unmatched resource offer for the resource provider
+	existingOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: resourceOffer.ResourceProvider,
+		NotMatched:       true,
+	})
+	if len(existingOffers) > 0 {
+		controller.log.Warn().
+			Str("address", resourceOffer.ResourceProvider).
+			Msg("resource provider posted a resource offer when an unmatched offer already exists")
+		// TODO(bgins) Return error to resource provider
+		// The resource provider currently crashes when an error is returned. Once we update the
+		// resource provider to selectively handle errors, we should return one here.
+		return nil, nil
+	}
+
 	// Check the resource provider's ETH balance
 	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
 	if err != nil {
