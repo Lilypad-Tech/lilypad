@@ -465,18 +465,6 @@ func TestResourceOfferOps(t *testing.T) {
 					t.Errorf("Expected ID %s, got %s", resourceOffer.ID, retrieved.ID)
 				}
 
-				// Get resource offer by address
-				byAddress, err := store.GetResourceOfferByAddress(resourceOffer.ResourceProvider)
-				if err != nil {
-					t.Fatalf("Failed to get resource offer by address: %v", err)
-				}
-				if byAddress == nil {
-					t.Fatalf("Expected resource offer by address, got nil")
-				}
-				if byAddress.ResourceProvider != resourceOffer.ResourceProvider {
-					t.Errorf("Expected provider %s, got %s", resourceOffer.ResourceProvider, byAddress.ResourceProvider)
-				}
-
 				// Update resource offer
 				newDealID := generateCID()
 				newState := generateState()
@@ -503,15 +491,6 @@ func TestResourceOfferOps(t *testing.T) {
 				}
 				if removed != nil {
 					t.Error("Resource offer still exists after removal")
-				}
-
-				// Verify removal by address
-				removedByAddr, err := store.GetResourceOfferByAddress(resourceOffer.ResourceProvider)
-				if err != nil {
-					t.Fatalf("Error checking removed resource offer by address: %v", err)
-				}
-				if removedByAddr != nil {
-					t.Error("Resource offer still exists after removal when checking by address")
 				}
 			}
 		})

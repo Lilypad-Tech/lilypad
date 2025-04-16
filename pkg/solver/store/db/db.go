@@ -358,21 +358,6 @@ func (store *SolverStoreDatabase) GetResourceOffer(id string) (*data.ResourceOff
 	return &resourceOffer, nil
 }
 
-func (store *SolverStoreDatabase) GetResourceOfferByAddress(address string) (*data.ResourceOfferContainer, error) {
-	var record ResourceOffer
-	result := store.db.Where("resource_provider = ?", address).First(&record)
-
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, result.Error
-	}
-
-	resourceOffer := record.Attributes.Data()
-	return &resourceOffer, nil
-}
-
 func (store *SolverStoreDatabase) GetDeal(id string) (*data.DealContainer, error) {
 	// Deals are unique by CID, so we can query first
 	var record Deal
