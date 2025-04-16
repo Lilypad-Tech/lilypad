@@ -6,6 +6,8 @@ import (
 
 	"github.com/lilypad-tech/lilypad/v2/pkg/data"
 	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
+	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/rs/zerolog"
 	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,7 +15,8 @@ import (
 )
 
 type SolverStoreDatabase struct {
-	db *gorm.DB
+	db  *gorm.DB
+	log *zerolog.Logger
 }
 
 func NewSolverStoreDatabase(connStr string, gormLogLevel string) (*SolverStoreDatabase, error) {
@@ -45,7 +48,9 @@ func NewSolverStoreDatabase(connStr string, gormLogLevel string) (*SolverStoreDa
 	db.AutoMigrate(&MatchDecision{})
 	db.AutoMigrate(&AllowedResourceProvider{})
 
-	return &SolverStoreDatabase{db}, nil
+	log := system.GetLogger(system.SolverService)
+
+	return &SolverStoreDatabase{db, log}, nil
 }
 
 func (store *SolverStoreDatabase) AddJobOffer(jobOffer data.JobOfferContainer) (*data.JobOfferContainer, error) {
@@ -185,6 +190,7 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 
 	var records []JobOffer
 	if err := q.Find(&records).Error; err != nil {
+		store.log.Error().Err(err).Msg("retrieve job offers from database failed")
 		return nil, err
 	}
 
@@ -218,6 +224,7 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 
 	var records []ResourceOffer
 	if err := q.Find(&records).Error; err != nil {
+		store.log.Error().Err(err).Msg("retrieve resource offers from database failed")
 		return nil, err
 	}
 
