@@ -282,14 +282,14 @@ func getTargetedDeal(
 		trace.WithAttributes(attribute.String("job_offer.target.address", jobOffer.JobOffer.Target.Address)))
 	defer span.End()
 
-	span.AddEvent("db.get_resource_offer_by_address.start")
-	resourceOffer, err := db.GetResourceOfferByAddress(jobOffer.JobOffer.Target.Address)
-	if err != nil {
-		return nil, err
-	}
+	span.AddEvent("db.get_resource_offers.start")
+	offers, err := db.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: jobOffer.JobOffer.Target.Address,
+		NotMatched:       true,
+	})
 
-	// We don't have a resource provider for this address
-	if resourceOffer == nil {
+	// We don't have an unmatched resource offer for this address
+	if len(offers) < 1 {
 		log.Debug().
 			Func(system.AddTraceContext(span)).
 			Str("job offer", jobOffer.ID).
@@ -301,7 +301,9 @@ func getTargetedDeal(
 		updateJobOfferState(jobOffer.ID, "", data.GetAgreementStateIndex("JobOfferCancelled"))
 		return nil, nil
 	}
-	span.AddEvent("db.get_resource_offer_by_address.found", trace.WithAttributes(attribute.String("resource_offer.id", resourceOffer.ID)))
+
+	resourceOffer := offers[0]
+	span.AddEvent("db.get_resource_offers.end", trace.WithAttributes(attribute.String("resource_offer.id", resourceOffer.ID)))
 
 	span.AddEvent("get_deal.start")
 	deal, err := data.GetDeal(jobOffer.JobOffer, resourceOffer.ResourceOffer)
