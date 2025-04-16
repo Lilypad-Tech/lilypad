@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744656509060,
+  "lastUpdate": 1744834970631,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2256,6 +2256,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "76282 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f15696a7c072d903810ba08eb30c491fa5f5719e",
+          "message": "feat: Reduce solver control loop triggers (#563)\n\n* feat: Remove web3 event control loop triggers\n\n* chore: Add database store logs\n\n* chore: Add matcher logs",
+          "timestamp": "2025-04-16T13:22:12-07:00",
+          "tree_id": "fdac30998137e85895a593d989131683136d1e1b",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/f15696a7c072d903810ba08eb30c491fa5f5719e"
+        },
+        "date": 1744834970098,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46218,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "77761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46218,
+            "unit": "ns/op",
+            "extra": "77761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "77761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77761 times\n4 procs"
           }
         ]
       }
