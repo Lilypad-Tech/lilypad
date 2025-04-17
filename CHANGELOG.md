@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.18.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.17.0...v2.18.0) (2025-04-17)
+
+
+### Features
+
+* Reduce solver control loop triggers ([#563](https://github.com/Lilypad-Tech/lilypad/issues/563)) ([f15696a](https://github.com/Lilypad-Tech/lilypad/commit/f15696a7c072d903810ba08eb30c491fa5f5719e))
+
+
+### Bug Fixes
+
+* Prevent duplicate unmatched resource offers ([#566](https://github.com/Lilypad-Tech/lilypad/issues/566)) ([47f2b9f](https://github.com/Lilypad-Tech/lilypad/commit/47f2b9fdcf60b1a3a1f9fded56ac9e3954ba6ea1))
+* Target unmatched resource offers ([#569](https://github.com/Lilypad-Tech/lilypad/issues/569)) ([ac2e3b1](https://github.com/Lilypad-Tech/lilypad/commit/ac2e3b19790a3abc0080cb101f8ae057c57bfc16))
+
 ## [2.17.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.16.0...v2.17.0) (2025-04-04)
 
 
