@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1744834970631,
+  "lastUpdate": 1744922029023,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2304,6 +2304,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "77761 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ac2e3b19790a3abc0080cb101f8ae057c57bfc16",
+          "message": "fix: Target unmatched resource offers (#569)\n\n* fix: Target unmatched resource offers\n\n* chore: Remove GetResourceOfferByAddress store method",
+          "timestamp": "2025-04-17T13:33:16-07:00",
+          "tree_id": "39ac4bca9d5644343517f7f2fe5aff297d9a1fc0",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/ac2e3b19790a3abc0080cb101f8ae057c57bfc16"
+        },
+        "date": 1744922028692,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46169,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46169,
+            "unit": "ns/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "78108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "78108 times\n4 procs"
           }
         ]
       }
