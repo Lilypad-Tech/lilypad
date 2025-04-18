@@ -38,6 +38,13 @@ type GPUSpec struct {
 
 // this is what is loaded from the template file in the git repo
 type Module struct {
+	Author      ModuleAuthor `json:"author"`
+	Description string       `json:"description"`
+
+	// An image URL
+	Image string      `json:"image"`
+	Model ModuleModel `json:"model"`
+
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
 	// the module file itself will contain this spec
@@ -47,6 +54,20 @@ type Module struct {
 
 	// the bacalhau job spec
 	Job bacalhau.Job `json:"job"`
+}
+
+type ModuleAuthor struct {
+	Name string `json:"name"`
+
+	// An Avatar URL
+	Avatar  string `json:"avatar"`
+	Address string `json:"address"`
+}
+
+type ModuleModel struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Size string `json:"size"`
 }
 
 // describes a workload to be run
