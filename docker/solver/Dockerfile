@@ -8,7 +8,7 @@ ARG network=dev
 
 COPY . .
 RUN go mod download && go mod verify
-RUN go build -v -ldflags="-X 'github.com/lilypad-tech/lilypad/v2/pkg/system.Version=${VERSION}' -X 'github.com/lilypad-tech/lilypad/v2/pkg/system.CommitSHA=${COMMIT_SHA}'"
+RUN go build -v -ldflags="-X 'github.com/Lilypad-Tech/lilypad/v2/pkg/system.Version=${VERSION}' -X 'github.com/Lilypad-Tech/lilypad/v2/pkg/system.CommitSHA=${COMMIT_SHA}'"
 RUN go install
 
 RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
