@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"testing"
 
+	httputil "github.com/Lilypad-Tech/lilypad/v2/pkg/http"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-retryablehttp"
-	httputil "github.com/lilypad-tech/lilypad/v2/pkg/http"
 )
 
 type anuraTestCase struct {

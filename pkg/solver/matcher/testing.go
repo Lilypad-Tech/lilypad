@@ -2,7 +2,7 @@
 
 package matcher
 
-import "github.com/lilypad-tech/lilypad/v2/pkg/data"
+import "github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 
 type matchTestCase struct {
 	name           string

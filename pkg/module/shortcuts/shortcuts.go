@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 )
 
 // allow shortcode github.com/lukemarsden/lilypad-sdxl:v0.0.1 (tag),
 // TODO: enforce sha1 for tags on the server side (like a pin file)
 
 // parse something with no slashes in it as
-// github.com/lilypad-tech/lilypad-module-<shortcode>
+// github.com/Lilypad-Tech/lilypad-module-<shortcode>
 
 const LILYPAD_MODULE_CONFIG_PATH = "/lilypad_module.json.tmpl"
 
 func GetModule(name string) (data.ModuleConfig, error) {
 	// parse name per following valid formats
 	// github.com/user/repo:tag --> Repo: https://github.com/user/repo; Hash = tag
-	// bar:tag --> Repo = https://github.com/lilypad-tech/lilypad-module-<bar>, Hash = tag
+	// bar:tag --> Repo = https://github.com/Lilypad-Tech/lilypad-module-<bar>, Hash = tag
 	if name == "" {
 		return data.ModuleConfig{}, fmt.Errorf("module name is empty")
 	}
@@ -32,7 +32,7 @@ func GetModule(name string) (data.ModuleConfig, error) {
 		repo = fmt.Sprintf("https://%s", repo)
 	} else {
 		// lilypad std module
-		repo = fmt.Sprintf("https://github.com/lilypad-tech/lilypad-module-%s", repo)
+		repo = fmt.Sprintf("https://github.com/Lilypad-Tech/lilypad-module-%s", repo)
 	}
 
 	// TODO: docs for authoring a module

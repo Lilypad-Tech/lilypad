@@ -3,9 +3,9 @@ package solver
 import (
 	"testing"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
-	databasestore "github.com/lilypad-tech/lilypad/v2/pkg/solver/store/db"
-	memorystore "github.com/lilypad-tech/lilypad/v2/pkg/solver/store/memory"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store"
+	databasestore "github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store/db"
+	memorystore "github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store/memory"
 )
 
 const DB_CONN_STR = "postgres://postgres:postgres@localhost:5432/solver-db?sslmode=disable"

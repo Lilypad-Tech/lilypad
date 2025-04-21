@@ -3,7 +3,7 @@ package options
 import (
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/spf13/cobra"
 )
 

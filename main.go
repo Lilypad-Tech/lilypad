@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lilypad-tech/lilypad/v2/cmd/lilypad"
+	"github.com/Lilypad-Tech/lilypad/v2/cmd/lilypad"
 )
 
 func main() {

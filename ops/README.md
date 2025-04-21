@@ -17,7 +17,7 @@ We need to point DNS for `testnet.lilypad.tech` at the node and open the followi
  * 8080
  * 8545
  * 8546
- 
+
 log out and log in again
 
 ```bash
@@ -25,7 +25,7 @@ cd /
 sudo mkdir app
 sudo chown $USER app
 cd /app/
-git clone https://github.com/lilypad-tech/lilypad
+git clone https://github.com/Lilypad-Tech/lilypad
 cd lilypad
 (cd hardhat && yarn install)
 ```
