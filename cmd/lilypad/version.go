@@ -9,7 +9,7 @@ import (
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 )
 
-const goBinaryURL = "https://github.com/lilypad-tech/lilypad/releases/"
+const goBinaryURL = "https://github.com/Lilypad-Tech/lilypad/releases/"
 
 func newVersionCmd() *cobra.Command {
 	options := optionsfactory.NewSolverOptions()

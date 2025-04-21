@@ -22,10 +22,10 @@ The current list of modules can be found in the following repositories:
 
 
 * [lilysay](https://github.com/Lilypad-Tech/lilypad-module-lilysay)
-* [cowsay](https://github.com/lilypad-tech/lilypad-module-cowsay)
+* [cowsay](https://github.com/Lilypad-Tech/lilypad-module-cowsay)
 * [Stable Diffusion XL](https://github.com/Lilypad-Tech/lilypad-module-sdxl-pipeline/)
 * [Stable Diffusion Video](https://github.com/Lilypad-Tech/lilypad-module-sdv-pipeline)
-* [wasm](https://github.com/lilypad-tech/lilypad-module-wasm)
+* [wasm](https://github.com/Lilypad-Tech/lilypad-module-wasm)
 
 Containerised job modules can be built and added to the available module list; for more details visit the [building a job](https://lilypad.team/building) documentation. If you would like to contribute, open a pull request on this repository to add your link to the list above.
 
