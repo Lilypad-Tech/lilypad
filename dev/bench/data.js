@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745251693028,
+  "lastUpdate": 1745263543637,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2400,6 +2400,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78181 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "db90c60f97509c409a35b56d61b2241ca9c7db6f",
+          "message": "chore: Update module path casing (#571)\n\n* chore: Update module path casing\n\n* chore: Update build module paths casing\n\n* chore: Update import module paths casing\n\n* chore: Update docs module paths casing",
+          "timestamp": "2025-04-21T12:25:08-07:00",
+          "tree_id": "f3d3cce9394e8476d79ae24d2fd0dce7e0c511ae",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/db90c60f97509c409a35b56d61b2241ca9c7db6f"
+        },
+        "date": 1745263542653,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 47474,
+            "unit": "ns/op\t   44315 B/op\t     281 allocs/op",
+            "extra": "77218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 47474,
+            "unit": "ns/op",
+            "extra": "77218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 44315,
+            "unit": "B/op",
+            "extra": "77218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77218 times\n4 procs"
           }
         ]
       }
