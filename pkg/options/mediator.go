@@ -3,8 +3,8 @@ package options
 import (
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/mediator"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/mediator"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 	"github.com/spf13/cobra"
 )
 

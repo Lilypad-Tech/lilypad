@@ -19,9 +19,9 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/rs/zerolog/log"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
-	"github.com/lilypad-tech/lilypad/v2/pkg/module/shortcuts"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/module/shortcuts"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 )
 
 const REPO_DIR = "repos"

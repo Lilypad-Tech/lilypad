@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	lilypadproxy "github.com/Lilypad-Tech/lilypad/v2/pkg/web3/bindingsV2/LilypadProxy"
 	"github.com/ethereum/go-ethereum/common"
-	lilypadproxy "github.com/lilypad-tech/lilypad/v2/pkg/web3/bindingsV2/LilypadProxy"
 )
 
 func (sdk *Web3SDKV2) SaveResult(result lilypadproxy.SharedStructsResult) (bool, error) {

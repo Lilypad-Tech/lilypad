@@ -1,10 +1,10 @@
 package lilypad
 
 import (
-	"github.com/lilypad-tech/lilypad/v2/pkg/jobcreator"
-	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
-	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/jobcreator"
+	optionsfactory "github.com/Lilypad-Tech/lilypad/v2/pkg/options"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/web3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )

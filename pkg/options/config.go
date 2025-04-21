@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
-	"github.com/lilypad-tech/lilypad/v2/pkg/ipfs"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
-	"github.com/lilypad-tech/lilypad/v2/pkg/web3"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/ipfs"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/web3"
 )
 
 //go:embed configs

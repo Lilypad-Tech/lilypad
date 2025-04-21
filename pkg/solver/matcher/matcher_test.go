@@ -5,7 +5,7 @@ package matcher
 import (
 	"testing"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 )
 
 func TestMatchOffers(t *testing.T) {
