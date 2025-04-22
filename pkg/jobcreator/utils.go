@@ -20,6 +20,13 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		return data.JobOffer{}, fmt.Errorf("error loading module: %s opts=%+v", err.Error(), options)
 	}
 
+	if module.HasInputFiles(loadedModule.InputFiles) {
+		err = module.ValidateInputFiles(options.InputsPath, loadedModule.InputFiles)
+		if err != nil {
+			return data.JobOffer{}, fmt.Errorf("error reading input files: %s", err.Error())
+		}
+	}
+
 	// Generate a nonce to make sure the job offer is unique
 	nonce, err := nanoid.New()
 	if err != nil {
@@ -34,6 +41,7 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		Module:     options.Module,
 		Spec:       loadedModule.Machine,
 		Inputs:     options.Inputs,
+		InputFiles: loadedModule.InputFiles,
 		Mode:       options.Mode,
 		Pricing:    options.Pricing,
 		Timeouts:   options.Timeouts,

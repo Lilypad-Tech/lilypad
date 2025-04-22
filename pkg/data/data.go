@@ -207,6 +207,8 @@ type JobOffer struct {
 	// the user inputs to the module
 	// these values will power the go template
 	Inputs map[string]string `json:"inputs"`
+	// Expected input files
+	InputFiles InputFiles `json:"inputFiles"`
 	// tells the solver how to match these prices
 	// for JC this will normally be MarketPrice
 	Mode PricingMode `json:"mode"`
