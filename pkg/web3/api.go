@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/web3/bindings/pow"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/web3/bindings/users"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
-	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/pow"
-	"github.com/lilypad-tech/lilypad/v2/pkg/web3/bindings/users"
 )
 
 func (sdk *Web3SDK) GetServiceAddresses(serviceType string) ([]common.Address, error) {

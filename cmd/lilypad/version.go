@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	optionsfactory "github.com/lilypad-tech/lilypad/v2/pkg/options"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	optionsfactory "github.com/Lilypad-Tech/lilypad/v2/pkg/options"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 )
 
-const goBinaryURL = "https://github.com/lilypad-tech/lilypad/releases/"
+const goBinaryURL = "https://github.com/Lilypad-Tech/lilypad/releases/"
 
 func newVersionCmd() *cobra.Command {
 	options := optionsfactory.NewSolverOptions()

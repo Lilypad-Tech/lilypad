@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/data"
-	"github.com/lilypad-tech/lilypad/v2/pkg/solver/store"
-	"github.com/lilypad-tech/lilypad/v2/pkg/system"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 	"github.com/rs/zerolog"
 	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"

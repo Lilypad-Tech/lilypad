@@ -3,7 +3,7 @@ package stats
 import (
 	"fmt"
 
-	"github.com/lilypad-tech/lilypad/v2/pkg/http"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/http"
 )
 
 type Reputation struct {
