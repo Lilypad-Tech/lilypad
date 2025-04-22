@@ -45,6 +45,9 @@ type Module struct {
 	Image string      `json:"image"`
 	Model ModuleModel `json:"model"`
 
+	// Expected input files
+	InputFiles InputFiles `json:"inputFiles"`
+
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
 	// the module file itself will contain this spec
@@ -68,6 +71,11 @@ type ModuleModel struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 	Size string `json:"size"`
+}
+
+type InputFiles struct {
+	Required []string `json:"required"`
+	Optional []string `json:"optional"`
 }
 
 // describes a workload to be run
