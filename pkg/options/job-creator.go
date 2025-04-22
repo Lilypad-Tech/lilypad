@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/jobcreator"
@@ -30,11 +31,12 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 	return jobcreator.JobCreatorOfferOptions{
 		Module: GetDefaultModuleOptions(),
 		// this is the default pricing mode for an JC
-		Mode:     GetDefaultPricingMode(data.MarketPrice),
-		Pricing:  GetDefaultPricingOptions(),
-		Timeouts: GetDefaultTimeoutOptions(),
-		Inputs:   map[string]string{},
-		Services: GetDefaultServicesOptions(),
+		Mode:       GetDefaultPricingMode(data.MarketPrice),
+		Pricing:    GetDefaultPricingOptions(),
+		Timeouts:   GetDefaultTimeoutOptions(),
+		Inputs:     map[string]string{},
+		InputsPath: GetDefaultServeOptionString("INPUTS_PATH", ""),
+		Services:   GetDefaultServicesOptions(),
 	}
 }
 
@@ -50,6 +52,7 @@ func AddJobCreatorMediationCliFlags(cmd *cobra.Command, mediationOptions *jobcre
 func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.JobCreatorOfferOptions) {
 	// add the inputs that we will merge into the module template file
 	cmd.PersistentFlags().StringToStringVarP(&offerOptions.Inputs, "input", "i", offerOptions.Inputs, "Input key-value pairs")
+	cmd.PersistentFlags().StringVar(&offerOptions.InputsPath, "inputs-path", offerOptions.InputsPath, "Path to file inputs directory (INPUTS_PATH)")
 
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, &offerOptions.Pricing)
@@ -82,6 +85,16 @@ func CheckJobCreatorOptions(options jobcreator.JobCreatorOptions) error {
 	err = CheckTelemetryOptions(options.Telemetry)
 	if err != nil {
 		return err
+	}
+
+	if options.Offer.InputsPath != "" {
+		fileInfo, err := os.Stat(options.Offer.InputsPath)
+		if err != nil {
+			return fmt.Errorf("inputs path error: %w", err)
+		}
+		if !fileInfo.IsDir() {
+			return fmt.Errorf("inputs path must be a directory: %s", options.Offer.InputsPath)
+		}
 	}
 
 	if options.Mediation.CheckResultsPercentage < 0 || options.Mediation.CheckResultsPercentage > 100 {

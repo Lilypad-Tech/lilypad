@@ -30,6 +30,8 @@ type JobCreatorOfferOptions struct {
 	Timeouts data.DealTimeouts
 	// the inputs to the module
 	Inputs map[string]string
+	// The file inputs directory
+	InputsPath string
 	// which mediators and directories this RP will trust
 	Services data.ServiceConfig
 	// which node(s) (if any) to target
