@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -842,4 +843,48 @@ func getHashBasedRepoPath(repoURL, hash string) (string, error) {
 	repo := pathParts[1]
 
 	return filepath.Join(REPO_DIR, host, owner, repo, hash), nil
+}
+
+// File inputs
+
+// Check that required files exist and only explicitly defined
+// files are in the target directory
+func ValidateInputFiles(path string, inputFiles data.InputFiles) error {
+	allowedFiles := make(map[string]bool)
+	for _, file := range inputFiles.Required {
+		allowedFiles[file] = true
+	}
+	for _, file := range inputFiles.Optional {
+		allowedFiles[file] = true
+	}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return fmt.Errorf("error reading inputs path %s: %w", path, err)
+	}
+
+	foundRequired := make(map[string]bool)
+	for _, entry := range entries {
+		fileName := entry.Name()
+
+		if entry.IsDir() {
+			return fmt.Errorf("subdirectory %s found, but subdirectories are not allowed in inputs directory", fileName)
+		}
+
+		if !allowedFiles[fileName] {
+			return fmt.Errorf("file %s found but not listed in required or optional files", fileName)
+		}
+
+		if slices.Contains(inputFiles.Required, fileName) {
+			foundRequired[fileName] = true
+		}
+	}
+
+	for _, requiredFile := range inputFiles.Required {
+		if !foundRequired[requiredFile] {
+			return fmt.Errorf("required file %s not found in inputs directory", requiredFile)
+		}
+	}
+
+	return nil
 }
