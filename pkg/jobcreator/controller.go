@@ -112,6 +112,22 @@ func (controller *JobCreatorController) AddJobOffer(offer data.JobOffer) (data.J
 	return container, nil
 }
 
+func (controller *JobCreatorController) AddJobOfferWithFiles(offer data.JobOffer, inputsPath string) (data.JobOfferContainer, error) {
+	controller.log.Debug("add job offer with files", offer)
+	container, err := controller.solverClient.AddJobOfferWithFiles(offer, inputsPath)
+	if err != nil {
+		return container, err
+	}
+
+	// Set the controller's jobID to track this specific job
+	controller.jobID = container.JobOffer.ID
+	controller.log.Debug("Set controller jobID", map[string]any{
+		"jobID": controller.jobID,
+	})
+
+	return container, nil
+}
+
 // SubscribeToJobOfferUpdates subscribes to job offer updates for this controller's job
 // Returns a function that can be called to unsubscribe
 func (controller *JobCreatorController) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {

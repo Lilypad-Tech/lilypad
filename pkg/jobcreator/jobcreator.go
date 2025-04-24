@@ -86,6 +86,10 @@ func (jobCreator *BasicJobCreator) AddJobOffer(offer data.JobOffer) (data.JobOff
 	return jobCreator.controller.AddJobOffer(offer)
 }
 
+func (jobCreator *BasicJobCreator) AddJobOfferWithFiles(offer data.JobOffer, inputsPath string) (data.JobOfferContainer, error) {
+	return jobCreator.controller.AddJobOfferWithFiles(offer, inputsPath)
+}
+
 func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {
 	return jobCreator.controller.SubscribeToJobOfferUpdates(sub)
 }

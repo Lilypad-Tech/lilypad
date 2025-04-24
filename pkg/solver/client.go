@@ -1,9 +1,12 @@
 package solver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/http"
@@ -122,6 +125,52 @@ func (client *SolverClient) GetDealsWithFilter(query store.GetDealsQuery, filter
 
 func (client *SolverClient) AddJobOffer(jobOffer data.JobOffer) (data.JobOfferContainer, error) {
 	return http.PostRequest[data.JobOffer, data.JobOfferContainer](client.options, "/job_offers", jobOffer)
+}
+
+func (client *SolverClient) AddJobOfferWithFiles(jobOffer data.JobOffer, inputsPath string) (data.JobOfferContainer, error) {
+	var requestBody bytes.Buffer
+	writer := multipart.NewWriter(&requestBody)
+
+	// Add job offer part
+	jobOfferPart, err := writer.CreateFormFile("job_offer.json", "job_offer.json")
+	if err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error creating job offer part: %w", err)
+	}
+	jobOfferJson, err := json.Marshal(jobOffer)
+	if err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error marshaling job offer: %w", err)
+	}
+	if _, err := jobOfferPart.Write([]byte(jobOfferJson)); err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error writing job offer part: %w", err)
+	}
+
+	// Add input files part
+	inputBuf, err := system.GetTarBuffer(inputsPath)
+	if err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error creating inputs file tar buffer: %w", err)
+	}
+	inputPart, err := writer.CreateFormFile("inputs.tar", "inputs.tar")
+	if err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error creating inputs file part: %w", err)
+	}
+	if _, err := io.Copy(inputPart, inputBuf); err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error writing inputs file part: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return data.JobOfferContainer{}, fmt.Errorf("error closing multipart writer: %w", err)
+	}
+
+	// Add content type header
+	headers := map[string]string{
+		"Content-Type": writer.FormDataContentType(),
+	}
+
+	return http.PostRequestBufferWithHeaders[data.JobOfferContainer](
+		client.options,
+		"/job_offers/with_files",
+		headers,
+		&requestBody,
+	)
 }
 
 func (client *SolverClient) AddResourceOffer(resourceOffer data.ResourceOffer) (data.ResourceOfferContainer, error) {
