@@ -88,6 +88,7 @@ func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.Clean
 
 	subrouter.HandleFunc("/job_offers", http.GetHandler(server.getJobOffers)).Methods("GET")
 	subrouter.HandleFunc("/job_offers", http.PostHandler(server.addJobOffer)).Methods("POST")
+	subrouter.HandleFunc("/job_offers/with_files", server.addJobOfferWithFiles).Methods("POST")
 
 	subrouter.HandleFunc("/job_offers/{id}", http.GetHandler(server.getJobOffer)).Methods("GET")
 	subrouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(server.jobOfferDownloadFiles)).Methods("GET")
@@ -128,6 +129,7 @@ func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.Clean
 	anurarouter.Use(anuraMiddleware)
 
 	anurarouter.HandleFunc("/job_offers", http.PostHandler(server.addJobOffer)).Methods("POST")
+	anurarouter.HandleFunc("/job_offers/with_files", server.addJobOfferWithFiles).Methods("POST")
 	anurarouter.HandleFunc("/job_offers", http.GetHandler(server.getJobOffers)).Methods("GET")
 	anurarouter.HandleFunc("/job_offers/{id}", http.GetHandler(server.getJobOffer)).Methods("GET")
 	anurarouter.HandleFunc("/job_offers/{id}/files", http.GetHandler(server.jobOfferDownloadFiles)).Methods("GET")
@@ -374,6 +376,145 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 	}
 
 	return server.controller.addJobOffer(jobOffer)
+}
+
+func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	// Check signature and validate the job offer
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error checking signature")
+		corehttp.Error(res, "Unauthorized", corehttp.StatusUnauthorized)
+		return
+	}
+
+	// Set a maximum size for the entire request body
+	// This includes the job offer, which only accounts for a small portion of the request body
+	maxRequestSize := int64(server.options.Storage.MaximumFileInputsSizeMB << 20)
+	req.Body = corehttp.MaxBytesReader(res, req.Body, maxRequestSize)
+
+	// Parse the multipart form with max memory size
+	err = req.ParseMultipartForm(int64(server.options.Storage.MaximumFileInputsMemoryMB << 20))
+	if err != nil {
+		server.log.Error().Err(err).Msg("error parsing multipart form")
+		corehttp.Error(res, "Error parsing form data", corehttp.StatusBadRequest)
+		return
+	}
+
+	// Get the job offer JSON part
+	jobOfferPart, _, err := req.FormFile("job_offer.json")
+	if err != nil {
+		server.log.Error().Err(err).Msg("error getting job offer")
+		corehttp.Error(res, "Missing job_offer.json part", corehttp.StatusBadRequest)
+		return
+	}
+	defer jobOfferPart.Close()
+
+	var jobOffer data.JobOffer
+	err = json.NewDecoder(jobOfferPart).Decode(&jobOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error decoding job offer JSON")
+		corehttp.Error(res, "Invalid job offer JSON", corehttp.StatusBadRequest)
+		return
+	}
+
+	// Only the job creator can post their job offer
+	if signerAddress != jobOffer.JobCreator {
+		server.log.Error().
+			Str("signer", signerAddress).
+			Str("jobCreator", jobOffer.JobCreator).
+			Msg("job creator address does not match signer address")
+		corehttp.Error(res, "Job creator address does not match signer address", corehttp.StatusUnauthorized)
+		return
+	}
+
+	// Check version
+	if server.options.AccessControl.EnableVersionCheck && !http.IsAnura(req, server.options.AccessControl.AnuraAddresses) {
+		versionHeader, _ := http.GetVersionFromHeaders(req)
+		minVersion, ok := server.versionConfig.IsSupported(versionHeader)
+		if !ok {
+			server.log.Debug().Str("cid", jobOffer.ID).
+				Str("address", jobOffer.JobCreator).
+				Str("version", versionHeader).
+				Str("minVersion", minVersion).
+				Msg("job offer rejected because job creator is running an unsupported version")
+			corehttp.Error(res,
+				fmt.Sprintf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion),
+				corehttp.StatusForbidden)
+			return
+		}
+	}
+
+	// Check recency
+	offerRecent := isTimestampRecent(jobOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		server.log.Debug().Str("cid", jobOffer.ID).Str("address", jobOffer.JobCreator).Msg("job offer rejected because timestamp was not recent")
+		corehttp.Error(res, "Job offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection", corehttp.StatusBadRequest)
+		return
+	}
+
+	err = data.CheckJobOffer(jobOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("Error checking job offer")
+		corehttp.Error(res, fmt.Sprintf("Invalid job offer: %s", err.Error()), corehttp.StatusBadRequest)
+		return
+	}
+
+	// Get the inputs file part
+	inputsFile, _, err := req.FormFile("inputs.tar")
+	if err != nil {
+		server.log.Error().Err(err).Msg("error getting inputs.tar part")
+		corehttp.Error(res, "Missing inputs.tar part", corehttp.StatusBadRequest)
+		return
+	}
+	defer inputsFile.Close()
+
+	// Create directory for job offer inputs file
+	jobID, err := data.GetJobOfferID(jobOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("unable to compute job ID")
+		corehttp.Error(res, "Could not compute a job ID", corehttp.StatusInternalServerError)
+		return
+	}
+	dirPath, err := EnsureInputsArchivePath(jobID)
+	if err != nil {
+		server.log.Error().Err(err).Str("cid", jobID).Msg("error creating job offer directory")
+		corehttp.Error(res, "Error creating job offer directory", corehttp.StatusInternalServerError)
+		return
+	}
+
+	// Create the file
+	filename := "inputs.tar"
+	filePath := filepath.Join(dirPath, filename)
+	f, err := os.Create(filePath)
+	if err != nil {
+		server.log.Error().Err(err).Str("filePath", filePath).Msg("error creating file")
+		corehttp.Error(res, "Error saving input file", corehttp.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// Copy the data to the file
+	_, err = io.Copy(f, inputsFile)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error copying input file data")
+		corehttp.Error(res, "Error saving input file data", corehttp.StatusInternalServerError)
+		return
+	}
+
+	// Add the job for matching
+	jobOfferContainer, err := server.controller.addJobOffer(jobOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error adding job offer")
+		corehttp.Error(res, fmt.Sprintf("Error adding job offer: %s", err.Error()), corehttp.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(res).Encode(jobOfferContainer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error encoding job offer container response")
+		corehttp.Error(res, "Error encoding response", corehttp.StatusInternalServerError)
+		return
+	}
 }
 
 func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.ResourceOfferContainer, error) {

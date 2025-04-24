@@ -9,6 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Solver storage for tar input files
+const INPUT_ARCHIVES_DIR = "job-input-archives"
 const FILES_DIR = "job-files"
 const DOWNLOADS_DIR = "downloaded-files"
 
@@ -53,8 +55,16 @@ func ServiceLogSolverEvent(service system.Service, ev SolverEvent) {
 	LogSolverEvent(system.GetServiceBadge(service), ev)
 }
 
+func GetInputArchivesPath(id string) string {
+	return system.GetDataDir(filepath.Join(INPUT_ARCHIVES_DIR, id))
+}
+
 func GetDealsFilePath(id string) string {
 	return system.GetDataDir(filepath.Join(FILES_DIR, id))
+}
+
+func EnsureInputsArchivePath(id string) (string, error) {
+	return system.EnsureDataDir(filepath.Join(INPUT_ARCHIVES_DIR, id))
 }
 
 func EnsureDealsFilePath(id string) (string, error) {
