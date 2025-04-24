@@ -471,17 +471,17 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 	err := func() error {
 		controller.log.Info("loading module", "")
 		span.AddEvent("module.load")
-		module, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
+		loadedModule, err := module.LoadModule(deal.Deal.JobOffer.Module, deal.Deal.JobOffer.Inputs)
 		if err != nil {
 			span.SetStatus(codes.Error, "load module failed")
 			span.RecordError(err)
 			return fmt.Errorf("error loading module: %s", err.Error())
 		}
-		controller.log.Info("module loaded", module)
+		controller.log.Info("module loaded", loadedModule)
 		span.AddEvent("module.loaded")
 
 		span.AddEvent("executor.job.start")
-		executorResult, err := controller.executor.RunJob(deal, *module)
+		executorResult, err := controller.executor.RunJob(deal, *loadedModule)
 		if err != nil {
 			controller.log.Error("error running job", err)
 			span.SetStatus(codes.Error, "job execution failed")
