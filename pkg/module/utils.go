@@ -847,6 +847,10 @@ func getHashBasedRepoPath(repoURL, hash string) (string, error) {
 
 // File inputs
 
+func HasInputFiles(inputFiles data.InputFiles) bool {
+	return len(inputFiles.Required) > 0 || len(inputFiles.Optional) > 0
+}
+
 // Check that required files exist and only explicitly defined
 // files are in the target directory
 func ValidateInputFiles(path string, inputFiles data.InputFiles) error {
