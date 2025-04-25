@@ -480,6 +480,28 @@ func (controller *ResourceProviderController) runJob(ctx context.Context, deal d
 		controller.log.Info("module loaded", loadedModule)
 		span.AddEvent("module.loaded")
 
+		if module.HasInputFiles(loadedModule.InputFiles) {
+			controller.log.Info("downloading file inputs", loadedModule.InputFiles)
+			span.AddEvent("solver.files.download")
+			dirPath := solver.GetInputsFilePath(deal.Deal.ID)
+			err = controller.solverClient.DownloadInputFiles(deal.ID, dirPath)
+			if err != nil {
+				controller.log.Error("download input files failed", err)
+				span.SetStatus(codes.Error, "download input files failed")
+				span.RecordError(err)
+				return fmt.Errorf("error downloading input files: %s", err.Error())
+			}
+
+			err = module.ValidateInputFiles(dirPath, deal.Deal.JobOffer.InputFiles)
+			if err != nil {
+				controller.log.Error("unexpected input files", err)
+				span.SetStatus(codes.Error, "input files validation failed")
+				span.RecordError(err)
+				return fmt.Errorf("error validating downloaded input files: %s", err.Error())
+			}
+			span.AddEvent("solver.files.downloaded")
+		}
+
 		span.AddEvent("executor.job.start")
 		executorResult, err := controller.executor.RunJob(deal, *loadedModule)
 		if err != nil {

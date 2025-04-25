@@ -201,6 +201,14 @@ func (client *SolverClient) UploadResultFiles(id string, localPath string) (data
 	return http.PostRequestBuffer[data.Result](client.options, fmt.Sprintf("/deals/%s/files", id), buf)
 }
 
+func (client *SolverClient) DownloadInputFiles(id string, localPath string) error {
+	buf, err := http.GetRequestBuffer(client.options, fmt.Sprintf("/deals/%s/input_files", id), map[string]string{})
+	if err != nil {
+		return err
+	}
+	return system.ExpandTarBuffer(buf, localPath)
+}
+
 func (client *SolverClient) DownloadResultFiles(id string, localPath string) error {
 	buf, err := http.GetRequestBuffer(client.options, fmt.Sprintf("/deals/%s/files", id), map[string]string{})
 	if err != nil {
