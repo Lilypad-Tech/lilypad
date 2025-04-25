@@ -99,6 +99,7 @@ func (server *solverServer) ListenAndServe(ctx context.Context, cm *system.Clean
 	subrouter.HandleFunc("/deals", http.GetHandler(server.getDeals)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}", http.GetHandler(server.getDeal)).Methods("GET")
 
+	subrouter.HandleFunc("/deals/{id}/input_files", http.GetHandler(server.downloadInputFiles)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/files", http.GetHandler(server.downloadFiles)).Methods("GET")
 	subrouter.HandleFunc("/deals/{id}/files", server.uploadFiles).Methods("POST")
 
@@ -714,6 +715,64 @@ func (server *solverServer) updateTransactionsMediator(payload data.DealTransact
 // We use EmptyResponse to provide a type for the http.GetHandler wrapper,
 // but the client expects a file stream and will ignore it.
 type EmptyResponse struct{}
+
+func (server *solverServer) downloadInputFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	deal, err := server.store.GetDeal(id)
+	if err != nil {
+		server.log.Error().Err(err).Str("cid", id).Msg("error loading deal")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error loading deal",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	if deal == nil {
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "deal not found",
+			StatusCode: corehttp.StatusNotFound,
+		}
+	}
+
+	// Check authorization
+	signerAddress, err := http.CheckSignature(req)
+	if err != nil {
+		server.log.Error().Err(err).Msg("error checking signature")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "unauthorized",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+	if signerAddress != deal.ResourceProvider {
+		server.log.Debug().
+			Str("signer", signerAddress).
+			Str("resourceProvider", deal.ResourceProvider).
+			Msg("signer address does not match resource provider address")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "not authorized: only the resource provider running this job can download input files",
+			StatusCode: corehttp.StatusUnauthorized,
+		}
+	}
+
+	// Serve the input files
+	jobID := deal.Deal.JobOffer.ID
+	dirPath, err := EnsureInputsArchivePath(jobID)
+	if err != nil {
+		server.log.Error().Err(err).Str("cid", jobID).Msg("error getting file inputs directory")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "error accessing input files",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+	if err := server.handleFileDownload(dirPath, res, func() {
+		server.log.Debug().Str("cid", jobID).Str("address", deal.ResourceProvider).Msg("job input files downloaded successfully")
+	}); err != nil {
+		return EmptyResponse{}, err
+	}
+
+	return EmptyResponse{}, nil
+}
 
 func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *corehttp.Request) (EmptyResponse, error) {
 	vars := mux.Vars(req)
