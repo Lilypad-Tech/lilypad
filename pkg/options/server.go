@@ -41,7 +41,7 @@ func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
 
 func GetDefaultStorageOptions() http.StorageOptions {
 	return http.StorageOptions{
-		MaximumFileInputsMemoryMB: GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_MEMORY_MB", 20),
+		MaximumFileInputsMemoryMB: GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_MEMORY_MB", 1),
 		MaximumFileInputsSizeMB:   GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_SIZE_MB", 10),
 	}
 }
