@@ -42,6 +42,7 @@ func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
 func GetDefaultStorageOptions() http.StorageOptions {
 	return http.StorageOptions{
 		MaximumFileInputsMemoryMB: GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_MEMORY_MB", 20),
+		MaximumFileInputsSizeMB:   GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_SIZE_MB", 10),
 	}
 }
 
@@ -105,6 +106,10 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.Storage.MaximumFileInputsMemoryMB, "server-max-file-inputs-memory-mb", serverOptions.Storage.MaximumFileInputsMemoryMB,
 		`The maxiumum memory used when accepting file inputs to a job (SERVER_MAX_FILE_INPUTS_MEMORY_MB).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.Storage.MaximumFileInputsSizeMB, "server-max-file-inputs-size-mb", serverOptions.Storage.MaximumFileInputsSizeMB,
+		`The maxiumum file inputs upload size to a job (SERVER_MAX_FILE_INPUTS_SIZE_MB).`,
 	)
 }
 

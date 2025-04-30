@@ -31,6 +31,7 @@ type RateLimiterOptions struct {
 
 type StorageOptions struct {
 	MaximumFileInputsMemoryMB int
+	MaximumFileInputsSizeMB   int
 }
 
 type ClientOptions struct {
