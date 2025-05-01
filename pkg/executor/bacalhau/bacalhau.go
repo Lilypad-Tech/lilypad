@@ -258,7 +258,7 @@ func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
-	putJobResponse, err := executor.bacalhauClient.postJob(module.Job)
+	putJobResponse, err := executor.bacalhauClient.postJob(module.Job, deal.ID)
 	if err != nil {
 		return "", fmt.Errorf("error creating job %s -> %s", deal.ID, err.Error())
 	}
