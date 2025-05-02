@@ -390,8 +390,8 @@ func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, re
 
 	// Set a maximum size for the entire request body
 	// This includes the job offer, which only accounts for a small portion of the request body
-	maxRequestSize := int64(server.options.Storage.MaximumFileInputsSizeMB << 20)
-	req.Body = corehttp.MaxBytesReader(res, req.Body, maxRequestSize)
+	maxRequestSizeBytes := int64(server.options.Storage.MaximumFileInputsSizeMB << 20)
+	req.Body = corehttp.MaxBytesReader(res, req.Body, maxRequestSizeBytes)
 
 	// Parse the multipart form with max memory size
 	err = req.ParseMultipartForm(int64(server.options.Storage.MaximumFileInputsMemoryMB << 20))
