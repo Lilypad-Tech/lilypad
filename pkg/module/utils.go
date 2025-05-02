@@ -856,9 +856,15 @@ func HasInputFiles(inputFiles data.InputFiles) bool {
 func ValidateInputFiles(path string, inputFiles data.InputFiles) error {
 	allowedFiles := make(map[string]bool)
 	for _, file := range inputFiles.Required {
+		if allowedFiles[file] {
+			return fmt.Errorf("duplicate file %s in input files definition", file)
+		}
 		allowedFiles[file] = true
 	}
 	for _, file := range inputFiles.Optional {
+		if allowedFiles[file] {
+			return fmt.Errorf("duplicate file %s in input files definition", file)
+		}
 		allowedFiles[file] = true
 	}
 
