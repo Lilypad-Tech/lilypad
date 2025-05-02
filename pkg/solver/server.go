@@ -437,7 +437,7 @@ func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, re
 				Str("address", jobOffer.JobCreator).
 				Str("version", versionHeader).
 				Str("minVersion", minVersion).
-				Msg("job offer rejected because job creator is running an unsupported version")
+				Msg("job offer with files rejected because job creator is running an unsupported version")
 			corehttp.Error(res,
 				fmt.Sprintf("Please update to minimum supported version %s or newer: https://github.com/Lilypad-Tech/lilypad/releases", minVersion),
 				corehttp.StatusForbidden)
