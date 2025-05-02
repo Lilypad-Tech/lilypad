@@ -6,6 +6,7 @@ import (
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/module"
+	"github.com/rs/zerolog/log"
 
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
@@ -23,6 +24,10 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 	if module.HasInputFiles(loadedModule.InputFiles) {
 		err = module.ValidateInputFiles(options.InputsPath, loadedModule.InputFiles)
 		if err != nil {
+			log.Error().Err(err).
+				Str("inputsPath", options.InputsPath).
+				Any("inputFiles", loadedModule.InputFiles).
+				Msg("failed to validate input files")
 			return data.JobOffer{}, fmt.Errorf("error reading input files: %s", err.Error())
 		}
 	}

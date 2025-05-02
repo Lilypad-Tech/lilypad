@@ -116,6 +116,7 @@ func (controller *JobCreatorController) AddJobOfferWithFiles(offer data.JobOffer
 	controller.log.Debug("add job offer with files", offer)
 	container, err := controller.solverClient.AddJobOfferWithFiles(offer, inputsPath)
 	if err != nil {
+		controller.log.Error("unable to post job with files", err)
 		return container, err
 	}
 
