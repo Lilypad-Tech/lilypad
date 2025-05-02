@@ -1,10 +1,12 @@
 package module
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,6 +20,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/h2non/filetype"
 	"github.com/rs/zerolog/log"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
@@ -885,6 +888,12 @@ func ValidateInputFiles(path string, inputFiles data.InputFiles) error {
 			return fmt.Errorf("file %s found but not listed in required or optional files", fileName)
 		}
 
+		// Check for potentially dangerous file types
+		filePath := filepath.Join(path, fileName)
+		if err := validateFileContent(filePath); err != nil {
+			return err
+		}
+
 		if slices.Contains(inputFiles.Required, fileName) {
 			foundRequired[fileName] = true
 		}
@@ -893,6 +902,57 @@ func ValidateInputFiles(path string, inputFiles data.InputFiles) error {
 	for _, requiredFile := range inputFiles.Required {
 		if !foundRequired[requiredFile] {
 			return fmt.Errorf("required file %s not found in inputs directory", requiredFile)
+		}
+	}
+
+	return nil
+}
+
+func validateFileContent(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("error opening file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	// Read first 4KB for type detection
+	head := make([]byte, 4096)
+	n, err := file.Read(head)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+	head = head[:n]
+
+	// Get filetype
+	kind, _ := filetype.Match(head)
+
+	dangerousMimeTypes := map[string]bool{
+		"application/x-executable":      true, // Linux binaries
+		"application/x-dosexec":         true, // Windows executables
+		"application/x-mach-binary":     true, // macOS binaries
+		"application/x-msdownload":      true, // Windows DLLs
+		"application/java-archive":      true, // JAR files
+		"application/x-shockwave-flash": true, // Flash
+	}
+
+	if dangerousMimeTypes[kind.MIME.Value] {
+		return fmt.Errorf("file %s has potentially dangerous type: %s", filePath, kind.MIME.Value)
+	}
+
+	// Additional checks for text files
+	if strings.HasPrefix(kind.MIME.Value, "text/") || kind.MIME.Value == "" {
+		file.Seek(0, 0)
+		scanner := bufio.NewScanner(file)
+
+		for lineNum := 0; scanner.Scan() && lineNum < 10; lineNum++ {
+			line := scanner.Text()
+
+			// Check for script markers
+			if (lineNum == 0 && strings.HasPrefix(line, "#!")) ||
+				strings.Contains(line, "<script") ||
+				strings.Contains(line, "<?php") {
+				return fmt.Errorf("file %s contains script content", filePath)
+			}
 		}
 	}
 
