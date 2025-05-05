@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -37,6 +38,7 @@ type solverServer struct {
 	services      data.ServiceConfig
 	versionConfig *system.VersionConfig
 	log           *zerolog.Logger
+	meter         metric.Meter
 }
 
 func NewSolverServer(
@@ -46,6 +48,7 @@ func NewSolverServer(
 	stats stats.Stats,
 	versionConfig *system.VersionConfig,
 	services data.ServiceConfig,
+	meter metric.Meter,
 ) (*solverServer, error) {
 	server := &solverServer{
 		options:       options,
@@ -54,6 +57,7 @@ func NewSolverServer(
 		stats:         stats,
 		versionConfig: versionConfig,
 		log:           system.GetLogger(system.SolverService),
+		meter:         meter,
 	}
 
 	metricsDashboard.Init(services.APIHost)
@@ -376,6 +380,11 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 		return nil, err
 	}
 
+	err = recordJobOffer(req.Context(), server.meter)
+	if err != nil {
+		server.log.Warn().Err(err).Msg("Failed to record metrics for job without file inputs")
+	}
+
 	return server.controller.addJobOffer(jobOffer)
 }
 
@@ -495,7 +504,7 @@ func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, re
 	defer f.Close()
 
 	// Copy the data to the file
-	_, err = io.Copy(f, inputsFile)
+	bytesWritten, err := io.Copy(f, inputsFile)
 	if err != nil {
 		server.log.Error().Err(err).Msg("error copying input file data")
 		corehttp.Error(res, "Error saving input file data", corehttp.StatusInternalServerError)
@@ -509,6 +518,17 @@ func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, re
 		corehttp.Error(res, fmt.Sprintf("Error adding job offer: %s", err.Error()), corehttp.StatusInternalServerError)
 		return
 	}
+
+	fileSizeKB := bytesWritten / 1000
+	err = recordJobOfferWithFileInputs(req.Context(), server.meter, fileSizeKB)
+	if err != nil {
+		server.log.Warn().Err(err).Msg("Failed to record file input metrics")
+	}
+	server.log.Info().
+		Str("jobID", jobID).
+		Str("jobCreator", jobOffer.JobCreator).
+		Int64("fileSizeKB", fileSizeKB).
+		Msg("Job offer uploaded with file inputs")
 
 	err = json.NewEncoder(res).Encode(jobOfferContainer)
 	if err != nil {
