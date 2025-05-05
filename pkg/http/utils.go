@@ -526,13 +526,13 @@ func PostRequestBufferWithHeaders[ResultType any](
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Debug().Msgf("error reading response body: %s", body)
-		return result, err
+		return result, fmt.Errorf("error reading response body: %s", body)
 	}
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		log.Debug().Msgf("error unmarshaling response body: %s", body)
-		return result, err
+		return result, fmt.Errorf("error unmarshaling response body: %s", body)
 	}
 
 	return result, nil
