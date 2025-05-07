@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.19.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.18.0...v2.19.0) (2025-05-07)
+
+
+### Features
+
+* Add job file inputs ([#573](https://github.com/Lilypad-Tech/lilypad/issues/573)) ([b291b95](https://github.com/Lilypad-Tech/lilypad/commit/b291b9570b6ed9f3e074358cece70921a215a935))
+
 ## [2.18.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.17.0...v2.18.0) (2025-04-21)
 
 
