@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745345113339,
+  "lastUpdate": 1746632261475,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2496,6 +2496,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "78597 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b291b9570b6ed9f3e074358cece70921a215a935",
+          "message": "feat: Add job file inputs (#573)\n\n* feat: Add module input files field\n\n* feat: Add job creator INPUTS_PATH config\n\n* feat: Add ValidateInputFiles helper function\n\n* chore: Add HasInputFiles helper\n\n* feat: Add job offer input files field\n\n* chore: Add SERVER_MAX_FILE_INPUTS_MEMORY_MB config\n\n* feat: Add SERVER_MAX_FILE_INPUTS_SIZE_MB config\n\n* feat: Add job offer with files handler\n\n* chore: Add PostRequestBufferWithHeaders helper\n\n* feat: Add job creator post job offer with files\n\n* chore: Rename module to loadedModule\n\n* feat: Add download input files handler\n\n* feat: Add resource provider download input files\n\n* chore: Reduce SERVER_MAX_FILE_INPUTS_MEMORY_MB default\n\n* feat: Add Bacalhau local directory input source\n\n* docs: Improve error message\n\nCo-authored-by: Narb <29411347+narbs91@users.noreply.github.com>\n\n* chore: Add logs\n\n* chore: Rename maxRequestSize to maxRequestSizeBytes\n\n* chore: Check for duplicate input filenames\n\n* feat: Add check for potentially dangerous file types\n\n* chore: Report body post error wrapper\n\n* fix: Make Bacalhau input sources optional\n\n* feat: Add file inputs metrics\n\n* test: Isolate test data directories\n\n---------\n\nCo-authored-by: Narb <29411347+narbs91@users.noreply.github.com>",
+          "timestamp": "2025-05-07T08:35:47-07:00",
+          "tree_id": "3e6a5f7040c82b5cc410e229fc592fa88ffb0a73",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/b291b9570b6ed9f3e074358cece70921a215a935"
+        },
+        "date": 1746632260896,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 48361,
+            "unit": "ns/op\t   45532 B/op\t     281 allocs/op",
+            "extra": "77182 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 48361,
+            "unit": "ns/op",
+            "extra": "77182 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 45532,
+            "unit": "B/op",
+            "extra": "77182 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77182 times\n4 procs"
           }
         ]
       }
