@@ -24,6 +24,12 @@ type metrics struct {
 	jobTimedOut           metric.Int64Gauge
 }
 
+type jobOfferMetrics struct {
+	jobOffersWithoutFileInputs metric.Int64Counter
+	jobOffersWithFileInputs    metric.Int64Counter
+	totalFileInputSize         metric.Int64Counter
+}
+
 type jobStats struct {
 	stateCounts stateCounts
 }
@@ -155,6 +161,39 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 	}, nil
 }
 
+func newJobOfferMetrics(meter metric.Meter) (*jobOfferMetrics, error) {
+	jobOffersWithoutFileInputs, err := meter.Int64Counter(
+		"solver.job_offer.without_files",
+		metric.WithDescription("Number of jobs without file inputs."),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	jobOffersWithFileInputs, err := meter.Int64Counter(
+		"solver.job_offer.with_files",
+		metric.WithDescription("Number of jobs with file inputs."),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	totalFileInputSize, err := meter.Int64Counter(
+		"solver.job_offer.file_inputs.total_size",
+		metric.WithDescription("Total size of all file inputs in kilobytes."),
+		metric.WithUnit("kBy"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &jobOfferMetrics{
+		jobOffersWithoutFileInputs,
+		jobOffersWithFileInputs,
+		totalFileInputSize,
+	}, nil
+}
+
 func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.DealContainer, jobOffers []data.JobOfferContainer) error {
 	log := system.GetLogger(system.SolverService)
 	var jobStats jobStats
@@ -220,6 +259,33 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 	metrics.timeoutMediateResults.Record(ctx, jobStats.stateCounts.timeoutMediateResults)
 	metrics.jobOfferCancelled.Record(ctx, jobStats.stateCounts.jobOfferCancelled)
 	metrics.jobTimedOut.Record(ctx, jobStats.stateCounts.jobTimedOut)
+
+	return nil
+}
+
+func recordJobOffer(ctx context.Context, meter metric.Meter) error {
+	log := system.GetLogger(system.SolverService)
+
+	metrics, err := newJobOfferMetrics(meter)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to create file inputs metric")
+		return err
+	}
+	metrics.jobOffersWithoutFileInputs.Add(ctx, 1)
+
+	return nil
+}
+
+func recordJobOfferWithFileInputs(ctx context.Context, meter metric.Meter, sizeKB int64) error {
+	log := system.GetLogger(system.SolverService)
+
+	metrics, err := newJobOfferMetrics(meter)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to create file inputs metric")
+		return err
+	}
+	metrics.jobOffersWithFileInputs.Add(ctx, 1)
+	metrics.totalFileInputSize.Add(ctx, sizeKB)
 
 	return nil
 }

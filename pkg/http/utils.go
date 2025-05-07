@@ -494,6 +494,50 @@ func PostRequestBuffer[ResultType any](
 	return result, nil
 }
 
+func PostRequestBufferWithHeaders[ResultType any](
+	options ClientOptions,
+	path string,
+	headers map[string]string,
+	data *bytes.Buffer,
+) (ResultType, error) {
+	var result ResultType
+	client := newRetryClient()
+	privateKey, err := web3.ParsePrivateKey(options.PrivateKey)
+	if err != nil {
+		return result, err
+	}
+	req, err := retryablehttp.NewRequest("POST", URL(options, path), data)
+	if err != nil {
+		return result, err
+	}
+
+	if err := AddHeaders(req, privateKey, web3.GetAddress(privateKey).String()); err != nil {
+		return result, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Debug().Msgf("error reading response body: %s", body)
+		return result, fmt.Errorf("error reading response body: %s", body)
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		log.Debug().Msgf("error unmarshaling response body: %s", body)
+		return result, fmt.Errorf("error unmarshaling response body: %s", body)
+	}
+
+	return result, nil
+}
+
 func newRetryClient() *retryablehttp.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 10

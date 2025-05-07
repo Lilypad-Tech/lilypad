@@ -52,9 +52,8 @@ func (c *BacalhauClient) getVersion() (string, error) {
 	return response.BuildVersionInfo.GitVersion, nil
 }
 
-func (c *BacalhauClient) postJob(job bacalhau.Job) (*apimodels.PutJobResponse, error) {
-
-	translatedJob := translateJob(job)
+func (c *BacalhauClient) postJob(job bacalhau.Job, dealID string, hasInputFiles bool) (*apimodels.PutJobResponse, error) {
+	translatedJob := translateJob(job, dealID, hasInputFiles)
 
 	putJobRequest := apimodels.PutJobRequest{
 		Job: translatedJob,
@@ -128,7 +127,21 @@ func (c *BacalhauClient) getMachineSpecs() ([]data.MachineSpec, error) {
 	return specs, nil
 }
 
-func translateJob(job bacalhau.Job) *models.Job {
+func translateJob(job bacalhau.Job, dealID string, hasInputFiles bool) *models.Job {
+	var inputSources []*models.InputSource
+	if hasInputFiles {
+		inputSources = append(inputSources, &models.InputSource{
+			Source: &models.SpecConfig{
+				Type: "localDirectory",
+				Params: map[string]any{
+					"SourcePath": fmt.Sprintf("/inputs/%s", dealID),
+					"ReadWrite":  true,
+				},
+			},
+			Target: "/inputs",
+		})
+	}
+
 	return &models.Job{
 		ID:        job.Metadata.ID,
 		Name:      job.Metadata.ID,
@@ -167,7 +180,8 @@ func translateJob(job bacalhau.Job) *models.Job {
 					ExecutionTimeout: job.Spec.Timeout,
 					// TODO: add queue timeout and total timeout
 				},
-				ResultPaths: translateOutputSources(job.Spec.Outputs),
+				InputSources: inputSources,
+				ResultPaths:  translateOutputSources(job.Spec.Outputs),
 			},
 		},
 		State:      models.NewJobState(models.JobStateTypePending),

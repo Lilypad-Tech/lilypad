@@ -30,6 +30,8 @@ type JobCreatorOfferOptions struct {
 	Timeouts data.DealTimeouts
 	// the inputs to the module
 	Inputs map[string]string
+	// The file inputs directory
+	InputsPath string
 	// which mediators and directories this RP will trust
 	Services data.ServiceConfig
 	// which node(s) (if any) to target
@@ -82,6 +84,10 @@ func (jobCreator *BasicJobCreator) GetJobOfferFromOptions(options JobCreatorOffe
 // adds the job offer to the solver
 func (jobCreator *BasicJobCreator) AddJobOffer(offer data.JobOffer) (data.JobOfferContainer, error) {
 	return jobCreator.controller.AddJobOffer(offer)
+}
+
+func (jobCreator *BasicJobCreator) AddJobOfferWithFiles(offer data.JobOffer, inputsPath string) (data.JobOfferContainer, error) {
+	return jobCreator.controller.AddJobOfferWithFiles(offer, inputsPath)
 }
 
 func (jobCreator *BasicJobCreator) SubscribeToJobOfferUpdates(sub JobOfferSubscriber) func() {

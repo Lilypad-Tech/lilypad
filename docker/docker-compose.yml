@@ -10,9 +10,11 @@ services:
       dockerfile: ./docker/bacalhau/Dockerfile
     environment:
       - BACALHAU_ENVIRONMENT=local
-    command: ["bacalhau", "serve", "--orchestrator", "--compute"]
+    command: |-
+      bacalhau serve --orchestrator --compute --config Compute.AllowListedLocalPaths="/inputs/*:rw"
     volumes:
       - bacalhau-data:/root/.bacalhau
+      - /tmp/lilypad/data/job-inputs/:/inputs
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider

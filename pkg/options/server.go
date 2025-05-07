@@ -14,6 +14,7 @@ func GetDefaultServerOptions() http.ServerOptions {
 		Port:          GetDefaultServeOptionInt("SERVER_PORT", 8080), //nolint:gomnd
 		AccessControl: GetDefaultAccessControlOptions(),
 		RateLimiter:   GetDefaultRateLimiterOptions(),
+		Storage:       GetDefaultStorageOptions(),
 	}
 }
 
@@ -35,6 +36,13 @@ func GetDefaultRateLimiterOptions() http.RateLimiterOptions {
 	return http.RateLimiterOptions{
 		RequestLimit: GetDefaultServeOptionInt("SERVER_RATE_REQUEST_LIMIT", 5),
 		WindowLength: GetDefaultServeOptionInt("SERVER_RATE_WINDOW_LENGTH", 10),
+	}
+}
+
+func GetDefaultStorageOptions() http.StorageOptions {
+	return http.StorageOptions{
+		MaximumFileInputsMemoryMB: GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_MEMORY_MB", 1),
+		MaximumFileInputsSizeMB:   GetDefaultServeOptionInt("SERVER_MAX_FILE_INPUTS_SIZE_MB", 10),
 	}
 }
 
@@ -94,6 +102,14 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.AccessControl.MinimumVersion, "server-minimum-version", serverOptions.AccessControl.MinimumVersion,
 		`The minimum client version (SERVER_MINIMUM_VERSION).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.Storage.MaximumFileInputsMemoryMB, "server-max-file-inputs-memory-mb", serverOptions.Storage.MaximumFileInputsMemoryMB,
+		`The maxiumum memory used when accepting file inputs to a job (SERVER_MAX_FILE_INPUTS_MEMORY_MB).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.Storage.MaximumFileInputsSizeMB, "server-max-file-inputs-size-mb", serverOptions.Storage.MaximumFileInputsSizeMB,
+		`The maxiumum file inputs upload size to a job (SERVER_MAX_FILE_INPUTS_SIZE_MB).`,
 	)
 }
 

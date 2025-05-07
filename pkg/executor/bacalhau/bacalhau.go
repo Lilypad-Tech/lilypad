@@ -13,6 +13,7 @@ import (
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	executorlib "github.com/Lilypad-Tech/lilypad/v2/pkg/executor"
+	modulelib "github.com/Lilypad-Tech/lilypad/v2/pkg/module"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 	"github.com/bacalhau-project/bacalhau/pkg/models"
 	"github.com/ipfs/boxo/files"
@@ -258,7 +259,8 @@ func (executor *BacalhauExecutor) getJobID(
 	deal data.DealContainer,
 	module data.Module,
 ) (string, error) {
-	putJobResponse, err := executor.bacalhauClient.postJob(module.Job)
+	hasInputFiles := modulelib.HasInputFiles(module.InputFiles)
+	putJobResponse, err := executor.bacalhauClient.postJob(module.Job, deal.ID, hasInputFiles)
 	if err != nil {
 		return "", fmt.Errorf("error creating job %s -> %s", deal.ID, err.Error())
 	}

@@ -45,6 +45,9 @@ type Module struct {
 	Image string      `json:"image"`
 	Model ModuleModel `json:"model"`
 
+	// Expected input files
+	InputFiles InputFiles `json:"inputFiles"`
+
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
 	// the module file itself will contain this spec
@@ -68,6 +71,11 @@ type ModuleModel struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 	Size string `json:"size"`
+}
+
+type InputFiles struct {
+	Required []string `json:"required"`
+	Optional []string `json:"optional"`
 }
 
 // describes a workload to be run
@@ -199,6 +207,8 @@ type JobOffer struct {
 	// the user inputs to the module
 	// these values will power the go template
 	Inputs map[string]string `json:"inputs"`
+	// Expected input files
+	InputFiles InputFiles `json:"inputFiles"`
 	// tells the solver how to match these prices
 	// for JC this will normally be MarketPrice
 	Mode PricingMode `json:"mode"`

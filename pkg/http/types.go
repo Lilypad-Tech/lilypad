@@ -6,6 +6,7 @@ type ServerOptions struct {
 	Port          int
 	AccessControl AccessControlOptions
 	RateLimiter   RateLimiterOptions
+	Storage       StorageOptions
 }
 
 type AccessControlOptions struct {
@@ -26,6 +27,11 @@ type ValidationToken struct {
 type RateLimiterOptions struct {
 	RequestLimit int
 	WindowLength int
+}
+
+type StorageOptions struct {
+	MaximumFileInputsMemoryMB int
+	MaximumFileInputsSizeMB   int
 }
 
 type ClientOptions struct {

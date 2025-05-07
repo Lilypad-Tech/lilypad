@@ -63,9 +63,11 @@ services:
     ports:
       - 1234:1234
       - 6001:6001
-    command: ["bacalhau", "serve", "--orchestrator", "--compute"]
+    command: |-
+      bacalhau serve --orchestrator --compute --config Compute.AllowListedLocalPaths="/inputs/*:rw"
     volumes:
       - bacalhau-data:/root/.bacalhau
+      - /tmp/lilypad/data/job-inputs/:/inputs
 volumes:
   bacalhau-data:
   chain-data:

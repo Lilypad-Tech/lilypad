@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/module"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/web3"
 	"github.com/rs/zerolog/log"
@@ -85,7 +86,12 @@ func RunJob(
 
 	// Add the job offer
 	span.AddEvent("add_job_offer.start")
-	jobOfferContainer, err := jobCreatorService.AddJobOffer(offer)
+	var jobOfferContainer data.JobOfferContainer
+	if module.HasInputFiles(offer.InputFiles) {
+		jobOfferContainer, err = jobCreatorService.AddJobOfferWithFiles(offer, options.Offer.InputsPath)
+	} else {
+		jobOfferContainer, err = jobCreatorService.AddJobOffer(offer)
+	}
 	if err != nil {
 		jobCreatorService.controller.log.Error("failed to add job offer", err)
 		span.SetStatus(codes.Error, "failed to add job offer")

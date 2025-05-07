@@ -6,6 +6,7 @@ import (
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/module"
+	"github.com/rs/zerolog/log"
 
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
@@ -18,6 +19,17 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 	loadedModule, err := module.LoadModule(options.Module, options.Inputs)
 	if err != nil {
 		return data.JobOffer{}, fmt.Errorf("error loading module: %s opts=%+v", err.Error(), options)
+	}
+
+	if module.HasInputFiles(loadedModule.InputFiles) {
+		err = module.ValidateInputFiles(options.InputsPath, loadedModule.InputFiles)
+		if err != nil {
+			log.Error().Err(err).
+				Str("inputsPath", options.InputsPath).
+				Any("inputFiles", loadedModule.InputFiles).
+				Msg("failed to validate input files")
+			return data.JobOffer{}, fmt.Errorf("error reading input files: %s", err.Error())
+		}
 	}
 
 	// Generate a nonce to make sure the job offer is unique
@@ -34,6 +46,7 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		Module:     options.Module,
 		Spec:       loadedModule.Machine,
 		Inputs:     options.Inputs,
+		InputFiles: loadedModule.InputFiles,
 		Mode:       options.Mode,
 		Pricing:    options.Pricing,
 		Timeouts:   options.Timeouts,
