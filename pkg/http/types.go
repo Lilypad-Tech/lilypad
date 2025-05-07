@@ -18,6 +18,7 @@ type AccessControlOptions struct {
 	OfferTimestampDiffSeconds       int
 	EnableVersionCheck              bool
 	MinimumVersion                  string
+	MaximumJobOfferCapacity         int
 }
 
 type ValidationToken struct {

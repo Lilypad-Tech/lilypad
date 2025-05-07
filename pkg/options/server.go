@@ -29,6 +29,7 @@ func GetDefaultAccessControlOptions() http.AccessControlOptions {
 		OfferTimestampDiffSeconds:       GetDefaultServeOptionInt("SERVER_OFFER_TIMESTAMP_DIFF_SECONDS", 30),
 		EnableVersionCheck:              GetDefaultServeOptionBool("SERVER_ENABLE_VERSION_CHECK", true),
 		MinimumVersion:                  GetDefaultServeOptionString("SERVER_MINIMUM_VERSION", ""),
+		MaximumJobOfferCapacity:         GetDefaultServeOptionInt("SERVER_MAX_JOB_OFFER_CAPACITY", 1000),
 	}
 }
 
@@ -102,6 +103,10 @@ func AddServerCliFlags(cmd *cobra.Command, serverOptions *http.ServerOptions) {
 	cmd.PersistentFlags().StringVar(
 		&serverOptions.AccessControl.MinimumVersion, "server-minimum-version", serverOptions.AccessControl.MinimumVersion,
 		`The minimum client version (SERVER_MINIMUM_VERSION).`,
+	)
+	cmd.PersistentFlags().IntVar(
+		&serverOptions.AccessControl.MaximumJobOfferCapacity, "server-max-job-offer-capacity", serverOptions.AccessControl.MaximumJobOfferCapacity,
+		`The maximum unmatched job offers before new offers are rejected (SERVER_MAX_JOB_OFFER_CAPACITY).`,
 	)
 	cmd.PersistentFlags().IntVar(
 		&serverOptions.Storage.MaximumFileInputsMemoryMB, "server-max-file-inputs-memory-mb", serverOptions.Storage.MaximumFileInputsMemoryMB,
