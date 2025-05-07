@@ -344,6 +344,14 @@ func (server *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp
 *
 */
 func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
+	unmatchedOffers, err := server.store.GetJobOffers(store.GetJobOffersQuery{
+		NotMatched: true,
+	})
+	if len(unmatchedOffers) > server.options.AccessControl.MaximumJobOfferCapacity {
+		server.log.Warn().Err(err).Msgf("job offer received while at max job offer capacity")
+		return nil, errors.New("network busy")
+	}
+
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
 		server.log.Error().Err(err).Msgf("error checking signature")
@@ -389,6 +397,15 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 }
 
 func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
+	unmatchedOffers, err := server.store.GetJobOffers(store.GetJobOffersQuery{
+		NotMatched: true,
+	})
+	if len(unmatchedOffers) > server.options.AccessControl.MaximumJobOfferCapacity {
+		server.log.Warn().Err(err).Msgf("job offer received while at max job offer capacity")
+		corehttp.Error(res, "network busy", corehttp.StatusServiceUnavailable)
+		return
+	}
+
 	// Check signature and validate the job offer
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
