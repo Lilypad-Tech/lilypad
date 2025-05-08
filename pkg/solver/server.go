@@ -346,6 +346,7 @@ func (server *solverServer) getResult(res corehttp.ResponseWriter, req *corehttp
 func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.ResponseWriter, req *corehttp.Request) (*data.JobOfferContainer, error) {
 	unmatchedOffers, err := server.store.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched: true,
+		Cancelled:  system.BoolPointer(false),
 	})
 	if len(unmatchedOffers) > server.options.AccessControl.MaximumJobOfferCapacity {
 		server.log.Warn().Err(err).Msgf("job offer received while at max job offer capacity")
@@ -399,6 +400,7 @@ func (server *solverServer) addJobOffer(jobOffer data.JobOffer, res corehttp.Res
 func (server *solverServer) addJobOfferWithFiles(res corehttp.ResponseWriter, req *corehttp.Request) {
 	unmatchedOffers, err := server.store.GetJobOffers(store.GetJobOffersQuery{
 		NotMatched: true,
+		Cancelled:  system.BoolPointer(false),
 	})
 	if len(unmatchedOffers) > server.options.AccessControl.MaximumJobOfferCapacity {
 		server.log.Warn().Err(err).Msgf("job offer received while at max job offer capacity")
