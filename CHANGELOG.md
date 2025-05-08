@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.20.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.19.0...v2.20.0) (2025-05-08)
+
+
+### Features
+
+* Add job offer max capacity check ([#576](https://github.com/Lilypad-Tech/lilypad/issues/576)) ([ca8db88](https://github.com/Lilypad-Tech/lilypad/commit/ca8db886ee559b8b49b6a0fe25c253b4c848e807))
+
+
+### Bug Fixes
+
+* Exclude cancelled jobs from max job offer capacity ([#578](https://github.com/Lilypad-Tech/lilypad/issues/578)) ([f34d1ea](https://github.com/Lilypad-Tech/lilypad/commit/f34d1eabc9cc87cf00ee65c8606a13563bd8a195))
+
 ## [2.19.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.18.0...v2.19.0) (2025-05-07)
 
 
