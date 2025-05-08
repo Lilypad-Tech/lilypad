@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1746650555364,
+  "lastUpdate": 1746724719932,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2688,6 +2688,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "76436 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f34d1eabc9cc87cf00ee65c8606a13563bd8a195",
+          "message": "fix: Exclude cancelled jobs from max job offer capacity (#578)",
+          "timestamp": "2025-05-08T10:18:04-07:00",
+          "tree_id": "ba678510625ac23e83f276ced29fd240d4bcf819",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/f34d1eabc9cc87cf00ee65c8606a13563bd8a195"
+        },
+        "date": 1746724718924,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46900,
+            "unit": "ns/op\t   45532 B/op\t     281 allocs/op",
+            "extra": "77278 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46900,
+            "unit": "ns/op",
+            "extra": "77278 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 45532,
+            "unit": "B/op",
+            "extra": "77278 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77278 times\n4 procs"
           }
         ]
       }
