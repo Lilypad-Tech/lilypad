@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
@@ -76,6 +77,35 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (executor *BacalhauExecutor) Preflight() error {
+	// Check if Bacalhau is available
+	available, err := executor.IsAvailable()
+	if err != nil {
+		return fmt.Errorf("Bacalhau is not available: %s", err.Error())
+	}
+	if !available {
+		return errors.New("Bacalhau is not available")
+	}
+
+	// Check that bacalhau can run docker jobs
+	nodes, err := executor.bacalhauClient.getNodes()
+	if err != nil {
+		return fmt.Errorf("error getting available nodes: %s", err.Error())
+	}
+
+	dockerSupported := true
+	for _, node := range nodes {
+		if !slices.Contains(node.Info.ComputeNodeInfo.ExecutionEngines, "docker") {
+			dockerSupported = false
+		}
+	}
+	if !dockerSupported {
+		return errors.New("Bacalhau does not support docker jobs on this node")
+	}
+
+	return nil
 }
 
 func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
