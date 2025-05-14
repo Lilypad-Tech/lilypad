@@ -95,10 +95,10 @@ func (executor *BacalhauExecutor) Preflight() error {
 		return fmt.Errorf("error getting available nodes: %s", err.Error())
 	}
 
-	dockerSupported := true
+	dockerSupported := false
 	for _, node := range nodes {
-		if !slices.Contains(node.Info.ComputeNodeInfo.ExecutionEngines, "docker") {
-			dockerSupported = false
+		if slices.Contains(node.Info.ComputeNodeInfo.ExecutionEngines, "docker") {
+			dockerSupported = true
 		}
 	}
 	if !dockerSupported {
