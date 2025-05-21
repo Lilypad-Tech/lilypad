@@ -8,7 +8,6 @@ import (
 
 	"github.com/bacalhau-project/bacalhau/pkg/models"
 
-	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data/bacalhau"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/apimodels"
 	clientv2 "github.com/bacalhau-project/bacalhau/pkg/publicapi/client/v2"
@@ -93,38 +92,12 @@ func (c *BacalhauClient) getJobResult(jobId string) (string, error) {
 }
 
 func (c *BacalhauClient) getNodes() ([]*models.NodeState, error) {
-
 	getNodesRequest := apimodels.ListNodesRequest{}
 	response, err := c.api.Nodes().List(context.Background(), &getNodesRequest)
 	if err != nil {
 		return nil, err
 	}
 	return response.Nodes, nil
-}
-
-func (c *BacalhauClient) getMachineSpecs() ([]data.MachineSpec, error) {
-	nodes, err := c.getNodes()
-	var specs []data.MachineSpec
-	for _, node := range nodes {
-		spec := data.MachineSpec{
-			CPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.CPU) * 1000, // convert float to "milli-CPU"
-			RAM:  int(node.Info.ComputeNodeInfo.MaxCapacity.Memory),
-			GPU:  int(node.Info.ComputeNodeInfo.MaxCapacity.GPU),
-			Disk: int(node.Info.ComputeNodeInfo.MaxCapacity.Disk),
-		}
-		for _, gpu := range node.Info.ComputeNodeInfo.MaxCapacity.GPUs {
-			spec.GPUs = append(spec.GPUs, data.GPUSpec{
-				Name:   gpu.Name,
-				Vendor: string(gpu.Vendor),
-				VRAM:   int(gpu.Memory),
-			})
-		}
-		specs = append(specs, spec)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return specs, nil
 }
 
 func translateJob(job bacalhau.Job, dealID string, hasInputFiles bool) *models.Job {
