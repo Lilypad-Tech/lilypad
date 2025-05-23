@@ -184,7 +184,7 @@ func (result marketPriceUnavailable) attributes() []attribute.KeyValue {
 type priceMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
-	moduleID      string
+	// moduleID      string
 }
 
 func (_ priceMismatch) matched() bool { return false }
@@ -193,18 +193,18 @@ func (_ priceMismatch) message() string {
 }
 func (result priceMismatch) attributes() []attribute.KeyValue {
 	// If the module instruction price is not specified, this lookup will use the zero-value of 0
-	moduleInstructionPrice := result.resourceOffer.ModulePricing[result.moduleID].InstructionPrice
+	// moduleInstructionPrice := result.resourceOffer.ModulePricing[result.moduleID].InstructionPrice
 
 	return []attribute.KeyValue{
 		attribute.String("match_result", fmt.Sprintf("%T", result)),
 		attribute.Bool("match_result.matched", result.matched()),
 		attribute.String("match_result.message", result.message()),
 		attribute.Int("match_result.job_offer.pricing.instruction_price", int(result.jobOffer.Pricing.InstructionPrice)),
-		attribute.Int("match_result.resource_offer.module_pricing.instruction_price", int(moduleInstructionPrice)),
+		// attribute.Int("match_result.resource_offer.module_pricing.instruction_price", int(moduleInstructionPrice)),
 		attribute.Int("match_result.resource_offer.default_pricing.instruction_price", int(result.resourceOffer.DefaultPricing.InstructionPrice)),
 		attribute.String("match_result.job_offer.mode", string(result.jobOffer.Mode)),
 		attribute.String("match_result.resource_offer.mode", string(result.resourceOffer.Mode)),
-		attribute.String("match_result.module_id", result.moduleID),
+		// attribute.String("match_result.module_id", result.moduleID),
 		attribute.StringSlice("match_result.resource_offer.modules", result.resourceOffer.Modules),
 		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
 		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
@@ -300,34 +300,34 @@ func matchOffers(
 		}
 	}
 
-	moduleID, err := data.GetModuleID(jobOffer.Module)
-	if err != nil {
-		return moduleIDError{
-			jobOffer:      jobOffer,
-			resourceOffer: resourceOffer,
-			err:           err,
-		}
-	}
+	// moduleID, err := data.GetModuleID(jobOffer.Module)
+	// if err != nil {
+	// 	return moduleIDError{
+	// 		jobOffer:      jobOffer,
+	// 		resourceOffer: resourceOffer,
+	// 		err:           err,
+	// 	}
+	// }
 
 	// if the resource provider has specified modules then check them
-	if len(resourceOffer.Modules) > 0 {
-		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
-		hasModule := false
-		for _, module := range resourceOffer.Modules {
-			if module == moduleID {
-				hasModule = true
-				break
-			}
-		}
+	// if len(resourceOffer.Modules) > 0 {
+	// 	// if the resourceOffer.Modules array does not contain the moduleID then we don't match
+	// 	hasModule := false
+	// 	for _, module := range resourceOffer.Modules {
+	// 		if module == moduleID {
+	// 			hasModule = true
+	// 			break
+	// 		}
+	// 	}
 
-		if !hasModule {
-			return moduleMismatch{
-				jobOffer:      jobOffer,
-				resourceOffer: resourceOffer,
-				moduleID:      moduleID,
-			}
-		}
-	}
+	// 	if !hasModule {
+	// 		return moduleMismatch{
+	// 			jobOffer:      jobOffer,
+	// 			resourceOffer: resourceOffer,
+	// 			moduleID:      moduleID,
+	// 		}
+	// 	}
+	// }
 
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
@@ -342,7 +342,7 @@ func matchOffers(
 			return priceMismatch{
 				jobOffer:      jobOffer,
 				resourceOffer: resourceOffer,
-				moduleID:      moduleID,
+				// moduleID:      moduleID,
 			}
 		}
 	}

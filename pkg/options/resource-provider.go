@@ -85,6 +85,10 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	AddPricingCliFlags(cmd, &offerOptions.DefaultPricing)
 	AddTimeoutCliFlags(cmd, &offerOptions.DefaultTimeouts)
 	AddServicesCliFlags(cmd, &offerOptions.Services)
+
+	// TODO
+	// Add check for offer modules config and exit if length > 0
+	// Give an error message stating this feature is not implemented yet
 }
 
 func AddResourceProviderPowCliFlags(cmd *cobra.Command, options *resourceprovider.ResourceProviderPowOptions) {
