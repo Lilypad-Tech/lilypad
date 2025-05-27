@@ -2,7 +2,6 @@ package matcher
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/rs/zerolog"
@@ -122,26 +121,6 @@ func (result diskSpaceMismatch) attributes() []attribute.KeyValue {
 		attribute.String("match_result.message", result.message()),
 		attribute.Int("match_result.job_offer.spec.disk", result.jobOffer.Spec.Disk),
 		attribute.Int("match_result.resource_offer.spec.disk", result.resourceOffer.Spec.Disk),
-	}
-}
-
-type moduleMismatch struct {
-	resourceOffer data.ResourceOffer
-	jobOffer      data.JobOffer
-	moduleID      string
-}
-
-func (_ moduleMismatch) matched() bool   { return false }
-func (_ moduleMismatch) message() string { return "resource provider does not provide module" }
-func (result moduleMismatch) attributes() []attribute.KeyValue {
-	return []attribute.KeyValue{
-		attribute.String("match_result", fmt.Sprintf("%T", result)),
-		attribute.Bool("match_result.matched", result.matched()),
-		attribute.String("match_result.message", result.message()),
-		attribute.String("match_result.module_id", result.moduleID),
-		attribute.StringSlice("match_result.resource_offer.modules", result.resourceOffer.Modules),
-		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
-		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
 	}
 }
 
@@ -358,12 +337,6 @@ func logMatch(result matchResult, log *zerolog.Logger) {
 			Str("job offer", r.jobOffer.ID).
 			Int("resource RAM", r.resourceOffer.Spec.RAM).
 			Int("job RAM", r.jobOffer.Spec.RAM).
-			Msg(r.message())
-	case moduleMismatch:
-		log.Trace().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Str("modules", strings.Join(r.resourceOffer.Modules, ", ")).
 			Msg(r.message())
 	case marketPriceUnavailable:
 		log.Trace().
