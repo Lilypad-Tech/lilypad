@@ -125,25 +125,6 @@ func (result diskSpaceMismatch) attributes() []attribute.KeyValue {
 	}
 }
 
-type moduleIDError struct {
-	resourceOffer data.ResourceOffer
-	jobOffer      data.JobOffer
-	err           error
-}
-
-func (_ moduleIDError) matched() bool   { return false }
-func (_ moduleIDError) message() string { return "error computing module ID" }
-func (result moduleIDError) attributes() []attribute.KeyValue {
-	return []attribute.KeyValue{
-		attribute.String("match_result", fmt.Sprintf("%T", result)),
-		attribute.Bool("match_result.matched", result.matched()),
-		attribute.String("match_result.message", result.message()),
-		attribute.String("match_result.err", result.err.Error()),
-		attribute.String("match_result.job_offer.module.repo", result.jobOffer.Module.Repo),
-		attribute.String("match_result.job_offer.module.hash", result.jobOffer.Module.Hash),
-	}
-}
-
 type moduleMismatch struct {
 	resourceOffer data.ResourceOffer
 	jobOffer      data.JobOffer
@@ -377,12 +358,6 @@ func logMatch(result matchResult, log *zerolog.Logger) {
 			Str("job offer", r.jobOffer.ID).
 			Int("resource RAM", r.resourceOffer.Spec.RAM).
 			Int("job RAM", r.jobOffer.Spec.RAM).
-			Msg(r.message())
-	case moduleIDError:
-		log.Error().
-			Str("resource offer", r.resourceOffer.ID).
-			Str("job offer", r.jobOffer.ID).
-			Err(r.err).
 			Msg(r.message())
 	case moduleMismatch:
 		log.Trace().
