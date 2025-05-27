@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1747764575855,
+  "lastUpdate": 1748386945574,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2832,6 +2832,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "76412 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "22a97db7f2b006a71a862a55f635c479cfc07bef",
+          "message": "chore: Increase test solver wait time (#582)",
+          "timestamp": "2025-05-27T16:00:52-07:00",
+          "tree_id": "e354750d3450c3e93970a72792db8ff99f08ab23",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/22a97db7f2b006a71a862a55f635c479cfc07bef"
+        },
+        "date": 1748386945175,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 46686,
+            "unit": "ns/op\t   45532 B/op\t     281 allocs/op",
+            "extra": "77066 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 46686,
+            "unit": "ns/op",
+            "extra": "77066 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 45532,
+            "unit": "B/op",
+            "extra": "77066 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 281,
+            "unit": "allocs/op",
+            "extra": "77066 times\n4 procs"
           }
         ]
       }
