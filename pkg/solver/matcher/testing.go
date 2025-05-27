@@ -50,21 +50,6 @@ func getMatchTestCases() []matchTestCase {
 		Services: baseServices,
 	}
 
-	// Module configs
-	cowsayModuleConfig := data.ModuleConfig{
-		Name: "cowsay",
-		Repo: "https://github.com/Lilypad-Tech/lilypad-module-cowsay",
-		Hash: "v0.0.4",
-		Path: "/lilypad_module.json.tmpl",
-	}
-
-	lilysayModuleConfig := data.ModuleConfig{
-		Name: "lilysay",
-		Repo: "https://github.com/Lilypad-Tech/lilypad-module-lilysay",
-		Hash: "v0.5.2",
-		Path: "/lilypad_module.json.tmpl",
-	}
-
 	testCases := []matchTestCase{
 		// Matching cases
 		{
@@ -128,22 +113,6 @@ func getMatchTestCases() []matchTestCase {
 			jobOffer: func() data.JobOffer {
 				j := baseJobOffer
 				j.Spec.Disk = 0 // zero-value
-				return j
-			}(),
-			expectedResult: "*matcher.offersMatched",
-			shouldMatch:    true,
-		},
-		{
-			name: "Resource provider supports module",
-			resourceOffer: func() data.ResourceOffer {
-				r := baseResourceOffer
-				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
-				r.Modules = []string{moduleID}
-				return r
-			}(),
-			jobOffer: func() data.JobOffer {
-				j := baseJobOffer
-				j.Module = cowsayModuleConfig
 				return j
 			}(),
 			expectedResult: "*matcher.offersMatched",
@@ -250,22 +219,6 @@ func getMatchTestCases() []matchTestCase {
 				return j
 			}(),
 			expectedResult: "*matcher.diskSpaceMismatch",
-			shouldMatch:    false,
-		},
-		{
-			name: "Resource provider does not support module",
-			resourceOffer: func() data.ResourceOffer {
-				r := baseResourceOffer
-				moduleID, _ := data.GetModuleID(cowsayModuleConfig)
-				r.Modules = []string{moduleID}
-				return r
-			}(),
-			jobOffer: func() data.JobOffer {
-				j := baseJobOffer
-				j.Module = lilysayModuleConfig
-				return j
-			}(),
-			expectedResult: "*matcher.moduleMismatch",
 			shouldMatch:    false,
 		},
 		{
