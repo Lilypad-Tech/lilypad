@@ -300,35 +300,6 @@ func matchOffers(
 		}
 	}
 
-	moduleID, err := data.GetModuleID(jobOffer.Module)
-	if err != nil {
-		return moduleIDError{
-			jobOffer:      jobOffer,
-			resourceOffer: resourceOffer,
-			err:           err,
-		}
-	}
-
-	// if the resource provider has specified modules then check them
-	if len(resourceOffer.Modules) > 0 {
-		// if the resourceOffer.Modules array does not contain the moduleID then we don't match
-		hasModule := false
-		for _, module := range resourceOffer.Modules {
-			if module == moduleID {
-				hasModule = true
-				break
-			}
-		}
-
-		if !hasModule {
-			return moduleMismatch{
-				jobOffer:      jobOffer,
-				resourceOffer: resourceOffer,
-				moduleID:      moduleID,
-			}
-		}
-	}
-
 	// we don't currently support market priced resource offers
 	if resourceOffer.Mode == data.MarketPrice {
 		return marketPriceUnavailable{
