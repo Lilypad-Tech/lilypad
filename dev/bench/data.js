@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748451452779,
+  "lastUpdate": 1748472479292,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2928,6 +2928,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "791194 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "logan.lentz1@gmail.com",
+            "name": "Logan Lentz",
+            "username": "noryev"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "013bfbc7ca5286a7bffd35b59ed422e55d3bfc68",
+          "message": "fix: add GPU access to Bacalhau in docker-compose.yml (#583)\n\nAdded GPU access to Bacalhau section in docker-compose.yml, identical to the resource-provider section.",
+          "timestamp": "2025-05-28T17:47:27-05:00",
+          "tree_id": "2b2d3d01179b0cd44bb2a8acbf52092e9d9a8995",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/013bfbc7ca5286a7bffd35b59ed422e55d3bfc68"
+        },
+        "date": 1748472478218,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4676,
+            "unit": "ns/op\t   13504 B/op\t      26 allocs/op",
+            "extra": "771207 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4676,
+            "unit": "ns/op",
+            "extra": "771207 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 13504,
+            "unit": "B/op",
+            "extra": "771207 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "771207 times\n4 procs"
           }
         ]
       }
