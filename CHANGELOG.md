@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.20.1](https://github.com/Lilypad-Tech/lilypad/compare/v2.20.0...v2.20.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* Add GPU access to Bacalhau in docker-compose.yml ([#583](https://github.com/Lilypad-Tech/lilypad/issues/583)) ([013bfbc](https://github.com/Lilypad-Tech/lilypad/commit/013bfbc7ca5286a7bffd35b59ed422e55d3bfc68))
+
+
+### Performance Improvements
+
+* Remove supported modules check from solver matching algorithm ([#581](https://github.com/Lilypad-Tech/lilypad/issues/581)) ([2d4df47](https://github.com/Lilypad-Tech/lilypad/commit/2d4df476713975a3b3a40700171afa81ea3fe287))
+
 ## [2.20.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.19.0...v2.20.0) (2025-05-15)
 
 
