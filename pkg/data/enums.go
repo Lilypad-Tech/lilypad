@@ -15,6 +15,8 @@ var ServiceType = []string{
 }
 
 // AgreementState corresponds to AgreementState in TypeScript
+// TimeoutSubmitResults, TimeoutJudgeResults, and TimeoutMediateResults are no longer used
+// but we are stuck with them because of the enum. We plan to remove it: https://github.com/Lilypad-Tech/lilypad/issues/559
 var AgreementState = []string{
 	"DealNegotiating",
 	"DealAgreed",
