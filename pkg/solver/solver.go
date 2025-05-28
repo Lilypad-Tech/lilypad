@@ -15,16 +15,23 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type SolverTimeoutOptions struct {
+	MatchSeconds     uint64 `json:"match_seconds"`
+	ExecutionSeconds uint64 `json:"execution_seconds"`
+	DownloadSeconds  uint64 `json:"download_seconds"`
+	TotalSeconds     uint64 `json:"total_seconds"`
+}
+
 type SolverOptions struct {
-	Server            http.ServerOptions
-	Store             store.StoreOptions
-	Web3              web3.Web3Options
-	Services          data.ServiceConfig
-	Stats             stats.StatsOptions
-	Telemetry         system.TelemetryOptions
-	Metrics           system.MetricsOptions
-	Logs              system.LogsOptions
-	JobTimeoutSeconds int
+	Server    http.ServerOptions
+	Store     store.StoreOptions
+	Web3      web3.Web3Options
+	Services  data.ServiceConfig
+	Stats     stats.StatsOptions
+	Telemetry system.TelemetryOptions
+	Metrics   system.MetricsOptions
+	Logs      system.LogsOptions
+	Timeouts  SolverTimeoutOptions
 }
 
 type Solver struct {
