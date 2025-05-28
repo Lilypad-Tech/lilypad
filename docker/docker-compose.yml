@@ -15,6 +15,13 @@ services:
     volumes:
       - bacalhau-data:/root/.bacalhau
       - /tmp/lilypad/data/job-inputs/:/inputs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   resource-provider:
     image: ghcr.io/lilypad-tech/resource-provider:latest
     container_name: resource-provider
