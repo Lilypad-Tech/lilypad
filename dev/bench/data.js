@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748386945574,
+  "lastUpdate": 1748451452779,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2880,6 +2880,54 @@ window.BENCHMARK_DATA = {
             "value": 281,
             "unit": "allocs/op",
             "extra": "77066 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2d4df476713975a3b3a40700171afa81ea3fe287",
+          "message": "perf: Remove supported modules check from solver matching algorithm (#581)\n\n* perf: Remove supported modules check\n\n* chore: Remove moduleIDError match result\n\n* chore: Remove moduleMismatch match result\n\n* chore: Update priceMismach match result\n\nRemove module ID which we will no longer expect.\n\n* test: Remove supported module test cases\n\n* chore: Disable resource provider module list",
+          "timestamp": "2025-05-28T09:57:02-07:00",
+          "tree_id": "e933622a85aa72856ba18bc88b59cc530767fc4d",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/2d4df476713975a3b3a40700171afa81ea3fe287"
+        },
+        "date": 1748451452367,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4801,
+            "unit": "ns/op\t   13504 B/op\t      26 allocs/op",
+            "extra": "791194 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4801,
+            "unit": "ns/op",
+            "extra": "791194 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 13504,
+            "unit": "B/op",
+            "extra": "791194 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "791194 times\n4 procs"
           }
         ]
       }
