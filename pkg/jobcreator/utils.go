@@ -49,7 +49,6 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 		InputFiles: loadedModule.InputFiles,
 		Mode:       options.Mode,
 		Pricing:    options.Pricing,
-		Timeouts:   options.Timeouts,
 		Services:   options.Services,
 		Target:     options.Target,
 	}, nil
