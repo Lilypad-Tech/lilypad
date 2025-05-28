@@ -147,6 +147,10 @@ func CheckResourceProviderOfferOptions(options resourceprovider.ResourceProvider
 		return fmt.Errorf("OFFER_RAM cannot be zero")
 	}
 
+	if len(options.Modules) > 0 {
+		return fmt.Errorf("OFFER_MODULES module list is not currently supported")
+	}
+
 	return nil
 }
 
