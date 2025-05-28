@@ -73,10 +73,10 @@ func runResourceProvider(cmd *cobra.Command, options resourceprovider.ResourcePr
 		return err
 	}
 
-	resourecProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
+	resourceProviderErrors := resourceProviderService.Start(commandCtx.Ctx, commandCtx.Cm)
 	for {
 		select {
-		case err := <-resourecProviderErrors:
+		case err := <-resourceProviderErrors:
 			commandCtx.Cleanup()
 			return err
 		case <-commandCtx.Ctx.Done():
