@@ -48,6 +48,9 @@ type Module struct {
 	// Expected input files
 	InputFiles InputFiles `json:"inputFiles"`
 
+	// Maximum time to execute on the resource provider
+	ExecutionTimeoutSeconds uint64 `json:"executionTimeoutSeconds"`
+
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
 	// the module file itself will contain this spec
@@ -209,6 +212,8 @@ type JobOffer struct {
 	Inputs map[string]string `json:"inputs"`
 	// Expected input files
 	InputFiles InputFiles `json:"inputFiles"`
+	// Maximum time to execute on the resource provider
+	ExecutionTimeoutSeconds uint64 `json:"executionTimeoutSeconds"`
 	// tells the solver how to match these prices
 	// for JC this will normally be MarketPrice
 	Mode PricingMode `json:"mode"`
