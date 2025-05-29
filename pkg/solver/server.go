@@ -853,6 +853,17 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 		}
 	}
 
+	// The job creator has been verified, mark and start the download.
+	// We mark a Downloading state to avoid timeouts once the download has begun.
+	deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Downloading"))
+	if err != nil {
+		server.log.Error().Str("cid", id).Msg("unable to update deal to downloading state")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "failed to process download",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+
 	if err := server.handleFileDownload(GetDealsFilePath(id), res, func() {
 		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
 		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
@@ -1073,6 +1084,11 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 		}
 	}
 
+	// This call is a workaround to circumevent the old protocol, where we don't require
+	// the job creator to propagate a ResultsAccepted state.
+	// In the downloadFiles handler, we set a Downloading state to avoid a timeout
+	// while the client is downloading the files. The `ResultsAccepted` state used here
+	// gives us the same effect.
 	server.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 	// Retrieve deal for stats reporting
