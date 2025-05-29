@@ -31,6 +31,7 @@ var AgreementState = []string{
 	"JobOfferCancelled",
 	"JobTimedOut",
 	"Uploading",
+	"Downloading",
 	"TimeoutMatch",
 	"TimeoutExecution",
 	"TimeoutDownload",
