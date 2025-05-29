@@ -30,6 +30,7 @@ var AgreementState = []string{
 	"TimeoutMediateResults",
 	"JobOfferCancelled",
 	"JobTimedOut",
+	"Uploading",
 	"TimeoutMatch",
 	"TimeoutExecution",
 	"TimeoutDownload",

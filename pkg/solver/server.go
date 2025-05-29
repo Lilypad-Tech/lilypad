@@ -969,6 +969,13 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return fmt.Errorf("resource provider address does not match signer address")
 		}
 
+		// The resource provider has been verified, mark and start the upload
+		deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Uploading"))
+		if err != nil {
+			server.log.Error().Str("cid", id).Msg("unable to update deal to uploading state")
+			return err
+		}
+
 		// Get the directory path
 		dirPath, err := EnsureDealsFilePath(id)
 		if err != nil {
