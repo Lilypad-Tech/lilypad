@@ -292,7 +292,7 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	// Remove expired job offers
 	err := controller.cancelExpiredJobs(ctx)
 	if err != nil {
-		span.SetStatus(codes.Error, "remove expired offers failed")
+		span.SetStatus(codes.Error, "cancel expired jobs failed")
 		span.RecordError(err)
 		return err
 	}
@@ -343,6 +343,20 @@ func (controller *SolverController) solve(ctx context.Context) error {
 	return nil
 }
 
+// Cancellation
+
+/*
+We track four time span in our system:
+  - Match time. The time a job offer can wait for a match before the solver times it out.
+  - Execution time. The time from when the deal is made until the resource provider uploads the job outputs to the solver.
+  - Download time. The time the solver will store job outputs for the job creator to download.
+  - Total job run time. The time from when the job offer is created until the job creator downloads the job outputs.
+    Includes match, execution, and download times.
+
+We set timeouts for each of these time spans. The module author sets the execution timeout. The solver sets match, download, and total timeouts, where
+the total timeout is a fallback in case one of the other time outs did not occur. The solver also sets a fallback execution timeout for modules that have
+not specified a timeout.
+*/
 func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error {
 	ctx, span := controller.tracer.Start(ctx, "cancel_expired_jobs")
 	defer span.End()
@@ -360,34 +374,46 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 	}
 	span.AddEvent("db.get_job_offers.done")
 
-	// Check active job offers, and cancel expired offers
-	// and associated resource offers and deals
 	span.AddEvent("expire_jobs.start")
 	expiredOffers := []string{}
 	expiredDeals := []string{}
 	for _, jobOffer := range jobOffers {
-		now := time.Now().UnixMilli()
-		if now-int64(jobOffer.JobOffer.CreatedAt) > int64(controller.options.JobTimeoutSeconds*1000) {
-			if jobOffer.DealID == "" {
-				// Cancel expired job offers
-				_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
-				if err != nil {
-					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired job offer state failed")
-					span.SetStatus(codes.Error, "update expired job offer state failed")
-					span.RecordError(err)
-				}
-			} else {
-				// Cancel expired job offers, resource offers, and deals
-				deal, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex("JobTimedOut"))
-				if err != nil {
-					controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
-					span.SetStatus(codes.Error, "update expired deal state failed")
-					span.RecordError(err)
-				}
-				expiredDeals = append(expiredDeals, jobOffer.DealID)
-				controller.stats.PostJobRun(deal)
+		var deal *data.DealContainer
+		var executionTimeout uint64
+		if jobOffer.DealID != "" {
+			deal, err = controller.store.GetDeal(jobOffer.DealID)
+
+			// Get module execution timeout. If the module execution timeout is zero,
+			// it has probably not been set, so use the solver fallback instead.
+			executionTimeout = deal.Deal.JobOffer.ExecutionTimeoutSeconds
+			if executionTimeout == 0 {
+				executionTimeout = controller.options.Timeouts.ExecutionSeconds
 			}
-			expiredOffers = append(expiredOffers, jobOffer.ID)
+		}
+
+		// Check timeouts for the appropriate job lifecycle stages.
+		// The total timeout is always checked as a global maximum for any job.
+		var expiredOfferID, expiredDealID string
+		if data.GetAgreementStateString(jobOffer.State) == "DealNegotiating" &&
+			matchExpired(jobOffer.JobOffer.CreatedAt, controller.options.Timeouts.MatchSeconds) {
+			expiredOfferID, expiredDealID = controller.cancelExpiredJob(ctx, jobOffer, "TimeoutMatch")
+		} else if deal != nil &&
+			data.GetAgreementStateString(deal.State) == "DealAgreed" &&
+			executionExpired(deal.CreatedAt, executionTimeout) {
+			expiredOfferID, expiredDealID = controller.cancelExpiredJob(ctx, jobOffer, "TimeoutExecution")
+		} else if deal != nil &&
+			data.GetAgreementStateString(deal.State) == "ResultsSubmitted" &&
+			downloadExpired(deal.UploadAt, controller.options.Timeouts.DownloadSeconds) {
+			expiredOfferID, expiredDealID = controller.cancelExpiredJob(ctx, jobOffer, "TimeoutDownload")
+		} else if jobExpired(jobOffer.JobOffer.CreatedAt, controller.options.Timeouts.TotalSeconds) {
+			expiredOfferID, expiredDealID = controller.cancelExpiredJob(ctx, jobOffer, "JobTimedOut")
+		}
+
+		if expiredOfferID != "" {
+			expiredOffers = append(expiredOffers, expiredOfferID)
+		}
+		if expiredDealID != "" {
+			expiredDeals = append(expiredDeals, expiredDealID)
 		}
 	}
 	span.SetAttributes(attribute.KeyValue{
@@ -401,6 +427,62 @@ func (controller *SolverController) cancelExpiredJobs(ctx context.Context) error
 	span.AddEvent("expire_jobs.end")
 
 	return nil
+}
+
+func (controller *SolverController) cancelExpiredJob(ctx context.Context, jobOffer data.JobOfferContainer, expirationState string) (jobOfferID string, dealID string) {
+	ctx, span := controller.tracer.Start(ctx, "cancel_expired_job",
+		trace.WithAttributes(attribute.String("job_offer.id", jobOffer.ID)),
+		trace.WithAttributes(attribute.String("job_offer.deal_id", jobOffer.DealID)),
+		trace.WithAttributes(attribute.String("job_offer.job_creator", jobOffer.JobCreator)),
+		trace.WithAttributes(attribute.String("job_offer.state", data.GetAgreementStateString(jobOffer.State))),
+		trace.WithAttributes(attribute.String("expiration_state", expirationState)),
+	)
+	defer span.End()
+
+	// Cancel pre-match expired job offer
+	if jobOffer.DealID == "" {
+		_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex(expirationState))
+		if err != nil {
+			controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired job offer state failed")
+			span.SetStatus(codes.Error, "update expired job offer state failed")
+			span.RecordError(err)
+		}
+
+		return jobOffer.ID, ""
+	}
+
+	// Cancel expired job offer, resource offer, and deal
+	deal, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex(expirationState))
+	if err != nil {
+		controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
+		span.SetStatus(codes.Error, "update expired deal state failed")
+		span.RecordError(err)
+	}
+
+	// Report expired job
+	controller.stats.PostJobRun(deal)
+
+	return jobOffer.ID, deal.ID
+}
+
+func matchExpired(offerCreatedAt int, matchTimeoutSeconds uint64) bool {
+	now := time.Now().UnixMilli()
+	return now-int64(offerCreatedAt) > int64(matchTimeoutSeconds*1000)
+}
+
+func executionExpired(dealCreatedAt int, executionTimeoutSeconds uint64) bool {
+	now := time.Now().UnixMilli()
+	return now-int64(dealCreatedAt) > int64(executionTimeoutSeconds*1000)
+}
+
+func downloadExpired(uploadAt int, downloadTimeoutSeconds uint64) bool {
+	now := time.Now().UnixMilli()
+	return now-int64(uploadAt) > int64(downloadTimeoutSeconds*1000)
+}
+
+func jobExpired(offerCreatedAt int, jobTimeoutSeconds uint64) bool {
+	now := time.Now().UnixMilli()
+	return now-int64(offerCreatedAt) > int64(jobTimeoutSeconds*1000)
 }
 
 /*
