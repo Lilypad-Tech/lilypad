@@ -30,6 +30,9 @@ var AgreementState = []string{
 	"TimeoutMediateResults",
 	"JobOfferCancelled",
 	"JobTimedOut",
+	"TimeoutMatch",
+	"TimeoutExecution",
+	"TimeoutDownload",
 }
 
 // PaymentReason corresponds to PaymentReason in TypeScript
@@ -88,10 +91,20 @@ func IsActiveAgreementState(itemType uint8) bool {
 
 func IsTerminalAgreementState(itemType uint8) bool {
 	return itemType == GetAgreementStateIndex("JobOfferCancelled") ||
+		itemType == GetAgreementStateIndex("TimeoutMatch") ||
+		itemType == GetAgreementStateIndex("TimeoutExecution") ||
+		itemType == GetAgreementStateIndex("TimeoutDownload") ||
 		itemType == GetAgreementStateIndex("JobTimedOut") ||
 		itemType == GetAgreementStateIndex("ResultsAccepted") ||
 		itemType == GetAgreementStateIndex("MediationAccepted") ||
 		itemType == GetAgreementStateIndex("MediationRejected")
+}
+
+func IsTimeoutAgreementState(state uint8) bool {
+	return state == GetAgreementStateIndex("TimeoutMatch") ||
+		state == GetAgreementStateIndex("TimeoutExecution") ||
+		state == GetAgreementStateIndex("TimeoutDownload") ||
+		state == GetAgreementStateIndex("JobTimedOut")
 }
 
 // GetPaymentReason corresponds to getPaymentReason in TypeScript

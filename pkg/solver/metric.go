@@ -18,6 +18,9 @@ type metrics struct {
 	mediationAccepted metric.Int64Gauge
 	mediationRejected metric.Int64Gauge
 	jobOfferCancelled metric.Int64Gauge
+	timeoutMatch      metric.Int64Gauge
+	timeoutExecution  metric.Int64Gauge
+	timeoutDownload   metric.Int64Gauge
 	jobTimedOut       metric.Int64Gauge
 }
 
@@ -41,6 +44,9 @@ type stateCounts struct {
 	mediationAccepted int64
 	mediationRejected int64
 	jobOfferCancelled int64
+	timeoutMatch      int64
+	timeoutExecution  int64
+	timeoutDownload   int64
 	jobTimedOut       int64
 }
 
@@ -109,6 +115,27 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+	timeoutMatch, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_match",
+		metric.WithDescription("Number of jobs in a TimeoutMatch state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	timeoutExecution, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_execution",
+		metric.WithDescription("Number of jobs in a TimeoutExecution state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	timeoutDownload, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_download",
+		metric.WithDescription("Number of jobs in a TimeoutDownload state."),
+	)
+	if err != nil {
+		return nil, err
+	}
 	jobTimedOut, err := meter.Int64Gauge(
 		"solver.job_offer.state.job_timed_out",
 		metric.WithDescription("Number of jobs in a JobTimedOut state."),
@@ -127,6 +154,9 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 		mediationAccepted,
 		mediationRejected,
 		jobOfferCancelled,
+		timeoutMatch,
+		timeoutExecution,
+		timeoutDownload,
 		jobTimedOut,
 	}, nil
 }
@@ -187,16 +217,22 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 			jobStats.stateCounts.mediationAccepted += 1
 		case "MediationRejected":
 			jobStats.stateCounts.mediationRejected += 1
+		case "TimeoutExecution":
+			jobStats.stateCounts.timeoutExecution += 1
+		case "TimeoutDownload":
+			jobStats.stateCounts.timeoutDownload += 1
 		default:
 			log.Trace().Str("state", data.GetAgreementStateString(deal.State)).Msg("untracked deal state ID")
 		}
 	}
 
-	// Cancelled states may only exist in the job offer
+	// Some cancelled states may only exist in the job offer
 	for _, offer := range jobOffers {
 		switch data.GetAgreementStateString(offer.State) {
 		case "JobOfferCancelled":
 			jobStats.stateCounts.jobOfferCancelled += 1
+		case "TimeoutMatch":
+			jobStats.stateCounts.timeoutMatch += 1
 		case "JobTimedOut":
 			jobStats.stateCounts.jobTimedOut += 1
 		default:

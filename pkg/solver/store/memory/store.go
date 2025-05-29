@@ -113,7 +113,7 @@ func (s *SolverStoreMemory) GetJobOffers(query store.GetJobOffersQuery) ([]data.
 		}
 		if query.Cancelled != nil {
 			isCancelled := jobOffer.State == data.GetAgreementStateIndex("JobOfferCancelled") ||
-				jobOffer.State == data.GetAgreementStateIndex("JobTimedOut")
+				data.IsTimeoutAgreementState(jobOffer.State)
 
 			wantCancelled := *query.Cancelled
 			if wantCancelled && !isCancelled {

@@ -123,6 +123,15 @@ func runJob(cmd *cobra.Command, options jobcreator.JobCreatorOptions, network st
 		case "JobOfferCancelled":
 			desc = "Job cancelled..."
 			emoji = "😭"
+		case "TimeoutMatch":
+			desc = "Job timed before a match could be made..."
+			emoji = "⏱️"
+		case "TimeoutExecution":
+			desc = "Job timed during execution..."
+			emoji = "⏱️"
+		case "TimeoutDownload":
+			desc = "Job output download window expired..."
+			emoji = "⏱️"
 		case "JobTimedOut":
 			desc = "Job timed out..."
 			emoji = "⏱️"

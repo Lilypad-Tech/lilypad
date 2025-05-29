@@ -24,7 +24,7 @@ type GetJobOffersQuery struct {
 	// This includes the DealNegotiating, DealAgreed, or ResultsSubmitted states.
 	Active bool `json:"in_progress"`
 
-	// Cancelled job offers are in a JobOfferCancelled or JobTimedOut state.
+	// Cancelled job offers are in a JobOfferCancelled or a timed out state.
 	// All job offers are included when Cancelled is nil.
 	Cancelled *bool `json:"cancelled"`
 

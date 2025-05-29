@@ -148,7 +148,7 @@ waitloop:
 	}
 
 	// Check if our job timed out
-	if finalJobOffer.State == data.GetAgreementStateIndex("JobTimedOut") {
+	if data.IsTimeoutAgreementState(finalJobOffer.State) {
 		span.SetStatus(codes.Error, "job timed out")
 		span.RecordError(err)
 		return nil, fmt.Errorf("job timed out")
