@@ -40,16 +40,17 @@ func getJobOfferFromOptions(options JobCreatorOfferOptions, jobCreatorAddress st
 
 	return data.JobOffer{
 		// assign CreatedAt to the current millisecond timestamp
-		CreatedAt:  int(time.Now().UnixNano() / int64(time.Millisecond)),
-		Nonce:      nonce,
-		JobCreator: jobCreatorAddress,
-		Module:     options.Module,
-		Spec:       loadedModule.Machine,
-		Inputs:     options.Inputs,
-		InputFiles: loadedModule.InputFiles,
-		Mode:       options.Mode,
-		Pricing:    options.Pricing,
-		Services:   options.Services,
-		Target:     options.Target,
+		CreatedAt:               int(time.Now().UnixNano() / int64(time.Millisecond)),
+		Nonce:                   nonce,
+		JobCreator:              jobCreatorAddress,
+		Module:                  options.Module,
+		Spec:                    loadedModule.Machine,
+		Inputs:                  options.Inputs,
+		InputFiles:              loadedModule.InputFiles,
+		ExecutionTimeoutSeconds: loadedModule.ExecutionTimeoutSeconds,
+		Mode:                    options.Mode,
+		Pricing:                 options.Pricing,
+		Services:                options.Services,
+		Target:                  options.Target,
 	}, nil
 }
