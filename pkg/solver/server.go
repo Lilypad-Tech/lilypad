@@ -620,12 +620,14 @@ func (server *solverServer) addResult(results data.Result, res corehttp.Response
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
-	if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+	if data.IsTimeoutAgreementState(deal.State) {
+		state := data.GetAgreementStateString(deal.State)
 		server.log.Trace().
 			Str("cid", deal.ID).
 			Str("address", deal.ResourceProvider).
+			Str("state", state).
 			Msg("attempted results post for timed out job for deal")
-		return nil, fmt.Errorf("job with deal ID %s timed out", deal.ID)
+		return nil, fmt.Errorf("job with deal ID %s timed out with a %s state", deal.ID, state)
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
@@ -947,12 +949,14 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return err
 		}
 
-		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+		if data.IsTimeoutAgreementState(deal.State) {
+			state := data.GetAgreementStateString(deal.State)
 			server.log.Trace().
 				Str("cid", deal.ID).
 				Str("address", deal.ResourceProvider).
+				Str("state", state).
 				Msg("attempted file upload for timed out job for deal")
-			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
+			return fmt.Errorf("job with deal ID %s timed out with a %s state", deal.ID, state)
 		}
 
 		signerAddress, err := http.CheckSignature(req)
