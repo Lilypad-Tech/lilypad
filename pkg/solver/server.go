@@ -857,7 +857,7 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 	// We mark a Downloading state to avoid timeouts once the download has begun.
 	deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Downloading"))
 	if err != nil {
-		server.log.Error().Str("cid", id).Msg("unable to update deal to downloading state")
+		server.log.Error().Str("cid", deal.ID).Msg("unable to update deal to downloading state")
 		return EmptyResponse{}, &http.HTTPError{
 			Message:    "failed to process download",
 			StatusCode: corehttp.StatusInternalServerError,
@@ -983,7 +983,7 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 		// The resource provider has been verified, mark and start the upload
 		deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Uploading"))
 		if err != nil {
-			server.log.Error().Str("cid", id).Msg("unable to update deal to uploading state")
+			server.log.Error().Str("cid", deal.ID).Msg("unable to update deal to uploading state")
 			return err
 		}
 

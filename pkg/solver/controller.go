@@ -443,7 +443,10 @@ func (controller *SolverController) cancelExpiredJob(ctx context.Context, jobOff
 	if jobOffer.DealID == "" {
 		_, err := controller.updateJobOfferState(jobOffer.ID, jobOffer.DealID, data.GetAgreementStateIndex(expirationState))
 		if err != nil {
-			controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired job offer state failed")
+			controller.log.Error().Func(system.AddTraceContext(span)).
+				Str("cid", jobOffer.ID).
+				Str("jobCreator", jobOffer.JobCreator).
+				Err(err).Msg("update expired job offer state failed")
 			span.SetStatus(codes.Error, "update expired job offer state failed")
 			span.RecordError(err)
 		}
@@ -454,7 +457,12 @@ func (controller *SolverController) cancelExpiredJob(ctx context.Context, jobOff
 	// Cancel expired job offer, resource offer, and deal
 	deal, err := controller.updateDealState(jobOffer.DealID, data.GetAgreementStateIndex(expirationState))
 	if err != nil {
-		controller.log.Error().Func(system.AddTraceContext(span)).Err(err).Msg("update expired deal state failed")
+		controller.log.Error().Func(system.AddTraceContext(span)).
+			Str("cid", deal.ID).
+			Str("job_id", deal.Deal.JobOffer.ID).
+			Str("jobCreator", deal.JobCreator).
+			Str("resourceProvider", deal.ResourceProvider).
+			Err(err).Msg("update expired deal state failed")
 		span.SetStatus(codes.Error, "update expired deal state failed")
 		span.RecordError(err)
 	}
