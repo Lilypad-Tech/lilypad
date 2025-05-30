@@ -241,9 +241,7 @@ func (controller *ResourceProviderController) getResourceOffer(index int, spec d
 		Modules:          controller.options.Offers.Modules,
 		Mode:             controller.options.Offers.Mode,
 		DefaultPricing:   controller.options.Offers.DefaultPricing,
-		DefaultTimeouts:  controller.options.Offers.DefaultTimeouts,
 		ModulePricing:    map[string]data.DealPricing{},
-		ModuleTimeouts:   map[string]data.DealTimeouts{},
 		Services:         controller.options.Offers.Services,
 	}
 }

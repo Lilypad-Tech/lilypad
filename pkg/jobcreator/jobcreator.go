@@ -26,8 +26,6 @@ type JobCreatorOfferOptions struct {
 	// and the solver will match as soon as a resource offer
 	// is added that matches the bid
 	Pricing data.DealPricing
-	// the timeouts we are offering with the deal
-	Timeouts data.DealTimeouts
 	// the inputs to the module
 	Inputs map[string]string
 	// The file inputs directory

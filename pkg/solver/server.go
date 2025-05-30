@@ -620,12 +620,14 @@ func (server *solverServer) addResult(results data.Result, res corehttp.Response
 	if deal == nil {
 		return nil, fmt.Errorf("deal not found")
 	}
-	if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+	if data.IsTimeoutAgreementState(deal.State) {
+		state := data.GetAgreementStateString(deal.State)
 		server.log.Trace().
 			Str("cid", deal.ID).
 			Str("address", deal.ResourceProvider).
+			Str("state", state).
 			Msg("attempted results post for timed out job for deal")
-		return nil, fmt.Errorf("job with deal ID %s timed out", deal.ID)
+		return nil, fmt.Errorf("job with deal ID %s timed out with a %s state", deal.ID, state)
 	}
 	signerAddress, err := http.CheckSignature(req)
 	if err != nil {
@@ -851,6 +853,17 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 		}
 	}
 
+	// The job creator has been verified, mark and start the download.
+	// We mark a Downloading state to avoid timeouts once the download has begun.
+	deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Downloading"))
+	if err != nil {
+		server.log.Error().Str("cid", deal.ID).Msg("unable to update deal to downloading state")
+		return EmptyResponse{}, &http.HTTPError{
+			Message:    "failed to process download",
+			StatusCode: corehttp.StatusInternalServerError,
+		}
+	}
+
 	if err := server.handleFileDownload(GetDealsFilePath(id), res, func() {
 		downloadAt := int(time.Now().UnixNano() / int64(time.Millisecond))
 		deal, err = server.store.UpdateDealDownloadTime(deal.ID, downloadAt)
@@ -947,12 +960,14 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 			return err
 		}
 
-		if deal.State == data.GetAgreementStateIndex("JobTimedOut") {
+		if data.IsTimeoutAgreementState(deal.State) {
+			state := data.GetAgreementStateString(deal.State)
 			server.log.Trace().
 				Str("cid", deal.ID).
 				Str("address", deal.ResourceProvider).
+				Str("state", state).
 				Msg("attempted file upload for timed out job for deal")
-			return fmt.Errorf("job with deal ID %s timed out", deal.ID)
+			return fmt.Errorf("job with deal ID %s timed out with a %s state", deal.ID, state)
 		}
 
 		signerAddress, err := http.CheckSignature(req)
@@ -963,6 +978,13 @@ func (server *solverServer) uploadFiles(res corehttp.ResponseWriter, req *coreht
 		// Only the resource provider in a deal can upload job outputs
 		if signerAddress != deal.ResourceProvider {
 			return fmt.Errorf("resource provider address does not match signer address")
+		}
+
+		// The resource provider has been verified, mark and start the upload
+		deal, err = server.store.UpdateDealState(deal.ID, data.GetAgreementStateIndex("Uploading"))
+		if err != nil {
+			server.log.Error().Str("cid", deal.ID).Msg("unable to update deal to uploading state")
+			return err
 		}
 
 		// Get the directory path
@@ -1062,6 +1084,11 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 		}
 	}
 
+	// This call is a workaround to circumevent the old protocol, where we don't require
+	// the job creator to propagate a ResultsAccepted state.
+	// In the downloadFiles handler, we set a Downloading state to avoid a timeout
+	// while the client is downloading the files. The `ResultsAccepted` state used here
+	// gives us the same effect.
 	server.updateJobStates(jobOffer.DealID, "ResultsAccepted")
 
 	// Retrieve deal for stats reporting

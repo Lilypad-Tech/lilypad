@@ -9,19 +9,19 @@ import (
 )
 
 type metrics struct {
-	dealNegotiating       metric.Int64Gauge
-	dealAgreed            metric.Int64Gauge
-	resultsSubmitted      metric.Int64Gauge
-	resultsAccepted       metric.Int64Gauge
-	resultsRejected       metric.Int64Gauge
-	resultsChecked        metric.Int64Gauge
-	mediationAccepted     metric.Int64Gauge
-	mediationRejected     metric.Int64Gauge
-	timeoutSubmitResults  metric.Int64Gauge
-	timeoutJudgeResults   metric.Int64Gauge
-	timeoutMediateResults metric.Int64Gauge
-	jobOfferCancelled     metric.Int64Gauge
-	jobTimedOut           metric.Int64Gauge
+	dealNegotiating   metric.Int64Gauge
+	dealAgreed        metric.Int64Gauge
+	resultsSubmitted  metric.Int64Gauge
+	resultsAccepted   metric.Int64Gauge
+	resultsRejected   metric.Int64Gauge
+	resultsChecked    metric.Int64Gauge
+	mediationAccepted metric.Int64Gauge
+	mediationRejected metric.Int64Gauge
+	jobOfferCancelled metric.Int64Gauge
+	timeoutMatch      metric.Int64Gauge
+	timeoutExecution  metric.Int64Gauge
+	timeoutDownload   metric.Int64Gauge
+	jobTimedOut       metric.Int64Gauge
 }
 
 type jobOfferMetrics struct {
@@ -35,19 +35,19 @@ type jobStats struct {
 }
 
 type stateCounts struct {
-	dealNegotiating       int64
-	dealAgreed            int64
-	resultsSubmitted      int64
-	resultsAccepted       int64
-	resultsRejected       int64
-	resultsChecked        int64
-	mediationAccepted     int64
-	mediationRejected     int64
-	timeoutSubmitResults  int64
-	timeoutJudgeResults   int64
-	timeoutMediateResults int64
-	jobOfferCancelled     int64
-	jobTimedOut           int64
+	dealNegotiating   int64
+	dealAgreed        int64
+	resultsSubmitted  int64
+	resultsAccepted   int64
+	resultsRejected   int64
+	resultsChecked    int64
+	mediationAccepted int64
+	mediationRejected int64
+	jobOfferCancelled int64
+	timeoutMatch      int64
+	timeoutExecution  int64
+	timeoutDownload   int64
+	jobTimedOut       int64
 }
 
 func newMetrics(meter metric.Meter) (*metrics, error) {
@@ -108,30 +108,30 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 	if err != nil {
 		return nil, err
 	}
-	timeoutSubmitResults, err := meter.Int64Gauge(
-		"solver.deal.state.timeout_submit_results",
-		metric.WithDescription("Number of jobs in a TimeoutSubmitResults state."),
-	)
-	if err != nil {
-		return nil, err
-	}
-	timeoutJudgeResults, err := meter.Int64Gauge(
-		"solver.deal.state.timeout_judge_results",
-		metric.WithDescription("Number of jobs in a TimeoutJudgeResults state."),
-	)
-	if err != nil {
-		return nil, err
-	}
-	timeoutMediateResults, err := meter.Int64Gauge(
-		"solver.deal.state.timeout_mediate_results",
-		metric.WithDescription("Number of jobs in a TimeoutMediateResults state."),
-	)
-	if err != nil {
-		return nil, err
-	}
 	jobOfferCancelled, err := meter.Int64Gauge(
 		"solver.job_offer.state.job_offer_cancelled",
 		metric.WithDescription("Number of jobs in a JobOfferCancelled state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	timeoutMatch, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_match",
+		metric.WithDescription("Number of jobs in a TimeoutMatch state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	timeoutExecution, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_execution",
+		metric.WithDescription("Number of jobs in a TimeoutExecution state."),
+	)
+	if err != nil {
+		return nil, err
+	}
+	timeoutDownload, err := meter.Int64Gauge(
+		"solver.job_offer.state.timeout_download",
+		metric.WithDescription("Number of jobs in a TimeoutDownload state."),
 	)
 	if err != nil {
 		return nil, err
@@ -153,10 +153,10 @@ func newMetrics(meter metric.Meter) (*metrics, error) {
 		resultsChecked,
 		mediationAccepted,
 		mediationRejected,
-		timeoutSubmitResults,
-		timeoutJudgeResults,
-		timeoutMediateResults,
 		jobOfferCancelled,
+		timeoutMatch,
+		timeoutExecution,
+		timeoutDownload,
 		jobTimedOut,
 	}, nil
 }
@@ -217,22 +217,22 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 			jobStats.stateCounts.mediationAccepted += 1
 		case "MediationRejected":
 			jobStats.stateCounts.mediationRejected += 1
-		case "TimeoutSubmitResults":
-			jobStats.stateCounts.timeoutSubmitResults += 1
-		case "TimeoutJudgeResults":
-			jobStats.stateCounts.timeoutJudgeResults += 1
-		case "TimeoutMediateResults":
-			jobStats.stateCounts.timeoutMediateResults += 1
+		case "TimeoutExecution":
+			jobStats.stateCounts.timeoutExecution += 1
+		case "TimeoutDownload":
+			jobStats.stateCounts.timeoutDownload += 1
 		default:
 			log.Trace().Str("state", data.GetAgreementStateString(deal.State)).Msg("untracked deal state ID")
 		}
 	}
 
-	// Cancelled states may only exist in the job offer
+	// Some cancelled states may only exist in the job offer
 	for _, offer := range jobOffers {
 		switch data.GetAgreementStateString(offer.State) {
 		case "JobOfferCancelled":
 			jobStats.stateCounts.jobOfferCancelled += 1
+		case "TimeoutMatch":
+			jobStats.stateCounts.timeoutMatch += 1
 		case "JobTimedOut":
 			jobStats.stateCounts.jobTimedOut += 1
 		default:
@@ -254,9 +254,6 @@ func reportJobMetrics(ctx context.Context, meter metric.Meter, deals []data.Deal
 	metrics.resultsChecked.Record(ctx, jobStats.stateCounts.resultsChecked)
 	metrics.mediationAccepted.Record(ctx, jobStats.stateCounts.mediationAccepted)
 	metrics.mediationRejected.Record(ctx, jobStats.stateCounts.mediationRejected)
-	metrics.timeoutSubmitResults.Record(ctx, jobStats.stateCounts.timeoutSubmitResults)
-	metrics.timeoutJudgeResults.Record(ctx, jobStats.stateCounts.timeoutJudgeResults)
-	metrics.timeoutMediateResults.Record(ctx, jobStats.stateCounts.timeoutMediateResults)
 	metrics.jobOfferCancelled.Record(ctx, jobStats.stateCounts.jobOfferCancelled)
 	metrics.jobTimedOut.Record(ctx, jobStats.stateCounts.jobTimedOut)
 

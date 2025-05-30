@@ -175,11 +175,17 @@ func (store *SolverStoreDatabase) GetJobOffers(query store.GetJobOffersQuery) ([
 		if *query.Cancelled {
 			q = q.Where("state IN (?)", []uint8{
 				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("TimeoutMatch"),
+				data.GetAgreementStateIndex("TimeoutExecution"),
+				data.GetAgreementStateIndex("TimeoutDownload"),
 				data.GetAgreementStateIndex("JobTimedOut"),
 			})
 		} else {
 			q = q.Where("state NOT IN (?)", []uint8{
 				data.GetAgreementStateIndex("JobOfferCancelled"),
+				data.GetAgreementStateIndex("TimeoutMatch"),
+				data.GetAgreementStateIndex("TimeoutExecution"),
+				data.GetAgreementStateIndex("TimeoutDownload"),
 				data.GetAgreementStateIndex("JobTimedOut"),
 			})
 		}

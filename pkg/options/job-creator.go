@@ -33,7 +33,6 @@ func GetDefaultJobCreatorOfferOptions() jobcreator.JobCreatorOfferOptions {
 		// this is the default pricing mode for an JC
 		Mode:       GetDefaultPricingMode(data.MarketPrice),
 		Pricing:    GetDefaultPricingOptions(),
-		Timeouts:   GetDefaultTimeoutOptions(),
 		Inputs:     map[string]string{},
 		InputsPath: GetDefaultServeOptionString("INPUTS_PATH", ""),
 		Services:   GetDefaultServicesOptions(),
@@ -56,7 +55,6 @@ func AddJobCreatorOfferCliFlags(cmd *cobra.Command, offerOptions *jobcreator.Job
 
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, &offerOptions.Pricing)
-	AddTimeoutCliFlags(cmd, &offerOptions.Timeouts)
 	AddModuleCliFlags(cmd, &offerOptions.Module)
 	AddServicesCliFlags(cmd, &offerOptions.Services)
 	AddTargetCliFlags(cmd, &offerOptions.Target)

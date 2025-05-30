@@ -47,12 +47,10 @@ type ResourceProviderOfferOptions struct {
 
 	// the default pricing for this resource provider
 	// for all modules that don't have a specific price
-	DefaultPricing  data.DealPricing
-	DefaultTimeouts data.DealTimeouts
+	DefaultPricing data.DealPricing
 
 	// allow different pricing for different modules
-	ModulePricing  map[string]data.DealPricing
-	ModuleTimeouts map[string]data.DealTimeouts
+	ModulePricing map[string]data.DealPricing
 
 	// which mediators and directories this RP will trust
 	Services data.ServiceConfig
