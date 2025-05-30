@@ -10,7 +10,7 @@ func GetDefaultTimeoutOptions() solver.SolverTimeoutOptions {
 		MatchSeconds:     GetDefaultServeOptionUint64("TIMEOUT_MATCH_SECONDS", 30),
 		ExecutionSeconds: GetDefaultServeOptionUint64("TIMEOUT_EXECUTION_SECONDS", 900), // 15 minutes
 		DownloadSeconds:  GetDefaultServeOptionUint64("TIMEOUT_DOWNLOAD_SECONDS", 3600), // One hour
-		TotalSeconds:     GetDefaultServeOptionUint64("TIMEOUT_TOTAL_SECONDS", 86400),   // One day
+		TotalSeconds:     GetDefaultServeOptionUint64("TIMEOUT_TOTAL_SECONDS", 7200),    // Two hours
 	}
 }
 
