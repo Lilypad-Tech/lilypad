@@ -43,8 +43,8 @@ type Result struct {
 
 type MatchDecision struct {
 	gorm.Model    `gorm:"type:timestamp(3) with time zone"`
-	ResourceOffer string `gorm:"primaryKey"`
-	JobOffer      string `gorm:"primaryKey"`
+	ResourceOffer string `gorm:"primaryKey;index:idx_resource_offer_job_offer,priority:1"`
+	JobOffer      string `gorm:"primaryKey;index:idx_resource_offer_job_offer,priority:2"`
 	Attributes    datatypes.JSONType[data.MatchDecision]
 }
 
