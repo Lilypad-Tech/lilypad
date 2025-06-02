@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748898550041,
+  "lastUpdate": 1748906449010,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3024,6 +3024,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "775478 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29411347+narbs91@users.noreply.github.com",
+            "name": "Narb",
+            "username": "narbs91"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "55cbbc61f83d5918a3f7214fbe1cd99e08591f92",
+          "message": "feat: adds index on MatchDecision table for faster lookup (#586)\n\nadds index on MatchDecision table for faster lookup",
+          "timestamp": "2025-06-02T16:20:19-07:00",
+          "tree_id": "46e11846e37a33f24b52ed411249f410deea8c05",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/55cbbc61f83d5918a3f7214fbe1cd99e08591f92"
+        },
+        "date": 1748906448619,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4876,
+            "unit": "ns/op\t   13504 B/op\t      26 allocs/op",
+            "extra": "767162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4876,
+            "unit": "ns/op",
+            "extra": "767162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 13504,
+            "unit": "B/op",
+            "extra": "767162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "767162 times\n4 procs"
           }
         ]
       }
