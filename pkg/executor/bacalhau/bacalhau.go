@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
@@ -23,6 +24,7 @@ import (
 )
 
 const RESULTS_DIR = "bacalhau-results"
+const MINIMUM_DISK_SPACE = 3 * 1024 * 1024 * 1024 // 3 Gb
 
 type BacalhauExecutorOptions struct {
 	ApiHost               string
@@ -76,6 +78,42 @@ func (executor *BacalhauExecutor) IsAvailable() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (executor *BacalhauExecutor) Preflight() error {
+	// Check if Bacalhau is available
+	available, err := executor.IsAvailable()
+	if err != nil {
+		return fmt.Errorf("Bacalhau is not available: %s", err.Error())
+	}
+	if !available {
+		return errors.New("Bacalhau is not available")
+	}
+
+	// Check that bacalhau can run docker jobs
+	nodes, err := executor.bacalhauClient.getNodes()
+	if err != nil {
+		return fmt.Errorf("error getting available nodes: %s", err.Error())
+	}
+
+	dockerSupported := false
+	for _, node := range nodes {
+		if slices.Contains(node.Info.ComputeNodeInfo.ExecutionEngines, "docker") {
+			dockerSupported = true
+		}
+	}
+	if !dockerSupported {
+		return errors.New("Bacalhau does not support docker jobs on this node")
+	}
+
+	// Check that bacalhau has enough disk space
+	for _, node := range nodes {
+		if node.Info.ComputeNodeInfo.MaxCapacity.Disk < MINIMUM_DISK_SPACE {
+			return errors.New("Bacalhau node does not have enough disk space. Minimum required is 3 Gb")
+		}
+	}
+
+	return nil
 }
 
 func (executor *BacalhauExecutor) GetMachineSpecs() ([]data.MachineSpec, error) {
