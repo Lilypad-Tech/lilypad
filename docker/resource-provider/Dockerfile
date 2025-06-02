@@ -9,6 +9,9 @@ COPY . .
 
 FROM nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04 AS build-gpu
 WORKDIR /usr/src/app
+ARG VERSION
+ARG COMMIT_SHA
+
 COPY --from=base /usr/src/app .
 COPY --from=base /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
@@ -17,6 +20,9 @@ RUN go build -v -tags cuda -ldflags="-X 'github.com/Lilypad-Tech/lilypad/v2/pkg/
 ENV DISABLE_POW=false
 
 FROM base AS build-cpu
+ARG VERSION
+ARG COMMIT_SHA
+
 RUN go build -v -ldflags="-X 'github.com/Lilypad-Tech/lilypad/v2/pkg/system.Version=${VERSION}' -X 'github.com/Lilypad-Tech/lilypad/v2/pkg/system.CommitSHA=${COMMIT_SHA}'"
 ENV DISABLE_POW=true
 

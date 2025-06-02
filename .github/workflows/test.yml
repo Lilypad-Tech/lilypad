@@ -64,7 +64,7 @@ jobs:
           DATA_DIR: ${{ github.workspace }}/sol
         run: |
           ./stack solver --disable-telemetry=true --api-host="" > solver.log &
-          sleep 20
+          sleep 30
 
       - name: Run solver integration tests
         run: ./stack integration-tests-solver
