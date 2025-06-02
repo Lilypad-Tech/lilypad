@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	executor "github.com/Lilypad-Tech/lilypad/v2/pkg/executor/bacalhau"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,13 +30,16 @@ type preflightConfig struct {
 	Docker struct {
 		CheckRuntime bool
 	}
+	Bacalhau struct {
+		Options executor.BacalhauExecutorOptions
+	}
 }
 
 type preflightChecker struct {
 	gpuInfo []gpuInfo
 }
 
-func RunPreflightChecks() error {
+func RunPreflightChecks(bacalhauOptions executor.BacalhauExecutorOptions) error {
 	ctx := context.Background()
 	log.Info().Msg("Starting preflight checks...")
 	checker := &preflightChecker{}
@@ -45,21 +49,14 @@ func RunPreflightChecks() error {
 		}{
 			MinMemoryGB: RequiredGPUMemoryGB,
 		},
+		Bacalhau: struct {
+			Options executor.BacalhauExecutorOptions
+		}{
+			Options: bacalhauOptions,
+		},
 	}
 
-	// Logging GPU requirements
-	gpuInfo, err := checker.getGPUInfo(ctx)
-	if err != nil {
-		log.Warn().Err(err).Msg("⚠️  No GPU detected - will operate in CPU-only mode")
-		return nil
-	} else {
-		log.Info().
-			Int("gpu_count", len(gpuInfo)).
-			Int64("min_memory_gb", config.GPU.MinMemoryGB).
-			Msg("🎮 GPU requirements")
-	}
-
-	err = checker.runAllChecks(ctx, config)
+	err := checker.runAllChecks(ctx, config)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Preflight checks failed")
 		return err
@@ -73,6 +70,11 @@ func (p *preflightChecker) runAllChecks(ctx context.Context, config preflightCon
 	})
 	if !gpuResult.passed {
 		return fmt.Errorf("GPU check failed: %s", gpuResult.message)
+	}
+
+	bacalhauResult := p.checkBacalhau(ctx, config.Bacalhau.Options)
+	if !bacalhauResult.passed {
+		return fmt.Errorf("Bacalhau check failed: %s", bacalhauResult.message)
 	}
 
 	if config.Docker.CheckRuntime {

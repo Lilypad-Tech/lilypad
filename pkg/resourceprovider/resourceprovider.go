@@ -86,7 +86,7 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-	if err := preflight.RunPreflightChecks(); err != nil {
+	if err := preflight.RunPreflightChecks(options.Bacalhau); err != nil {
 		return nil, fmt.Errorf("preflight checks failed: %w", err)
 	}
 
