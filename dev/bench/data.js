@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748472479292,
+  "lastUpdate": 1748898550041,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -2976,6 +2976,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "771207 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "walkah@walkah.net",
+            "name": "James Walker",
+            "username": "walkah"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f92cd46e14b2e7396e34c2ece2facb20e445e7ca",
+          "message": "feat: add bacalhau preflight (#580)\n\n* feat: add bacalhau preflight\n\n* fix: docker support on *any* compute node\n\n* feat: add disk space check",
+          "timestamp": "2025-06-02T17:08:12-04:00",
+          "tree_id": "be8d1b73dfe20ad7666594f288bc7db1e97487f5",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/f92cd46e14b2e7396e34c2ece2facb20e445e7ca"
+        },
+        "date": 1748898549539,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4724,
+            "unit": "ns/op\t   13504 B/op\t      26 allocs/op",
+            "extra": "775478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4724,
+            "unit": "ns/op",
+            "extra": "775478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 13504,
+            "unit": "B/op",
+            "extra": "775478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "775478 times\n4 procs"
           }
         ]
       }
