@@ -24,6 +24,7 @@ import (
 )
 
 const RESULTS_DIR = "bacalhau-results"
+const MINIMUM_DISK_SPACE = 3 * 1024 * 1024 * 1024 // 3 Gb
 
 type BacalhauExecutorOptions struct {
 	ApiHost               string
@@ -103,6 +104,13 @@ func (executor *BacalhauExecutor) Preflight() error {
 	}
 	if !dockerSupported {
 		return errors.New("Bacalhau does not support docker jobs on this node")
+	}
+
+	// Check that bacalhau has enough disk space
+	for _, node := range nodes {
+		if node.Info.ComputeNodeInfo.MaxCapacity.Disk < MINIMUM_DISK_SPACE {
+			return errors.New("Bacalhau node does not have enough disk space. Minimum required is 3 Gb")
+		}
 	}
 
 	return nil
