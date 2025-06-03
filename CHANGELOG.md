@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.22.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.21.0...v2.22.0) (2025-06-03)
+
+
+### Features
+
+* Add job lifecycle timeouts ([#585](https://github.com/Lilypad-Tech/lilypad/issues/585)) ([7a8ba8a](https://github.com/Lilypad-Tech/lilypad/commit/7a8ba8ae86f2d4ee2d1f1c41d71a1371a4736e13))
+
 ## [2.21.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.20.0...v2.21.0) (2025-06-02)
 
 
