@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748973750901,
+  "lastUpdate": 1748982009265,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3120,6 +3120,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "782449 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "7957636+bgins@users.noreply.github.com",
+            "name": "Brian Ginsburg",
+            "username": "bgins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7a8ba8ae86f2d4ee2d1f1c41d71a1371a4736e13",
+          "message": "feat: Add job lifecycle timeouts (#585)\n\n* chore: Fix naming typo\n\n* chore: Remove old timeout configs\n\nThese configs were largely configured but not considered.\n\n* chore: Retain old timeouts for web3 APIV1\n\nWe use hardcoded values that were default originally default configs to\nsatisfy the old protocol.\n\n* feat: Add timeout configs\n\n* feat: Add new timeout states\n\n* feat: Add Uploading state\n\n* feat: Add Downloading state\n\n* feat: Add module-defined execution timeout\n\n* feat: Add job lifecycle timeouts\n\n* chore: Improve error messages\n\n* chore: Add logging context\n\n* chore: Reduce total timeout default to two hours\n\n---------\n\nCo-authored-by: Narb <29411347+narbs91@users.noreply.github.com>",
+          "timestamp": "2025-06-03T13:19:30-07:00",
+          "tree_id": "740ad31ce77b777a5f58ce462da46b052bdeb728",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/7a8ba8ae86f2d4ee2d1f1c41d71a1371a4736e13"
+        },
+        "date": 1748982008164,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4102,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "933274 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4102,
+            "unit": "ns/op",
+            "extra": "933274 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "933274 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "933274 times\n4 procs"
           }
         ]
       }
