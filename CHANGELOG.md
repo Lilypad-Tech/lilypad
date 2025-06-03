@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.21.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.20.0...v2.21.0) (2025-06-02)
+
+
+### Features
+
+* Add bacalhau preflight ([#580](https://github.com/Lilypad-Tech/lilypad/issues/580)) ([f92cd46](https://github.com/Lilypad-Tech/lilypad/commit/f92cd46e14b2e7396e34c2ece2facb20e445e7ca))
+* Adds index on MatchDecision table for faster lookup ([#586](https://github.com/Lilypad-Tech/lilypad/issues/586)) ([55cbbc6](https://github.com/Lilypad-Tech/lilypad/commit/55cbbc61f83d5918a3f7214fbe1cd99e08591f92))
+
+
+### Bug Fixes
+
+* Add GPU access to Bacalhau in docker-compose.yml ([#583](https://github.com/Lilypad-Tech/lilypad/issues/583)) ([013bfbc](https://github.com/Lilypad-Tech/lilypad/commit/013bfbc7ca5286a7bffd35b59ed422e55d3bfc68))
+
+
+### Performance Improvements
+
+* Remove supported modules check from solver matching algorithm ([#581](https://github.com/Lilypad-Tech/lilypad/issues/581)) ([2d4df47](https://github.com/Lilypad-Tech/lilypad/commit/2d4df476713975a3b3a40700171afa81ea3fe287))
+
 ## [2.20.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.19.0...v2.20.0) (2025-05-15)
 
 
