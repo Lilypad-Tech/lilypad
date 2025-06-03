@@ -15,6 +15,8 @@ var ServiceType = []string{
 }
 
 // AgreementState corresponds to AgreementState in TypeScript
+// TimeoutSubmitResults, TimeoutJudgeResults, and TimeoutMediateResults are no longer used
+// but we are stuck with them because of the enum. We plan to remove it: https://github.com/Lilypad-Tech/lilypad/issues/559
 var AgreementState = []string{
 	"DealNegotiating",
 	"DealAgreed",
@@ -28,6 +30,11 @@ var AgreementState = []string{
 	"TimeoutMediateResults",
 	"JobOfferCancelled",
 	"JobTimedOut",
+	"Uploading",
+	"Downloading",
+	"TimeoutMatch",
+	"TimeoutExecution",
+	"TimeoutDownload",
 }
 
 // PaymentReason corresponds to PaymentReason in TypeScript
@@ -86,10 +93,20 @@ func IsActiveAgreementState(itemType uint8) bool {
 
 func IsTerminalAgreementState(itemType uint8) bool {
 	return itemType == GetAgreementStateIndex("JobOfferCancelled") ||
+		itemType == GetAgreementStateIndex("TimeoutMatch") ||
+		itemType == GetAgreementStateIndex("TimeoutExecution") ||
+		itemType == GetAgreementStateIndex("TimeoutDownload") ||
 		itemType == GetAgreementStateIndex("JobTimedOut") ||
 		itemType == GetAgreementStateIndex("ResultsAccepted") ||
 		itemType == GetAgreementStateIndex("MediationAccepted") ||
 		itemType == GetAgreementStateIndex("MediationRejected")
+}
+
+func IsTimeoutAgreementState(state uint8) bool {
+	return state == GetAgreementStateIndex("TimeoutMatch") ||
+		state == GetAgreementStateIndex("TimeoutExecution") ||
+		state == GetAgreementStateIndex("TimeoutDownload") ||
+		state == GetAgreementStateIndex("JobTimedOut")
 }
 
 // GetPaymentReason corresponds to getPaymentReason in TypeScript

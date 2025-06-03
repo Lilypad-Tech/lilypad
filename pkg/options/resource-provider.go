@@ -51,12 +51,10 @@ func GetDefaultResourceProviderOfferOptions() resourceprovider.ResourceProviderO
 		// this is the default pricing mode for an RP
 		Mode: GetDefaultPricingMode(data.FixedPrice),
 		// this is the default pricing for a module unless it has a specific price
-		DefaultPricing:  GetDefaultPricingOptions(),
-		DefaultTimeouts: GetDefaultTimeoutOptions(),
+		DefaultPricing: GetDefaultPricingOptions(),
 		// allows an RP to list specific prices for each module
-		ModulePricing:  map[string]data.DealPricing{},
-		ModuleTimeouts: map[string]data.DealTimeouts{},
-		Services:       GetDefaultServicesOptions(),
+		ModulePricing: map[string]data.DealPricing{},
+		Services:      GetDefaultServicesOptions(),
 	}
 }
 
@@ -83,7 +81,6 @@ func AddResourceProviderOfferCliFlags(cmd *cobra.Command, offerOptions *resource
 	)
 	AddPricingModeCliFlags(cmd, &offerOptions.Mode)
 	AddPricingCliFlags(cmd, &offerOptions.DefaultPricing)
-	AddTimeoutCliFlags(cmd, &offerOptions.DefaultTimeouts)
 	AddServicesCliFlags(cmd, &offerOptions.Services)
 }
 

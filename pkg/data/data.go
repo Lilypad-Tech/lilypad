@@ -48,6 +48,9 @@ type Module struct {
 	// Expected input files
 	InputFiles InputFiles `json:"inputFiles"`
 
+	// Maximum time to execute on the resource provider
+	ExecutionTimeoutSeconds uint64 `json:"executionTimeoutSeconds"`
+
 	// the min spec that this module requires
 	// e.g. does this module need a GPU?
 	// the module file itself will contain this spec
@@ -209,13 +212,13 @@ type JobOffer struct {
 	Inputs map[string]string `json:"inputs"`
 	// Expected input files
 	InputFiles InputFiles `json:"inputFiles"`
+	// Maximum time to execute on the resource provider
+	ExecutionTimeoutSeconds uint64 `json:"executionTimeoutSeconds"`
 	// tells the solver how to match these prices
 	// for JC this will normally be MarketPrice
 	Mode PricingMode `json:"mode"`
 	// the offered price and timeouts
-	Pricing  DealPricing  `json:"pricing"`
-	Timeouts DealTimeouts `json:"timeouts"`
-
+	Pricing DealPricing `json:"pricing"`
 	// which parties are trusted by the job creator
 	Services ServiceConfig `json:"trusted_parties"`
 
@@ -255,13 +258,11 @@ type ResourceOffer struct {
 	Mode PricingMode `json:"mode"`
 	// the default pricing for this resource offer
 	// i.e. this is for any module
-	DefaultPricing  DealPricing  `json:"default_pricing"`
-	DefaultTimeouts DealTimeouts `json:"default_timeouts"`
+	DefaultPricing DealPricing `json:"default_pricing"`
 	// the pricing for each module
 	// this allows a resource provider to charge more
 	// for certain modules
-	ModulePricing  map[string]DealPricing  `json:"module_pricing"`
-	ModuleTimeouts map[string]DealTimeouts `json:"module_timeouts"`
+	ModulePricing map[string]DealPricing `json:"module_pricing"`
 
 	// which parties are trusted by the resource provider
 	Services ServiceConfig `json:"trusted_parties"`
@@ -282,18 +283,6 @@ type DealMembers struct {
 	JobCreator       string   `json:"job_creator"`
 	ResourceProvider string   `json:"resource_provider"`
 	Mediators        []string `json:"mediators"`
-}
-
-type DealTimeout struct {
-	Timeout    uint64 `json:"timeout"`
-	Collateral uint64 `json:"collateral"`
-}
-
-type DealTimeouts struct {
-	Agree          DealTimeout `json:"agree"`
-	SubmitResults  DealTimeout `json:"submit_results"`
-	JudgeResults   DealTimeout `json:"judge_results"`
-	MediateResults DealTimeout `json:"mediate_results"`
 }
 
 type DealPricing struct {
@@ -321,7 +310,6 @@ type Deal struct {
 	ID            string        `json:"id"`
 	Members       DealMembers   `json:"members"`
 	Pricing       DealPricing   `json:"pricing"`
-	Timeouts      DealTimeouts  `json:"timeouts"`
 	JobOffer      JobOffer      `json:"job_offer"`
 	ResourceOffer ResourceOffer `json:"resource_offer"`
 }

@@ -106,11 +106,18 @@ func (sdk *Web3SDK) Agree(
 	for _, mediator := range deal.Members.Mediators {
 		mediators = append(mediators, common.HexToAddress(mediator))
 	}
+	// Deal timeouts are retained for backwards compatibility with hardcoded values.
+	dealTimeouts := dealTimeouts{
+		Agree:          dealTimeout{Timeout: 3600, Collateral: 1},
+		SubmitResults:  dealTimeout{Timeout: 3600, Collateral: 1},
+		JudgeResults:   dealTimeout{Timeout: 3600, Collateral: 1},
+		MediateResults: dealTimeout{Timeout: 3600, Collateral: 1},
+	}
 	tx, err := sdk.Contracts.Controller.Agree(
 		sdk.TransactOpts,
 		deal.ID,
 		data.ConvertDealMembers(deal.Members),
-		data.ConvertDealTimeouts(deal.Timeouts),
+		convertDealTimeouts(dealTimeouts),
 		data.ConvertDealPricing(deal.Pricing),
 	)
 	if err != nil {
