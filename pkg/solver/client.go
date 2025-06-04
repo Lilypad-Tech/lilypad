@@ -34,7 +34,11 @@ func NewSolverClient(
 func (client *SolverClient) Start(ctx context.Context, cm *system.CleanupManager) error {
 
 	websocketURL := fmt.Sprintf("%s%s%s%s%s", http.WEBSOCKET_SUB_PATH, "?&Type=", client.options.Type, "&ID=", client.options.PublicAddress)
-	websocketEventChannel := http.ConnectWebSocket(http.WebsocketURL(client.options, websocketURL), ctx)
+	websocketEventChannel, err := http.ConnectWebSocket(ctx, http.WebsocketURL(client.options, websocketURL))
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		for {
 			select {
