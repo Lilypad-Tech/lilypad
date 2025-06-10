@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
@@ -231,24 +230,32 @@ func addMatchDecisions(
 	log *zerolog.Logger,
 	addTraceContext func(e *zerolog.Event),
 ) error {
+	records := []data.MatchDecision{}
+
 	for _, matchingOffer := range matchingResourceOffers {
 		addDealID := ""
 		if selectedResourceOffer.ID == matchingOffer.ID {
 			addDealID = dealID
 		}
-
 		// All match decisions had matching resource offers, set the result to true.
 		// The match decision has a deal ID if it's resource offer was selected.
-		_, err := db.AddMatchDecision(matchingOffer.ID, jobOfferID, addDealID, true)
-		if err != nil {
-			return fmt.Errorf(
-				"unable to add match decision for job offer %s and matched resource offer %s: %s",
-				jobOfferID,
-				matchingOffer.ID,
-				err,
-			)
+		decision := data.MatchDecision{
+			ResourceOffer: matchingOffer.ID,
+			JobOffer:      jobOfferID,
+			Deal:          addDealID,
+			Result:        true,
 		}
+		records = append(records, decision)
 	}
+
+	err := db.AddBulkMatchDecisions(records)
+	if err != nil {
+		return fmt.Errorf(
+			"unable to add match decisions in bulk with error: %s",
+			err,
+		)
+	}
+
 	log.Debug().
 		Func(addTraceContext).
 		Int("decisions", len(matchingResourceOffers)).
