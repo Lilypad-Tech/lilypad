@@ -72,6 +72,7 @@ type SolverStore interface {
 	AddDeal(deal data.DealContainer) (*data.DealContainer, error)
 	AddResult(result data.Result) (*data.Result, error)
 	AddMatchDecision(resourceOffer string, jobOffer string, deal string, result bool) (*data.MatchDecision, error)
+	AddBulkMatchDecisions(records []data.MatchDecision) error
 	AddAllowedResourceProvider(resourceProvider string) (string, error)
 	GetJobOffers(query GetJobOffersQuery) ([]data.JobOfferContainer, error)
 	GetResourceOffers(query GetResourceOffersQuery) ([]data.ResourceOfferContainer, error)

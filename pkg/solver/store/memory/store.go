@@ -82,6 +82,21 @@ func (s *SolverStoreMemory) AddMatchDecision(resourceOffer string, jobOffer stri
 	return decision, nil
 }
 
+/*
+*
+Note: This is being added here as a formaility to statisfy the interface definition. Since this is an in-memory map we don't have the bottle neck of database writes, thus can loop through
+and add the records one by one
+*/
+func (s *SolverStoreMemory) AddBulkMatchDecisions(records []data.MatchDecision) error {
+	for _, record := range records {
+		_, err := s.AddMatchDecision(record.ResourceOffer, record.JobOffer, record.Deal, record.Result)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (store *SolverStoreMemory) AddAllowedResourceProvider(resourceProvider string) (string, error) {
 	store.mutex.Lock()
 	defer store.mutex.Unlock()

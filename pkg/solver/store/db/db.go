@@ -141,6 +141,28 @@ func (store *SolverStoreDatabase) AddMatchDecision(resourceOffer string, jobOffe
 	return decision, nil
 }
 
+func (store *SolverStoreDatabase) AddBulkMatchDecisions(records []data.MatchDecision) error {
+	// This is the number of records that the batch transaction will create a time
+	// e.g. if there are a 1000 records, the batch create will create 100 records at a time in 10 batches
+	batchSize := 100
+
+	decisionRecords := []MatchDecision{}
+	for _, decision := range records {
+		decisionRecords = append(decisionRecords, MatchDecision{
+			ResourceOffer: decision.ResourceOffer,
+			JobOffer:      decision.JobOffer,
+			Attributes:    datatypes.NewJSONType(decision),
+		})
+	}
+
+	return store.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.CreateInBatches(decisionRecords, batchSize).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (store *SolverStoreDatabase) AddAllowedResourceProvider(resourceProvider string) (string, error) {
 	record := AllowedResourceProvider{
 		ResourceProvider: resourceProvider,

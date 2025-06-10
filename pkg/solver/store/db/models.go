@@ -11,7 +11,7 @@ type JobOffer struct {
 	CID        string `gorm:"index"`
 	JobCreator string `gorm:"index"`
 	DealID     string `gorm:"index"`
-	State      uint8
+	State      uint8  `gorm:"index"`
 	Attributes datatypes.JSONType[data.JobOfferContainer]
 }
 
