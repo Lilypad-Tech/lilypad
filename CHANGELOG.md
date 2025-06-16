@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.22.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.21.0...v2.22.0) (2025-06-16)
+
+
+### Features
+
+* Add job lifecycle timeouts ([#585](https://github.com/Lilypad-Tech/lilypad/issues/585)) ([7a8ba8a](https://github.com/Lilypad-Tech/lilypad/commit/7a8ba8ae86f2d4ee2d1f1c41d71a1371a4736e13))
+
+
+### Performance Improvements
+
+* Bulk write match decisions ([#589](https://github.com/Lilypad-Tech/lilypad/issues/589)) ([9d905f4](https://github.com/Lilypad-Tech/lilypad/commit/9d905f4af2898596a5030c82f63faf6a30190a5e))
+
 ## [2.21.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.20.0...v2.21.0) (2025-06-02)
 
 
