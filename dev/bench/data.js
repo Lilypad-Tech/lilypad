@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748982009265,
+  "lastUpdate": 1750095045360,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3168,6 +3168,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "933274 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29411347+narbs91@users.noreply.github.com",
+            "name": "Narb",
+            "username": "narbs91"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d905f4af2898596a5030c82f63faf6a30190a5e",
+          "message": "perf: bulk write match decisions (#589)\n\n* adds AddBulkMatchDecisions method to builk create records; updates matcher loop with bulk write\n\n* adds index to state column in job_offers_table",
+          "timestamp": "2025-06-16T10:28:52-07:00",
+          "tree_id": "f973509def160415807c67fce5d57e51925ffe21",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/9d905f4af2898596a5030c82f63faf6a30190a5e"
+        },
+        "date": 1750095044263,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4188,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "897685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4188,
+            "unit": "ns/op",
+            "extra": "897685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "897685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "897685 times\n4 procs"
           }
         ]
       }
