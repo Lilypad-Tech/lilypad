@@ -233,6 +233,8 @@ function job-creator() {
 function resource-provider() {
   load-local-env
   export WEB3_PRIVATE_KEY=${RESOURCE_PROVIDER_PRIVATE_KEY}
+  export ANURA_API_KEY=${ANURA_API_KEY}
+  export ANURA_BASE_URL=${ANURA_BASE_URL}
   export LOG_LEVEL=debug
   go run . resource-provider "$@" --network dev --disable-pow true
 }

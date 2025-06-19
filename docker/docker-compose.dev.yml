@@ -80,5 +80,7 @@ services:
       - BACALHAU_API_HOST=bacalhau
       - BACALHAU_NODE_CLIENTAPI_HOST=bacalhau
       - BACALHAU_NODE_CLIENTAPI_PORT=1234
+      - ANURA_BASE_URL=${ANURA_BASE_URL}
+      - ANURA_API_KEY=${ANURA_API_KEY}
 volumes:
   lilypad-data:

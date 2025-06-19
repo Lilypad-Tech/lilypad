@@ -33,6 +33,8 @@ ARG DISABLE_TELEMETRY=false
 ENV LOG_LEVEL=info
 ENV BACALHAU_API_HOST="localhost"
 ENV WEB3_PRIVATE_KEY=""
+ENV ANURA_API_KEY=""
+ENV ANURA_BASE_URL="https://anura-testnet.lilypad.tech/api/v1"
 
 RUN mv lilypad /usr/local/bin
 # Install necessary dependencies
