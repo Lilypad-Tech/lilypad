@@ -18,6 +18,7 @@ func NewResourceProviderOptions() resourceprovider.ResourceProviderOptions {
 		Pow:       GetDefaultResourceProviderPowOptions(),
 		IPFS:      GetDefaultIPFSOptions(),
 		Telemetry: GetDefaultTelemetryOptions(),
+		Anura:     GetDefaultAnuraOptions(),
 	}
 	options.Web3.Service = system.ResourceProviderService
 	return options

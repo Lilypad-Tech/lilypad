@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/anura"
 	"math/big"
 	"os"
 	"strconv"
@@ -72,6 +73,7 @@ type ResourceProviderOptions struct {
 	Pow       ResourceProviderPowOptions
 	IPFS      ipfs.IPFSOptions
 	Telemetry system.TelemetryOptions
+	Anura     anura.AnuraClientOptions
 }
 
 type ResourceProvider struct {
@@ -86,7 +88,7 @@ func NewResourceProvider(
 	executor executor.Executor,
 	tracer trace.Tracer,
 ) (*ResourceProvider, error) {
-	if err := preflight.RunPreflightChecks(options.Bacalhau); err != nil {
+	if err := preflight.RunPreflightChecks(options.Bacalhau, options.Anura); err != nil {
 		return nil, fmt.Errorf("preflight checks failed: %w", err)
 	}
 

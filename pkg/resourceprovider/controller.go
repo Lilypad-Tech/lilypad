@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/anura"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/executor"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/http"
@@ -29,6 +30,7 @@ type ResourceProviderController struct {
 	log          *system.ServiceLogger
 	tracer       trace.Tracer
 	executor     executor.Executor
+	AnuraClient  anura.AnuraClient
 	// keep track of which jobs are running
 	// this is because no remote state will change
 	// whilst we are actually running a job
@@ -71,6 +73,8 @@ func NewResourceProviderController(
 		return nil, err
 	}
 
+	anuraClient, err := anura.NewAnuraClient(options.Anura)
+
 	controller := &ResourceProviderController{
 		solverClient: solverClient,
 		options:      options,
@@ -79,6 +83,7 @@ func NewResourceProviderController(
 		log:          system.NewServiceLogger(system.ResourceProviderService),
 		tracer:       tracer,
 		executor:     executor,
+		AnuraClient:  anuraClient,
 		runningJobs:  map[string]bool{},
 	}
 	return controller, nil
