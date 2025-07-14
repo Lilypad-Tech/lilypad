@@ -2,6 +2,7 @@ package solver
 
 import (
 	"context"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/adminService"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/http"
@@ -23,15 +24,16 @@ type SolverTimeoutOptions struct {
 }
 
 type SolverOptions struct {
-	Server    http.ServerOptions
-	Store     store.StoreOptions
-	Web3      web3.Web3Options
-	Services  data.ServiceConfig
-	Stats     stats.StatsOptions
-	Telemetry system.TelemetryOptions
-	Metrics   system.MetricsOptions
-	Logs      system.LogsOptions
-	Timeouts  SolverTimeoutOptions
+	Server       http.ServerOptions
+	Store        store.StoreOptions
+	Web3         web3.Web3Options
+	Services     data.ServiceConfig
+	Stats        stats.StatsOptions
+	Telemetry    system.TelemetryOptions
+	Metrics      system.MetricsOptions
+	Logs         system.LogsOptions
+	Timeouts     SolverTimeoutOptions
+	AdminService adminService.AdminServiceClientOptions
 }
 
 type Solver struct {

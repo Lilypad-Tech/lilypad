@@ -4,7 +4,7 @@ import (
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/adminService"
 )
 
-func GetDefaultAdminServiceptions() adminService.AdminServiceClientOptions {
+func GetDefaultAdminServiceOptions() adminService.AdminServiceClientOptions {
 	return adminService.AdminServiceClientOptions{
 		BaseURL: GetDefaultServeOptionString("ADMIN_BASE_URL", ""),
 		ApiKey:  GetDefaultServeOptionString("ADMIN_API_KEY", ""),
