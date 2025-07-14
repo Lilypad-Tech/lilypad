@@ -27,6 +27,8 @@ services:
       - STORE_TYPE=${STORE_TYPE}
       - STORE_CONN_STR=${STORE_CONN_STR}
       - STORE_GORM_LOG_LEVEL=${STORE_GORM_LOG_LEVEL}
+      - ADMIN_BASE_URL=${ADMIN_BASE_URL}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
     ports:
       - 8081:8081
     healthcheck:
