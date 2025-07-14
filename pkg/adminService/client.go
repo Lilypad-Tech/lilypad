@@ -10,30 +10,14 @@ import (
 	"time"
 )
 
-type AllowListResponse struct {
-	Data AllowListResponseData `json:"data"`
-}
-
-type TestListResponse struct {
-	Data TestListResponseData `json:"data"`
-}
-
-type AllowListResponseData struct {
-	AllowList []ListItem `json:"allowlist"`
-}
-
-type TestListResponseData struct {
-	TestList []ListItem `json:"testlist"`
-}
-
-type ListItem struct {
-	ID               string `json:"id"`
-	ResourceProvider int64  `json:"resource_provider"`
+type ResourceProviderListItem struct {
+	ID               int    `json:"ID"`
+	ResourceProvider string `json:"resource_provider"`
 }
 
 type AdminServiceClient interface {
-	GetAllowList() (AllowListResponse, error)
-	GetTestList() (TestListResponse, error)
+	GetAllowList() ([]ResourceProviderListItem, error)
+	GetTestList() ([]ResourceProviderListItem, error)
 }
 
 type AdminServiceClientOptions struct {
@@ -64,39 +48,67 @@ func NewAdminServiceClient(adminServiceOptions AdminServiceClientOptions) (Admin
 		client:        http.Client{Timeout: time.Duration(30) * time.Second}}, nil
 }
 
-func (a *adminServiceClient) GetTestList() (TestListResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *adminServiceClient) GetAllowList() (AllowListResponse, error) {
-	getAllowListUrl := a.clientOptions.BaseURL + "/allow-list"
+func (a *adminServiceClient) GetTestList() ([]ResourceProviderListItem, error) {
+	getAllowListUrl := a.clientOptions.BaseURL + "/test-list"
 
 	req, err := http.NewRequest("GET", getAllowListUrl, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to build anura get modules request")
-		return AllowListResponse{}, err
+		log.Error().Err(err).Msg("Unable to build admin service get test list request")
+		return []ResourceProviderListItem{}, err
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.clientOptions.ApiKey))
 	resp, err := a.client.Do(req)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed anura get modules request")
-		return AllowListResponse{}, err
+		log.Error().Err(err).Msg("Failed admin service get test list request")
+		return []ResourceProviderListItem{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed reading get modules response")
-		return AllowListResponse{}, err
+		log.Error().Err(err).Msg("Failed reading get test list response")
+		return []ResourceProviderListItem{}, err
 	}
 
-	var response AllowListResponse
+	var response []ResourceProviderListItem
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed unmarshelling get modules response")
-		return AllowListResponse{}, err
+		log.Error().Err(err).Msg("Failed unmarshelling get test list response")
+		return []ResourceProviderListItem{}, err
+	}
+
+	return response, nil
+}
+
+func (a *adminServiceClient) GetAllowList() ([]ResourceProviderListItem, error) {
+	getAllowListUrl := a.clientOptions.BaseURL + "/allow-list"
+
+	req, err := http.NewRequest("GET", getAllowListUrl, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to build admin service get allow list request")
+		return []ResourceProviderListItem{}, err
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.clientOptions.ApiKey))
+	resp, err := a.client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed admin service get allow list request")
+		return []ResourceProviderListItem{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed reading get allow list response")
+		return []ResourceProviderListItem{}, err
+	}
+
+	var response []ResourceProviderListItem
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed unmarshelling get allow list response")
+		return []ResourceProviderListItem{}, err
 	}
 
 	return response, nil
