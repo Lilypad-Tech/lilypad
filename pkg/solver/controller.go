@@ -828,11 +828,13 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 func (controller *SolverController) getAllowList() ([]string, error) {
 	client, err := adminService.NewAdminServiceClient(controller.options.AdminService)
 	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to create admin service client")
 		return []string{}, err
 	}
 
 	response, err := client.GetAllowList()
 	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to get allow list thru admin service")
 		return []string{}, err
 	}
 
