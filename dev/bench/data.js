@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1750183268338,
+  "lastUpdate": 1752593901605,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3264,6 +3264,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "895165 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "65942753+rexdotsh@users.noreply.github.com",
+            "name": "mridul",
+            "username": "rexdotsh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "53eb0a67fccd175bd74ff515e90f453c2b82bf50",
+          "message": "feat: sign CLA for rexdotsh (#592)",
+          "timestamp": "2025-07-15T08:36:41-07:00",
+          "tree_id": "80e1c75d3ecb639dee75a20651f758c062c6474b",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/53eb0a67fccd175bd74ff515e90f453c2b82bf50"
+        },
+        "date": 1752593901106,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 3999,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "879350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 3999,
+            "unit": "ns/op",
+            "extra": "879350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "879350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "879350 times\n4 procs"
           }
         ]
       }
