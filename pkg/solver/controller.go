@@ -469,6 +469,11 @@ func (controller *SolverController) cancelExpiredJob(ctx context.Context, jobOff
 
 	// Report expired job
 	controller.stats.PostJobRun(deal)
+	controller.stats.PostReputation(deal.ResourceProvider,
+		stats.NewReputationBuilder().
+			WithJobFailed(true).
+			Build(),
+	)
 
 	return jobOffer.ID, deal.ID
 }
@@ -666,6 +671,13 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 	}
 	span.AddEvent("store.add_deal.done")
 
+	// Report job matched reputation
+	controller.stats.PostReputation(dealContainer.ResourceProvider,
+		stats.NewReputationBuilder().
+			WithJobMatched(true).
+			Build(),
+	)
+
 	span.AddEvent("write_event.start")
 	controller.writeEvent(SolverEvent{
 		EventType: DealAdded,
@@ -740,6 +752,15 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 	dealContainer, err := controller.store.UpdateDealState(id, state)
 	if err != nil {
 		return nil, err
+	}
+
+	// Report validation lost reputation for rejected deals
+	if state == data.GetAgreementStateIndex("MediationRejected") || state == data.GetAgreementStateIndex("ResultsRejected") {
+		controller.stats.PostReputation(dealContainer.ResourceProvider,
+			stats.NewReputationBuilder().
+				WithValidationLost(true).
+				Build(),
+		)
 	}
 
 	controller.writeEvent(SolverEvent{
