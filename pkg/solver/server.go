@@ -570,10 +570,21 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 
 	// Resource provider must be in allowlist when enabled
 	if server.options.AccessControl.EnableResourceProviderAllowlist {
-		allowedProviders, err := server.controller.getAllowList()
-		if err != nil {
-			server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist")
-			return nil, err
+		var allowedProviders []string
+
+		// Feature Flag to control where the allow list surfaces from
+		if server.controller.options.AdminService.EnableAdminService {
+			allowedProviders, err = server.controller.getAllowList()
+			if err != nil {
+				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from Admin Service")
+				return nil, err
+			}
+		} else {
+			allowedProviders, err = server.store.GetAllowedResourceProviders()
+			if err != nil {
+				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from DB")
+				return nil, err
+			}
 		}
 
 		if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {

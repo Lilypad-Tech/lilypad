@@ -6,7 +6,8 @@ import (
 
 func GetDefaultAdminServiceOptions() adminService.AdminServiceClientOptions {
 	return adminService.AdminServiceClientOptions{
-		BaseURL: GetDefaultServeOptionString("ADMIN_BASE_URL", ""),
-		ApiKey:  GetDefaultServeOptionString("ADMIN_API_KEY", ""),
+		BaseURL:            GetDefaultServeOptionString("ADMIN_BASE_URL", ""),
+		ApiKey:             GetDefaultServeOptionString("ADMIN_API_KEY", ""),
+		EnableAdminService: GetDefaultServeOptionBool("ENABLE_ADMIN_SERVICE", false),
 	}
 }

@@ -21,8 +21,9 @@ type AdminServiceClient interface {
 }
 
 type AdminServiceClientOptions struct {
-	BaseURL string
-	ApiKey  string
+	BaseURL            string
+	ApiKey             string
+	EnableAdminService bool
 }
 
 type adminServiceClient struct {
