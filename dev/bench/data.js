@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1752593901605,
+  "lastUpdate": 1752682796396,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3312,6 +3312,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "879350 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "65942753+rexdotsh@users.noreply.github.com",
+            "name": "mridul",
+            "username": "rexdotsh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "90060be99049def5124b1ff8fbb45bd04374a251",
+          "message": "feat: Add reputation tracking for job lifecycle events (#591)\n\nTrack job matched, failed, and validation lost reputation events\n\nCo-authored-by: Narb <29411347+narbs91@users.noreply.github.com>",
+          "timestamp": "2025-07-16T21:49:24+05:30",
+          "tree_id": "d8c25c9091d2acb8fe5ca995db985a72e3bde4f1",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/90060be99049def5124b1ff8fbb45bd04374a251"
+        },
+        "date": 1752682795419,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4040,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "895635 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4040,
+            "unit": "ns/op",
+            "extra": "895635 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "895635 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "895635 times\n4 procs"
           }
         ]
       }
