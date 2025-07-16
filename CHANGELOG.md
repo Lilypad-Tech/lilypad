@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.23.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.22.0...v2.23.0) (2025-07-16)
+
+
+### Features
+
+* Add reputation tracking for job lifecycle events ([#591](https://github.com/Lilypad-Tech/lilypad/issues/591)) ([90060be](https://github.com/Lilypad-Tech/lilypad/commit/90060be99049def5124b1ff8fbb45bd04374a251))
+* Sign CLA for rexdotsh ([#592](https://github.com/Lilypad-Tech/lilypad/issues/592)) ([53eb0a6](https://github.com/Lilypad-Tech/lilypad/commit/53eb0a67fccd175bd74ff515e90f453c2b82bf50))
+
 ## [2.22.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.21.0...v2.22.0) (2025-06-16)
 
 
