@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1752682796396,
+  "lastUpdate": 1753105245535,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3360,6 +3360,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "895635 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "65942753+rexdotsh@users.noreply.github.com",
+            "name": "mridul",
+            "username": "rexdotsh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c15bf35865ad8526ddbc99412ed69152699d5d25",
+          "message": "fix(solver/stats): populate module_id in reputation events (#595)",
+          "timestamp": "2025-07-21T23:40:18+10:00",
+          "tree_id": "ab7fc000f86730d09a65555fd82e6aa5c56aabf0",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/c15bf35865ad8526ddbc99412ed69152699d5d25"
+        },
+        "date": 1753105244748,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 3994,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "898320 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 3994,
+            "unit": "ns/op",
+            "extra": "898320 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "898320 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "898320 times\n4 procs"
           }
         ]
       }
