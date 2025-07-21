@@ -17,6 +17,7 @@ import (
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/http"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/metricsDashboard"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/module/shortcuts"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/stats"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/system"
@@ -876,6 +877,7 @@ func (server *solverServer) downloadFiles(res corehttp.ResponseWriter, req *core
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
+				WithModuleID(shortcuts.GetShortcut(deal.Deal.JobOffer.Module.Repo, deal.Deal.JobOffer.Module.Hash)).
 				Build(),
 		)
 	}); err != nil {
@@ -1118,6 +1120,7 @@ func (server *solverServer) jobOfferDownloadFiles(res corehttp.ResponseWriter, r
 		server.stats.PostReputation(deal.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithJobCompletedNoValidation(true).
+				WithModuleID(shortcuts.GetShortcut(deal.Deal.JobOffer.Module.Repo, deal.Deal.JobOffer.Module.Hash)).
 				Build(),
 		)
 	}); err != nil {
