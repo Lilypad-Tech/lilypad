@@ -33,13 +33,13 @@ type adminServiceClient struct {
 
 func NewAdminServiceClient(adminServiceOptions AdminServiceClientOptions) (AdminServiceClient, error) {
 	if len(adminServiceOptions.ApiKey) == 0 {
-		err := errors.New("Admin Service API key not set")
+		err := errors.New("admin Service API key not set")
 		log.Error().Err(err).Msg("Admin Service API Key is required")
 		return nil, err
 	}
 
 	if len(adminServiceOptions.BaseURL) == 0 {
-		err := errors.New("Admin Service base URL not set")
+		err := errors.New("admin Service base URL not set")
 		log.Error().Err(err).Msg("Admin Service Base URL is required")
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func NewAdminServiceClient(adminServiceOptions AdminServiceClientOptions) (Admin
 }
 
 func (a *adminServiceClient) GetTestList() ([]ResourceProviderListItem, error) {
-	getAllowListUrl := a.clientOptions.BaseURL + "/test-list"
+	getAllowListUrl := a.clientOptions.BaseURL + "/api/v1/test-list"
 
 	req, err := http.NewRequest("GET", getAllowListUrl, nil)
 	if err != nil {
@@ -83,7 +83,7 @@ func (a *adminServiceClient) GetTestList() ([]ResourceProviderListItem, error) {
 }
 
 func (a *adminServiceClient) GetAllowList() ([]ResourceProviderListItem, error) {
-	getAllowListUrl := a.clientOptions.BaseURL + "/allow-list"
+	getAllowListUrl := a.clientOptions.BaseURL + "/api/v1/allow-list"
 
 	req, err := http.NewRequest("GET", getAllowListUrl, nil)
 	if err != nil {
