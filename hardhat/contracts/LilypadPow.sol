@@ -13,6 +13,7 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
         uint256 complete_timestamp; //used to estimate hashrate of this submission
         bytes32 challenge; //record this to provent user never change challenge
         uint256 difficulty;
+        uint256 report_hashrates;  //report by users, but this value maybe not truth
     }
 
     struct Challenge {
@@ -95,7 +96,7 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
     }
 
     // submitWork miner submint a nonce value, sc check the difficulty and emit a valid pow event when success
-    function submitWork(uint256 nonce, string calldata nodeId) external {
+    function submitWork(uint256 nonce, string calldata nodeId, uint256 report_hashrates) external {
         checkTimeWindow();
 
         Challenge memory lastChallenge = lastChallenges[msg.sender];
@@ -135,7 +136,8 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
                 lastChallenge.timestamp,
                 block.timestamp,
                 lastChallenge.challenge,
-                lastChallenge.difficulty
+                lastChallenge.difficulty,
+                report_hashrates
             )
         );
 
@@ -148,7 +150,8 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
             lastChallenge.timestamp,
             block.timestamp,
             lastChallenge.challenge,
-            lastChallenge.difficulty
+            lastChallenge.difficulty,
+            report_hashrates
         );
     }
 
@@ -169,7 +172,8 @@ contract LilypadPow is Initializable, OwnableUpgradeable {
         uint256 start_timestamp,
         uint256 complete_timestamp,
         bytes32 challenge,
-        uint256 difficulty
+        uint256 difficulty,
+        uint256 report_hashrates
     );
     event GenerateChallenge(bytes32 challenge, uint256 difficulty);
     event NewPowRound();
