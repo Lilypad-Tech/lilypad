@@ -17,7 +17,9 @@ type Reputation struct {
 
 // The reputation builder constructs reputation from
 // reputation events. For now, it does not expose runtime
-// millis.
+// millis or module ID. To work around this, WithModuleID
+// sets the module ID using a shortcut derived from the
+// module's repo and hash.
 type ReputationBuilder struct {
 	reputation Reputation
 }
