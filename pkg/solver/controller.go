@@ -3,6 +3,7 @@ package solver
 import (
 	"context"
 	"fmt"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/adminService"
 	"time"
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
@@ -847,4 +848,25 @@ func (controller *SolverController) updateDealTransactionsMediator(id string, pa
 		Deal:      dealContainer,
 	})
 	return dealContainer, nil
+}
+
+func (controller *SolverController) getAllowList() ([]string, error) {
+	client, err := adminService.NewAdminServiceClient(controller.options.AdminService)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to create admin service client")
+		return []string{}, err
+	}
+
+	response, err := client.GetAllowList()
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to get allow list thru admin service")
+		return []string{}, err
+	}
+
+	var allowList []string
+	for _, rp := range response {
+		allowList = append(allowList, rp.ResourceProvider)
+	}
+
+	return allowList, nil
 }
