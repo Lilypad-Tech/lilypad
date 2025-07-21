@@ -7,6 +7,7 @@ import (
 
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/data"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/metricsDashboard"
+	"github.com/Lilypad-Tech/lilypad/v2/pkg/module/shortcuts"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/matcher"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/stats"
 	"github.com/Lilypad-Tech/lilypad/v2/pkg/solver/store"
@@ -472,6 +473,7 @@ func (controller *SolverController) cancelExpiredJob(ctx context.Context, jobOff
 	controller.stats.PostReputation(deal.ResourceProvider,
 		stats.NewReputationBuilder().
 			WithJobFailed(true).
+			WithModuleID(shortcuts.GetShortcut(deal.Deal.JobOffer.Module.Repo, deal.Deal.JobOffer.Module.Hash)).
 			Build(),
 	)
 
@@ -675,6 +677,7 @@ func (controller *SolverController) addDeal(ctx context.Context, deal data.Deal)
 	controller.stats.PostReputation(dealContainer.ResourceProvider,
 		stats.NewReputationBuilder().
 			WithJobMatched(true).
+			WithModuleID(shortcuts.GetShortcut(dealContainer.Deal.JobOffer.Module.Repo, dealContainer.Deal.JobOffer.Module.Hash)).
 			Build(),
 	)
 
@@ -759,6 +762,7 @@ func (controller *SolverController) updateDealState(id string, state uint8) (*da
 		controller.stats.PostReputation(dealContainer.ResourceProvider,
 			stats.NewReputationBuilder().
 				WithValidationLost(true).
+				WithModuleID(shortcuts.GetShortcut(dealContainer.Deal.JobOffer.Module.Repo, dealContainer.Deal.JobOffer.Module.Hash)).
 				Build(),
 		)
 	}
