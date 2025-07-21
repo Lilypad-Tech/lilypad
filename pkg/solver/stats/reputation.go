@@ -17,7 +17,7 @@ type Reputation struct {
 
 // The reputation builder constructs reputation from
 // reputation events. For now, it does not expose runtime
-// millis or module ID.
+// millis.
 type ReputationBuilder struct {
 	reputation Reputation
 }
@@ -43,6 +43,11 @@ func (b *ReputationBuilder) WithValidationLost(val bool) *ReputationBuilder {
 
 func (b *ReputationBuilder) WithJobFailed(val bool) *ReputationBuilder {
 	b.reputation.JobFailed = &val
+	return b
+}
+
+func (b *ReputationBuilder) WithModuleID(moduleID string) *ReputationBuilder {
+	b.reputation.ModuleID = moduleID
 	return b
 }
 
