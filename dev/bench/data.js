@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1753105245535,
+  "lastUpdate": 1753125213818,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3408,6 +3408,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "898320 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "65942753+rexdotsh@users.noreply.github.com",
+            "name": "mridul",
+            "username": "rexdotsh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4035f1b15616bd0490734411c8e9901fc136ddb8",
+          "message": "fix(solver/controller): include module id on all cases of postreputation to stats api (#596)",
+          "timestamp": "2025-07-21T12:13:06-07:00",
+          "tree_id": "f2282222f33267757bff1c664f4f95d3f66c6753",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/4035f1b15616bd0490734411c8e9901fc136ddb8"
+        },
+        "date": 1753125212799,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4217,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "887860 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4217,
+            "unit": "ns/op",
+            "extra": "887860 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "887860 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "887860 times\n4 procs"
           }
         ]
       }
