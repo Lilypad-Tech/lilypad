@@ -22,6 +22,8 @@ type ResourceProviderInListResponse struct {
 type AdminServiceClient interface {
 	GetAllowList() ([]ResourceProviderListItem, error)
 	GetTestList() ([]ResourceProviderListItem, error)
+	IsRPonAllowList(resourceProvider string) (bool, error)
+	IsRPonTestList(resourceProvider string) (bool, error)
 }
 
 type AdminServiceClientOptions struct {
@@ -119,7 +121,7 @@ func (a *adminServiceClient) GetAllowList() ([]ResourceProviderListItem, error) 
 	return response, nil
 }
 
-func (a *adminServiceClient) isRPonAllowList(resourceProvider string) (ResourceProviderInListResponse, error) {
+func (a *adminServiceClient) IsRPonAllowList(resourceProvider string) (ResourceProviderInListResponse, error) {
 	isRpOnAllowListUrl := a.clientOptions.BaseURL + "/api/v1/allow-list/contains/" + resourceProvider
 
 	req, err := http.NewRequest("GET", isRpOnAllowListUrl, nil)
@@ -152,7 +154,7 @@ func (a *adminServiceClient) isRPonAllowList(resourceProvider string) (ResourceP
 	return response, nil
 }
 
-func (a *adminServiceClient) isRPonTestList(resourceProvider string) (ResourceProviderInListResponse, error) {
+func (a *adminServiceClient) IsRPonTestList(resourceProvider string) (ResourceProviderInListResponse, error) {
 	isRpOnAllowListUrl := a.clientOptions.BaseURL + "/api/v1/test-list/contains/" + resourceProvider
 
 	req, err := http.NewRequest("GET", isRpOnAllowListUrl, nil)
