@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.23.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.22.0...v2.23.0) (2025-07-28)
+
+
+### Features
+
+* Add reputation tracking for job lifecycle events ([#591](https://github.com/Lilypad-Tech/lilypad/issues/591)) ([90060be](https://github.com/Lilypad-Tech/lilypad/commit/90060be99049def5124b1ff8fbb45bd04374a251))
+* Onboard admin service ([#590](https://github.com/Lilypad-Tech/lilypad/issues/590)) ([5828d5e](https://github.com/Lilypad-Tech/lilypad/commit/5828d5e4fed02bfba7da21e58942b85f33548a5f))
+* Sign CLA for rexdotsh ([#592](https://github.com/Lilypad-Tech/lilypad/issues/592)) ([53eb0a6](https://github.com/Lilypad-Tech/lilypad/commit/53eb0a67fccd175bd74ff515e90f453c2b82bf50))
+
+
+### Bug Fixes
+
+* **solver/controller:** Include module id on all cases of postreputation to stats api ([#596](https://github.com/Lilypad-Tech/lilypad/issues/596)) ([4035f1b](https://github.com/Lilypad-Tech/lilypad/commit/4035f1b15616bd0490734411c8e9901fc136ddb8))
+* **solver/stats:** Populate module_id in reputation events ([#595](https://github.com/Lilypad-Tech/lilypad/issues/595)) ([c15bf35](https://github.com/Lilypad-Tech/lilypad/commit/c15bf35865ad8526ddbc99412ed69152699d5d25))
+
 ## [2.22.0](https://github.com/Lilypad-Tech/lilypad/compare/v2.21.0...v2.22.0) (2025-06-16)
 
 
