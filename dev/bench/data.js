@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1753125213818,
+  "lastUpdate": 1753720518079,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3456,6 +3456,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "887860 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29411347+narbs91@users.noreply.github.com",
+            "name": "Narb",
+            "username": "narbs91"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5828d5e4fed02bfba7da21e58942b85f33548a5f",
+          "message": "feat: onboard admin service (#590)\n\n* adds env variables for admin service\n\n* adds admin service client code\n\n* adds admin-servie to solver options\n\n* refactors client; adds getTestList impl\n\n* exposes getAllowList method in solver controller\n\n* switches over allowlist check to admin service\n\n* adds feature flag for enabling admin service\n\n* adds logging in controller method\n\n* updates local env to set ENABLE_ADMIN_SERVICE to false\n\n* removes /api/v1 from baseUrl; updates error messages in client",
+          "timestamp": "2025-07-28T09:33:34-07:00",
+          "tree_id": "f5da422f9c0cb250f492030be8c52ea2e9eae3bf",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/5828d5e4fed02bfba7da21e58942b85f33548a5f"
+        },
+        "date": 1753720517476,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 3977,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "878948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 3977,
+            "unit": "ns/op",
+            "extra": "878948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "878948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "878948 times\n4 procs"
           }
         ]
       }
