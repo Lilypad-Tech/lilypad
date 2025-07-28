@@ -35,6 +35,7 @@ var AgreementState = []string{
 	"TimeoutMatch",
 	"TimeoutExecution",
 	"TimeoutDownload",
+	"TestingNeeded",
 }
 
 // PaymentReason corresponds to PaymentReason in TypeScript
