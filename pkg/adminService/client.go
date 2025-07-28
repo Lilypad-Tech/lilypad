@@ -148,7 +148,7 @@ func (a *adminServiceClient) IsRPonAllowList(resourceProvider string) (ResourceP
 		return ResourceProviderInAllowListResponse{}, err
 	}
 
-	var response ResourceProviderInListResponse
+	var response ResourceProviderInAllowListResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed unmarshelling get rp contained on allow list response")
