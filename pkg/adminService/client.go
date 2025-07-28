@@ -22,8 +22,8 @@ type ResourceProviderInListResponse struct {
 type AdminServiceClient interface {
 	GetAllowList() ([]ResourceProviderListItem, error)
 	GetTestList() ([]ResourceProviderListItem, error)
-	IsRPonAllowList(resourceProvider string) (bool, error)
-	IsRPonTestList(resourceProvider string) (bool, error)
+	IsRPonAllowList(resourceProvider string) (ResourceProviderInListResponse, error)
+	IsRPonTestList(resourceProvider string) (ResourceProviderInListResponse, error)
 }
 
 type AdminServiceClientOptions struct {
