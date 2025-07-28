@@ -8,15 +8,16 @@ import (
 
 func NewSolverOptions() solver.SolverOptions {
 	options := solver.SolverOptions{
-		Server:    GetDefaultServerOptions(),
-		Store:     GetDefaultStoreOptions(),
-		Web3:      GetDefaultWeb3Options(),
-		Services:  GetDefaultServicesOptions(),
-		Stats:     GetDefaultStatsOptions(),
-		Telemetry: GetDefaultTelemetryOptions(),
-		Metrics:   GetDefaultMetricsOptions(),
-		Logs:      GetDefaultLogsOptions(),
-		Timeouts:  GetDefaultTimeoutOptions(),
+		Server:       GetDefaultServerOptions(),
+		Store:        GetDefaultStoreOptions(),
+		Web3:         GetDefaultWeb3Options(),
+		Services:     GetDefaultServicesOptions(),
+		Stats:        GetDefaultStatsOptions(),
+		Telemetry:    GetDefaultTelemetryOptions(),
+		Metrics:      GetDefaultMetricsOptions(),
+		Logs:         GetDefaultLogsOptions(),
+		Timeouts:     GetDefaultTimeoutOptions(),
+		AdminService: GetDefaultAdminServiceOptions(),
 	}
 	options.Web3.Service = system.SolverService
 	return options
