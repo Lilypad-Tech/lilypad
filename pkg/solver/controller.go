@@ -870,3 +870,35 @@ func (controller *SolverController) getAllowList() ([]string, error) {
 
 	return allowList, nil
 }
+
+func (controller *SolverController) isRpOnAllowList(resourceProvider string) (bool, error) {
+	client, err := adminService.NewAdminServiceClient(controller.options.AdminService)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to create admin service client")
+		return false, err
+	}
+
+	response, err := client.IsRPonAllowList(resourceProvider)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to check if RP is on allow list thru admin service")
+		return false, err
+	}
+
+	return response.InAllowList, nil
+}
+
+func (controller *SolverController) isRpOnTestList(resourceProvider string) (bool, error) {
+	client, err := adminService.NewAdminServiceClient(controller.options.AdminService)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to create admin service client")
+		return false, err
+	}
+
+	response, err := client.IsRPonTestList(resourceProvider)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to check if RP is on test list thru admin service")
+		return false, err
+	}
+
+	return response.InTestList, nil
+}
