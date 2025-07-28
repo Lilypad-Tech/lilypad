@@ -569,29 +569,39 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
 
+	// Boolean flag representing whether the RP is on the testing list i.e. needs to prove they can run a job before joining the network
+	var isOnTestList = false
+
 	// Resource provider must be in allowlist when enabled
 	if server.options.AccessControl.EnableResourceProviderAllowlist {
-		var allowedProviders []string
 
 		// Feature Flag to control where the allow list surfaces from
 		if server.controller.options.AdminService.EnableAdminService {
-			allowedProviders, err = server.controller.getAllowList()
+			// Compute whether the RP is on the test list
+			isOnTestList, err = server.controller.isRpOnTestList(signerAddress)
 			if err != nil {
-				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from Admin Service")
+				server.log.Error().Err(err).Msgf("Unable to test if resource provider allowlist from Admin Service")
 				return nil, err
 			}
+
+			if isOnTestList {
+				server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider is in test list")
+				return nil, errors.New("resource provider is on test list")
+			}
 		} else {
-			allowedProviders, err = server.store.GetAllowedResourceProviders()
+			var allowedProviders []string
+			allowedProviders, err := server.store.GetAllowedResourceProviders()
 			if err != nil {
 				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from DB")
 				return nil, err
 			}
+
+			if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
+				server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider not in allowlist")
+				return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
+			}
 		}
 
-		if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
-			server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider not in allowlist")
-			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
-		}
 	}
 
 	if server.options.AccessControl.EnableVersionCheck {
