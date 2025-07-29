@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1753720518079,
+  "lastUpdate": 1753812602508,
   "repoUrl": "https://github.com/Lilypad-Tech/lilypad",
   "entries": {
     "Benchmark": [
@@ -3504,6 +3504,54 @@ window.BENCHMARK_DATA = {
             "value": 26,
             "unit": "allocs/op",
             "extra": "878948 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "174042765+lilypad-releases[bot]@users.noreply.github.com",
+            "name": "lilypad-releases[bot]",
+            "username": "lilypad-releases[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9ed865134a4906dce8227975adc9c2fd6da62677",
+          "message": "chore(main): release 2.23.0 (#593)\n\nCo-authored-by: lilypad-releases[bot] <174042765+lilypad-releases[bot]@users.noreply.github.com>",
+          "timestamp": "2025-07-29T11:09:38-07:00",
+          "tree_id": "572a63aea9a74c2c54e8c2ce965675964441b26a",
+          "url": "https://github.com/Lilypad-Tech/lilypad/commit/9ed865134a4906dce8227975adc9c2fd6da62677"
+        },
+        "date": 1753812601799,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkMatchOffers",
+            "value": 4136,
+            "unit": "ns/op\t   11248 B/op\t      26 allocs/op",
+            "extra": "899910 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - ns/op",
+            "value": 4136,
+            "unit": "ns/op",
+            "extra": "899910 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - B/op",
+            "value": 11248,
+            "unit": "B/op",
+            "extra": "899910 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMatchOffers - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "899910 times\n4 procs"
           }
         ]
       }
