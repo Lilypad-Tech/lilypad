@@ -246,6 +246,13 @@ func (store *SolverStoreDatabase) GetResourceOffers(query store.GetResourceOffer
 			data.GetAgreementStateIndex("DealAgreed"),
 		})
 	}
+
+	if query.PendingTesting {
+		q = q.Where("state IN (?)", []uint8{
+			data.GetAgreementStateIndex("PendingTesting"),
+		})
+	}
+
 	if query.OrderOldestFirst {
 		q = q.Order("created_at ASC")
 	}

@@ -569,29 +569,46 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 		return nil, fmt.Errorf("resource provider address does not match signer address")
 	}
 
+	// Boolean flag representing whether the RP is on the testing list i.e. needs to prove they can run a job before joining the network
+	var isOnTestList = false
+
 	// Resource provider must be in allowlist when enabled
 	if server.options.AccessControl.EnableResourceProviderAllowlist {
-		var allowedProviders []string
 
 		// Feature Flag to control where the allow list surfaces from
 		if server.controller.options.AdminService.EnableAdminService {
-			allowedProviders, err = server.controller.getAllowList()
+			// Compute whether the RP is on the test list
+			isOnTestList, err = server.controller.isRpOnTestList(signerAddress)
 			if err != nil {
-				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from Admin Service")
+				server.log.Error().Err(err).Msgf("Unable to test if resource provider allowlist from Admin Service")
 				return nil, err
 			}
+
+			// If the RP is on the test list, we will post its offer but set it so that it's pending a test (i.e. proving it can run a job) before it can join the network
+			if isOnTestList {
+				resourceOfferContainer, err := server.addTestListResourceOffer(resourceOffer)
+				if err != nil {
+					server.log.Error().Err(err).Msg("Error adding resource offer for test list")
+				}
+
+				server.log.Info().Str("address", resourceOffer.ResourceProvider).Any("Resource Offer", resourceOfferContainer).Msg("resource provider is in test list and posted TestPending Offer")
+				// Return an error here to notify the RP that it needs to undergo testing
+				return nil, errors.New("resource provider is on test list, your machine will under go automated testing before it will be allowed to post an official resource offer on the network")
+			}
 		} else {
-			allowedProviders, err = server.store.GetAllowedResourceProviders()
+			var allowedProviders []string
+			allowedProviders, err := server.store.GetAllowedResourceProviders()
 			if err != nil {
 				server.log.Error().Err(err).Msgf("Unable to load resource provider allowlist from DB")
 				return nil, err
 			}
+
+			if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
+				server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider not in allowlist")
+				return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
+			}
 		}
 
-		if !slices.Contains(allowedProviders, resourceOffer.ResourceProvider) {
-			server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider not in allowlist")
-			return nil, errors.New("resource provider not in beta program, request beta program access here: https://forms.gle/XaE3rRuXVLxTnZto7")
-		}
 	}
 
 	if server.options.AccessControl.EnableVersionCheck {
@@ -619,6 +636,22 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 		return nil, err
 	}
 	return server.controller.addResourceOffer(resourceOffer)
+}
+
+func (server *solverServer) addTestListResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOfferContainer, error) {
+	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		server.log.Debug().Str("cid", resourceOffer.ID).Str("address", resourceOffer.ResourceProvider).Msg("resource offer rejected because timestamp was not recent")
+		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
+	}
+
+	err := data.CheckResourceOffer(resourceOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("Error checking resource offer")
+		return nil, err
+	}
+
+	return server.controller.addTestResourceOffer(resourceOffer)
 }
 
 func (server *solverServer) addResult(results data.Result, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Result, error) {

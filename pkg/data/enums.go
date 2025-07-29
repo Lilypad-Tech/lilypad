@@ -35,6 +35,7 @@ var AgreementState = []string{
 	"TimeoutMatch",
 	"TimeoutExecution",
 	"TimeoutDownload",
+	"PendingTesting",
 }
 
 // PaymentReason corresponds to PaymentReason in TypeScript
@@ -85,6 +86,10 @@ func GetAgreementStateIndex(itemType string) uint8 {
 
 func GetDefaultAgreementState() uint8 {
 	return GetAgreementStateIndex("DealNegotiating")
+}
+
+func GetTestPendingAgreementState() uint8 {
+	return GetAgreementStateIndex("PendingTesting")
 }
 
 func IsActiveAgreementState(itemType uint8) bool {

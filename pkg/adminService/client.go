@@ -15,9 +15,19 @@ type ResourceProviderListItem struct {
 	ResourceProvider string `json:"resource_provider"`
 }
 
+type ResourceProviderInAllowListResponse struct {
+	InAllowList bool `json:"inAllowList"`
+}
+
+type ResourceProviderInTestListResponse struct {
+	InTestList bool `json:"inTestList"`
+}
+
 type AdminServiceClient interface {
 	GetAllowList() ([]ResourceProviderListItem, error)
 	GetTestList() ([]ResourceProviderListItem, error)
+	IsRPonAllowList(resourceProvider string) (ResourceProviderInAllowListResponse, error)
+	IsRPonTestList(resourceProvider string) (ResourceProviderInTestListResponse, error)
 }
 
 type AdminServiceClientOptions struct {
@@ -110,6 +120,72 @@ func (a *adminServiceClient) GetAllowList() ([]ResourceProviderListItem, error) 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed unmarshelling get allow list response")
 		return []ResourceProviderListItem{}, err
+	}
+
+	return response, nil
+}
+
+func (a *adminServiceClient) IsRPonAllowList(resourceProvider string) (ResourceProviderInAllowListResponse, error) {
+	isRpOnAllowListUrl := a.clientOptions.BaseURL + "/api/v1/allow-list/contains/" + resourceProvider
+
+	req, err := http.NewRequest("GET", isRpOnAllowListUrl, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to build admin service rp contained on allow list request")
+		return ResourceProviderInAllowListResponse{}, err
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.clientOptions.ApiKey))
+	resp, err := a.client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed admin service call to check if RP is on allow list request")
+		return ResourceProviderInAllowListResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed reading get rp contained on allow list response")
+		return ResourceProviderInAllowListResponse{}, err
+	}
+
+	var response ResourceProviderInAllowListResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed unmarshelling get rp contained on allow list response")
+		return ResourceProviderInAllowListResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (a *adminServiceClient) IsRPonTestList(resourceProvider string) (ResourceProviderInTestListResponse, error) {
+	isRpOnAllowListUrl := a.clientOptions.BaseURL + "/api/v1/test-list/contains/" + resourceProvider
+
+	req, err := http.NewRequest("GET", isRpOnAllowListUrl, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to build admin service rp contained on test list request")
+		return ResourceProviderInTestListResponse{}, err
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.clientOptions.ApiKey))
+	resp, err := a.client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed admin service call to check if RP is on test list request")
+		return ResourceProviderInTestListResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed reading get rp contained on test list response")
+		return ResourceProviderInTestListResponse{}, err
+	}
+
+	var response ResourceProviderInTestListResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed unmarshelling get rp contained on test list response")
+		return ResourceProviderInTestListResponse{}, err
 	}
 
 	return response, nil

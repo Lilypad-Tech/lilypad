@@ -153,6 +153,18 @@ func GetResourceOfferContainer(
 	}
 }
 
+func GetTestListResourceOfferContainer(
+	resourceOffer ResourceOffer,
+) ResourceOfferContainer {
+	return ResourceOfferContainer{
+		ID:               resourceOffer.ID,
+		DealID:           "",
+		ResourceProvider: resourceOffer.ResourceProvider,
+		State:            GetTestPendingAgreementState(),
+		ResourceOffer:    resourceOffer,
+	}
+}
+
 func GetDealContainer(
 	deal Deal,
 ) DealContainer {
