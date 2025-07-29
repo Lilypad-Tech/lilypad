@@ -55,6 +55,8 @@ type GetResourceOffersQuery struct {
 
 	// Sort resource offers oldest first
 	OrderOldestFirst bool `json:"order_oldest_first"`
+
+	PendingTesting bool `json:"pending_test"`
 }
 
 type GetDealsQuery struct {

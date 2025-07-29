@@ -584,9 +584,16 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 				return nil, err
 			}
 
+			// If the RP is on the test list, we will post its offer but set it so that it's pending a test (i.e. proving it can run a job) before it can join the network
 			if isOnTestList {
-				server.log.Debug().Str("address", resourceOffer.ResourceProvider).Msg("resource provider is in test list")
-				return nil, errors.New("resource provider is on test list")
+				resourceOfferContainer, err := server.addTestListResourceOffer(resourceOffer)
+				if err != nil {
+					server.log.Error().Err(err).Msg("Error adding resource offer for test list")
+				}
+
+				server.log.Info().Str("address", resourceOffer.ResourceProvider).Any("Resource Offer", resourceOfferContainer).Msg("resource provider is in test list and posted TestPending Offer")
+				// Return an error here to notify the RP that it needs to undergo testing
+				return nil, errors.New("resource provider is on test list, your machine will under go automated testing before it will be allowed to post an official resource offer on the network")
 			}
 		} else {
 			var allowedProviders []string
@@ -629,6 +636,22 @@ func (server *solverServer) addResourceOffer(resourceOffer data.ResourceOffer, r
 		return nil, err
 	}
 	return server.controller.addResourceOffer(resourceOffer)
+}
+
+func (server *solverServer) addTestListResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOfferContainer, error) {
+	offerRecent := isTimestampRecent(resourceOffer.CreatedAt, server.options.AccessControl.OfferTimestampDiffSeconds*1000)
+	if !offerRecent {
+		server.log.Debug().Str("cid", resourceOffer.ID).Str("address", resourceOffer.ResourceProvider).Msg("resource offer rejected because timestamp was not recent")
+		return nil, errors.New("resource offer rejected because CreatedAt time is not recent, check your computer's time settings and network connection")
+	}
+
+	err := data.CheckResourceOffer(resourceOffer)
+	if err != nil {
+		server.log.Error().Err(err).Msg("Error checking resource offer")
+		return nil, err
+	}
+
+	return server.controller.addTestResourceOffer(resourceOffer)
 }
 
 func (server *solverServer) addResult(results data.Result, res corehttp.ResponseWriter, req *corehttp.Request) (*data.Result, error) {

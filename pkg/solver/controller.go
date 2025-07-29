@@ -29,6 +29,7 @@ type SolverEventType string
 const (
 	JobOfferAdded                       SolverEventType = "JobOfferAdded"
 	ResourceOfferAdded                  SolverEventType = "ResourceOfferAdded"
+	TestListResourceOfferAdded          SolverEventType = "TestListResourceOfferAdded"
 	ResourceOfferRemoved                SolverEventType = "ResourceOfferRemoved"
 	DealAdded                           SolverEventType = "DealAdded"
 	JobOfferStateUpdated                SolverEventType = "JobOfferStateUpdated"
@@ -605,6 +606,83 @@ func (controller *SolverController) addResourceOffer(resourceOffer data.Resource
 
 	controller.writeEvent(SolverEvent{
 		EventType:     ResourceOfferAdded,
+		ResourceOffer: ret,
+	})
+	return ret, nil
+}
+
+func (controller *SolverController) addTestResourceOffer(resourceOffer data.ResourceOffer) (*data.ResourceOfferContainer, error) {
+	id, err := data.GetResourceOfferID(resourceOffer)
+	if err != nil {
+		return nil, err
+	}
+	resourceOffer.ID = id
+
+	// Check if we have an unmatched resource offer for the resource provider
+	existingOffers, err := controller.store.GetResourceOffers(store.GetResourceOffersQuery{
+		ResourceProvider: resourceOffer.ResourceProvider,
+		NotMatched:       true,
+		PendingTesting:   true,
+	})
+	if len(existingOffers) > 0 {
+		controller.log.Warn().
+			Str("address", resourceOffer.ResourceProvider).
+			Msg("resource provider posted a test list resource offer when an unmatched offer already exists")
+		// TODO(bgins) Return error to resource provider
+		// The resource provider currently crashes when an error is returned. Once we update the
+		// resource provider to selectively handle errors, we should return one here.
+		return nil, nil
+	}
+
+	// Check the resource provider's ETH balance
+	balance, err := controller.web3SDK.GetBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve ETH balance for resource provider: %v", err)
+	}
+	// Convert InstructionPrice from ETH to Wei
+	requiredBalanceWei := web3.EtherToWei(REQUIRED_BALANCE_IN_WEI) // 0.0006 based on the required balance for a job
+
+	// If the balance is less than the required balance, don't add the resource offer
+	if balance.Cmp(requiredBalanceWei) < 0 {
+		controller.log.Error().Err(err).
+			Str("addresss", resourceOffer.ResourceProvider).
+			Str("balance", balance.String()).
+			Str("requiredBalance", requiredBalanceWei.String()).
+			Msg("resource provider does not have enough ETH to post test resource offer")
+		return nil, nil
+	}
+
+	// required LP balance
+	requiredBalanceLp := web3.EtherToWei(float64(resourceOffer.DefaultPricing.InstructionPrice)) // based on the required LP balance for a job
+	balanceLp, err := controller.web3SDK.GetLPBalance(resourceOffer.ResourceProvider)
+	if err != nil {
+		controller.log.Error().Err(err).Msg("failed to retrieve LP balance for resource provider")
+		return nil, nil
+	}
+	if balanceLp.Cmp(requiredBalanceLp) < 0 {
+		controller.log.Error().Err(err).
+			Str("addresss", resourceOffer.ResourceProvider).
+			Str("balance", balanceLp.String()).
+			Str("requiredBalance", requiredBalanceLp.String()).
+			Msg("resource provider does not have enough LP to post test resource offer")
+		return nil, nil
+	}
+
+	controller.log.Info().Str("cid", resourceOffer.ID).
+		Str("address", resourceOffer.ResourceProvider).
+		Any("test resourceOffer", resourceOffer).
+		Msg("adding test list resource offer")
+
+	//TODO: figure out how you want to track this
+	//metricsDashboard.TrackNodeInfo(resourceOffer)
+
+	ret, err := controller.store.AddResourceOffer(data.GetTestListResourceOfferContainer(resourceOffer))
+	if err != nil {
+		return nil, err
+	}
+
+	controller.writeEvent(SolverEvent{
+		EventType:     TestListResourceOfferAdded,
 		ResourceOffer: ret,
 	})
 	return ret, nil
