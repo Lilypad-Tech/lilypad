@@ -159,9 +159,10 @@ func (resourceProvider *ResourceProvider) StartMineLoop(ctx context.Context) cha
 			ID:       id,
 			Address:  walletAddress.String(),
 			Date:     finishTime,
-			Hashrate: hashrate,
+			Hashrate: hashrate / 1000, //mhash
 		})
-		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId)
+
+		txId, err := resourceProvider.web3SDK.SubmitWork(ctx, nonce, nodeId, big.NewInt(int64(hashrate))) //store khash/s
 		if err != nil {
 			log.Err(err).Msgf("Submit work fail")
 			return
