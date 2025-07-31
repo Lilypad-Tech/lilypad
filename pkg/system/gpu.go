@@ -6,7 +6,7 @@ import (
 )
 
 func GetGPUInfo() []string {
-	gpu, err := ghw.GPU()
+	gpu, err := ghw.GPU(ghw.WithDisableWarnings())
 	if err != nil {
 		log.Warn().Msgf("failed to get GPU info: %s", err)
 	}
