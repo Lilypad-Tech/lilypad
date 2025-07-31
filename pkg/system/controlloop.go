@@ -4,6 +4,9 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type ControlLoop struct {
@@ -15,6 +18,7 @@ type ControlLoop struct {
 	handler      func() error
 	running      bool
 	counter      int
+	log          *zerolog.Logger
 }
 
 func NewControlLoop(
@@ -23,6 +27,7 @@ func NewControlLoop(
 	interval time.Duration,
 	handler func() error,
 ) *ControlLoop {
+	log := GetLogger(service)
 	return &ControlLoop{
 		service:  service,
 		ctx:      ctx,
@@ -30,6 +35,7 @@ func NewControlLoop(
 		handler:  handler,
 		running:  false,
 		counter:  0,
+		log:      log,
 	}
 }
 
@@ -46,6 +52,8 @@ func (loop *ControlLoop) resetCounter() {
 }
 
 func (loop *ControlLoop) Trigger() {
+	log.Debug().Bool("running", loop.running).Int("counter", loop.counter).Msg("control loop triggered")
+
 	if loop.running {
 		loop.incrementCounter()
 	} else {
